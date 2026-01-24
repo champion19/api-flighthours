@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  log-rotator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flighthours-log-rotator:latest
+    container_name: flighthours-log-rotator
+    restart: unless-stopped
+
+    environment:
+      - TZ=America/Bogota
+      - RETENTION_DAYS=7
+
+    volumes:
+      # Logs del backend Flighthours
+      - /var/log/flighthours-backend:/var/log/flighthours-backend
+
+      # Volúmenes de monitoreo (opcional, comentar si no se usan)
+      - prometheus_data:/prometheus
+      - loki_data:/loki
+      - grafana_data:/grafana
+
+    networks:
+      - monitoring
+
+    healthcheck:
+      test: ["CMD", "test", "-f", "/var/log/logrotate.log"]
+      interval: 1h
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    labels:
+      - "com.flighthours.service=log-rotator"
+      - "com.flighthours.version=1.0"
+      - "com.flighthours.description=Log rotation and volume cleanup"
+
+volumes:
+  prometheus_data:
+    external: true
+  loki_data:
+    external: true
+  grafana_data:
+    external: true
+
+networks:
+  monitoring:
+    external: true

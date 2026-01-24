@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the person",
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": ".*\\S.*"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email address",
+      "maxLength": 250,
+      "pattern": ".*\\S.*"
+    },
+    "password": {
+      "type": "string",
+      "description": "Access password",
+      "minLength": 8,
+      "maxLength": 50,
+      "pattern": ".*\\S.*"
+    },
+    "identificationnumber": {
+      "type": "string",
+      "description": "Identity document number (ID card, passport, DNI, etc.)",
+      "maxLength": 10,
+      "minLength": 7,
+      "pattern": "^[0-9]+$"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "role": {
+      "type": "string",
+      "description": "Role of the person",
+      "maxLength": 10,
+      "minLength": 1,
+      "enum": [
+        "pilot"
+      ],
+      "errorMessage": "the proposed role is invalid.it must be pilot"
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "password",
+    "identificationnumber",
+    "start_date",
+    "end_date",
+    "role"
+  ],
+  "additionalProperties": false
+}
