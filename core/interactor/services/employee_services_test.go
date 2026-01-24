@@ -121,7 +121,7 @@ func TestService_RegisterEmployee(t *testing.T) {
 			fakeKeycloak{getUserByEmailFn: func(context.Context, string) (*gocloak.User, error) {
 				return nil, errors.New("should not be called")
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.RegisterEmployee(ctx, mkEmployee())
@@ -138,7 +138,7 @@ func TestService_RegisterEmployee(t *testing.T) {
 			fakeKeycloak{getUserByEmailFn: func(context.Context, string) (*gocloak.User, error) {
 				return nil, errors.New("context deadline exceeded")
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.RegisterEmployee(ctx, mkEmployee())
@@ -156,7 +156,7 @@ func TestService_RegisterEmployee(t *testing.T) {
 			fakeKeycloak{getUserByEmailFn: func(context.Context, string) (*gocloak.User, error) {
 				return &gocloak.User{ID: &kcID}, nil
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.RegisterEmployee(ctx, mkEmployee())
@@ -173,7 +173,7 @@ func TestService_RegisterEmployee(t *testing.T) {
 			fakeKeycloak{getUserByEmailFn: func(context.Context, string) (*gocloak.User, error) {
 				return nil, errors.New("404")
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.RegisterEmployee(ctx, mkEmployee())
@@ -191,7 +191,7 @@ func TestService_RegisterEmployee(t *testing.T) {
 			fakeKeycloak{getUserByEmailFn: func(context.Context, string) (*gocloak.User, error) {
 				return &gocloak.User{ID: &kcID}, nil
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.RegisterEmployee(ctx, mkEmployee())
@@ -208,7 +208,7 @@ func TestService_RegisterEmployee(t *testing.T) {
 			fakeKeycloak{getUserByEmailFn: func(context.Context, string) (*gocloak.User, error) {
 				return nil, errors.New("not found")
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		res, err := svc.RegisterEmployee(ctx, mkEmployee())
@@ -236,7 +236,7 @@ func TestService_CreateUserInKeycloak(t *testing.T) {
 			fakeKeycloak{createUserFn: func(context.Context, *domain.Employee) (string, error) {
 				return "", errors.New("connect: connection refused")
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.CreateUserInKeycloak(ctx, employee)
@@ -253,7 +253,7 @@ func TestService_CreateUserInKeycloak(t *testing.T) {
 			fakeKeycloak{createUserFn: func(context.Context, *domain.Employee) (string, error) {
 				return "", errors.New("some keycloak error")
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		_, err := svc.CreateUserInKeycloak(ctx, employee)
@@ -270,7 +270,7 @@ func TestService_CreateUserInKeycloak(t *testing.T) {
 			fakeKeycloak{createUserFn: func(context.Context, *domain.Employee) (string, error) {
 				return "kc1", nil
 			}},
-			noopLogger{},
+			noopLogger{}, nil,
 		)
 
 		id, err := svc.CreateUserInKeycloak(ctx, employee)

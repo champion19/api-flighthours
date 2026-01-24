@@ -16,7 +16,7 @@ func TestEmployeeService_GetEmployeeByEmail(t *testing.T) {
 		employee := &domain.Employee{ID: "123", Email: "test@example.com"}
 		mockRepo.On("GetEmployeeByEmail", mock.Anything, "test@example.com").Return(employee, nil)
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		result, err := svc.GetEmployeeByEmail(context.Background(), "test@example.com")
 
 		if err != nil {
@@ -32,7 +32,7 @@ func TestEmployeeService_GetEmployeeByEmail(t *testing.T) {
 		mockRepo := new(mocks.MockRepository)
 		mockRepo.On("GetEmployeeByEmail", mock.Anything, "notfound@example.com").Return(nil, domain.ErrPersonNotFound)
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		_, err := svc.GetEmployeeByEmail(context.Background(), "notfound@example.com")
 
 		if err != domain.ErrPersonNotFound {
@@ -48,7 +48,7 @@ func TestEmployeeService_GetEmployeeByID(t *testing.T) {
 		employee := &domain.Employee{ID: "123", Email: "test@example.com"}
 		mockRepo.On("GetEmployeeByID", mock.Anything, "123").Return(employee, nil)
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		result, err := svc.GetEmployeeByID(context.Background(), "123")
 
 		if err != nil {
@@ -66,7 +66,7 @@ func TestEmployeeService_BeginTx(t *testing.T) {
 	mockTx := new(mocks.MockTx)
 	mockRepo.On("BeginTx", mock.Anything).Return(mockTx, nil)
 
-	svc := NewService(mockRepo, nil, noopLogger{})
+	svc := NewService(mockRepo, nil, noopLogger{}, nil)
 	tx, err := svc.BeginTx(context.Background())
 
 	if err != nil {
@@ -86,7 +86,7 @@ func TestEmployeeService_SaveEmployeeToDB(t *testing.T) {
 
 		mockRepo.On("Save", mock.Anything, mockTx, employee).Return(nil)
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		err := svc.SaveEmployeeToDB(context.Background(), mockTx, employee)
 
 		if err != nil {
@@ -102,7 +102,7 @@ func TestEmployeeService_SaveEmployeeToDB(t *testing.T) {
 
 		mockRepo.On("Save", mock.Anything, mockTx, employee).Return(errors.New("db error"))
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		err := svc.SaveEmployeeToDB(context.Background(), mockTx, employee)
 
 		if err == nil {
@@ -118,7 +118,7 @@ func TestEmployeeService_UpdateEmployeeKeycloakID(t *testing.T) {
 
 	mockRepo.On("PatchEmployee", mock.Anything, mockTx, "emp123", "kc456").Return(nil)
 
-	svc := NewService(mockRepo, nil, noopLogger{})
+	svc := NewService(mockRepo, nil, noopLogger{}, nil)
 	err := svc.UpdateEmployeeKeycloakID(context.Background(), mockTx, "emp123", "kc456")
 
 	if err != nil {
@@ -132,7 +132,7 @@ func TestEmployeeService_SetUserPassword(t *testing.T) {
 		mockAuth := new(mocks.MockAuthClient)
 		mockAuth.On("SetPassword", mock.Anything, "user123", "newpass", false).Return(nil)
 
-		svc := NewService(nil, mockAuth, noopLogger{})
+		svc := NewService(nil, mockAuth, noopLogger{}, nil)
 		err := svc.SetUserPassword(context.Background(), "user123", "newpass")
 
 		if err != nil {
@@ -145,7 +145,7 @@ func TestEmployeeService_SetUserPassword(t *testing.T) {
 		mockAuth := new(mocks.MockAuthClient)
 		mockAuth.On("SetPassword", mock.Anything, "user123", "newpass", false).Return(errors.New("keycloak error"))
 
-		svc := NewService(nil, mockAuth, noopLogger{})
+		svc := NewService(nil, mockAuth, noopLogger{}, nil)
 		err := svc.SetUserPassword(context.Background(), "user123", "newpass")
 
 		if err == nil {
@@ -159,7 +159,7 @@ func TestEmployeeService_AssignUserRole(t *testing.T) {
 	mockAuth := new(mocks.MockAuthClient)
 	mockAuth.On("AssignRole", mock.Anything, "user123", "admin").Return(nil)
 
-	svc := NewService(nil, mockAuth, noopLogger{})
+	svc := NewService(nil, mockAuth, noopLogger{}, nil)
 	err := svc.AssignUserRole(context.Background(), "user123", "admin")
 
 	if err != nil {
@@ -175,7 +175,7 @@ func TestEmployeeService_RollbackKeycloakUser(t *testing.T) {
 	mockAuth := new(mocks.MockAuthClient)
 	mockAuth.On("DeleteUser", mock.Anything, "kc123").Return(nil)
 
-	svc := NewService(nil, mockAuth, noopLogger{})
+	svc := NewService(nil, mockAuth, noopLogger{}, nil)
 	err := svc.RollbackKeycloakUser(context.Background(), "kc123")
 
 	if err != nil {
@@ -190,7 +190,7 @@ func TestEmployeeService_LocateEmployee(t *testing.T) {
 		employee := &domain.Employee{ID: "123", Email: "test@example.com"}
 		mockRepo.On("GetEmployeeByID", mock.Anything, "123").Return(employee, nil)
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		result, err := svc.LocateEmployee(context.Background(), "123")
 
 		if err != nil {
@@ -206,7 +206,7 @@ func TestEmployeeService_LocateEmployee(t *testing.T) {
 		mockRepo := new(mocks.MockRepository)
 		mockRepo.On("GetEmployeeByID", mock.Anything, "999").Return(nil, domain.ErrPersonNotFound)
 
-		svc := NewService(mockRepo, nil, noopLogger{})
+		svc := NewService(mockRepo, nil, noopLogger{}, nil)
 		_, err := svc.LocateEmployee(context.Background(), "999")
 
 		if err != domain.ErrPersonNotFound {
