@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Update Employee Request",
+  "description": "Schema for validating employee update requests (excludes email and password)",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the employee (cannot be only whitespace)",
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": ".*\\S.*"
+    },
+    "airline": {
+      "type": "string",
+      "description": "Airline ID (obfuscated ID)",
+      "maxLength": 50,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9-]+$"
+    },
+    "identificationNumber": {
+      "type": "string",
+      "description": "Identity document number (digits only)",
+      "maxLength": 10,
+      "minLength": 7,
+      "pattern": "^[0-9]+$"
+    },
+    "bp": {
+      "type": "string",
+      "description": "BP code (digits only)",
+      "maxLength": 20,
+      "pattern": "^[0-9]+$"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether the employee is active"
+    },
+    "role": {
+      "type": "string",
+      "description": "Role of the employee",
+      "maxLength": 20,
+      "minLength": 1,
+      "enum": [
+        "pilot"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "identificationNumber",
+    "start_date",
+    "role"
+  ],
+  "additionalProperties": false
+}

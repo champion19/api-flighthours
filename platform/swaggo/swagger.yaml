@@ -1,0 +1,417 @@
+basePath: /flighthours/api/v1
+definitions:
+  github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType:
+    enum:
+    - ERROR
+    - EXITO
+    - WARNING
+    - INFO
+    - DEBUG
+    type: string
+    x-enum-varnames:
+    - TypeError
+    - TypeSuccess
+    - TypeWarning
+    - TypeInfo
+    - TypeDebug
+  handlers.CacheReloadResponse:
+    properties:
+      after_count:
+        type: integer
+      before_count:
+        type: integer
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  handlers.EmployeeRequest:
+    properties:
+      active:
+        type: boolean
+      airline:
+        type: string
+      bp:
+        type: string
+      email:
+        type: string
+      end_date:
+        type: string
+      identificationNumber:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  handlers.Link:
+    properties:
+      href:
+        type: string
+      method:
+        type: string
+      rel:
+        type: string
+    type: object
+  handlers.MessageCreatedResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      id:
+        type: string
+    type: object
+  handlers.MessageDeletedResponse:
+    type: object
+  handlers.MessageListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      count:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/handlers.MessageResponse'
+        type: array
+    type: object
+  handlers.MessageRequest:
+    properties:
+      active:
+        type: boolean
+      category:
+        type: string
+      code:
+        type: string
+      content:
+        type: string
+      module:
+        type: string
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType'
+    type: object
+  handlers.MessageResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      active:
+        type: boolean
+      category:
+        type: string
+      code:
+        type: string
+      content:
+        type: string
+      id:
+        type: string
+      module:
+        type: string
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType'
+    type: object
+  handlers.MessageUpdatedResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+    type: object
+  handlers.RegisterEmployeeResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      message:
+        type: string
+    type: object
+  middleware.APIResponse:
+    properties:
+      code:
+        description: Business message code
+        type: string
+      data: {}
+      message:
+        description: Business message content
+        type: string
+      success:
+        type: boolean
+    type: object
+  middleware.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8081
+info:
+  contact:
+    email: support@flighthours.com
+    name: Flighthours API Support
+    url: https://flighthours.com/support
+  description: API RESTful para la plataforma Flighthours, implementada con arquitectura
+    hexagonal y siguiendo los principios del Richardson Maturity Model (Nivel 2-3)
+    con HATEOAS.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Flighthours Backend API
+  version: "1.0"
+paths:
+  /messages:
+    get:
+      description: Obtiene una lista de mensajes del sistema con filtros opcionales.
+        Permite filtrar por módulo, tipo, categoría y estado activo.
+      parameters:
+      - description: 'Filtrar por módulo (ej: users, flights, bookings)'
+        in: query
+        name: module
+        type: string
+      - description: Filtrar por tipo (ERROR, WARNING, INFO, SUCCESS)
+        in: query
+        name: type
+        type: string
+      - description: Filtrar por categoría (usuario_final, sistema, validacion)
+        in: query
+        name: category
+        type: string
+      - description: Filtrar por estado activo (true, false)
+        in: query
+        name: active
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de mensajes obtenida exitosamente
+          schema:
+            $ref: '#/definitions/handlers.MessageListResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Listar mensajes del sistema
+      tags:
+      - messages
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo mensaje del sistema con tipo, categoría y contenido.
+        Los mensajes se utilizan para mostrar información, advertencias y errores
+        a los usuarios.
+      parameters:
+      - description: Datos del mensaje a crear
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.MessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Mensaje creado exitosamente
+          schema:
+            $ref: '#/definitions/handlers.MessageCreatedResponse'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "409":
+          description: El código del mensaje ya existe
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Crear un nuevo mensaje del sistema
+      tags:
+      - messages
+  /messages/{id}:
+    delete:
+      description: Elimina un mensaje del sistema de forma permanente. Esta acción
+        no se puede deshacer.
+      parameters:
+      - description: ID del mensaje (encoded)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mensaje eliminado exitosamente
+          schema:
+            $ref: '#/definitions/handlers.MessageDeletedResponse'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Mensaje no encontrado
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Eliminar un mensaje del sistema
+      tags:
+      - messages
+    get:
+      description: Obtiene los detalles de un mensaje del sistema específico por su
+        ID.
+      parameters:
+      - description: ID del mensaje (encoded)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mensaje encontrado exitosamente
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Mensaje no encontrado
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Obtener un mensaje por ID
+      tags:
+      - messages
+    put:
+      consumes:
+      - application/json
+      description: Actualiza un mensaje del sistema existente. Permite modificar tipo,
+        categoría, contenido y estado activo.
+      parameters:
+      - description: ID del mensaje (encoded)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos del mensaje a actualizar
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.MessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mensaje actualizado exitosamente
+          schema:
+            $ref: '#/definitions/handlers.MessageUpdatedResponse'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Mensaje no encontrado
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Actualizar un mensaje del sistema
+      tags:
+      - messages
+  /messages/reload:
+    post:
+      description: Recarga el caché de mensajes desde la base de datos. Útil después
+        de hacer cambios masivos a mensajes.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Caché recargado exitosamente
+          schema:
+            $ref: '#/definitions/handlers.CacheReloadResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Recargar caché de mensajes
+      tags:
+      - messages
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva cuenta de empleado en el sistema con sincronización
+        a Keycloak. Incluye validación de datos, verificación de duplicados y creación
+        de usuario en el sistema de autenticación.
+      parameters:
+      - description: Datos del empleado a registrar
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.EmployeeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Cuenta creada exitosamente
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.RegisterEmployeeResponse'
+              type: object
+        "400":
+          description: Error de validación - Datos inválidos o incompletos
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "409":
+          description: Conflicto - Email o número de identidad ya registrado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: Registrar nueva cuenta de empleado
+      tags:
+      - accounts
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
