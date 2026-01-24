@@ -1,0 +1,22 @@
+#Configuracion de Prometheus para FlightHours
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+#Configuracion de scraping
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+ # Monitoreo del Backend flighthours
+  - job_name: "flighthours-backend"
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ["host.docker.internal:8081"]
+
+  # Monitoreo de Grafana
+  - job_name: "grafana"
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ["grafana:3000"]

@@ -1,0 +1,47 @@
+{
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Unique message code (e.g., MOD_U_DUP_ERR_00001)",
+      "pattern": "^[A-Z_0-9]+$",
+      "maxLength": 50,
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "description": "Message type",
+      "enum": ["ERROR", "SUCCESS", "WARNING", "INFO", "DEBUG"]
+    },
+    "category": {
+      "type": "string",
+      "description": "Message category (e.g., usuario_final, developer)",
+      "maxLength": 50,
+      "minLength": 1
+    },
+    "module": {
+      "type": "string",
+      "description": "Module identifier (e.g., users, auth, messages)",
+      "maxLength": 50,
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "description": "Message title",
+      "maxLength": 200,
+      "minLength": 1
+    },
+    "content": {
+      "type": "string",
+      "description": "Message content (can include placeholders like ${0}, ${1})",
+      "maxLength": 500,
+      "minLength": 1
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Indicates if the message is active",
+      "default": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,41 @@
+# Rotación de logs del backend Flighthours
+
+# Los logs se rotan diariamente y se mantienen por 7 días
+
+/var/log/flighthours-backend/backend-*.log {
+    # Rotar diariamente
+    daily
+
+    # Mantener logs de los últimos 7 días
+    rotate 7
+
+    # Comprimir logs antiguos
+    compress
+
+    # No comprimir el log más reciente
+    delaycompress
+
+    # No fallar si el archivo no existe
+    missingok
+
+    # No rotar si el archivo está vacío
+    notifempty
+
+    # Crear nuevo archivo después de rotar
+    create 0644 root root
+
+    # Formato de fecha en el nombre del archivo rotado
+    dateext
+    dateformat -%Y%m%d
+
+    # Usar fecha en lugar de número para el archivo rotado
+    dateyesterday
+
+    # Copiar y truncar en lugar de mover (para logs en uso)
+    copytruncate
+
+    # Ejecutar después de rotar
+    postrotate
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Logs rotados exitosamente" >> /var/log/logrotate.log
+    endscript
+}
