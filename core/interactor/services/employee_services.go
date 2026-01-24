@@ -13,16 +13,18 @@ import (
 )
 
 type service struct {
-	repository output.Repository
-	keycloak   output.AuthClient
-	logger     logger.Logger
+	repository   output.Repository
+	keycloak     output.AuthClient
+	logger       logger.Logger
+	jwtValidator *jwt.JWKSValidator
 }
 
-func NewService(repository output.Repository, keycloak output.AuthClient, logger logger.Logger) input.Service {
+func NewService(repository output.Repository, keycloak output.AuthClient, logger logger.Logger, jwtValidator *jwt.JWKSValidator) input.Service {
 	return &service{
-		repository: repository,
-		keycloak:   keycloak,
-		logger:     logger,
+		repository:   repository,
+		keycloak:     keycloak,
+		logger:       logger,
+		jwtValidator: jwtValidator,
 	}
 }
 func (s service) GetEmployeeByEmail(ctx context.Context, email string) (*domain.Employee, error) {
@@ -446,7 +448,19 @@ func (s service) Login(ctx context.Context, email, password string) (*gocloak.JW
 func (s service) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
 	s.logger.Info(logger.LogKeycloakEmailVerify)
 
-	// Extract email from the JWT token
+	// Step 1: Validate JWT signature using JWKS (if validator is available)
+	if s.jwtValidator != nil {
+		_, err := s.jwtValidator.ValidateToken(token)
+		if err != nil {
+			s.logger.Error(logger.LogKeycloakEmailVerifyError, "error", err, "reason", "JWT signature validation failed")
+			return "", domain.ErrInvalidToken
+		}
+		s.logger.Debug("JWT signature validated successfully")
+	} else {
+		s.logger.Warn("JWKS validator not available, skipping signature validation")
+	}
+
+	// Step 2: Extract email from the JWT token
 	tokenParser := jwt.NewTokenParser()
 	email, err := tokenParser.ExtractEmailFromToken(token)
 	if err != nil {

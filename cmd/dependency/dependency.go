@@ -69,8 +69,27 @@ func Init() (*Dependencies, error) {
 		return nil, err
 	}
 
-	// Crear EmployeeService con todas las dependencias
-	employeeService := services.NewService(employeeRepo, keycloakClient, log)
+	// JWKS Validator (JWT signature and expiration validation)
+	// This fetches Keycloak's public keys for local token validation
+	// Must be initialized before EmployeeService
+	var jwtValidator *jwt.JWKSValidator
+	jwtConfig := jwt.JWKSConfig{
+		JWKSURL:         cfg.GetKeycloakJWKSURL(),
+		Issuer:          cfg.GetKeycloakIssuerURL(),
+		RefreshInterval: 15 * time.Minute, // Refresh keys every 15 minutes
+	}
+	jwtValidator, err = jwt.NewJWKSValidator(context.Background(), jwtConfig)
+	if err != nil {
+		log.Warn("JWKS validator initialization failed, using fallback validation", "error", err)
+		// Don't fail startup - middleware will fall back to simple parsing
+		// This allows the app to start even if Keycloak is temporarily unavailable
+		jwtValidator = nil
+	} else {
+		log.Success("JWKS validator initialized", "jwks_url", jwtConfig.JWKSURL)
+	}
+
+	// Crear EmployeeService con todas las dependencias (incluyendo JWT validator)
+	employeeService := services.NewService(employeeRepo, keycloakClient, log, jwtValidator)
 
 	interactorFacade := interactor.NewInteractor(employeeService, log)
 
@@ -111,24 +130,6 @@ func Init() (*Dependencies, error) {
 	messageService := services.NewMessageService(msgRepo, log)
 	messageInteractor := interactor.NewMessageInteractor(messageService, log)
 	log.Success(logger.LogDependencyMessageIntInit)
-
-// JWKS Validator (JWT signature and expiration validation)
-	// This fetches Keycloak's public keys for local token validation
-	var jwtValidator *jwt.JWKSValidator
-	jwtConfig := jwt.JWKSConfig{
-		JWKSURL:         cfg.GetKeycloakJWKSURL(),
-		Issuer:          cfg.GetKeycloakIssuerURL(),
-		RefreshInterval: 15 * time.Minute, // Refresh keys every 15 minutes
-	}
-	jwtValidator, err = jwt.NewJWKSValidator(context.Background(), jwtConfig)
-	if err != nil {
-		log.Warn("JWKS validator initialization failed, using fallback validation", "error", err)
-		// Don't fail startup - middleware will fall back to simple parsing
-		// This allows the app to start even if Keycloak is temporarily unavailable
-		jwtValidator = nil
-	} else {
-		log.Success("JWKS validator initialized", "jwks_url", jwtConfig.JWKSURL)
-	}
 
 	return &Dependencies{
 		EmployeeService:   employeeService,
