@@ -1,6 +1,5 @@
 package logger
 
-
 const (
 	LogAppStarting          = "Iniciando aplicación FlighHours Backend"
 	LogAppConfigLoaded      = "Configuración cargada exitosamente"
@@ -15,7 +14,6 @@ const (
 	LogAppShuttingDown      = "Apagando aplicación gracefully"
 )
 
-
 const (
 	LogRegRequestReceived   = "Nueva solicitud de registro recibida"
 	LogRegProcessing        = "Procesando registro de usuario"
@@ -27,7 +25,6 @@ const (
 	LogRegKeycloakSync      = "Sincronizando usuario con Keycloak"
 	LogRegKeycloakSyncError = "Error sincronizando con Keycloak"
 )
-
 
 const (
 	LogDBQueryExecuting       = "Ejecutando query de base de datos"
@@ -83,87 +80,86 @@ const (
 )
 
 const (
-	LogKeycloakClientInit                 = "Inicializando cliente Keycloak"
-	LogKeycloakClientOK                   = "Cliente Keycloak inicializado correctamente"
-	LogKeycloakClientError                = "Error inicializando cliente Keycloak"
-	LogKeycloakClientCreated              = "Cliente Keycloak creado exitosamente"
-	LogKeycloakConfigNil                  = "Configuración de Keycloak no puede ser nil"
-	LogKeycloakAdminAuth                  = "Autenticando admin de Keycloak"
-	LogKeycloakAdminAuthError             = "Error autenticando admin de Keycloak"
-	LogKeycloakAdminTokenInit             = "Inicializando token de admin"
-	LogKeycloakAdminTokenInitError        = "Error inicializando token de admin"
-	LogKeycloakTokenRefresh               = "Refrescando token de admin de Keycloak"
-	LogKeycloakTokenRefreshOK             = "Token de admin refrescado exitosamente"
-	LogKeycloakTokenRefreshErr            = "Error refrescando token de admin de Keycloak"
-	LogKeycloakTokenEnsure                = "Asegurando token válido"
-	LogKeycloakTokenEnsureError           = "Error asegurando token válido"
-	LogKeycloakUserLogin                  = "Intentando login de usuario"
-	LogKeycloakUserLoginOK                = "Login de usuario exitoso"
-	LogKeycloakUserLoginError             = "Error en login de usuario"
-	LogKeycloakUserLoginFailed            = "Login de usuario falló"
-	LogKeycloakUserCreate                 = "Creando usuario en Keycloak"
-	LogKeycloakUserCreateOK               = "Usuario creado en Keycloak"
-	LogKeycloakUserCreateError            = "Error creando usuario en Keycloak"
-	LogKeycloakUserNil                    = "Usuario no puede ser nil"
-	LogKeycloakUserGet                    = "Obteniendo usuario de Keycloak"
-	LogKeycloakUserGetByEmail             = "Obteniendo usuario por email"
-	LogKeycloakUserGetByEmailError        = "Error obteniendo usuario por email"
-	LogKeycloakUserGetByID                = "Obteniendo usuario por ID"
-	LogKeycloakUserGetByIDError           = "Error obteniendo usuario por ID"
-	LogKeycloakUserGetError               = "Error obteniendo usuario de Keycloak"
-	LogKeycloakUserNotFound               = "Usuario no encontrado en Keycloak"
-	LogKeycloakUserDelete                 = "Eliminando usuario de Keycloak"
-	LogKeycloakUserDeleteOK               = "Usuario eliminado de Keycloak"
-	LogKeycloakUserDeleteError            = "Error eliminando usuario de Keycloak"
-	LogKeycloakPasswordSet                = "Configurando password para usuario"
-	LogKeycloakPasswordSetOK              = "Password configurado exitosamente"
-	LogKeycloakPasswordSetError           = "Error configurando password"
-	LogKeycloakRoleGet                    = "Obteniendo rol"
-	LogKeycloakRoleGetError               = "Error obteniendo rol"
-	LogKeycloakRoleAssign                 = "Asignando rol a usuario"
-	LogKeycloakRoleAssignOK               = "Rol asignado exitosamente"
-	LogKeycloakRoleAssignError            = "Error asignando rol a usuario"
-	LogKeycloakUserTokenRefresh           = "Refrescando token de usuario"
-	LogKeycloakUserTokenRefreshOK         = "Token de usuario refrescado exitosamente"
-	LogKeycloakUserTokenRefreshErr        = "Error refrescando token de usuario"
-	LogKeycloakEmailEmpty                 = "Email no puede estar vacío"
-	LogKeycloakUserIDEmpty                = "ID de usuario no puede estar vacío"
-	LogKeycloakPasswordEmpty              = "Password no puede estar vacío"
-	LogKeycloakRoleNameEmpty              = "Nombre de rol no puede estar vacío"
-	LogKeycloakRefreshTokenEmpty          = "Refresh token no puede estar vacío"
-	LogKeycloakUsernameEmpty              = "Nombre de usuario no puede estar vacío"
-	LogKeycloakSendVerificationEmail      = "Enviando email de verificación"
-	LogKeycloakSendVerificationEmailOK    = "Email de verificación enviado exitosamente"
-	LogKeycloakSendVerificationEmailError = "Error enviando email de verificación"
-	LogKeycloakSendPasswordReset          = "Enviando email de recuperación de contraseña"
-	LogKeycloakSendPasswordResetOK        = "Email de recuperación enviado exitosamente"
-	LogKeycloakSendPasswordResetError     = "Error enviando email de recuperación"
-	LogKeycloakSearchUserByEmail          = "Buscando usuario por email en Keycloak"
-	LogKeycloakSearchUserByEmailOK        = "Usuario encontrado por email en Keycloak"
-	LogKeycloakEmailVerify                = "Verificando email de usuario"
-	LogKeycloakEmailVerifyOK              = "Email verificado exitosamente"
-	LogKeycloakEmailVerifyError           = "Error verificando email"
-	LogKeycloakEmailAlreadyVerified       = "Email ya ha sido verificado"
-	LogKeycloakPasswordUpdate             = "Actualizando contraseña de usuario"
-	LogKeycloakPasswordUpdateOK           = "Contraseña actualizada exitosamente"
-	LogKeycloakPasswordUpdateError        = "Error actualizando contraseña"
-	LogKeycloakPasswordMismatch           = "Las contraseñas no coinciden"
-	LogKeycloakPasswordTokenValidation    = "Validando token de actualización de contraseña"
-	LogKeycloakPasswordTokenValidOK       = "Token de actualización validado"
-	LogKeycloakPasswordTokenInvalid       = "Token de actualización inválido"
+	LogKeycloakClientInit                   = "Inicializando cliente Keycloak"
+	LogKeycloakClientOK                     = "Cliente Keycloak inicializado correctamente"
+	LogKeycloakClientError                  = "Error inicializando cliente Keycloak"
+	LogKeycloakClientCreated                = "Cliente Keycloak creado exitosamente"
+	LogKeycloakConfigNil                    = "Configuración de Keycloak no puede ser nil"
+	LogKeycloakAdminAuth                    = "Autenticando admin de Keycloak"
+	LogKeycloakAdminAuthError               = "Error autenticando admin de Keycloak"
+	LogKeycloakAdminTokenInit               = "Inicializando token de admin"
+	LogKeycloakAdminTokenInitError          = "Error inicializando token de admin"
+	LogKeycloakTokenRefresh                 = "Refrescando token de admin de Keycloak"
+	LogKeycloakTokenRefreshOK               = "Token de admin refrescado exitosamente"
+	LogKeycloakTokenRefreshErr              = "Error refrescando token de admin de Keycloak"
+	LogKeycloakTokenEnsure                  = "Asegurando token válido"
+	LogKeycloakTokenEnsureError             = "Error asegurando token válido"
+	LogKeycloakUserLogin                    = "Intentando login de usuario"
+	LogKeycloakUserLoginOK                  = "Login de usuario exitoso"
+	LogKeycloakUserLoginError               = "Error en login de usuario"
+	LogKeycloakUserLoginFailed              = "Login de usuario falló"
+	LogKeycloakUserCreate                   = "Creando usuario en Keycloak"
+	LogKeycloakUserCreateOK                 = "Usuario creado en Keycloak"
+	LogKeycloakUserCreateError              = "Error creando usuario en Keycloak"
+	LogKeycloakUserNil                      = "Usuario no puede ser nil"
+	LogKeycloakUserGet                      = "Obteniendo usuario de Keycloak"
+	LogKeycloakUserGetByEmail               = "Obteniendo usuario por email"
+	LogKeycloakUserGetByEmailError          = "Error obteniendo usuario por email"
+	LogKeycloakUserGetByID                  = "Obteniendo usuario por ID"
+	LogKeycloakUserGetByIDError             = "Error obteniendo usuario por ID"
+	LogKeycloakUserGetError                 = "Error obteniendo usuario de Keycloak"
+	LogKeycloakUserNotFound                 = "Usuario no encontrado en Keycloak"
+	LogKeycloakUserDelete                   = "Eliminando usuario de Keycloak"
+	LogKeycloakUserDeleteOK                 = "Usuario eliminado de Keycloak"
+	LogKeycloakUserDeleteError              = "Error eliminando usuario de Keycloak"
+	LogKeycloakPasswordSet                  = "Configurando password para usuario"
+	LogKeycloakPasswordSetOK                = "Password configurado exitosamente"
+	LogKeycloakPasswordSetError             = "Error configurando password"
+	LogKeycloakRoleGet                      = "Obteniendo rol"
+	LogKeycloakRoleGetError                 = "Error obteniendo rol"
+	LogKeycloakRoleAssign                   = "Asignando rol a usuario"
+	LogKeycloakRoleAssignOK                 = "Rol asignado exitosamente"
+	LogKeycloakRoleAssignError              = "Error asignando rol a usuario"
+	LogKeycloakUserTokenRefresh             = "Refrescando token de usuario"
+	LogKeycloakUserTokenRefreshOK           = "Token de usuario refrescado exitosamente"
+	LogKeycloakUserTokenRefreshErr          = "Error refrescando token de usuario"
+	LogKeycloakEmailEmpty                   = "Email no puede estar vacío"
+	LogKeycloakUserIDEmpty                  = "ID de usuario no puede estar vacío"
+	LogKeycloakPasswordEmpty                = "Password no puede estar vacío"
+	LogKeycloakRoleNameEmpty                = "Nombre de rol no puede estar vacío"
+	LogKeycloakRefreshTokenEmpty            = "Refresh token no puede estar vacío"
+	LogKeycloakUsernameEmpty                = "Nombre de usuario no puede estar vacío"
+	LogKeycloakSendVerificationEmail        = "Enviando email de verificación"
+	LogKeycloakSendVerificationEmailOK      = "Email de verificación enviado exitosamente"
+	LogKeycloakSendVerificationEmailError   = "Error enviando email de verificación"
+	LogKeycloakSendPasswordReset            = "Enviando email de recuperación de contraseña"
+	LogKeycloakSendPasswordResetOK          = "Email de recuperación enviado exitosamente"
+	LogKeycloakSendPasswordResetError       = "Error enviando email de recuperación"
+	LogKeycloakSearchUserByEmail            = "Buscando usuario por email en Keycloak"
+	LogKeycloakSearchUserByEmailOK          = "Usuario encontrado por email en Keycloak"
+	LogKeycloakEmailVerify                  = "Verificando email de usuario"
+	LogKeycloakEmailVerifyOK                = "Email verificado exitosamente"
+	LogKeycloakEmailVerifyError             = "Error verificando email"
+	LogKeycloakEmailAlreadyVerified         = "Email ya ha sido verificado"
+	LogKeycloakPasswordUpdate               = "Actualizando contraseña de usuario"
+	LogKeycloakPasswordUpdateOK             = "Contraseña actualizada exitosamente"
+	LogKeycloakPasswordUpdateError          = "Error actualizando contraseña"
+	LogKeycloakPasswordMismatch             = "Las contraseñas no coinciden"
+	LogKeycloakPasswordTokenValidation      = "Validando token de actualización de contraseña"
+	LogKeycloakPasswordTokenValidOK         = "Token de actualización validado"
+	LogKeycloakPasswordTokenInvalid         = "Token de actualización inválido"
 	LogKeycloakLoginCheckingVerification    = "Verificando estado de email antes de login"
 	LogKeycloakLoginEmailNotVerified        = "Login rechazado: email no verificado"
 	LogKeycloakLoginEmailVerified           = "Email verificado, procediendo con login"
 	LogKeycloakLoginResendingVerification   = "Reenviando email de verificación automáticamente"
 	LogKeycloakLoginResendVerificationOK    = "Email de verificación reenviado exitosamente"
 	LogKeycloakLoginResendVerificationError = "Error reenviando email de verificación"
-
-	LogKeycloakChangePassword           = "Cambiando contraseña de usuario autenticado"
-	LogKeycloakChangePasswordValidating = "Validando contraseña actual del usuario"
-	LogKeycloakChangePasswordInvalid    = "Contraseña actual incorrecta"
-	LogKeycloakChangePasswordOK         = "Contraseña cambiada exitosamente"
-	LogKeycloakChangePasswordError      = "Error cambiando contraseña"
-	LogKeycloakChangePasswordMismatch   = "Las contraseñas nuevas no coinciden"
+	LogKeycloakChangePassword               = "Cambiando contraseña de usuario autenticado"
+	LogKeycloakChangePasswordValidating     = "Validando contraseña actual del usuario"
+	LogKeycloakChangePasswordInvalid        = "Contraseña actual incorrecta"
+	LogKeycloakChangePasswordOK             = "Contraseña cambiada exitosamente"
+	LogKeycloakChangePasswordError          = "Error cambiando contraseña"
+	LogKeycloakChangePasswordMismatch       = "Las contraseñas nuevas no coinciden"
 )
 
 const (
@@ -244,12 +240,18 @@ const (
 	LogEmployeeKeycloakStatusUpdated = "Estado del usuario actualizado en Keycloak"
 	LogEmployeeKeycloakRoleUpdate    = "Actualizando rol del usuario en Keycloak"
 	LogEmployeeKeycloakRoleUpdated   = "Rol del usuario actualizado en Keycloak"
-	LogEmployeeDeletingKeycloak    = "Eliminando usuario de Keycloak"
-	LogEmployeeDeleteKeycloakError = "Error eliminando usuario de Keycloak"
-	LogEmployeeDeletedKeycloak     = "Usuario eliminado de Keycloak exitosamente"
-	LogEmployeeDeletingDB          = "Eliminando empleado de base de datos"
-	LogEmployeeDeleteDBError       = "Error eliminando empleado de base de datos"
-	LogEmployeeDeleteComplete      = "Empleado eliminado exitosamente"
+	LogEmployeeDeletingKeycloak      = "Eliminando usuario de Keycloak"
+	LogEmployeeDeleteKeycloakError   = "Error eliminando usuario de Keycloak"
+	LogEmployeeDeletedKeycloak       = "Usuario eliminado de Keycloak exitosamente"
+	LogEmployeeDeletingDB            = "Eliminando empleado de base de datos"
+	LogEmployeeDeleteDBError         = "Error eliminando empleado de base de datos"
+	LogEmployeeDeleteComplete        = "Empleado eliminado exitosamente"
+
+	// Repository layer - Employee Update
+	LogRepoEmployeeUpdateStart   = "Iniciando actualización de empleado en repositorio"
+	LogRepoEmployeeUpdateTxOK    = "Transacción de repositorio validada correctamente"
+	LogRepoEmployeeUpdateQueryOK = "Query de actualización ejecutado exitosamente"
+	LogRepoEmployeeUpdateTxErr   = "Error: tipo de transacción inválido"
 )
 
 const (
@@ -286,7 +288,6 @@ const (
 	LogUtilsPathError        = "Error resolviendo ruta"
 )
 
-
 const (
 	LogMiddlewareValidationStart    = "Iniciando validación de request body"
 	LogMiddlewareValidationOK       = "Validación exitosa"
@@ -299,7 +300,6 @@ const (
 	LogMiddlewareErrorHandling      = "Manejando error de middleware"
 	LogMiddlewareNotFound           = "Endpoint no encontrado"
 )
-
 
 const (
 	LogSchemaValidatorInit      = "Inicializando validador de esquemas"
@@ -317,7 +317,6 @@ const (
 	LogSchemaNotInitialized     = "Validador no inicializado"
 )
 
-
 const (
 	LogConfigFileNotFound    = "Archivo de configuración no encontrado"
 	LogConfigFallback        = "Usando configuración por defecto"
@@ -329,7 +328,6 @@ const (
 	LogConfigValidating      = "Validando configuración"
 	LogConfigValidationError = "Error validando configuración"
 )
-
 
 const (
 	LogMessageServiceInit       = "Inicializando servicio de mensajes"
@@ -372,7 +370,6 @@ const (
 	LogMessageIDDecodeError     = "Error decodificando ID"
 )
 
-
 const (
 	LogPrometheusInit          = "Inicializando métricas de Prometheus"
 	LogPrometheusInitOK        = "Métricas de Prometheus inicializadas correctamente"
@@ -382,7 +379,6 @@ const (
 	LogPrometheusScrapeSuccess = "Scraping de métricas exitoso"
 	LogPrometheusScrapeError   = "Error durante scraping de métricas"
 )
-
 
 const (
 	LogEmployeeServiceSearchByEmail             = "Buscando persona por email"
@@ -424,7 +420,6 @@ const (
 	LogEmployeeServiceRollbackEmployeeError     = "Error en rollback de empleado"
 )
 
-
 const (
 	LogEmployeeInteractorRegStart             = "Iniciando proceso de registro"
 	LogEmployeeInteractorStep1_Error          = "[PASO 1/8] Validaciones fallidas"
@@ -456,15 +451,12 @@ const (
 	LogEmployeeInteractorCleanup_OK           = "Estado inconsistente limpiado exitosamente"
 )
 
-
 const (
 	LogDependencyMessageRepoInit = "Dependencia de repositorio de mensajes inicializada exitosamente"
 	LogDependencyMessageIntInit  = "Error inicializando dependencia de repositorio de mensajes"
 )
 
-
 const (
-
 	LogMessageInteractorCreateStep1Error = "[PASO 1/3] Validación de mensaje fallida"
 	LogMessageInteractorCreateStep1OK    = "[PASO 1/3] Validación de mensaje completada"
 	LogMessageInteractorCreateStep2Error = "[PASO 2/3] Error iniciando transacción"
@@ -474,7 +466,6 @@ const (
 	LogMessageInteractorCreateCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
 	LogMessageInteractorCreateCommitOK   = "Transacción confirmada exitosamente"
 	LogMessageInteractorCreateComplete   = "Mensaje creado exitosamente"
-
 
 	LogMessageInteractorUpdateStep1Error = "[PASO 1/4] Mensaje no encontrado"
 	LogMessageInteractorUpdateStep1OK    = "[PASO 1/4] Mensaje encontrado"
@@ -488,7 +479,6 @@ const (
 	LogMessageInteractorUpdateCommitOK   = "Transacción confirmada exitosamente"
 	LogMessageInteractorUpdateComplete   = "Mensaje actualizado exitosamente"
 
-
 	LogMessageInteractorDeleteStep1Error = "[PASO 1/3] Mensaje no encontrado"
 	LogMessageInteractorDeleteStep1OK    = "[PASO 1/3] Mensaje encontrado"
 	LogMessageInteractorDeleteStep2Error = "[PASO 2/3] Error iniciando transacción"
@@ -499,11 +489,9 @@ const (
 	LogMessageInteractorDeleteCommitOK   = "Transacción confirmada exitosamente"
 	LogMessageInteractorDeleteComplete   = "Mensaje eliminado exitosamente"
 
-
 	LogMessageInteractorRollbackError = "ROLLBACK BD FALLÓ - ALERTA CRÍTICA"
 	LogMessageInteractorRollbackOK    = "Rollback BD ejecutado correctamente"
 )
-
 
 const (
 	LogAirlineGet             = "Obteniendo información de aerolínea"
@@ -524,7 +512,6 @@ const (
 	LogAirlineRepoInitError   = "Error inicializando repositorio de aerolíneas"
 )
 
-
 const (
 	LogAirportGet             = "Obteniendo información de aeropuerto"
 	LogAirportGetOK           = "Aeropuerto obtenido exitosamente"
@@ -543,7 +530,6 @@ const (
 	LogAirportListOK          = "Aeropuertos listados exitosamente"
 	LogAirportListError       = "Error listando aeropuertos"
 )
-
 
 const (
 	LogDailyLogbookGet             = "Obteniendo información de bitácora diaria"
@@ -591,7 +577,6 @@ const (
 	LogAircraftRegistrationRepoInitOK    = "Repositorio de matrículas inicializado"
 	LogAircraftRegistrationRepoInitError = "Error inicializando repositorio de matrículas"
 )
-
 
 const (
 	LogAircraftModelGet             = "Obteniendo información de modelo de aeronave"
@@ -727,7 +712,6 @@ const (
 	LogCityGetError = "Error obteniendo aeropuertos por ciudad"
 	LogCityNotFound = "Ciudad no encontrada (sin aeropuertos)"
 )
-
 
 const (
 	LogCountryGet      = "Obteniendo aeropuertos por país"

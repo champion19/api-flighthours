@@ -98,6 +98,10 @@ func (f *fakeService) GetEmployeesByRole(context.Context, string) ([]domain.Empl
 	return nil, errors.New("not implemented")
 }
 
+func (f *fakeService) UpdateEmployee(context.Context, output.Tx, domain.Employee) error {
+	return nil
+}
+
 type fakeServiceErr struct {
 	err error
 }
@@ -157,6 +161,10 @@ func (f *fakeServiceErr) GetEmployeeByKeycloakID(context.Context, string) (*doma
 
 func (f *fakeServiceErr) GetEmployeesByRole(context.Context, string) ([]domain.Employee, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (f *fakeServiceErr) UpdateEmployee(context.Context, output.Tx, domain.Employee) error {
+	return nil
 }
 
 type fakeMessageCacheRepo struct {

@@ -127,13 +127,11 @@ type ChangePasswordResponse struct {
 	Email   string `json:"email,omitempty"`
 }
 
-// UpdateEmployeeRequest - DTO para actualizar información general del empleado
-// Excluye email y password ya que se manejan en endpoints separados
+// UpdateEmployeeRequest - DTO para actualizar información básica del empleado
+// Excluye: email, password (endpoints separados), airline, bp (HU24 - Empleado Aerolínea)
 type UpdateEmployeeRequest struct {
 	Name                 string `json:"name"`
-	Airline              string `json:"airline"`
 	IdentificationNumber string `json:"identificationNumber"`
-	Bp                   string `json:"bp"`
 	StartDate            string `json:"start_date"`
 	EndDate              string `json:"end_date"`
 	Active               bool   `json:"active"`
@@ -182,17 +180,14 @@ func (c *ChangePasswordRequest) Sanitize() {
 // Sanitize trims whitespace from UpdateEmployeeRequest fields
 func (u *UpdateEmployeeRequest) Sanitize() {
 	u.Name = TrimString(u.Name)
-	u.Airline = TrimString(u.Airline)
 	u.IdentificationNumber = TrimString(u.IdentificationNumber)
-	u.Bp = TrimString(u.Bp)
 	u.StartDate = TrimString(u.StartDate)
 	u.EndDate = TrimString(u.EndDate)
 	u.Role = TrimString(u.Role)
 }
 
-// ToUpdateData convierte el request a un mapa de campos actualizables
-// Se usa con un empleado existente para preservar email, password y keycloak_user_id
-// Returns error if date validation fails (invalid format or start_date > end_date)
+// ToUpdateData convierte el request a un domain.Employee para actualización
+// Preserva: email, password, keycloak_user_id, airline, bp del empleado existente
 func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.Employee, error) {
 	layout := "2006-01-02"
 
@@ -215,7 +210,6 @@ func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.E
 	}
 
 	// Validate: start_date cannot be after end_date
-	// Only validate if both dates are set (endDate is not zero)
 	if !endDate.IsZero() && startDate.After(endDate) {
 		return domain.Employee{}, domain.ErrStartDateAfterEndDate
 	}
@@ -223,16 +217,16 @@ func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.E
 	return domain.Employee{
 		ID:                   existing.ID,
 		Name:                 u.Name,
-		Airline:              u.Airline,
+		Airline:              existing.Airline,  // Preservar airline (HU24)
 		Email:                existing.Email,    // Preservar email
-		Password:             existing.Password, // Preservar password (aunque no está en BD)
+		Password:             existing.Password, // Preservar password
 		IdentificationNumber: u.IdentificationNumber,
-		Bp:                   u.Bp,
+		Bp:                   existing.Bp, // Preservar bp (HU24)
 		StartDate:            startDate,
 		EndDate:              endDate,
 		Active:               u.Active,
 		Role:                 u.Role,
-		KeycloakUserID:       existing.KeycloakUserID, // Preservar keycloak_user_id
+		KeycloakUserID:       existing.KeycloakUserID,
 	}, nil
 }
 

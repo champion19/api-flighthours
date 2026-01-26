@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 func (h handler) RegisterEmployee() func(c *gin.Context) {
 
 	return func(c *gin.Context) {
@@ -83,7 +82,6 @@ func (h handler) RegisterEmployee() func(c *gin.Context) {
 		h.Response.Success(c, domain.MsgUserRegistered)
 	}
 }
-
 
 func (h handler) ResendVerificationEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -194,7 +192,7 @@ func (h handler) VerifyEmailByToken() gin.HandlerFunc {
 	}
 }
 
-func (h handler) GetMe() gin.HandlerFunc {
+func (h handler) GetEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
@@ -270,5 +268,76 @@ func (h handler) ChangePassword() gin.HandlerFunc {
 
 		log.Success(logger.LogKeycloakChangePasswordOK, "email", email, "client_ip", c.ClientIP())
 		h.Response.SuccessWithData(c, domain.MsgKCPwdChanged, response)
+	}
+}
+
+// UpdateEmployee - PUT /employees/me - HU23
+// Updates the authenticated employee's basic information
+// Preserves: email, password, airline, bp, keycloak_user_id
+func (h handler) UpdateEmployee() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogEmployeeUpdateRequest, "endpoint", "PUT /employees/me", "client_ip", c.ClientIP())
+
+		// Get authenticated user from context
+		existingEmployee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			log.Error(logger.LogEmployeeNotFound, "error", "authenticated user not in context", "client_ip", c.ClientIP())
+			c.Error(domain.ErrUserNotFound)
+			return
+		}
+
+		// Bind and sanitize request
+		var req UpdateEmployeeRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Error(logger.LogRegJSONParseError, "error", err, "client_ip", c.ClientIP())
+			c.Error(domain.ErrInvalidJSONFormat)
+			return
+		}
+
+		req.Sanitize()
+
+		// Convert request to domain, preserving immutable fields from existing employee
+		employeeDomain, err := req.ToUpdateData(existingEmployee)
+		if err != nil {
+			log.Error(logger.LogEmployeeUpdateError, "email", existingEmployee.Email, "error", err, "client_ip", c.ClientIP())
+			switch err {
+			case domain.ErrStartDateAfterEndDate:
+				h.Response.Error(c, domain.MsgValStartDateAfterEndDate)
+			case domain.ErrInvalidDateFormat:
+				h.Response.Error(c, domain.MsgValInvalidDateFormat)
+			default:
+				h.Response.Error(c, domain.MsgValBadFormat)
+			}
+			return
+		}
+
+		// Call interactor
+		result, err := h.Interactor.UpdateEmployee(c, employeeDomain)
+		if err != nil {
+			log.Error(logger.LogEmployeeUpdateError, "employee_id", existingEmployee.ID, "error", err, "client_ip", c.ClientIP())
+			c.Error(err)
+			return
+		}
+
+		// Encode ID for response
+		encodedID, err := h.EncodeID(result.ID)
+		if err != nil {
+			h.HandleIDEncodingError(c, result.ID, err)
+			return
+		}
+
+		// Build response with HATEOAS links
+		baseURL := GetBaseURL(c)
+		response := UpdateEmployeeResponse{
+			ID:      encodedID,
+			Updated: result.Updated,
+			Links:   BuildEmployeeLinks(baseURL, encodedID),
+		}
+
+		log.Success(logger.LogEmployeeUpdateComplete, "employee_id", result.ID, "email", existingEmployee.Email, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgUserUpdated, response)
 	}
 }

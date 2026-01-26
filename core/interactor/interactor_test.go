@@ -130,9 +130,12 @@ func (f *fakeService) GetEmployeeByKeycloakID(context.Context, string) (*domain.
 	return nil, errors.New("not implemented")
 }
 
-
 func (f *fakeService) GetEmployeesByRole(context.Context, string) ([]domain.Employee, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (f *fakeService) UpdateEmployee(context.Context, output.Tx, domain.Employee) error {
+	return nil
 }
 
 func TestInteractor_RegisterEmployee(t *testing.T) {

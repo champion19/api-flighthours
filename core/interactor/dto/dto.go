@@ -23,6 +23,12 @@ type TokenResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
+// UpdateEmployee - DTO for employee update response (HU23)
+type UpdateEmployee struct {
+	ID      string `json:"id"`
+	Updated bool   `json:"updated"`
+	Message string `json:"message"`
+}
 
 func FromDomainToDTO(employee *domain.Employee) *RegisterEmployee {
 	return &RegisterEmployee{
@@ -30,4 +36,3 @@ func FromDomainToDTO(employee *domain.Employee) *RegisterEmployee {
 		Message:  "Employee located successfully",
 	}
 }
-

@@ -88,6 +88,10 @@ func (f *fakeServiceForReadOnly) GetEmployeesByRole(context.Context, string) ([]
 	return nil, errors.New("not implemented")
 }
 
+func (f *fakeServiceForReadOnly) UpdateEmployee(context.Context, output.Tx, domain.Employee) error {
+	return nil
+}
+
 var _ input.Service = (*fakeServiceForReadOnly)(nil)
 
 func TestInteractor_Locate(t *testing.T) {
