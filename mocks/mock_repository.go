@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockTx is a mock implementation of output.Tx
 type MockTx struct {
 	mock.Mock
 }
@@ -23,7 +22,6 @@ func (m *MockTx) Rollback() error {
 	return args.Error(0)
 }
 
-// MockRepository is a mock implementation of output.Repository
 type MockRepository struct {
 	mock.Mock
 }
@@ -80,7 +78,6 @@ func (m *MockRepository) GetEmployeeByKeycloakID(ctx context.Context, keycloakUs
 	return args.Get(0).(*domain.Employee), args.Error(1)
 }
 
-// GetEmployeesByRole mock for HU47 - Virtual Entity pattern (Crew Member Types)
 func (m *MockRepository) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
 	args := m.Called(ctx, role)
 	if args.Get(0) == nil {

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockMessageCache is a mock implementation of MessageCache
 type MockMessageCache struct {
 	mock.Mock
 }

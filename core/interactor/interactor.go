@@ -26,20 +26,20 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogEmployeeInteractorRegStart, employee.ToLogger())
-	//paso 1
+
 	result, err = i.service.RegisterEmployee(ctx, employee)
 	if err != nil {
 		if err == domain.ErrIncompleteRegistration {
 			log.Warn(logger.LogEmployeeInteractorIncompleteDetected, "email", employee.Email)
 
-			//intentar limpiar el estado inconsistente antes de reintentar
+
 			if cleanErr := i.service.CheckAndCleanInconsistentState(ctx, employee.Email); cleanErr != nil {
 				log.Error(logger.LogEmployeeInteractorCleanup_Error, "email", employee.Email, "error", cleanErr)
 				return nil, cleanErr
 			}
 
 			log.Success(logger.LogEmployeeInteractorCleanup_OK, "email", employee.Email)
-			//retornar el error de registro incompleto para que el cliente sepa que debe reintentar
+
 			return nil, err
 		}
 		log.Error(logger.LogEmployeeInteractorStep1_Error, "error", err)
@@ -50,14 +50,11 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 	employee.SetID()
 	log.Debug(logger.LogEmployeeInteractorIDGenerated, "employee_id", employee.ID)
 
-	//paso 1.5
 	if err = i.service.CheckAndCleanInconsistentState(ctx, employee.Email); err != nil {
 		log.Error(logger.LogEmployeeInteractorStep15_Error, "error", err)
 		return
 	}
 	log.Success(logger.LogEmployeeInteractorStep15_OK, "email", employee.Email)
-
-	//paso 2
 	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
 		log.Error(logger.LogEmployeeInteractorStep2_Error, "error", err)
@@ -90,14 +87,12 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 			}
 		}
 	}()
-	//paso 3
 	if err = i.service.SaveEmployeeToDB(ctx, tx, employee); err != nil {
 		log.Error(logger.LogEmployeeInteractorStep3_Error, "error", err)
 		return
 	}
 	log.Success(logger.LogEmployeeInteractorStep3_OK)
 
-	//paso 4
 	keycloakUserID, err = i.service.CreateUserInKeycloak(ctx, &employee)
 	if err != nil {
 		log.Error(logger.LogEmployeeInteractorStep4_Error, "error", err)
@@ -107,28 +102,23 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 	keycloakCreated = true
 	log.Success(logger.LogEmployeeInteractorStep4_OK, "keycloak_user_id", keycloakUserID)
 
-	//paso 5
 	if err = i.service.SetUserPassword(ctx, keycloakUserID, employee.Password); err != nil {
 		log.Error(logger.LogEmployeeInteractorStep5_Error, "error", err)
 		return
 	}
 	log.Success(logger.LogEmployeeInteractorStep5_OK)
-
-	//paso 6
 	if err = i.service.AssignUserRole(ctx, keycloakUserID, employee.Role); err != nil {
 		log.Error(logger.LogEmployeeInteractorStep6_Error, "error", err)
 		return
 	}
 	log.Success(logger.LogEmployeeInteractorStep6_OK, "role", employee.Role)
 
-	//paso 7
 	if err = i.service.UpdateEmployeeKeycloakID(ctx, tx, employee.ID, keycloakUserID); err != nil {
 		log.Error(logger.LogEmployeeInteractorStep7_Error, "error", err)
 		return
 	}
 	log.Success(logger.LogEmployeeInteractorStep7_OK)
 
-	//paso 8
 	if err = tx.Commit(); err != nil {
 		log.Error(logger.LogEmployeeInteractorCommit_Error, "error", err)
 		return
@@ -139,9 +129,7 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 	result.Employee = employee
 	result.Message = "user registered successfully"
 
-	// Paso 9: Enviar email de verificación
 	if sendErr := i.service.SendVerificationEmail(ctx, keycloakUserID); sendErr != nil {
-		//log warning pero no falla la creación del usuario
 		log.Warn(logger.LogKeycloakSendVerificationEmailError,
 			"keycloak_user_id", keycloakUserID,
 			"email", employee.Email,
@@ -169,27 +157,23 @@ func (i *Interactor) Locate(ctx context.Context, id string) (*dto.RegisterEmploy
 	return result, nil
 }
 
-// ResendVerificationEmail reenvía el email de verificación a un usuario por email
 func (i *Interactor) ResendVerificationEmail(ctx context.Context, email string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakSendVerificationEmail, "email", email)
 
-	// Buscar empleado por email en la base de datos
 	user, err := i.service.GetUserByEmail(ctx, email)
 	if err != nil {
 		log.Error(logger.LogKeycloakUserNotFound, "email", email, "error", err)
 		return domain.ErrUserNotFound
 	}
 
-	//verificar si el email ya fue verificado
 	if user.EmailVerified != nil && *user.EmailVerified {
 		log.Warn(logger.LogKeycloakSendVerificationEmailError, "email", email, "reason", "email already verified")
 		return domain.ErrEmailAlreadyVerified
 	}
 
-	// Enviar email de verificación
 	if err = i.service.SendVerificationEmail(ctx, *user.ID); err != nil {
 		log.Error(logger.LogKeycloakSendVerificationEmailError, "email", email, "error", err)
 		return err
@@ -205,7 +189,6 @@ func (i *Interactor) RequestPasswordReset(ctx context.Context, email string) err
 
 	log.Info(logger.LogKeycloakSendPasswordReset, "email", email)
 
-	// Llamar al servicio que busca el usuario y envía el email
 	if err := i.service.SendPasswordResetEmail(ctx, email); err != nil {
 		log.Warn(logger.LogKeycloakSendPasswordResetError, "email", email, "error", err)
 	} else {
@@ -215,15 +198,12 @@ func (i *Interactor) RequestPasswordReset(ctx context.Context, email string) err
 	return nil
 }
 
-// VerifyEmailByToken verifica el email de un usuario extrayéndolo del token JWT
-// Este método delega al Service que maneja la lógica de negocio (parsing del token y verificación en Keycloak)
 func (i *Interactor) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakEmailVerify)
 
-	// Delegar toda la lógica al Service (parsing del token + verificación en Keycloak)
 	email, err := i.service.VerifyEmailByToken(ctx, token)
 	if err != nil {
 		switch err {
@@ -248,8 +228,6 @@ func (i *Interactor) Login(ctx context.Context, email string, password string) (
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakUserLogin, "email", email, "client_ip")
-
-	// Llamar al servicio de autenticación de Keycloak
 	token, err := i.service.Login(ctx, email, password)
 	if err != nil {
 		log.Error(logger.LogKeycloakUserLoginError, "email", email, "error", err, "client_ip")
@@ -265,21 +243,17 @@ func (i *Interactor) Login(ctx context.Context, email string, password string) (
 	}, nil
 }
 
-// UpdatePassword validates the action token and updates the user's password
-// This method handles password updates from the password reset flow
 func (i *Interactor) UpdatePassword(ctx context.Context, token, newPassword, confirmPassword string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakPasswordUpdate)
 
-	// Validate passwords match
 	if newPassword != confirmPassword {
 		log.Warn(logger.LogKeycloakPasswordMismatch)
 		return "", domain.ErrPasswordMismatch
 	}
 
-	// Delegate to service
 	email, err := i.service.UpdatePassword(ctx, token, newPassword)
 	if err != nil {
 		switch err {
@@ -297,21 +271,16 @@ func (i *Interactor) UpdatePassword(ctx context.Context, token, newPassword, con
 	return email, nil
 }
 
-// ChangePassword allows an authenticated user to change their own password
-// This method validates the current password and sets a new one without requiring email/token flow
 func (i *Interactor) ChangePassword(ctx context.Context, email, currentPassword, newPassword, confirmPassword string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakChangePassword, "email", email)
-
-	// Validate new passwords match
 	if newPassword != confirmPassword {
 		log.Warn(logger.LogKeycloakChangePasswordMismatch, "email", email)
 		return "", domain.ErrPasswordMismatch
 	}
 
-	// Delegate to service (validates current password and sets new one)
 	resultEmail, err := i.service.ChangePassword(ctx, email, currentPassword, newPassword)
 	if err != nil {
 		switch err {
@@ -331,22 +300,17 @@ func (i *Interactor) ChangePassword(ctx context.Context, email, currentPassword,
 	return resultEmail, nil
 }
 
-// DeleteEmployee removes an employee from the system (DB and Keycloak)
-// First retrieves the employee to get the keycloakUserID, then delegates to service
 func (i *Interactor) DeleteEmployee(ctx context.Context, employeeID string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogEmployeeDeleting, "employee_id", employeeID)
-
-	// Step 1: Get the employee to retrieve keycloakUserID
 	employee, err := i.service.GetEmployeeByID(ctx, employeeID)
 	if err != nil {
 		log.Warn(logger.LogEmployeeNotFound, "employee_id", employeeID, "error", err)
 		return domain.ErrPersonNotFound
 	}
 
-	// Step 2: Delegate to service to delete from Keycloak and DB
 	if err := i.service.DeleteEmployee(ctx, employee.ID, employee.KeycloakUserID); err != nil {
 		log.Error(logger.LogEmployeeDeleteError, "employee_id", employeeID, "error", err)
 		return err
@@ -355,9 +319,6 @@ func (i *Interactor) DeleteEmployee(ctx context.Context, employeeID string) erro
 	log.Success(logger.LogEmployeeDeleteComplete, "employee_id", employeeID, "email", employee.Email)
 	return nil
 }
-
-// GetEmployeesByRole retrieves all employees for a specific role (HU47 - Virtual Entity pattern)
-// This implements the "Crew Member Types" feature - returns employees filtered by role field
 func (i *Interactor) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)

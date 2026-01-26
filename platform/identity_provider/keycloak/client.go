@@ -296,7 +296,6 @@ func (c *client) AssignRole(ctx context.Context, userID string, roleName string)
 
 	c.logger.Info(logger.LogKeycloakRoleAssign, "user_id", userID, "role", roleName)
 
-	// Obtener el role por nombre
 	role, err := c.gocloak.GetRealmRole(
 		ctx,
 		c.token.AccessToken,
@@ -308,7 +307,6 @@ func (c *client) AssignRole(ctx context.Context, userID string, roleName string)
 		return fmt.Errorf("failed to get role %s: %w", roleName, err)
 	}
 
-	// Asignar el role al usuario
 	err = c.gocloak.AddRealmRoleToUser(
 		ctx,
 		c.token.AccessToken,
@@ -392,7 +390,7 @@ func (c *client) SendVerificationEmail(ctx context.Context, userID string) error
 	params := gocloak.ExecuteActionsEmail{
 		UserID:   &userID,
 		Actions:  &[]string{"VERIFY_EMAIL"},
-		Lifespan: gocloak.IntP(86400), // 24 horas
+		Lifespan: gocloak.IntP(86400),
 	}
 
 	err := c.gocloak.ExecuteActionsEmail(
@@ -408,8 +406,6 @@ func (c *client) SendVerificationEmail(ctx context.Context, userID string) error
 	return nil
 }
 
-// SendPasswordResetEmail sends a password reset email to the user
-// It searches for the user by email first, then sends the reset email
 func (c *client) SendPasswordResetEmail(ctx context.Context, email string) error {
 	if email == "" {
 		return fmt.Errorf("email cannot be empty")
@@ -421,7 +417,6 @@ func (c *client) SendPasswordResetEmail(ctx context.Context, email string) error
 
 	c.logger.Info(logger.LogKeycloakSendPasswordReset, "email", email, "realm", c.config.Realm)
 
-	// Buscar usuario por email
 	c.logger.Debug(logger.LogKeycloakSearchUserByEmail, "email", email)
 
 	users, err := c.gocloak.GetUsers(
@@ -445,11 +440,10 @@ func (c *client) SendPasswordResetEmail(ctx context.Context, email string) error
 
 	c.logger.Debug(logger.LogKeycloakSearchUserByEmailOK, "email", email, "user_id", *users[0].ID)
 
-	// Enviar email de reset de contraseña
 	params := gocloak.ExecuteActionsEmail{
 		UserID:   users[0].ID,
 		Actions:  &[]string{"UPDATE_PASSWORD"},
-		Lifespan: gocloak.IntP(43200), // 12 horas
+		Lifespan: gocloak.IntP(43200),
 	}
 
 	err = c.gocloak.ExecuteActionsEmail(
@@ -545,14 +539,6 @@ func (c *client) RefreshToken(ctx context.Context, refreshToken string) (*gocloa
 	return token, nil
 }
 
-// ValidateActionToken validates a Keycloak action token (from password reset email)
-// and returns the userID and email from the token claims
-// This performs the following validations:
-// 1. Token format is valid JWT
-// 2. Token has not expired
-// 3. Token issuer matches our Keycloak realm
-// 4. Token type is an action token (typ: "reset-credentials")
-// 5. User exists in Keycloak
 func (c *client) ValidateActionToken(ctx context.Context, token string) (string, string, error) {
 	if token == "" {
 		return "", "", fmt.Errorf("token cannot be empty")
@@ -560,21 +546,18 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 
 	c.logger.Debug(logger.LogKeycloakPasswordTokenValidation, "realm", c.config.Realm)
 
-	// Parse the JWT token to extract claims
 	parts := splitToken(token)
 	if len(parts) != 3 {
 		c.logger.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "invalid token format")
 		return "", "", fmt.Errorf("invalid token format")
 	}
 
-	// Decode the payload (second part)
 	claims, err := decodeJWTPayload(parts[1])
 	if err != nil {
 		c.logger.Error(logger.LogKeycloakPasswordTokenInvalid, "error", err)
 		return "", "", fmt.Errorf("failed to decode token: %w", err)
 	}
 
-	// 1. Validate expiration (exp claim)
 	if exp, ok := claims["exp"].(float64); ok {
 		expirationTime := time.Unix(int64(exp), 0)
 		if time.Now().After(expirationTime) {
@@ -587,7 +570,6 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		c.logger.Warn("Token missing expiration claim, proceeding with caution")
 	}
 
-	// 2. Validate issuer (iss claim)
 	expectedIssuer := fmt.Sprintf("%s/realms/%s", c.config.ServerURL, c.config.Realm)
 	if iss, ok := claims["iss"].(string); ok {
 		if iss != expectedIssuer {
@@ -600,22 +582,16 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		c.logger.Warn("Token missing issuer claim")
 	}
 
-	// 3. Validate action type (typ claim for action tokens)
-	// Keycloak action tokens have typ like "kc-action", "reset-credentials", etc.
 	if typ, ok := claims["typ"].(string); ok {
 		c.logger.Debug("Token type", "typ", typ)
-		// Action tokens typically have specific types
-		// We allow any type since this is coming from a Keycloak email action
 	}
 
-	// 4. Extract user ID (sub claim)
 	userID, ok := claims["sub"].(string)
 	if !ok || userID == "" {
 		c.logger.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "missing sub claim")
 		return "", "", fmt.Errorf("missing user ID in token")
 	}
 
-	// 5. Verify user exists in Keycloak (this confirms the token is for a real user)
 	if err := c.ensureValidToken(ctx); err != nil {
 		return "", "", fmt.Errorf("failed to authenticate with Keycloak: %w", err)
 	}
@@ -627,7 +603,6 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		return "", "", fmt.Errorf("user not found in Keycloak: %w", err)
 	}
 
-	// Get email from user or token
 	var email string
 	if user.Email != nil {
 		email = *user.Email
@@ -635,7 +610,6 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		email = emailClaim
 	}
 
-	// Verify user is enabled
 	if user.Enabled != nil && !*user.Enabled {
 		c.logger.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "user is disabled",
 			"user_id", userID)
@@ -650,24 +624,23 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 	return userID, email, nil
 }
 
-// splitToken splits a JWT token into its parts
+
 func splitToken(token string) []string {
 	return strings.Split(token, ".")
 }
 
-// decodeJWTPayload decodes the base64-encoded JWT payload
 func decodeJWTPayload(payload string) (map[string]interface{}, error) {
-	// JWT uses base64url encoding, decode it
+
 	decoded, err := base64.RawURLEncoding.DecodeString(payload)
 	if err != nil {
-		// Try with padding
+
 		decoded, err = base64.URLEncoding.DecodeString(payload)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode base64: %w", err)
 		}
 	}
 
-	// Parse JSON
+	
 	var claims map[string]interface{}
 	if err := json.Unmarshal(decoded, &claims); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON claims: %w", err)

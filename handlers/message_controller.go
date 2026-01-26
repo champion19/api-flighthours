@@ -8,18 +8,7 @@ import (
 )
 
 
-// CreateMessage godoc
-// @Summary Crear un nuevo mensaje del sistema
-// @Description Crea un nuevo mensaje del sistema con tipo, categoría y contenido. Los mensajes se utilizan para mostrar información, advertencias y errores a los usuarios.
-// @Tags messages
-// @Accept json
-// @Produce json
-// @Param message body MessageRequest true "Datos del mensaje a crear"
-// @Success 201 {object} MessageCreatedResponse "Mensaje creado exitosamente"
-// @Failure 400 {object} middleware.ErrorResponse "Datos de entrada inválidos"
-// @Failure 409 {object} middleware.ErrorResponse "El código del mensaje ya existe"
-// @Failure 500 {object} middleware.ErrorResponse "Error interno del servidor"
-// @Router /messages [post]
+
 func (h handler) CreateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -44,7 +33,7 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 			"type", messageRequest.Type)
 
 		message := messageRequest.ToDomain()
-		message.SetID() // Generate UUID
+		message.SetID()
 
 		result, err := h.MessageInteractor.CreateMessage(c, message)
 		if err != nil {
@@ -56,18 +45,13 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 			return
 		}
 
-		// Encode UUID for public API
 		encodedID, err := h.IDEncoder.Encode(result.ID)
 		if err != nil {
 			h.HandleIDEncodingError(c, result.ID, err)
 			return
 		}
-
-		// Build HATEOAS links
 		baseURL := GetBaseURL(c)
 		links := BuildMessageCreatedLinks(baseURL, encodedID)
-
-		// Set Location header
 		SetLocationHeader(c, baseURL, "messages", encodedID)
 
 		response := MessageCreatedResponse{
@@ -85,19 +69,7 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 	}
 }
 
-// UpdateMessage godoc
-// @Summary Actualizar un mensaje del sistema
-// @Description Actualiza un mensaje del sistema existente. Permite modificar tipo, categoría, contenido y estado activo.
-// @Tags messages
-// @Accept json
-// @Produce json
-// @Param id path string true "ID del mensaje (encoded)"
-// @Param message body MessageRequest true "Datos del mensaje a actualizar"
-// @Success 200 {object} MessageUpdatedResponse "Mensaje actualizado exitosamente"
-// @Failure 400 {object} middleware.ErrorResponse "Datos de entrada inválidos"
-// @Failure 404 {object} middleware.ErrorResponse "Mensaje no encontrado"
-// @Failure 500 {object} middleware.ErrorResponse "Error interno del servidor"
-// @Router /messages/{id} [put]
+
 func (h handler) UpdateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -108,7 +80,6 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		// Get encoded ID from URL parameter and decode to UUID
 		encodedID := c.Param("id")
 		uuid, err := h.IDEncoder.Decode(encodedID)
 		if err != nil {
@@ -146,7 +117,6 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 			return
 		}
 
-		// Build HATEOAS links
 		baseURL := GetBaseURL(c)
 		links := BuildMessageUpdatedLinks(baseURL, encodedID)
 
@@ -163,17 +133,6 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 	}
 }
 
-// DeleteMessage godoc
-// @Summary Eliminar un mensaje del sistema
-// @Description Elimina un mensaje del sistema de forma permanente. Esta acción no se puede deshacer.
-// @Tags messages
-// @Produce json
-// @Param id path string true "ID del mensaje (encoded)"
-// @Success 200 {object} MessageDeletedResponse "Mensaje eliminado exitosamente"
-// @Failure 400 {object} middleware.ErrorResponse "ID inválido"
-// @Failure 404 {object} middleware.ErrorResponse "Mensaje no encontrado"
-// @Failure 500 {object} middleware.ErrorResponse "Error interno del servidor"
-// @Router /messages/{id} [delete]
 func (h handler) DeleteMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -184,7 +143,7 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		// Get encoded ID from URL parameter and decode to UUID
+
 		encodedID := c.Param("id")
 		uuid, err := h.IDEncoder.Decode(encodedID)
 		if err != nil {
@@ -216,17 +175,6 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 	}
 }
 
-// GetMessageByID godoc
-// @Summary Obtener un mensaje por ID
-// @Description Obtiene los detalles de un mensaje del sistema específico por su ID.
-// @Tags messages
-// @Produce json
-// @Param id path string true "ID del mensaje (encoded)"
-// @Success 200 {object} MessageResponse "Mensaje encontrado exitosamente"
-// @Failure 400 {object} middleware.ErrorResponse "ID inválido"
-// @Failure 404 {object} middleware.ErrorResponse "Mensaje no encontrado"
-// @Failure 500 {object} middleware.ErrorResponse "Error interno del servidor"
-// @Router /messages/{id} [get]
 func (h handler) GetMessageByID() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -237,7 +185,6 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		// Get encoded ID from URL parameter and decode to UUID
 		encodedID := c.Param("id")
 		uuid, err := h.IDEncoder.Decode(encodedID)
 		if err != nil {
@@ -259,17 +206,15 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 			return
 		}
 
-		// Encode UUID for response
 		encodedIDForResponse, err := h.IDEncoder.Encode(message.ID)
 		if err != nil {
 			h.HandleIDEncodingError(c, message.ID, err)
 			return
 		}
 
-		// Build HATEOAS links
 		baseURL := GetBaseURL(c)
 		response := ToMessageResponse(message)
-		response.ID = encodedIDForResponse // Use encoded ID in response
+		response.ID = encodedIDForResponse
 		response.Links = BuildMessageLinks(baseURL, encodedIDForResponse)
 
 		log.Debug(logger.LogMessageGetOK,
@@ -281,18 +226,7 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 	}
 }
 
-// ListMessages godoc
-// @Summary Listar mensajes del sistema
-// @Description Obtiene una lista de mensajes del sistema con filtros opcionales. Permite filtrar por módulo, tipo, categoría y estado activo.
-// @Tags messages
-// @Produce json
-// @Param module query string false "Filtrar por módulo (ej: users, flights, bookings)"
-// @Param type query string false "Filtrar por tipo (ERROR, WARNING, INFO, SUCCESS)"
-// @Param category query string false "Filtrar por categoría (usuario_final, sistema, validacion)"
-// @Param active query string false "Filtrar por estado activo (true, false)"
-// @Success 200 {object} MessageListResponse "Lista de mensajes obtenida exitosamente"
-// @Failure 500 {object} middleware.ErrorResponse "Error interno del servidor"
-// @Router /messages [get]
+
 func (h handler) ListMessages() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -303,7 +237,6 @@ func (h handler) ListMessages() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		// Parse query parameters for filters
 		filters := make(map[string]interface{})
 		if module := c.Query("module"); module != "" {
 			filters["module"] = module
@@ -331,7 +264,7 @@ func (h handler) ListMessages() func(c *gin.Context) {
 			return
 		}
 
-		// Encode UUIDs for each message in response
+
 		baseURL := GetBaseURL(c)
 		response := ToMessageListResponse(messages)
 		for i := range response.Messages {
@@ -353,14 +286,6 @@ func (h handler) ListMessages() func(c *gin.Context) {
 	}
 }
 
-// ReloadMessageCache godoc
-// @Summary Recargar caché de mensajes
-// @Description Recarga el caché de mensajes desde la base de datos. Útil después de hacer cambios masivos a mensajes.
-// @Tags messages
-// @Produce json
-// @Success 200 {object} CacheReloadResponse "Caché recargado exitosamente"
-// @Failure 500 {object} middleware.ErrorResponse "Error interno del servidor"
-// @Router /messages/reload [post]
 func (h handler) ReloadMessageCache() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -371,10 +296,9 @@ func (h handler) ReloadMessageCache() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		// Obtener el conteo antes del reload
 		beforeCount := h.MessagingCache.MessageCount()
 
-		// Recargar el caché desde BD
+
 		err := h.MessagingCache.ReloadMessages(c.Request.Context())
 		if err != nil {
 			log.Error("Error al recargar caché de mensajes",
@@ -384,7 +308,6 @@ func (h handler) ReloadMessageCache() func(c *gin.Context) {
 			return
 		}
 
-		// Obtener el conteo después del reload
 		afterCount := h.MessagingCache.MessageCount()
 
 		response := CacheReloadResponse{

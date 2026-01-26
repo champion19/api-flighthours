@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	// HTTP Request counter
 	httpRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: promConstants.MetricHTTPRequestsTotal,
@@ -19,17 +18,15 @@ var (
 		[]string{promConstants.LabelMethod, promConstants.LabelEndpoint, promConstants.LabelStatus},
 	)
 
-	// HTTP Request duration histogram
 	httpRequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    promConstants.MetricHTTPRequestDuration,
 			Help:    promConstants.MetricHTTPRequestDurationHelp,
-			Buckets: prometheus.DefBuckets, // [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+			Buckets: prometheus.DefBuckets,
 		},
 		[]string{promConstants.LabelMethod, promConstants.LabelEndpoint, promConstants.LabelStatus},
 	)
 
-	// Error counter
 	httpErrorsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: promConstants.MetricHTTPErrorsTotal,
@@ -38,7 +35,6 @@ var (
 		[]string{promConstants.LabelMethod, promConstants.LabelEndpoint, promConstants.LabelStatus, promConstants.LabelErrorType},
 	)
 
-	// Business metrics - User registrations
 	userRegistrationsTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: promConstants.MetricUserRegistrationsTotal,
@@ -46,7 +42,6 @@ var (
 		},
 	)
 
-	// Business metrics - Messages created
 	messagesCreatedTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: promConstants.MetricMessagesCreatedTotal,
@@ -64,7 +59,6 @@ func PrometheusInit() {
 	prometheus.MustRegister(messagesCreatedTotal)
 }
 
-// TrackMetrics is a Gin middleware that tracks HTTP metrics
 func TrackMetrics() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -74,20 +68,15 @@ func TrackMetrics() gin.HandlerFunc {
 		}
 		method := c.Request.Method
 
-		// Process request
 		c.Next()
 
-		// Record metrics after request processing
 		duration := time.Since(start).Seconds()
 		status := strconv.Itoa(c.Writer.Status())
 
-		// Record request count
 		httpRequestsTotal.WithLabelValues(method, path, status).Inc()
 
-		// Record request duration
 		httpRequestDuration.WithLabelValues(method, path, status).Observe(duration)
 
-		// Record errors if status >= 400
 		if c.Writer.Status() >= 400 {
 			errorType := getErrorType(c.Writer.Status())
 			httpErrorsTotal.WithLabelValues(method, path, status, errorType).Inc()
@@ -95,7 +84,6 @@ func TrackMetrics() gin.HandlerFunc {
 	}
 }
 
-// getErrorType classifies HTTP status codes into error types
 func getErrorType(status int) string {
 	switch {
 	case status >= 500:
@@ -117,17 +105,14 @@ func getErrorType(status int) string {
 	}
 }
 
-// RecordEmployeeRegistration increments the employee registration counter
 func RecordEmployeeRegistration() {
 	userRegistrationsTotal.Inc()
 }
-
-// RecordMessageCreated increments the message creation counter
 func RecordMessageCreated(module, msgType string) {
 	messagesCreatedTotal.WithLabelValues(module, msgType).Inc()
 }
 
-// PrometheusMiddleware captura métricas de cada request HTTP
+
 func PrometheusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -137,20 +122,15 @@ func PrometheusMiddleware() gin.HandlerFunc {
 		}
 		method := c.Request.Method
 
-		// Process request
 		c.Next()
 
-		// Record metrics after request processing
 		duration := time.Since(start).Seconds()
 		status := strconv.Itoa(c.Writer.Status())
 
-		// Record request count
 		httpRequestsTotal.WithLabelValues(method, path, status).Inc()
 
-		// Record request duration
 		httpRequestDuration.WithLabelValues(method, path, status).Observe(duration)
 
-		// Record errors if status >= 400
 		if c.Writer.Status() >= 400 {
 			errorType := getErrorType(c.Writer.Status())
 			httpErrorsTotal.WithLabelValues(method, path, status, errorType).Inc()

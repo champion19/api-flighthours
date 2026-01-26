@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockLogger is a mock implementation of logger.Logger
 type MockLogger struct {
 	mock.Mock
 }
@@ -41,7 +40,7 @@ func (m *MockLogger) Panic(msg string, args ...any) {
 func (m *MockLogger) WithTraceID(traceID string) logger.Logger {
 	args := m.Called(traceID)
 	if args.Get(0) == nil {
-		return m // Return self if no mock setup
+		return m
 	}
 	return args.Get(0).(logger.Logger)
 }

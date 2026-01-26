@@ -13,7 +13,7 @@ type MessageRequest struct {
 	Active   bool               `json:"active"`
 }
 
-// MessageResponse represents the response payload for a message
+
 type MessageResponse struct {
 	ID       string             `json:"id"`
 	Code     string             `json:"code"`
@@ -26,29 +26,24 @@ type MessageResponse struct {
 	Links    []Link             `json:"_links,omitempty"`
 }
 
-// MessageListResponse represents the response for listing messages
 type MessageListResponse struct {
 	Messages []MessageResponse `json:"messages"`
 	Count    int               `json:"count"`
 	Links    []Link            `json:"_links,omitempty"`
 }
 
-// MessageCreatedResponse represents the response for message creation
 type MessageCreatedResponse struct {
 	ID    string `json:"id"`
 	Links []Link `json:"_links"`
 
 }
 
-// MessageUpdatedResponse represents the response for message update
 type MessageUpdatedResponse struct {
 	Links []Link `json:"_links"`
 
 }
 
-// MessageDeletedResponse represents the response for message deletion
 type MessageDeletedResponse struct {
-	// Empty struct - message comes from unified messaging system
 }
 
 
@@ -72,7 +67,7 @@ func (m MessageRequest) ToDomain() domain.Message {
 	}
 }
 
-// ToResponse converts domain.Message to MessageResponse
+
 func ToMessageResponse(m *domain.Message) MessageResponse {
 	return MessageResponse{
 		ID:       m.ID,
@@ -86,7 +81,7 @@ func ToMessageResponse(m *domain.Message) MessageResponse {
 	}
 }
 
-// ToMessageListResponse converts slice of domain.Message to MessageListResponse
+
 func ToMessageListResponse(messages []domain.Message) MessageListResponse {
 	responses := make([]MessageResponse, len(messages))
 	for i, msg := range messages {

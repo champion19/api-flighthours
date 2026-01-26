@@ -7,7 +7,6 @@ import (
 	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
 )
 
-// GetByCodeForCache returns a message for cache by code
 func (r *repository) GetByCodeForCache(ctx context.Context, code string) (*cachetypes.CachedMessage, error) {
 	var m cachetypes.CachedMessage
 	var createdAt, updatedAt interface{}

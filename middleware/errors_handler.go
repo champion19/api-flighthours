@@ -10,7 +10,6 @@ import (
 )
 
 var errorToMessageCode = map[error]string{
-	// User Management Errors (MOD_U_*)
 	domain.ErrDuplicateUser:                 domain.MsgUserDuplicate,
 	domain.ErrUserCannotSave:                domain.MsgUserCannotSave,
 	domain.ErrUserCannotFound:               domain.MsgUserNotFound,
@@ -25,16 +24,12 @@ var errorToMessageCode = map[error]string{
 	domain.ErrRoleRequired:                  domain.MsgUserRoleRequired,
 	domain.ErrUserCannotDelete:              domain.MsgUserCannotDelete,
 
-	// Person errors
 	domain.ErrPersonNotFound:     domain.MsgPersonNotFound,
 	domain.ErrInvalidTransaction: domain.MsgPersonInvalidTx,
 
-	// Validation errors
 	domain.ErrInvalidJSONFormat: domain.MsgValJSONInvalid,
 	domain.ErrInvalidRequest:    domain.MsgValInvalidReq,
 	domain.ErrInvalidID:         domain.MsgValIDInvalid,
-
-	// Schema validation errors
 	domain.ErrSchemaBadRequest:       domain.MsgValBadFormat,
 	domain.ErrSchemaInvalidRequest:   domain.MsgValInvalidReq,
 	domain.ErrSchemaReadFailed:       domain.MsgValSchemaRead,
@@ -47,13 +42,10 @@ var errorToMessageCode = map[error]string{
 	domain.ErrSchemaFieldType:        domain.MsgValFieldType,
 	domain.ErrSchemaMultipleFields:   domain.MsgValMultiple,
 
-	// Authorization errors
 	domain.ErrRoleAssignmentFailed: domain.MsgRoleAssignError,
 	domain.ErrRoleRemovalFailed:    domain.MsgRoleRemoveError,
 	domain.ErrRoleCheckFailed:      domain.MsgRoleCheckError,
 	domain.ErrGetUserRolesFailed:   domain.MsgRoleGetError,
-
-	// Message errors
 	domain.ErrMessageNotFound:         domain.MsgMessageNotFound,
 	domain.ErrMessageCodeRequired:     domain.MsgMessageCodeRequired,
 	domain.ErrMessageTypeRequired:     domain.MsgMessageTypeRequired,
@@ -69,46 +61,30 @@ var errorToMessageCode = map[error]string{
 	domain.ErrMessageListFailed:       domain.MsgMessageListError,
 	domain.ErrMessageNotRegistered:    domain.MsgMessageNotRegistered,
 	domain.ErrMessageInactive:         domain.MsgMessageInactive,
-
-	// Infrastructure errors (MOD_INFRA_*)
 	domain.ErrKeycloakInconsistentState:  domain.MsgKeycloakInconsistentState,
 	domain.ErrKeycloakUserCreationFailed: domain.MsgKeycloakCreateError,
 	domain.ErrKeycloakCleanupFailed:      domain.MsgKeycloakCleanupError,
-
-	// Dependency availability errors
 	domain.ErrKeycloakUnavailable: domain.MsgKeycloakUnavailable,
 	domain.ErrDatabaseUnavailable: domain.MsgDatabaseUnavailable,
-
-	// Incomplete registration (cleanup in progress)
 	domain.ErrIncompleteRegistration: domain.MsgIncompleteRegistration,
-
-	// Authentication errors (JWT/Token)
 	domain.ErrInvalidToken: domain.MsgUnauthorized,
 	domain.ErrUserNotFound: domain.MsgUserNotFound,
-
-	// DailyLogbook errors (BIT_*)
 	domain.ErrDailyLogbookNotFound:     domain.MsgDailyLogbookNotFound,
 	domain.ErrDailyLogbookCannotSave:   domain.MsgDailyLogbookSaveError,
 	domain.ErrDailyLogbookCannotUpdate: domain.MsgDailyLogbookUpdateError,
 	domain.ErrDailyLogbookCannotDelete: domain.MsgDailyLogbookDeleteError,
 	domain.ErrDailyLogbookUnauthorized: domain.MsgDailyLogbookUnauthorized,
-
-	// AircraftRegistration errors (MAT_*)
 	domain.ErrAircraftRegistrationNotFound:       domain.MsgAircraftRegistrationNotFound,
 	domain.ErrAircraftRegistrationCannotSave:     domain.MsgAircraftRegistrationSaveError,
 	domain.ErrAircraftRegistrationCannotUpdate:   domain.MsgAircraftRegistrationUpdateError,
 	domain.ErrAircraftRegistrationDuplicatePlate: domain.MsgAircraftRegistrationDuplicate,
 	domain.ErrAircraftRegistrationInvalidModel:   domain.MsgAircraftRegistrationInvalidModel,
 	domain.ErrAircraftRegistrationInvalidAirline: domain.MsgAircraftRegistrationInvalidAirline,
-
-	// AirlineRoute errors (RUT_AIR_*)
 	domain.ErrAirlineRouteNotFound:       domain.MsgAirlineRouteNotFound,
 	domain.ErrAirlineRouteCannotSave:     domain.MsgAirlineRouteGetErr,
 	domain.ErrAirlineRouteCannotUpdate:   domain.MsgAirlineRouteDeactivateErr,
 	domain.ErrAirlineRouteInvalidRoute:   domain.MsgAirlineRouteInvalidRoute,
 	domain.ErrAirlineRouteInvalidAirline: domain.MsgAirlineRouteInvalidAirline,
-
-	// Flight/DailyLogbookDetail errors (VUE_*)
 	domain.ErrFlightNotFound:            domain.MsgFlightNotFound,
 	domain.ErrFlightCannotSave:          domain.MsgFlightSaveError,
 	domain.ErrFlightCannotUpdate:        domain.MsgFlightUpdateError,
@@ -118,26 +94,12 @@ var errorToMessageCode = map[error]string{
 	domain.ErrFlightInvalidLogbook:      domain.MsgFlightInvalidLogbook,
 	domain.ErrFlightInvalidAircraft:     domain.MsgFlightInvalidAircraft,
 	domain.ErrFlightInvalidTimeSequence: domain.MsgFlightInvalidTimeSequence,
-
-	// Engine errors (MOT_*)
 	domain.ErrEngineNotFound: domain.MsgEngineNotFound,
-
-	// Manufacturer errors (FAB_*)
 	domain.ErrManufacturerNotFound: domain.MsgManufacturerNotFound,
-
-	// AircraftModel errors (MOD_AM_*)
 	domain.ErrAircraftModelNotFound: domain.MsgAircraftModelNotFound,
-
-	// Route errors (RUT_*)
 	domain.ErrRouteNotFound: domain.MsgRouteNotFound,
-
-	// Airline errors (MOD_AIR_*)
 	domain.ErrAirlineNotFound: domain.MsgAirlineNotFound,
-
-	// Airport errors (MOD_APT_*)
 	domain.ErrAirportNotFound: domain.MsgAirportNotFound,
-
-	// General errors
 	domain.ErrInternalServer: domain.MsgServerError,
 }
 
@@ -172,9 +134,7 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 			var params []string
 			if validationFields, exists := c.Get("validation_fields"); exists {
 				if fields, ok := validationFields.([]string); ok {
-					// For multiple fields error, concatenate all field names into one parameter
 					if len(fields) > 1 {
-						// Join fields with comma for multiple fields message
 						fieldsStr := fields[0]
 						for i := 1; i < len(fields); i++ {
 							fieldsStr += ", " + fields[i]
@@ -186,9 +146,7 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 				}
 			}
 
-			// Try to map domain error to message code
 			if messageCode, ok := errorToMessageCode[err]; ok {
-				// Get message from cache (or DB if not cached) with field params
 				msg := h.cache.GetMessageResponse(messageCode, params...)
 				status := h.cache.GetHTTPStatus(messageCode)
 
@@ -211,7 +169,6 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 				}
 			}
 
-			// Fallback for unmapped errors
 			log.Error(logger.LogMiddlewareInternalErr,
 				"error", err.Error(),
 				"path", c.Request.URL.Path,

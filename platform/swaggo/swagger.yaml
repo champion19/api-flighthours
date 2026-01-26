@@ -49,19 +49,6 @@ definitions:
       email:
         type: string
     type: object
-  handlers.EmployeeListResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      count:
-        type: integer
-      employees:
-        items:
-          $ref: '#/definitions/handlers.EmployeeResponse'
-        type: array
-    type: object
   handlers.EmployeeRequest:
     properties:
       active:
@@ -213,18 +200,6 @@ definitions:
           $ref: '#/definitions/handlers.Link'
         type: array
     type: object
-  handlers.PasswordResetRequest:
-    properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  handlers.PasswordResetResponse:
-    properties:
-      sent:
-        type: boolean
-    type: object
   handlers.RegisterEmployeeResponse:
     properties:
       _links:
@@ -244,58 +219,6 @@ definitions:
       email:
         type: string
       sent:
-        type: boolean
-    type: object
-  handlers.UpdateEmployeeRequest:
-    properties:
-      active:
-        type: boolean
-      airline:
-        type: string
-      bp:
-        type: string
-      end_date:
-        type: string
-      identificationNumber:
-        type: string
-      name:
-        type: string
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
-  handlers.UpdateEmployeeResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      id:
-        type: string
-      updated:
-        type: boolean
-    type: object
-  handlers.UpdatePasswordRequest:
-    properties:
-      confirm_password:
-        minLength: 8
-        type: string
-      new_password:
-        minLength: 8
-        type: string
-      token:
-        type: string
-    required:
-    - confirm_password
-    - new_password
-    - token
-    type: object
-  handlers.UpdatePasswordResponse:
-    properties:
-      email:
-        type: string
-      updated:
         type: boolean
     type: object
   handlers.VerifyEmailRequest:
@@ -419,46 +342,6 @@ paths:
       summary: Login de usuario
       tags:
       - Autenticación
-  /auth/password-reset:
-    post:
-      consumes:
-      - application/json
-      description: Envía un email con instrucciones para recuperar la contraseña de
-        un usuario
-      parameters:
-      - description: Email del usuario
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.PasswordResetRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Email de recuperación enviado
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.PasswordResetResponse'
-              type: object
-        "400":
-          description: Error de validación - Email inválido
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Usuario no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Solicitar recuperación de contraseña
-      tags:
-      - authentication
   /auth/resend-verification:
     post:
       consumes:
@@ -497,46 +380,6 @@ paths:
           schema:
             $ref: '#/definitions/middleware.APIResponse'
       summary: Reenviar email de verificación
-      tags:
-      - authentication
-  /auth/update-password:
-    post:
-      consumes:
-      - application/json
-      description: Actualiza la contraseña del usuario usando el token recibido por
-        email
-      parameters:
-      - description: Token y nueva contraseña
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdatePasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Contraseña actualizada exitosamente
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.UpdatePasswordResponse'
-              type: object
-        "400":
-          description: Error de validación - Contraseñas no coinciden o token inválido
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Token inválido o expirado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Actualizar contraseña con token
       tags:
       - authentication
   /auth/verify-email:
@@ -583,168 +426,17 @@ paths:
       summary: Verificar email de usuario (Proxy)
       tags:
       - Autenticación
-  /crew-member-types/{role}:
+  /employee/me:
     get:
       consumes:
       - application/json
-      description: Returns all employees of a specific role. No new tables needed
-        - queries employee.role field.
-      parameters:
-      - description: Employee role (e.g., PILOTO, COPILOTO, AUXILIAR)
-        in: path
-        name: role
-        required: true
-        type: string
+      description: Obtiene la información del empleado que realiza la petición usando
+        el token JWT. No requiere pasar ID.
       produces:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.EmployeeListResponse'
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get employees by role
-      tags:
-      - Crew Member Types
-  /employees/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Elimina un empleado del sistema (BD y Keycloak). Esta operación
-        es irreversible.
-      parameters:
-      - description: ID del empleado (UUID o ID ofuscado)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Empleado eliminado exitosamente
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "400":
-          description: ID inválido
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Empleado no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Eliminar empleado
-      tags:
-      - employees
-    get:
-      consumes:
-      - application/json
-      description: Obtiene la información de un empleado por su ID. Acepta tanto UUID
-        como ID ofuscado. No expone la contraseña del usuario.
-      parameters:
-      - description: ID del empleado (UUID o ID ofuscado)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Empleado encontrado
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.EmployeeResponse'
-              type: object
-        "400":
-          description: ID inválido
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Empleado no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Obtener empleado por ID
-      tags:
-      - employees
-    put:
-      consumes:
-      - application/json
-      description: |-
-        Actualiza la información general de un empleado (nombre, airline, bp, fechas, rol, active).
-        Los campos email y password NO se modifican ya que se manejan en endpoints separados.
-        Si el campo active cambia, se sincroniza el estado enabled/disabled con Keycloak.
-        Si el campo role cambia, se actualiza el rol asignado en Keycloak.
-      parameters:
-      - description: ID del empleado (UUID o ID ofuscado)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Datos a actualizar
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateEmployeeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Empleado actualizado exitosamente
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.UpdateEmployeeResponse'
-              type: object
-        "400":
-          description: Error de validación - JSON inválido o ID inválido
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Empleado no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Actualizar información de empleado
-      tags:
-      - employees
-  /employees/me:
-    get:
-      consumes:
-      - application/json
-      description: Obtiene la información del empleado actualmente autenticado usando
-        el token JWT. No expone la contraseña.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Empleado encontrado
+          description: Datos del usuario autenticado
           schema:
             allOf:
             - $ref: '#/definitions/middleware.APIResponse'
@@ -762,48 +454,7 @@ paths:
             $ref: '#/definitions/middleware.APIResponse'
       security:
       - BearerAuth: []
-      summary: Obtener información del empleado autenticado
-      tags:
-      - employees
-    put:
-      consumes:
-      - application/json
-      description: Actualiza la información del empleado actualmente autenticado.
-        Los campos email y password NO se modifican.
-      parameters:
-      - description: Datos a actualizar
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateEmployeeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Empleado actualizado exitosamente
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.UpdateEmployeeResponse'
-              type: object
-        "400":
-          description: Error de validación
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: No autenticado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Actualizar información del empleado autenticado
+      summary: Obtener perfil del usuario autenticado
       tags:
       - employees
   /messages:

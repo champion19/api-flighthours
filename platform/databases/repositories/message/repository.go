@@ -57,7 +57,7 @@ const (
 	queryMessageDelete = `DELETE FROM system_messages WHERE id = ?`
 )
 
-// repository implements output.MessageRepository
+
 
 var log logger.Logger = logger.NewSlogLogger()
 
@@ -79,7 +79,6 @@ type MessageRepository interface {
 	cachetypes.MessageCacheRepository
 }
 
-// NewMessageRepository creates a new message repository
 func NewMessageRepository(db *sql.DB) (MessageRepository, error) {
 	if db == nil {
 		return nil, sql.ErrConnDone

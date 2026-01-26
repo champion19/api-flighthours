@@ -1,19 +1,18 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-// Spike Test: Sudden traffic increase
 export const options = {
   stages: [
-    { duration: '1m', target: 10 },   // Normal load
-    { duration: '10s', target: 100 }, // Sudden spike!
-    { duration: '2m', target: 100 },  // Stay at spike
-    { duration: '10s', target: 10 },  // Drop back to normal
-    { duration: '1m', target: 10 },   // Normal load
-    { duration: '10s', target: 0 },   // Ramp-down
+    { duration: '1m', target: 10 },
+    { duration: '10s', target: 100 },
+    { duration: '2m', target: 100 },
+    { duration: '10s', target: 10 },
+    { duration: '1m', target: 10 },
+    { duration: '10s', target: 0 },
   ],
   thresholds: {
-    http_req_duration: ['p(95)<2000'], // Higher threshold for spike
-    http_req_failed: ['rate<0.15'],    // Allow more errors during spike
+    http_req_duration: ['p(95)<2000'],
+    http_req_failed: ['rate<0.15'],
   },
 };
 
@@ -27,7 +26,7 @@ export default function () {
     'response received': (r) => r.body !== null,
   });
 
-  sleep(Math.random() * 2); // Random think time 0-2s
+  sleep(Math.random() * 2); 
 }
 
 export function setup() {

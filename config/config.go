@@ -101,8 +101,6 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("error parsing JSON configuration: %w", err)
 	}
 
-	// Sobrescribir configuración de Keycloak con variables de entorno si existen
-	// Esto permite: JSON para defaults locales, ENV para producción/secrets
 	if serverURL := os.Getenv("KEYCLOAK_SERVER_URL"); serverURL != "" {
 		config.Keycloak.ServerURL = serverURL
 	}

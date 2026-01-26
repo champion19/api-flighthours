@@ -9,7 +9,7 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Option 1: Capture from Docker containers (if backend runs in Docker)
+
   - job_name: flighthours-backend-docker
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
@@ -45,7 +45,7 @@ scrape_configs:
           source_file:
           source_line:
 
-  # Option 2: Capture from log file (for local development with go run)
+
   - job_name: flighthours-backend-file
     static_configs:
       - targets:

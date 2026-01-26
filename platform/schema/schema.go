@@ -110,7 +110,7 @@ func (v *Validators) createSchema(resourcePath string) (*jsonschema.Schema, erro
 	return schema, nil
 }
 
-// ValidateRegister validates data against the register person schema
+
 func (v *Validators) ValidateRegister(data interface{}) error {
 	if v.RegisterValidator == nil {
 		return ErrSchemaEmpty
@@ -118,7 +118,7 @@ func (v *Validators) ValidateRegister(data interface{}) error {
 
 	result := v.RegisterValidator.Validate(data)
 	if !result.IsValid() {
-		// Collect all validation errors
+
 		var errorMessages []string
 		for _, err := range result.Errors {
 			errorMessages = append(errorMessages, err.Message)
@@ -132,7 +132,7 @@ func (v *Validators) ValidateRegister(data interface{}) error {
 	return nil
 }
 
-// ValidateUpdateEmployee validates data against the update employee schema
+
 func (v *Validators) ValidateUpdateEmployee(data interface{}) error {
 	if v.UpdateEmployeeValidator == nil {
 		return ErrSchemaEmpty
@@ -140,7 +140,7 @@ func (v *Validators) ValidateUpdateEmployee(data interface{}) error {
 
 	result := v.UpdateEmployeeValidator.Validate(data)
 	if !result.IsValid() {
-		// Collect all validation errors
+		
 		var errorMessages []string
 		for _, err := range result.Errors {
 			errorMessages = append(errorMessages, err.Message)

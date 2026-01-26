@@ -18,7 +18,6 @@ func main() {
 	app.Use(gin.Logger())
 	app.Use(gin.Recovery())
 
-	// Configurar CORS para permitir requests desde Swagger UI
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:8081", "http://localhost:8082","http://localhost:8080","http://localhost:3001"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

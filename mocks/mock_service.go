@@ -10,12 +10,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockService is a mock implementation of input.Service
 type MockService struct {
 	mock.Mock
 }
-
-// Transacciones
 
 func (m *MockService) BeginTx(ctx context.Context) (output.Tx, error) {
 	args := m.Called(ctx)
@@ -24,8 +21,6 @@ func (m *MockService) BeginTx(ctx context.Context) (output.Tx, error) {
 	}
 	return args.Get(0).(output.Tx), args.Error(1)
 }
-
-// Person - Validaciones y consultas
 
 func (m *MockService) RegisterEmployee(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
 	args := m.Called(ctx, employee)
@@ -64,8 +59,6 @@ func (m *MockService) CheckAndCleanInconsistentState(ctx context.Context, email 
 	return args.Error(0)
 }
 
-// Person - Operaciones transaccionales de BD
-
 func (m *MockService) SaveEmployeeToDB(ctx context.Context, tx output.Tx, employee domain.Employee) error {
 	args := m.Called(ctx, tx, employee)
 	return args.Error(0)
@@ -75,8 +68,6 @@ func (m *MockService) UpdateEmployeeKeycloakID(ctx context.Context, tx output.Tx
 	args := m.Called(ctx, tx, employeeID, keycloakUserID)
 	return args.Error(0)
 }
-
-// Person - Operaciones de Keycloak
 
 func (m *MockService) CreateUserInKeycloak(ctx context.Context, employee *domain.Employee) (string, error) {
 	args := m.Called(ctx, employee)
@@ -92,8 +83,6 @@ func (m *MockService) AssignUserRole(ctx context.Context, userID string, role st
 	args := m.Called(ctx, userID, role)
 	return args.Error(0)
 }
-
-// Person - Compensaciones (rollback)
 
 func (m *MockService) RollbackEmployee(ctx context.Context, employeeID string) error {
 	args := m.Called(ctx, employeeID)

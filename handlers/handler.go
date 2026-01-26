@@ -49,8 +49,6 @@ func (h *handler) EncodeID(uuid string) (string, error) {
 	return encodedID, nil
 }
 
-// DecodeID desofusca un ID ofuscado a UUID usando el encoder del handler
-// Retorna el UUID o un error si falla
 func (h *handler) DecodeID(encodedID string) (string, error) {
 	uuid, err := h.IDEncoder.Decode(encodedID)
 	if err != nil {
@@ -62,7 +60,6 @@ func (h *handler) DecodeID(encodedID string) (string, error) {
 	return uuid, nil
 }
 
-// HandleIDEncodingError maneja errores de ofuscamiento y envía respuesta apropiada
 func (h *handler) HandleIDEncodingError(c *gin.Context, uuid string, err error) {
 	Logger.Error(logger.LogMessageIDEncodeError,
 		"uuid", uuid,
@@ -71,7 +68,6 @@ func (h *handler) HandleIDEncodingError(c *gin.Context, uuid string, err error) 
 	c.Error(domain.ErrInternalServer)
 }
 
-// HandleIDDecodingError maneja errores de desofuscamiento y envía respuesta apropiada
 func (h *handler) HandleIDDecodingError(c *gin.Context, encodedID string, err error) {
 	Logger.Error(logger.LogMessageIDDecodeError,
 		"encoded_id", encodedID,
@@ -80,21 +76,15 @@ func (h *handler) HandleIDDecodingError(c *gin.Context, encodedID string, err er
 	c.Error(domain.ErrInvalidID)
 }
 
-// resolveID accepts ONLY obfuscated ID format
-// Returns (uuid, responseID) where:
-// - uuid: the decoded UUID for internal use
-// - responseID: the obfuscated ID to use in the response
-// If the ID cannot be decoded, returns empty strings
 func (h *handler) resolveID(inputID string) (string, string) {
 	if inputID == "" {
 		return "", ""
 	}
 
-	// Decode obfuscated ID to UUID
 	uuid, err := h.DecodeID(inputID)
 	if err != nil {
 		Logger.Warn(logger.LogMessageIDDecodeError, "encoded_id", inputID, "error", err)
-		return "", "" // Return empty if decoding fails
+		return "", ""
 	}
-	return uuid, inputID // Return decoded UUID and keep original obfuscated ID for response
+	return uuid, inputID
 }

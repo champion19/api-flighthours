@@ -9,13 +9,11 @@ import (
 	"github.com/champion19/flighthours-api/platform/logger"
 )
 
-// MessageInteractor orchestrates message operations
 type MessageInteractor struct {
 	service input.MessageService
 	logger  logger.Logger
 }
 
-// NewMessageInteractor creates a new message interactor
 func NewMessageInteractor(service input.MessageService, log logger.Logger) *MessageInteractor {
 	return &MessageInteractor{
 		service: service,
@@ -23,24 +21,21 @@ func NewMessageInteractor(service input.MessageService, log logger.Logger) *Mess
 	}
 }
 
-// CreateMessage creates a new system message with transaction handling
 func (i *MessageInteractor) CreateMessage(ctx context.Context, message domain.Message) (result *domain.Message, err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageCreate, message.ToLogger())
 
-	// PASO 1: Validate message
 	if err = i.service.ValidateMessage(ctx, message); err != nil {
-		log.Error(logger.LogMessageInteractorCreateStep1Error,"error",err)
+		log.Error(logger.LogMessageInteractorCreateStep1Error, "error", err)
 		return
 	}
 	log.Success(logger.LogMessageInteractorCreateStep1OK)
 
-	// PASO 2: Begin transaction
 	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
-		log.Error(logger.LogMessageInteractorCreateStep2Error,"error",err)
+		log.Error(logger.LogMessageInteractorCreateStep2Error, "error", err)
 		return
 	}
 	log.Success(logger.LogMessageInteractorCreateStep2OK)
@@ -48,21 +43,19 @@ func (i *MessageInteractor) CreateMessage(ctx context.Context, message domain.Me
 	defer func() {
 		if err != nil {
 			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogMessageInteractorRollbackError,"error",rbErr)
+				log.Error(logger.LogMessageInteractorRollbackError, "error", rbErr)
 			} else {
-				log.Warn(logger.LogMessageInteractorRollbackOK,"error",err)
+				log.Warn(logger.LogMessageInteractorRollbackOK, "error", err)
 			}
 		}
 	}()
 
-	// PASO 3: Save message to DB
 	if err = i.service.SaveMessageToDB(ctx, tx, message); err != nil {
-		log.Error(logger.LogMessageInteractorCreateStep3Error,"error", err)
+		log.Error(logger.LogMessageInteractorCreateStep3Error, "error", err)
 		return
 	}
 	log.Success(logger.LogMessageInteractorCreateStep3OK)
 
-	// COMMIT: Confirm transaction
 	if err = tx.Commit(); err != nil {
 		log.Error(logger.LogMessageInteractorCreateCommitErr, "error", err)
 		return
@@ -72,36 +65,32 @@ func (i *MessageInteractor) CreateMessage(ctx context.Context, message domain.Me
 	result = &message
 	log.Success(logger.LogMessageInteractorCreateComplete, message.ToLogger())
 
-	err = nil // ensure defer does NOT execute rollback
+	err = nil
 	return
 }
 
-// UpdateMessage updates an existing system message with transaction handling
 func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Message) (result *domain.Message, err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageUpdate, message.ToLogger())
 
-	// PASO 1: Validate message exists
 	_, err = i.service.GetMessageByID(ctx, message.ID)
 	if err != nil {
-		log.Error(logger.LogMessageInteractorUpdateStep1Error,"error",err)
+		log.Error(logger.LogMessageInteractorUpdateStep1Error, "error", err)
 		return nil, err
 	}
 	log.Success(logger.LogMessageInteractorUpdateStep1OK)
 
-	// PASO 2: Validate message data
 	if err = i.service.ValidateMessage(ctx, message); err != nil {
-		log.Error(logger.LogMessageInteractorUpdateStep2Error,"error",err)
+		log.Error(logger.LogMessageInteractorUpdateStep2Error, "error", err)
 		return
 	}
 	log.Success(logger.LogMessageInteractorUpdateStep2OK)
 
-	// PASO 3: Begin transaction
 	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
-		log.Error(logger.LogMessageInteractorUpdateStep3Error,"error",err)
+		log.Error(logger.LogMessageInteractorUpdateStep3Error, "error", err)
 		return
 	}
 	log.Success(logger.LogMessageInteractorUpdateStep3OK)
@@ -110,21 +99,19 @@ func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Me
 		if err != nil {
 			if rbErr := tx.Rollback(); rbErr != nil {
 				log.Error(logger.LogMessageInteractorRollbackError,
-					"rollback error",rbErr,"original error",err)
+					"rollback error", rbErr, "original error", err)
 			} else {
 				log.Warn(logger.LogMessageInteractorRollbackOK)
 			}
 		}
 	}()
 
-	// PASO 4: Update message in DB
 	if err = i.service.UpdateMessageInDB(ctx, tx, message); err != nil {
 		log.Error(logger.LogMessageInteractorUpdateStep4Error, "error", err)
 		return
 	}
 	log.Success(logger.LogMessageInteractorUpdateStep4OK)
 
-	// COMMIT: Confirm transaction
 	if err = tx.Commit(); err != nil {
 		log.Error(logger.LogMessageInteractorUpdateCommitErr, "error", err)
 		return
@@ -134,29 +121,25 @@ func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Me
 	result = &message
 	log.Success(logger.LogMessageInteractorUpdateComplete, message.ToLogger())
 
-	// Refresh cache after update
+
 	log.Info(logger.LogMessageCacheRefresh)
 
-	err = nil // ensure defer does NOT execute rollback
+	err = nil
 	return
 }
 
-// DeleteMessage deletes a system message with transaction handling
 func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err error) {
-	traceID:=middleware.GetTraceIDFromContext(ctx)
-	log:=i.logger.WithTraceID(traceID)
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageDelete, "id", id)
-
-	// PASO 1: Validate message exists
 	_, err = i.service.GetMessageByID(ctx, id)
 	if err != nil {
-		log.Error(logger.LogMessageInteractorDeleteStep1Error,"error",err)
+		log.Error(logger.LogMessageInteractorDeleteStep1Error, "error", err)
 		return err
 	}
 	log.Success(logger.LogMessageInteractorDeleteStep1OK)
 
-	// PASO 2: Begin transaction
 	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
 		log.Error(logger.LogMessageInteractorDeleteStep2Error, "error", err)
@@ -177,14 +160,12 @@ func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err e
 		}
 	}()
 
-	// PASO 3: Delete message from DB
 	if err = i.service.DeleteMessageFromDB(ctx, tx, id); err != nil {
 		log.Error(logger.LogMessageInteractorDeleteStep3Error, "error", err)
 		return err
 	}
 	log.Success(logger.LogMessageInteractorDeleteStep3OK)
 
-	// COMMIT: Confirm transaction
 	if err = tx.Commit(); err != nil {
 		log.Error(logger.LogMessageInteractorDeleteCommitErr, "error", err)
 		return err
@@ -193,17 +174,15 @@ func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err e
 
 	log.Success("Mensaje eliminado exitosamente", "id", id)
 
-	// Refresh cache after delete
 	log.Info(logger.LogMessageCacheRefresh)
 
-	err = nil // ensure defer does NOT execute rollback
+	err = nil
 	return
 }
 
-// GetMessageByID retrieves a message by ID (read-only, no transaction)
 func (i *MessageInteractor) GetMessageByID(ctx context.Context, id string) (*domain.Message, error) {
-	traceID:=middleware.GetTraceIDFromContext(ctx)
-	log:=i.logger.WithTraceID(traceID)
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := i.logger.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageGet, "id", id)
 
@@ -216,11 +195,9 @@ func (i *MessageInteractor) GetMessageByID(ctx context.Context, id string) (*dom
 	log.Debug(logger.LogMessageGetOK, message.ToLogger())
 	return message, nil
 }
-
-// GetMessageByCode retrieves a message by code (read-only, no transaction)
 func (i *MessageInteractor) GetMessageByCode(ctx context.Context, code string) (*domain.Message, error) {
-	traceID:=middleware.GetTraceIDFromContext(ctx)
-	log:=i.logger.WithTraceID(traceID)
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := i.logger.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageGet, "code", code)
 
@@ -234,10 +211,9 @@ func (i *MessageInteractor) GetMessageByCode(ctx context.Context, code string) (
 	return message, nil
 }
 
-// ListMessages retrieves messages with optional filters (read-only, no transaction)
 func (i *MessageInteractor) ListMessages(ctx context.Context, filters map[string]interface{}) ([]domain.Message, error) {
-	traceID:=middleware.GetTraceIDFromContext(ctx)
-	log:=i.logger.WithTraceID(traceID)
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := i.logger.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageList, "filters", filters)
 
@@ -251,10 +227,9 @@ func (i *MessageInteractor) ListMessages(ctx context.Context, filters map[string
 	return messages, nil
 }
 
-// ListActiveMessages retrieves only active messages (read-only, no transaction)
 func (i *MessageInteractor) ListActiveMessages(ctx context.Context) ([]domain.Message, error) {
-	traceID:=middleware.GetTraceIDFromContext(ctx)
-	log:=i.logger.WithTraceID(traceID)
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := i.logger.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageList, "filter", "active_only")
 

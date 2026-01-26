@@ -168,8 +168,6 @@ func TestEmployeeService_AssignUserRole(t *testing.T) {
 	mockAuth.AssertExpectations(t)
 }
 
-// TestEmployeeService_RollbackEmployee - skipped due to internal transaction handling complexity
-// func TestEmployeeService_RollbackEmployee(t *testing.T) {}
 
 func TestEmployeeService_RollbackKeycloakUser(t *testing.T) {
 	mockAuth := new(mocks.MockAuthClient)
@@ -215,6 +213,3 @@ func TestEmployeeService_LocateEmployee(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
-
-// TestEmployeeService_CheckAndCleanInconsistentState - skipped due to internal transaction handling complexity
-// func TestEmployeeService_CheckAndCleanInconsistentState(t *testing.T) {}

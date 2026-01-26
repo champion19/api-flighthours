@@ -8,12 +8,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockAuthClient is a mock implementation of output.AuthClient (Keycloak)
 type MockAuthClient struct {
 	mock.Mock
 }
-
-// Autenticación
 
 func (m *MockAuthClient) LoginUser(ctx context.Context, username, password string) (*gocloak.JWT, error) {
 	args := m.Called(ctx, username, password)
@@ -22,8 +19,6 @@ func (m *MockAuthClient) LoginUser(ctx context.Context, username, password strin
 	}
 	return args.Get(0).(*gocloak.JWT), args.Error(1)
 }
-
-// Gestión de usuarios
 
 func (m *MockAuthClient) CreateUser(ctx context.Context, employee *domain.Employee) (string, error) {
 	args := m.Called(ctx, employee)
@@ -61,8 +56,6 @@ func (m *MockAuthClient) SetPassword(ctx context.Context, userID string, passwor
 	return args.Error(0)
 }
 
-// Roles
-
 func (m *MockAuthClient) AssignRole(ctx context.Context, userID string, roleName string) error {
 	args := m.Called(ctx, userID, roleName)
 	return args.Error(0)
@@ -81,8 +74,6 @@ func (m *MockAuthClient) GetUserRoles(ctx context.Context, userID string) ([]*go
 	return args.Get(0).([]*gocloak.Role), args.Error(1)
 }
 
-// Verificación
-
 func (m *MockAuthClient) SendVerificationEmail(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
@@ -98,8 +89,6 @@ func (m *MockAuthClient) VerifyEmail(ctx context.Context, userID string) error {
 	return args.Error(0)
 }
 
-// Sesiones
-
 func (m *MockAuthClient) Logout(ctx context.Context, refreshToken string) error {
 	args := m.Called(ctx, refreshToken)
 	return args.Error(0)
@@ -112,8 +101,6 @@ func (m *MockAuthClient) RefreshToken(ctx context.Context, refreshToken string) 
 	}
 	return args.Get(0).(*gocloak.JWT), args.Error(1)
 }
-
-// Token Validation
 
 func (m *MockAuthClient) ValidateActionToken(ctx context.Context, token string) (string, string, error) {
 	args := m.Called(ctx, token)

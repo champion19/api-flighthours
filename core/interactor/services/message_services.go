@@ -8,13 +8,11 @@ import (
 	"github.com/champion19/flighthours-api/platform/logger"
 )
 
-// MessageService handles message-related business logic
 type MessageService struct {
 	repository output.MessageRepository
 	logger     logger.Logger
 }
 
-// NewMessageService creates a new message service
 func NewMessageService(repository output.MessageRepository, log logger.Logger) *MessageService {
 	return &MessageService{
 		repository: repository,
@@ -22,12 +20,9 @@ func NewMessageService(repository output.MessageRepository, log logger.Logger) *
 	}
 }
 
-// BeginTx starts a new transaction
 func (s *MessageService) BeginTx(ctx context.Context) (output.Tx, error) {
 	return s.repository.BeginTx(ctx)
 }
-
-// ValidateMessage validates a message before saving
 func (s *MessageService) ValidateMessage(ctx context.Context, message domain.Message) error {
 	s.logger.Debug(logger.LogMessageValidation, "code", message.Code)
 
@@ -36,7 +31,6 @@ func (s *MessageService) ValidateMessage(ctx context.Context, message domain.Mes
 		return err
 	}
 
-	// Check if code already exists (for create operations)
 	if message.ID == "" {
 		existing, err := s.repository.GetByCode(ctx, message.Code)
 		if err == nil && existing != nil {
@@ -49,7 +43,6 @@ func (s *MessageService) ValidateMessage(ctx context.Context, message domain.Mes
 	return nil
 }
 
-// GetMessageByID retrieves a message by ID (includes inactive messages for CRUD operations)
 func (s *MessageService) GetMessageByID(ctx context.Context, id string) (*domain.Message, error) {
 	s.logger.Debug(logger.LogMessageGet, "id", id)
 
@@ -68,7 +61,6 @@ func (s *MessageService) GetMessageByID(ctx context.Context, id string) (*domain
 	return message, nil
 }
 
-// GetMessageByCode retrieves a message by code
 func (s *MessageService) GetMessageByCode(ctx context.Context, code string) (*domain.Message, error) {
 	s.logger.Debug(logger.LogMessageGet, "code", code)
 
@@ -82,11 +74,9 @@ func (s *MessageService) GetMessageByCode(ctx context.Context, code string) (*do
 	return message, nil
 }
 
-// ListMessages lists messages with optional filters
 func (s *MessageService) ListMessages(ctx context.Context, filters map[string]interface{}) ([]domain.Message, error) {
 	s.logger.Debug(logger.LogMessageList, "filters", filters)
 
-	// ListMessages with filters - use GetByType or GetByModule based on filters
 	messages, err := s.repository.GetAllActive(ctx)
 	if err != nil {
 		s.logger.Error(logger.LogMessageListError, "error", err)
@@ -97,7 +87,6 @@ func (s *MessageService) ListMessages(ctx context.Context, filters map[string]in
 	return messages, nil
 }
 
-// ListActiveMessages lists only active messages
 func (s *MessageService) ListActiveMessages(ctx context.Context) ([]domain.Message, error) {
 	s.logger.Debug(logger.LogMessageList, "filter", "active_only")
 
@@ -111,7 +100,6 @@ func (s *MessageService) ListActiveMessages(ctx context.Context) ([]domain.Messa
 	return messages, nil
 }
 
-// SaveMessageToDB saves a message to the database
 func (s *MessageService) SaveMessageToDB(ctx context.Context, tx output.Tx, message domain.Message) error {
 	s.logger.Info(logger.LogMessageCreate, message.ToLogger())
 
@@ -125,7 +113,6 @@ func (s *MessageService) SaveMessageToDB(ctx context.Context, tx output.Tx, mess
 	return nil
 }
 
-// UpdateMessageInDB updates a message in the database
 func (s *MessageService) UpdateMessageInDB(ctx context.Context, tx output.Tx, message domain.Message) error {
 	s.logger.Info(logger.LogMessageUpdate, message.ToLogger())
 
@@ -148,7 +135,6 @@ func (s *MessageService) UpdateMessageInDB(ctx context.Context, tx output.Tx, me
 	return nil
 }
 
-// DeleteMessageFromDB deletes a message from the database
 func (s *MessageService) DeleteMessageFromDB(ctx context.Context, tx output.Tx, id string) error {
 	s.logger.Info(logger.LogMessageDelete, "id", id)
 

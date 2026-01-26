@@ -104,11 +104,9 @@ func (b *Builder) jsonValidator(schema *jsonschema.Schema) gin.HandlerFunc {
 
 			var validationError error
 
-			// If multiple fields failed, use specific multiple fields error
 			if len(fieldNames) > 1 {
 				validationError = json_schema.ErrMultipleFields
 			} else {
-				// Single field error - determine specific error type
 				var firstError *jsonschema.EvaluationError
 				for _, err := range result.Errors {
 					firstError = err
@@ -131,7 +129,6 @@ func (b *Builder) jsonValidator(schema *jsonschema.Schema) gin.HandlerFunc {
 				}
 			}
 
-			// Store field names in context for error_handler to use in message parameters
 			if len(fieldNames) > 0 {
 				c.Set("validation_fields", fieldNames)
 			}

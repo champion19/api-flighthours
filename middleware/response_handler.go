@@ -12,22 +12,20 @@ type ResponseHandler struct {
 	cache *messagingCache.MessageCache
 }
 
-// NewResponseHandler creates a new response handler
 func NewResponseHandler(cache *messagingCache.MessageCache) *ResponseHandler {
 	return &ResponseHandler{
 		cache: cache,
 	}
 }
 
-// APIResponse unified structure for all responses
 type APIResponse struct {
 	Success bool        `json:"success"`
-	Code    string      `json:"code,omitempty"`    // Business message code
-	Message string      `json:"message,omitempty"` // Business message content
+	Code    string      `json:"code,omitempty"`
+	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
-// Error sends an error response
+
 func (h *ResponseHandler) Error(c *gin.Context, code string, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 	status := h.cache.GetHTTPStatus(code)
@@ -48,7 +46,6 @@ func (h *ResponseHandler) Error(c *gin.Context, code string, params ...string) {
 	})
 }
 
-// ErrorWithData sends an error response with additional data
 func (h *ResponseHandler) ErrorWithData(c *gin.Context, code string, data interface{}, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 	status := h.cache.GetHTTPStatus(code)
@@ -71,7 +68,6 @@ func (h *ResponseHandler) ErrorWithData(c *gin.Context, code string, data interf
 	})
 }
 
-// Success sends a success response
 func (h *ResponseHandler) Success(c *gin.Context, code string, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 	status := h.cache.GetHTTPStatus(code)
@@ -92,7 +88,6 @@ func (h *ResponseHandler) Success(c *gin.Context, code string, params ...string)
 	})
 }
 
-// SuccessWithData sends a success response with data
 func (h *ResponseHandler) SuccessWithData(c *gin.Context, code string, data interface{}, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 	status := h.cache.GetHTTPStatus(code)
@@ -115,7 +110,6 @@ func (h *ResponseHandler) SuccessWithData(c *gin.Context, code string, data inte
 	})
 }
 
-// Warning sends a warning response
 func (h *ResponseHandler) Warning(c *gin.Context, code string, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 
@@ -135,7 +129,6 @@ func (h *ResponseHandler) Warning(c *gin.Context, code string, params ...string)
 	})
 }
 
-// WarningWithData sends a warning response with data
 func (h *ResponseHandler) WarningWithData(c *gin.Context, code string, data interface{}, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 
@@ -157,7 +150,6 @@ func (h *ResponseHandler) WarningWithData(c *gin.Context, code string, data inte
 	})
 }
 
-// Info sends an informational response
 func (h *ResponseHandler) Info(c *gin.Context, code string, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 
@@ -177,7 +169,6 @@ func (h *ResponseHandler) Info(c *gin.Context, code string, params ...string) {
 	})
 }
 
-// InfoWithData sends an informational response with data
 func (h *ResponseHandler) InfoWithData(c *gin.Context, code string, data interface{}, params ...string) {
 	msg := h.cache.GetMessageResponse(code, params...)
 
@@ -199,7 +190,6 @@ func (h *ResponseHandler) InfoWithData(c *gin.Context, code string, data interfa
 	})
 }
 
-// DataOnly sends only data without message (for listings, etc.)
 func (h *ResponseHandler) DataOnly(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, APIResponse{
 		Success: true,

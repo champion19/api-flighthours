@@ -19,9 +19,6 @@ type Message struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// ToDomain converts Message to domain.Message
-// It's used for converting Message to domain.Message, which is used in the business logic
-// It returns a domain.Message with the same data as the Message.
 func (r *Message) ToDomain() domain.Message {
 	return domain.Message{
 		ID:        r.ID,

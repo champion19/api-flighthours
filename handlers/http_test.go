@@ -94,7 +94,6 @@ func (f *fakeService) GetEmployeeByKeycloakID(context.Context, string) (*domain.
 	return nil, errors.New("not implemented")
 }
 
-// GetEmployeesByRole mock for HU47 - Virtual Entity pattern
 func (f *fakeService) GetEmployeesByRole(context.Context, string) ([]domain.Employee, error) {
 	return nil, errors.New("not implemented")
 }
@@ -156,7 +155,6 @@ func (f *fakeServiceErr) GetEmployeeByKeycloakID(context.Context, string) (*doma
 	return nil, errors.New("not implemented")
 }
 
-// GetEmployeesByRole mock for HU47 - Virtual Entity pattern
 func (f *fakeServiceErr) GetEmployeesByRole(context.Context, string) ([]domain.Employee, error) {
 	return nil, errors.New("not implemented")
 }

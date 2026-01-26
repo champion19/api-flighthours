@@ -76,17 +76,12 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 				"error_type", "connection")
 			return nil, domain.ErrDatabaseUnavailable
 		}
-		// Si el error NO es de conexión, asumimos que el usuario no existe
-		// (errores como "record not found" son normales)
+
 	}
 
 	dbExists := errDB == nil && existingEmployee != nil
 
-	//TODO: CRÍTICO: Si hay error de conexión/timeout, Keycloak está caído
-	// Check in Keycloak - IMPORTANTE: detectar indisponibilidad
-
 	keycloakUser, errKC := s.keycloak.GetUserByEmail(ctx, employee.Email)
-	// CRÍTICO: Si hay error de conexión/timeout, Keycloak está caído
 
 	if errKC != nil {
 		if isConnectionError(errKC) || isTimeoutError(errKC) {
@@ -96,16 +91,13 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 				"error_type", "connection")
 			return nil, domain.ErrKeycloakUnavailable
 		}
-		// Si el error NO es de conexión, asumimos que el usuario no existe
-		// (errores como 404 Not Found son normales)
 	}
 
 	kcExists := errKC == nil && keycloakUser != nil
 
-	// Log where the user exists
 	if dbExists && kcExists {
 		s.logger.Warn(logger.LogUserExistsInBoth, "email", employee.Email)
-		return nil, domain.ErrDuplicateUser // Usuario ya registrado completamente
+		return nil, domain.ErrDuplicateUser
 	}
 
 	if dbExists && !kcExists {
@@ -113,7 +105,6 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 			"email", employee.Email,
 			"employee_id", existingEmployee.ID,
 			"action", "will be cleaned")
-		// Retornar error de registro incompleto (mensaje: intente más tarde)
 		return nil, domain.ErrIncompleteRegistration
 	}
 
@@ -122,7 +113,6 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 			"email", employee.Email,
 			"keycloak_id", *keycloakUser.ID,
 			"action", "will be cleaned")
-		// Retornar error de registro incompleto (mensaje: intente más tarde)
 		return nil, domain.ErrIncompleteRegistration
 	}
 
@@ -222,15 +212,12 @@ func (s service) RollbackKeycloakUser(ctx context.Context, KeycloakUserID string
 func (s service) CheckAndCleanInconsistentState(ctx context.Context, email string) error {
 	s.logger.Debug(logger.LogDualSystemCheck, "email", email)
 
-	// Check if user exists in business DB
 	employeeInDB, errDB := s.repository.GetEmployeeByEmail(ctx, email)
 	dbExists := errDB == nil && employeeInDB != nil
 
-	// Check if user exists in Keycloak
 	keycloakUser, errKC := s.keycloak.GetUserByEmail(ctx, email)
 	kcExists := errKC == nil && keycloakUser != nil
 
-	// Both exist or neither exist - consistent state
 	if (dbExists && kcExists) || (!dbExists && !kcExists) {
 		if dbExists && kcExists {
 			s.logger.Debug(logger.LogUserExistsInBoth, "email", email)
@@ -240,7 +227,6 @@ func (s service) CheckAndCleanInconsistentState(ctx context.Context, email strin
 		return nil
 	}
 
-	// Log inconsistent state with details
 	s.logger.Warn(logger.LogInconsistentStateDetect,
 		"email", email,
 		"in_database", dbExists,
@@ -257,7 +243,7 @@ func (s service) CheckAndCleanInconsistentState(ctx context.Context, email strin
 			}
 			return "N/A"
 		}())
-	// User exists only in Keycloak - clean it
+
 	if !dbExists && kcExists {
 		s.logger.Info(logger.LogEmployeeServiceCleaningOrphan,
 			"email", email,
@@ -278,10 +264,9 @@ func (s service) CheckAndCleanInconsistentState(ctx context.Context, email strin
 			"email", email,
 			"source", "keycloak",
 			"action", "deleted from Keycloak")
-		return nil // Limpiado exitosamente, puede reintentar
+		return nil
 	}
 
-	// User exists only in DB - clean it
 	if dbExists && !kcExists {
 		s.logger.Info(logger.LogEmployeeServiceCleaningOrphan,
 			"email", email,
@@ -302,7 +287,7 @@ func (s service) CheckAndCleanInconsistentState(ctx context.Context, email strin
 			"email", email,
 			"source", "database",
 			"action", "deleted from business database")
-		return nil // Limpiado exitosamente, puede reintentar
+		return nil
 	}
 
 	return nil
@@ -312,7 +297,6 @@ func isConnectionError(err error) bool {
 		return false
 	}
 	errStr := err.Error()
-	// Check for common connection error patterns
 	return contains(errStr, "connection refused") ||
 		contains(errStr, "no such host") ||
 		contains(errStr, "connection reset") ||
@@ -320,7 +304,6 @@ func isConnectionError(err error) bool {
 		contains(errStr, "connect: connection refused")
 }
 
-// isTimeoutError checks if an error is a timeout-related error
 func isTimeoutError(err error) bool {
 	if err == nil {
 		return false
@@ -331,15 +314,12 @@ func isTimeoutError(err error) bool {
 		contains(errStr, "context deadline exceeded")
 }
 
-// contains is a case-insensitive substring check
 func contains(s, substr string) bool {
-	// Simple case-insensitive check
 	for i := 0; i+len(substr) <= len(s); i++ {
 		match := true
 		for j := 0; j < len(substr); j++ {
 			c1 := s[i+j]
 			c2 := substr[j]
-			// Convert to lowercase for comparison
 			if c1 >= 'A' && c1 <= 'Z' {
 				c1 += 32
 			}
@@ -394,31 +374,24 @@ func (s service) SendPasswordResetEmail(ctx context.Context, email string) error
 	return nil
 }
 
-// Login authenticates a user with email and password
-// This method verifies that the email is verified before allowing login
-// If email is not verified, it automatically resends the verification email
 func (s service) Login(ctx context.Context, email, password string) (*gocloak.JWT, error) {
 	s.logger.Debug(logger.LogKeycloakLoginCheckingVerification, "email", email)
 
-	// Step 1: Get user from Keycloak to check email verification status
 	user, err := s.keycloak.GetUserByEmail(ctx, email)
 	if err != nil {
 		s.logger.Error(logger.LogKeycloakUserNotFound, "email", email, "error", err)
 		return nil, domain.ErrUserNotFound
 	}
 
-	// Step 2: Check if email is verified
 	if user.EmailVerified == nil || !*user.EmailVerified {
 		s.logger.Warn(logger.LogKeycloakLoginEmailNotVerified, "email", email, "user_id", *user.ID)
 
-		// Step 2.1: Resend verification email automatically
 		s.logger.Info(logger.LogKeycloakLoginResendingVerification, "email", email, "user_id", *user.ID)
 		if sendErr := s.keycloak.SendVerificationEmail(ctx, *user.ID); sendErr != nil {
 			s.logger.Error(logger.LogKeycloakLoginResendVerificationError,
 				"email", email,
 				"user_id", *user.ID,
 				"error", sendErr)
-			// Continue anyway - the main error is that email is not verified
 		} else {
 			s.logger.Success(logger.LogKeycloakLoginResendVerificationOK, "email", email, "user_id", *user.ID)
 		}
@@ -428,7 +401,6 @@ func (s service) Login(ctx context.Context, email, password string) (*gocloak.JW
 
 	s.logger.Debug(logger.LogKeycloakLoginEmailVerified, "email", email, "user_id", *user.ID)
 
-	// Step 3: Proceed with Keycloak authentication
 	s.logger.Debug(logger.LogKeycloakUserLogin, "email", email)
 	token, err := s.keycloak.LoginUser(ctx, email, password)
 	if err != nil {
@@ -440,13 +412,9 @@ func (s service) Login(ctx context.Context, email, password string) (*gocloak.JW
 	return token, nil
 }
 
-// VerifyEmailByToken receives a JWT token, extracts the email, and marks it as verified in Keycloak
-// This is called when a user clicks on the verification link from the email
-// Returns the extracted email on success
 func (s service) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
 	s.logger.Info(logger.LogKeycloakEmailVerify)
 
-	// Extract email from the JWT token
 	tokenParser := jwt.NewTokenParser()
 	email, err := tokenParser.ExtractEmailFromToken(token)
 	if err != nil {
@@ -456,20 +424,16 @@ func (s service) VerifyEmailByToken(ctx context.Context, token string) (string, 
 
 	s.logger.Debug("Email extracted from token", "email", email)
 
-	// Get user from Keycloak by email
 	user, err := s.keycloak.GetUserByEmail(ctx, email)
 	if err != nil {
 		s.logger.Error(logger.LogKeycloakUserNotFound, "email", email, "error", err)
 		return "", domain.ErrUserNotFound
 	}
 
-	// Check if already verified
 	if user.EmailVerified != nil && *user.EmailVerified {
 		s.logger.Warn(logger.LogKeycloakEmailAlreadyVerified, "email", email, "user_id", *user.ID)
 		return email, domain.ErrEmailAlreadyVerified
 	}
-
-	// Verify the email in Keycloak
 	if err := s.keycloak.VerifyEmail(ctx, *user.ID); err != nil {
 		s.logger.Error(logger.LogKeycloakEmailVerifyError, "email", email, "user_id", *user.ID, "error", err)
 		return "", err
@@ -497,12 +461,8 @@ func (s service) LocateEmployee(ctx context.Context, id string) (*dto.RegisterEm
 	}, nil
 }
 
-// UpdatePassword validates the action token and updates the user's password
-// Returns the email of the user whose password was updated
 func (s service) UpdatePassword(ctx context.Context, token, newPassword string) (string, error) {
 	s.logger.Info(logger.LogKeycloakPasswordUpdate)
-
-	// Validate the action token and get user info
 	s.logger.Debug(logger.LogKeycloakPasswordTokenValidation)
 	userID, email, err := s.keycloak.ValidateActionToken(ctx, token)
 	if err != nil {
@@ -511,7 +471,6 @@ func (s service) UpdatePassword(ctx context.Context, token, newPassword string) 
 	}
 	s.logger.Debug(logger.LogKeycloakPasswordTokenValidOK, "user_id", userID, "email", email)
 
-	// Set the new password (temporary: false because user chose this password)
 	if err := s.keycloak.SetPassword(ctx, userID, newPassword, false); err != nil {
 		s.logger.Error(logger.LogKeycloakPasswordUpdateError, "user_id", userID, "error", err)
 		return "", domain.ErrPasswordUpdateFailed
@@ -521,13 +480,8 @@ func (s service) UpdatePassword(ctx context.Context, token, newPassword string) 
 	return email, nil
 }
 
-// ChangePassword allows an authenticated user to change their password
-// This method validates the current password by attempting login, then sets the new password
-// Returns the email of the user whose password was changed
 func (s service) ChangePassword(ctx context.Context, email, currentPassword, newPassword string) (string, error) {
 	s.logger.Info(logger.LogKeycloakChangePassword, "email", email)
-
-	// Step 1: Get user from Keycloak to ensure they exist
 	s.logger.Debug(logger.LogKeycloakChangePasswordValidating, "email", email)
 	user, err := s.keycloak.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -535,15 +489,12 @@ func (s service) ChangePassword(ctx context.Context, email, currentPassword, new
 		return "", domain.ErrUserNotFound
 	}
 
-	// Step 2: Validate current password by attempting login
-	// If login fails, the current password is incorrect
 	_, err = s.keycloak.LoginUser(ctx, email, currentPassword)
 	if err != nil {
 		s.logger.Warn(logger.LogKeycloakChangePasswordInvalid, "email", email, "error", err)
 		return "", domain.ErrInvalidCurrentPassword
 	}
 
-	// Step 3: Set the new password (temporary: false because user chose this password)
 	if err := s.keycloak.SetPassword(ctx, *user.ID, newPassword, false); err != nil {
 		s.logger.Error(logger.LogKeycloakChangePasswordError, "email", email, "user_id", *user.ID, "error", err)
 		return "", domain.ErrPasswordUpdateFailed
@@ -553,12 +504,8 @@ func (s service) ChangePassword(ctx context.Context, email, currentPassword, new
 	return email, nil
 }
 
-// DeleteEmployee removes an employee from both Keycloak and the database
-// First deletes from Keycloak (if keycloakUserID is provided), then from the database
 func (s service) DeleteEmployee(ctx context.Context, employeeID string, keycloakUserID string) error {
 	s.logger.Info(logger.LogEmployeeDeleting, "employee_id", employeeID, "keycloak_user_id", keycloakUserID)
-
-	// Step 1: Delete from Keycloak first (if user has a Keycloak ID)
 	if keycloakUserID != "" {
 		s.logger.Debug(logger.LogEmployeeDeletingKeycloak, "keycloak_user_id", keycloakUserID)
 		if err := s.keycloak.DeleteUser(ctx, keycloakUserID); err != nil {
@@ -568,12 +515,9 @@ func (s service) DeleteEmployee(ctx context.Context, employeeID string, keycloak
 		s.logger.Success(logger.LogEmployeeDeletedKeycloak, "keycloak_user_id", keycloakUserID)
 	}
 
-	// Step 2: Delete from database
 	s.logger.Debug(logger.LogEmployeeDeletingDB, "employee_id", employeeID)
 	if err := s.repository.DeleteEmployee(ctx, nil, employeeID); err != nil {
 		s.logger.Error(logger.LogEmployeeDeleteDBError, "employee_id", employeeID, "error", err)
-		// Note: At this point Keycloak user is already deleted, but DB delete failed
-		// This is an inconsistent state but we prioritize security (no orphan auth)
 		return domain.ErrUserCannotDelete
 	}
 
@@ -581,8 +525,6 @@ func (s service) DeleteEmployee(ctx context.Context, employeeID string, keycloak
 	return nil
 }
 
-// GetEmployeesByRole retrieves all employees for a specific role
-// This implements the "Crew Member Types" feature - no new table needed, we query employees by role field
 func (s service) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
 	s.logger.Debug(logger.LogCrewMemberTypeGet, "role", role)
 	employees, err := s.repository.GetEmployeesByRole(ctx, role)
