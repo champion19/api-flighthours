@@ -1,0 +1,12 @@
+FROM golang:1.25-alpine
+
+LABEL maintainer="Flighthours Team <support@flighthours.com>"
+LABEL description="Contenedor para generación de documentación Swagger con swag CLI"
+
+RUN apk add --no-cache git
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
+WORKDIR /app
+
+ENTRYPOINT ["/go/bin/swag"]
+CMD ["--help"]

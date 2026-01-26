@@ -1,0 +1,43 @@
+# Binarios
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Archivos de prueba
+*_test.go
+*.test
+
+# Dependencias
+vendor/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentación (no necesaria para build)
+docs/swaggo/*.md
+SWAGGER_TESTING.md
+README.md
+
+# Configuración local
+config/local-config.json
+
+# Logs
+*.log
+
+# Temporal
+tmp/
+temp/

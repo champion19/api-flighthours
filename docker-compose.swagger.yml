@@ -1,0 +1,46 @@
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: flighthours-swagger-ui
+    ports:
+      - "8082:8080"
+    environment:
+      # URL del archivo swagger.json
+      SWAGGER_JSON: /swagger/swagger.json
+
+      # Configuración de la UI
+      BASE_URL: /
+
+      # Personalización de la UI
+      DEEP_LINKING: "true"
+      DISPLAY_OPERATION_ID: "true"
+      DEFAULT_MODELS_EXPAND_DEPTH: 3
+      DEFAULT_MODEL_EXPAND_DEPTH: 3
+      DISPLAY_REQUEST_DURATION: "true"
+      DOC_EXPANSION: "list"
+      FILTER: "true"
+      SHOW_EXTENSIONS: "true"
+      SHOW_COMMON_EXTENSIONS: "true"
+      TRY_IT_OUT_ENABLED: "true"
+
+      # Configuración de validación
+      VALIDATOR_URL: "https://validator.swagger.io/validator"
+
+    volumes:
+      # Montar el directorio de documentación Swagger
+      - ./platform/swaggo:/swagger:ro
+
+    networks:
+      - flighthours-network
+
+    restart: unless-stopped
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.swagger.rule=Host(`swagger.localhost`)"
+      - "traefik.http.services.swagger.loadbalancer.server.port=8080"
+
+networks:
+  flighthours-network:
+    driver: bridge
+    name: flighthours-network
