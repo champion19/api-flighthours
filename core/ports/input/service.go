@@ -51,3 +51,10 @@ type MessageService interface {
 	UpdateMessageInDB(ctx context.Context, tx output.Tx, message domain.Message) error
 	DeleteMessageFromDB(ctx context.Context, tx output.Tx, id string) error
 }
+
+// AirlineService defines the interface for airline business operations
+type AirlineService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
+	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+}

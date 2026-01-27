@@ -36,3 +36,10 @@ type MessageRepository interface {
 	GetByType(ctx context.Context, msgType string) ([]domain.Message, error)
 	GetByModule(ctx context.Context, module string) ([]domain.Message, error)
 }
+
+// AirlineRepository defines the interface for airline data persistence operations
+type AirlineRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
+	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+}
