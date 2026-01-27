@@ -79,6 +79,11 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		public.POST("/auth/resend-verification", validator.WithValidateResendVerificationEmail(), handler.ResendVerificationEmail())
 
 		public.POST("/auth/verify-email", handler.VerifyEmailByToken())
+
+	
+		public.POST("/auth/password-reset", validator.WithValidatePasswordResetRequest(), handler.PasswordReset())
+
+		public.POST("/auth/update-password", validator.WithValidateUpdatePassword(), handler.UpdatePassword())
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
