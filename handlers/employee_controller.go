@@ -7,6 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RegisterEmployee godoc
+// @Summary      Registrar nueva cuenta de empleado
+// @Description  Crea una nueva cuenta de empleado en el sistema con sincronización a Keycloak
+// @Tags         accounts
+// @Accept       json
+// @Produce      json
+// @Param        request body handlers.EmployeeRequest true "Datos del empleado a registrar"
+// @Success      201 {object} middleware.APIResponse{data=handlers.RegisterEmployeeResponse} "Cuenta creada exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Error de validación - Datos inválidos"
+// @Failure      409 {object} middleware.APIResponse "Conflicto - Email o número de identidad ya registrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /register [post]
 func (h handler) RegisterEmployee() func(c *gin.Context) {
 
 	return func(c *gin.Context) {
@@ -73,7 +85,7 @@ func (h handler) RegisterEmployee() func(c *gin.Context) {
 			true,
 		)
 
-		log.Success("register employee success",
+		log.Success(logger.LogEmployeeRegisterSuccessLog,
 			result.Employee.ToLogger(),
 			"encoded_id", encodedID,
 			"client_ip", c.ClientIP())
@@ -83,6 +95,19 @@ func (h handler) RegisterEmployee() func(c *gin.Context) {
 	}
 }
 
+// ResendVerificationEmail godoc
+// @Summary      Reenviar email de verificación
+// @Description  Reenvía el email de verificación a un usuario registrado que no ha verificado su cuenta
+// @Tags         authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body handlers.ResendVerificationEmailRequest true "Email del usuario"
+// @Success      200 {object} middleware.APIResponse{data=handlers.ResendVerificationEmailResponse} "Email reenviado exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Error de validación - Email inválido"
+// @Failure      404 {object} middleware.APIResponse "Usuario no encontrado"
+// @Failure      409 {object} middleware.APIResponse "Email ya verificado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /auth/resend-verification [post]
 func (h handler) ResendVerificationEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req ResendVerificationEmailRequest
@@ -109,6 +134,18 @@ func (h handler) ResendVerificationEmail() gin.HandlerFunc {
 	}
 }
 
+// Login godoc
+// @Summary      Login de usuario
+// @Description  Autentica un usuario y retorna tokens de acceso
+// @Tags         authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body handlers.LoginRequest true "Credenciales de login"
+// @Success      200 {object} middleware.APIResponse{data=handlers.LoginResponse} "Login exitoso"
+// @Failure      400 {object} middleware.APIResponse "Credenciales inválidas"
+// @Failure      401 {object} middleware.APIResponse "Email no verificado o credenciales incorrectas"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /login [post]
 func (h handler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -153,6 +190,19 @@ func (h handler) Login() gin.HandlerFunc {
 	}
 }
 
+// VerifyEmailByToken godoc
+// @Summary      Verificar email de usuario
+// @Description  Verifica el email de un usuario usando un token JWT proxy
+// @Tags         authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body handlers.VerifyEmailRequest true "Token de verificación"
+// @Success      200 {object} middleware.APIResponse{data=handlers.VerifyEmailResponse} "Email verificado exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Token inválido o expirado"
+// @Failure      404 {object} middleware.APIResponse "Usuario no encontrado"
+// @Failure      409 {object} middleware.APIResponse "Email ya estaba verificado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /auth/verify-email [post]
 func (h handler) VerifyEmailByToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -192,6 +242,17 @@ func (h handler) VerifyEmailByToken() gin.HandlerFunc {
 	}
 }
 
+// GetEmployee godoc
+// @Summary      Obtener perfil del usuario autenticado
+// @Description  Obtiene la información del empleado que realiza la petición usando el token JWT
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} middleware.APIResponse{data=handlers.EmployeeResponse} "Datos del usuario autenticado"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /employee/me [get]
 func (h handler) GetEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -222,6 +283,20 @@ func (h handler) GetEmployee() gin.HandlerFunc {
 	}
 }
 
+// ChangePassword godoc
+// @Summary      Cambiar contraseña de usuario autenticado
+// @Description  Permite a un usuario cambiar su contraseña conociendo la contraseña actual
+// @Tags         authentication
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body handlers.ChangePasswordRequest true "Email, contraseña actual y nueva"
+// @Success      200 {object} middleware.APIResponse{data=handlers.ChangePasswordResponse} "Contraseña cambiada exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Error de validación - Contraseñas no coinciden"
+// @Failure      401 {object} middleware.APIResponse "Contraseña actual incorrecta"
+// @Failure      404 {object} middleware.APIResponse "Usuario no encontrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /auth/change-password [post]
 func (h handler) ChangePassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -271,9 +346,20 @@ func (h handler) ChangePassword() gin.HandlerFunc {
 	}
 }
 
-// UpdateEmployee - PUT /employees/me - HU23
-// Updates the authenticated employee's basic information
-// Preserves: email, password, airline, bp, keycloak_user_id
+// UpdateEmployee godoc
+// @Summary      Actualizar información del empleado autenticado
+// @Description  Actualiza la información básica del empleado autenticado usando el token JWT. Preserva: email, password, airline, bp (estos campos requieren otros endpoints).
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body handlers.UpdateEmployeeRequest true "Datos a actualizar"
+// @Success      200 {object} middleware.APIResponse{data=handlers.UpdateEmployeeResponse} "Empleado actualizado exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Error de validación - Datos inválidos"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      404 {object} middleware.APIResponse "Empleado no encontrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /employees/me [put]
 func (h handler) UpdateEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -281,7 +367,6 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 
 		log.Info(logger.LogEmployeeUpdateRequest, "endpoint", "PUT /employees/me", "client_ip", c.ClientIP())
 
-		// Get authenticated user from context
 		existingEmployee, exists := middleware.GetAuthenticatedUser(c)
 		if !exists {
 			log.Error(logger.LogEmployeeNotFound, "error", "authenticated user not in context", "client_ip", c.ClientIP())
@@ -289,7 +374,6 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 			return
 		}
 
-		// Bind and sanitize request
 		var req UpdateEmployeeRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			log.Error(logger.LogRegJSONParseError, "error", err, "client_ip", c.ClientIP())
@@ -299,7 +383,6 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 
 		req.Sanitize()
 
-		// Convert request to domain, preserving immutable fields from existing employee
 		employeeDomain, err := req.ToUpdateData(existingEmployee)
 		if err != nil {
 			log.Error(logger.LogEmployeeUpdateError, "email", existingEmployee.Email, "error", err, "client_ip", c.ClientIP())
@@ -314,7 +397,6 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 			return
 		}
 
-		// Call interactor
 		result, err := h.Interactor.UpdateEmployee(c, employeeDomain)
 		if err != nil {
 			log.Error(logger.LogEmployeeUpdateError, "employee_id", existingEmployee.ID, "error", err, "client_ip", c.ClientIP())
@@ -322,14 +404,12 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 			return
 		}
 
-		// Encode ID for response
 		encodedID, err := h.EncodeID(result.ID)
 		if err != nil {
 			h.HandleIDEncodingError(c, result.ID, err)
 			return
 		}
 
-		// Build response with HATEOAS links
 		baseURL := GetBaseURL(c)
 		response := UpdateEmployeeResponse{
 			ID:      encodedID,

@@ -1,3 +1,4 @@
+basePath: /flighthours/api/v1
 definitions:
   github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType:
     enum:
@@ -138,8 +139,6 @@ definitions:
       id:
         type: string
     type: object
-  handlers.MessageDeletedResponse:
-    type: object
   handlers.MessageListResponse:
     properties:
       _links:
@@ -221,6 +220,32 @@ definitions:
       sent:
         type: boolean
     type: object
+  handlers.UpdateEmployeeRequest:
+    properties:
+      active:
+        type: boolean
+      end_date:
+        type: string
+      identificationNumber:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  handlers.UpdateEmployeeResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      id:
+        type: string
+      updated:
+        type: boolean
+    type: object
   handlers.VerifyEmailRequest:
     properties:
       token:
@@ -238,35 +263,34 @@ definitions:
   middleware.APIResponse:
     properties:
       code:
-        description: Business message code
         type: string
       data: {}
       message:
-        description: Business message content
         type: string
       success:
         type: boolean
     type: object
-  middleware.ErrorResponse:
-    properties:
-      code:
-        type: string
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
+host: localhost:8082
 info:
-  contact: {}
+  contact:
+    email: support@flighthours.com
+    name: FlightHours Support
+  description: API para gestión de empleados de aerolínea y control de horas de vuelo
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: FlightHours API
+  version: "1.0"
 paths:
   /auth/change-password:
     post:
       consumes:
       - application/json
       description: Permite a un usuario cambiar su contraseña conociendo la contraseña
-        actual. Este flujo no requiere salir de la API ni tokens por email.
+        actual
       parameters:
-      - description: Email, contraseña actual y nueva contraseña
+      - description: Email, contraseña actual y nueva
         in: body
         name: request
         required: true
@@ -300,10 +324,177 @@ paths:
           description: Error interno del servidor
           schema:
             $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
       summary: Cambiar contraseña de usuario autenticado
       tags:
       - authentication
-  /auth/login:
+  /auth/resend-verification:
+    post:
+      consumes:
+      - application/json
+      description: Reenvía el email de verificación a un usuario registrado que no
+        ha verificado su cuenta
+      parameters:
+      - description: Email del usuario
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ResendVerificationEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email reenviado exitosamente
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.ResendVerificationEmailResponse'
+              type: object
+        "400":
+          description: Error de validación - Email inválido
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "409":
+          description: Email ya verificado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: Reenviar email de verificación
+      tags:
+      - authentication
+  /auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verifica el email de un usuario usando un token JWT proxy
+      parameters:
+      - description: Token de verificación
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email verificado exitosamente
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.VerifyEmailResponse'
+              type: object
+        "400":
+          description: Token inválido o expirado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "409":
+          description: Email ya estaba verificado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: Verificar email de usuario
+      tags:
+      - authentication
+  /employee/me:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la información del empleado que realiza la petición usando
+        el token JWT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Datos del usuario autenticado
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.EmployeeResponse'
+              type: object
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener perfil del usuario autenticado
+      tags:
+      - employees
+  /employees/me:
+    put:
+      consumes:
+      - application/json
+      description: 'Actualiza la información básica del empleado autenticado usando
+        el token JWT. Preserva: email, password, airline, bp (estos campos requieren
+        otros endpoints).'
+      parameters:
+      - description: Datos a actualizar
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateEmployeeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Empleado actualizado exitosamente
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.UpdateEmployeeResponse'
+              type: object
+        "400":
+          description: Error de validación - Datos inválidos
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Empleado no encontrado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar información del empleado autenticado
+      tags:
+      - employees
+  /login:
     post:
       consumes:
       - application/json
@@ -341,109 +532,36 @@ paths:
             $ref: '#/definitions/middleware.APIResponse'
       summary: Login de usuario
       tags:
-      - Autenticación
-  /auth/resend-verification:
-    post:
-      consumes:
-      - application/json
-      description: Reenvía el email de verificación a un usuario registrado que no
-        ha verificado su cuenta
-      parameters:
-      - description: Email del usuario
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.ResendVerificationEmailRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Email reenviado exitosamente
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.ResendVerificationEmailResponse'
-              type: object
-        "400":
-          description: Error de validación - Email inválido
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Usuario no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Reenviar email de verificación
-      tags:
       - authentication
-  /auth/verify-email:
-    post:
-      consumes:
-      - application/json
-      description: Verifica el email de un usuario usando un token JWT. Este endpoint
-        actúa como proxy para no exponer Keycloak directamente.
-      parameters:
-      - description: Token de verificación del email
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.VerifyEmailRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Email verificado exitosamente
-          schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.VerifyEmailResponse'
-              type: object
-        "400":
-          description: Token inválido o expirado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Usuario no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "409":
-          description: Email ya estaba verificado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      summary: Verificar email de usuario (Proxy)
-      tags:
-      - Autenticación
-  /employee/me:
+  /messages:
     get:
       consumes:
       - application/json
-      description: Obtiene la información del empleado que realiza la petición usando
-        el token JWT. No requiere pasar ID.
+      description: Lista todos los mensajes del sistema con filtros opcionales
+      parameters:
+      - description: Filtrar por módulo
+        in: query
+        name: module
+        type: string
+      - description: Filtrar por tipo (SUCCESS, ERROR, WARNING, INFO)
+        in: query
+        name: type
+        type: string
+      - description: Filtrar por categoría
+        in: query
+        name: category
+        type: string
+      - description: Filtrar por estado activo
+        in: query
+        name: active
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
-          description: Datos del usuario autenticado
+          description: Lista de mensajes
           schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.EmployeeResponse'
-              type: object
+            $ref: '#/definitions/handlers.MessageListResponse'
         "401":
           description: No autenticado
           schema:
@@ -454,54 +572,17 @@ paths:
             $ref: '#/definitions/middleware.APIResponse'
       security:
       - BearerAuth: []
-      summary: Obtener perfil del usuario autenticado
-      tags:
-      - employees
-  /messages:
-    get:
-      description: Obtiene una lista de mensajes del sistema con filtros opcionales.
-        Permite filtrar por módulo, tipo, categoría y estado activo.
-      parameters:
-      - description: 'Filtrar por módulo (ej: users, flights, bookings)'
-        in: query
-        name: module
-        type: string
-      - description: Filtrar por tipo (ERROR, WARNING, INFO, SUCCESS)
-        in: query
-        name: type
-        type: string
-      - description: Filtrar por categoría (usuario_final, sistema, validacion)
-        in: query
-        name: category
-        type: string
-      - description: Filtrar por estado activo (true, false)
-        in: query
-        name: active
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lista de mensajes obtenida exitosamente
-          schema:
-            $ref: '#/definitions/handlers.MessageListResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      summary: Listar mensajes del sistema
+      summary: Listar todos los mensajes
       tags:
       - messages
     post:
       consumes:
       - application/json
-      description: Crea un nuevo mensaje del sistema con tipo, categoría y contenido.
-        Los mensajes se utilizan para mostrar información, advertencias y errores
-        a los usuarios.
+      description: Crea un nuevo mensaje para el sistema de mensajes centralizados
       parameters:
       - description: Datos del mensaje a crear
         in: body
-        name: message
+        name: request
         required: true
         schema:
           $ref: '#/definitions/handlers.MessageRequest'
@@ -511,28 +592,40 @@ paths:
         "201":
           description: Mensaje creado exitosamente
           schema:
-            $ref: '#/definitions/handlers.MessageCreatedResponse'
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.MessageCreatedResponse'
+              type: object
         "400":
-          description: Datos de entrada inválidos
+          description: Error de validación
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
         "409":
-          description: El código del mensaje ya existe
+          description: Código de mensaje duplicado
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      summary: Crear un nuevo mensaje del sistema
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nuevo mensaje del sistema
       tags:
       - messages
   /messages/{id}:
     delete:
-      description: Elimina un mensaje del sistema de forma permanente. Esta acción
-        no se puede deshacer.
+      consumes:
+      - application/json
+      description: Elimina un mensaje del sistema por su ID ofuscado
       parameters:
-      - description: ID del mensaje (encoded)
+      - description: ID ofuscado del mensaje
         in: path
         name: id
         required: true
@@ -543,27 +636,34 @@ paths:
         "200":
           description: Mensaje eliminado exitosamente
           schema:
-            $ref: '#/definitions/handlers.MessageDeletedResponse'
+            $ref: '#/definitions/middleware.APIResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
         "404":
           description: Mensaje no encontrado
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      summary: Eliminar un mensaje del sistema
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar mensaje
       tags:
       - messages
     get:
-      description: Obtiene los detalles de un mensaje del sistema específico por su
-        ID.
+      consumes:
+      - application/json
+      description: Obtiene un mensaje específico por su ID ofuscado
       parameters:
-      - description: ID del mensaje (encoded)
+      - description: ID ofuscado del mensaje
         in: path
         name: id
         required: true
@@ -572,38 +672,43 @@ paths:
       - application/json
       responses:
         "200":
-          description: Mensaje encontrado exitosamente
+          description: Mensaje encontrado
           schema:
             $ref: '#/definitions/handlers.MessageResponse'
         "400":
           description: ID inválido
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
         "404":
           description: Mensaje no encontrado
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      summary: Obtener un mensaje por ID
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener mensaje por ID
       tags:
       - messages
     put:
       consumes:
       - application/json
-      description: Actualiza un mensaje del sistema existente. Permite modificar tipo,
-        categoría, contenido y estado activo.
+      description: Actualiza un mensaje del sistema por su ID ofuscado
       parameters:
-      - description: ID del mensaje (encoded)
+      - description: ID ofuscado del mensaje
         in: path
         name: id
         required: true
         type: string
-      - description: Datos del mensaje a actualizar
+      - description: Datos actualizados del mensaje
         in: body
-        name: message
+        name: request
         required: true
         schema:
           $ref: '#/definitions/handlers.MessageRequest'
@@ -613,38 +718,56 @@ paths:
         "200":
           description: Mensaje actualizado exitosamente
           schema:
-            $ref: '#/definitions/handlers.MessageUpdatedResponse'
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.MessageUpdatedResponse'
+              type: object
         "400":
-          description: Datos de entrada inválidos
+          description: Error de validación o ID inválido
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
         "404":
           description: Mensaje no encontrado
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
         "500":
           description: Error interno del servidor
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      summary: Actualizar un mensaje del sistema
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar mensaje existente
       tags:
       - messages
-  /messages/reload:
+  /messages/cache/reload:
     post:
-      description: Recarga el caché de mensajes desde la base de datos. Útil después
-        de hacer cambios masivos a mensajes.
+      consumes:
+      - application/json
+      description: Recarga todos los mensajes desde la base de datos al cache en memoria
       produces:
       - application/json
       responses:
         "200":
-          description: Caché recargado exitosamente
+          description: Cache recargado exitosamente
           schema:
             $ref: '#/definitions/handlers.CacheReloadResponse'
-        "500":
-          description: Error interno del servidor
+        "401":
+          description: No autenticado
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      summary: Recargar caché de mensajes
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error al recargar cache
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Recargar cache de mensajes
       tags:
       - messages
   /register:
@@ -652,12 +775,11 @@ paths:
       consumes:
       - application/json
       description: Crea una nueva cuenta de empleado en el sistema con sincronización
-        a Keycloak. Incluye validación de datos, verificación de duplicados y creación
-        de usuario en el sistema de autenticación.
+        a Keycloak
       parameters:
       - description: Datos del empleado a registrar
         in: body
-        name: account
+        name: request
         required: true
         schema:
           $ref: '#/definitions/handlers.EmployeeRequest'
@@ -674,7 +796,7 @@ paths:
                   $ref: '#/definitions/handlers.RegisterEmployeeResponse'
               type: object
         "400":
-          description: Error de validación - Datos inválidos o incompletos
+          description: Error de validación - Datos inválidos
           schema:
             $ref: '#/definitions/middleware.APIResponse'
         "409":
@@ -688,4 +810,10 @@ paths:
       summary: Registrar nueva cuenta de empleado
       tags:
       - accounts
+securityDefinitions:
+  BearerAuth:
+    description: 'Ingrese el token en formato: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -121,7 +121,6 @@ func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Me
 	result = &message
 	log.Success(logger.LogMessageInteractorUpdateComplete, message.ToLogger())
 
-
 	log.Info(logger.LogMessageCacheRefresh)
 
 	err = nil
@@ -133,6 +132,7 @@ func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err e
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageDelete, "id", id)
+
 	_, err = i.service.GetMessageByID(ctx, id)
 	if err != nil {
 		log.Error(logger.LogMessageInteractorDeleteStep1Error, "error", err)
@@ -195,6 +195,7 @@ func (i *MessageInteractor) GetMessageByID(ctx context.Context, id string) (*dom
 	log.Debug(logger.LogMessageGetOK, message.ToLogger())
 	return message, nil
 }
+
 func (i *MessageInteractor) GetMessageByCode(ctx context.Context, code string) (*domain.Message, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)

@@ -126,7 +126,7 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 
 	employee.KeycloakUserID = keycloakUserID
 	result.Employee = employee
-	result.Message = "user registered successfully"
+	result.Message = logger.DtoMsgUserRegistered
 
 	if sendErr := i.service.SendVerificationEmail(ctx, keycloakUserID); sendErr != nil {
 		log.Warn(logger.LogKeycloakSendVerificationEmailError,
@@ -334,16 +334,12 @@ func (i *Interactor) GetEmployeesByRole(ctx context.Context, role string) ([]dom
 	return employees, nil
 }
 
-// UpdateEmployee updates an employee's basic information (HU23)
-// Preserves: email, password, keycloak_user_id, airline, bp
-// Syncs with Keycloak if role or active status changes
 func (i *Interactor) UpdateEmployee(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := i.logger.WithTraceID(traceID)
 
 	log.Info(logger.LogEmployeeUpdateRequest, employee.ToLogger())
 
-	// Step 1: Begin transaction
 	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
 		log.Error(logger.LogDBTransactionBeginErr, "error", err)
@@ -358,14 +354,12 @@ func (i *Interactor) UpdateEmployee(ctx context.Context, employee domain.Employe
 		}
 	}()
 
-	// Step 2: Update employee in database
 	if err = i.service.UpdateEmployee(ctx, tx, employee); err != nil {
 		log.Error(logger.LogEmployeeUpdateError, "employee_id", employee.ID, "error", err)
 		return nil, err
 	}
 	log.Debug(logger.LogEmployeeUpdated, "employee_id", employee.ID)
 
-	// Step 3: Commit transaction
 	if err = tx.Commit(); err != nil {
 		log.Error(logger.LogDBTransactionCommitErr, "error", err)
 		return nil, domain.ErrDatabaseUnavailable
@@ -375,6 +369,6 @@ func (i *Interactor) UpdateEmployee(ctx context.Context, employee domain.Employe
 	return &dto.UpdateEmployee{
 		ID:      employee.ID,
 		Updated: true,
-		Message: "employee updated successfully",
+		Message: logger.DtoMsgEmployeeUpdated,
 	}, nil
 }

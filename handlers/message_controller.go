@@ -2,13 +2,25 @@ package handlers
 
 import (
 	domain "github.com/champion19/flighthours-api/core/interactor/services/domain"
+	"github.com/champion19/flighthours-api/middleware"
 	"github.com/champion19/flighthours-api/platform/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/champion19/flighthours-api/middleware"
 )
 
-
-
+// CreateMessage godoc
+// @Summary      Crear nuevo mensaje del sistema
+// @Description  Crea un nuevo mensaje para el sistema de mensajes centralizados
+// @Tags         messages
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body handlers.MessageRequest true "Datos del mensaje a crear"
+// @Success      201 {object} middleware.APIResponse{data=handlers.MessageCreatedResponse} "Mensaje creado exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Error de validación"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      409 {object} middleware.APIResponse "Código de mensaje duplicado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /messages [post]
 func (h handler) CreateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -59,7 +71,7 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 			Links: links,
 		}
 
-		log.Success("Mensaje creado exitosamente",
+		log.Success(logger.LogMessageCreatedSuccess,
 			"id", result.ID,
 			"encoded_id", encodedID,
 			"code", result.Code,
@@ -69,7 +81,21 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 	}
 }
 
-
+// UpdateMessage godoc
+// @Summary      Actualizar mensaje existente
+// @Description  Actualiza un mensaje del sistema por su ID ofuscado
+// @Tags         messages
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "ID ofuscado del mensaje"
+// @Param        request body handlers.MessageRequest true "Datos actualizados del mensaje"
+// @Success      200 {object} middleware.APIResponse{data=handlers.MessageUpdatedResponse} "Mensaje actualizado exitosamente"
+// @Failure      400 {object} middleware.APIResponse "Error de validación o ID inválido"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      404 {object} middleware.APIResponse "Mensaje no encontrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /messages/{id} [put]
 func (h handler) UpdateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -124,7 +150,7 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 			Links: links,
 		}
 
-		log.Success("Mensaje actualizado exitosamente",
+		log.Success(logger.LogMessageUpdatedSuccess,
 			"id", result.ID,
 			"code", result.Code,
 			"client_ip", c.ClientIP())
@@ -133,6 +159,20 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 	}
 }
 
+// DeleteMessage godoc
+// @Summary      Eliminar mensaje
+// @Description  Elimina un mensaje del sistema por su ID ofuscado
+// @Tags         messages
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "ID ofuscado del mensaje"
+// @Success      200 {object} middleware.APIResponse "Mensaje eliminado exitosamente"
+// @Failure      400 {object} middleware.APIResponse "ID inválido"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      404 {object} middleware.APIResponse "Mensaje no encontrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /messages/{id} [delete]
 func (h handler) DeleteMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -142,7 +182,6 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 			"method", c.Request.Method,
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
-
 
 		encodedID := c.Param("id")
 		uuid, err := h.IDEncoder.Decode(encodedID)
@@ -167,7 +206,7 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 			return
 		}
 
-		log.Success("Mensaje eliminado exitosamente",
+		log.Success(logger.LogMessageDeletedSuccess,
 			"id", uuid,
 			"client_ip", c.ClientIP())
 
@@ -175,6 +214,20 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 	}
 }
 
+// GetMessageByID godoc
+// @Summary      Obtener mensaje por ID
+// @Description  Obtiene un mensaje específico por su ID ofuscado
+// @Tags         messages
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "ID ofuscado del mensaje"
+// @Success      200 {object} handlers.MessageResponse "Mensaje encontrado"
+// @Failure      400 {object} middleware.APIResponse "ID inválido"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      404 {object} middleware.APIResponse "Mensaje no encontrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /messages/{id} [get]
 func (h handler) GetMessageByID() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -226,7 +279,21 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 	}
 }
 
-
+// ListMessages godoc
+// @Summary      Listar todos los mensajes
+// @Description  Lista todos los mensajes del sistema con filtros opcionales
+// @Tags         messages
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        module query string false "Filtrar por módulo"
+// @Param        type query string false "Filtrar por tipo (SUCCESS, ERROR, WARNING, INFO)"
+// @Param        category query string false "Filtrar por categoría"
+// @Param        active query boolean false "Filtrar por estado activo"
+// @Success      200 {object} handlers.MessageListResponse "Lista de mensajes"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /messages [get]
 func (h handler) ListMessages() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -264,7 +331,6 @@ func (h handler) ListMessages() func(c *gin.Context) {
 			return
 		}
 
-
 		baseURL := GetBaseURL(c)
 		response := ToMessageListResponse(messages)
 		for i := range response.Messages {
@@ -286,22 +352,32 @@ func (h handler) ListMessages() func(c *gin.Context) {
 	}
 }
 
+// ReloadMessageCache godoc
+// @Summary      Recargar cache de mensajes
+// @Description  Recarga todos los mensajes desde la base de datos al cache en memoria
+// @Tags         messages
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} handlers.CacheReloadResponse "Cache recargado exitosamente"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      500 {object} middleware.APIResponse "Error al recargar cache"
+// @Router       /messages/cache/reload [post]
 func (h handler) ReloadMessageCache() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info("Recargando caché de mensajes",
+		log.Info(logger.LogMessageCacheReloading,
 			"method", c.Request.Method,
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
 		beforeCount := h.MessagingCache.MessageCount()
 
-
 		err := h.MessagingCache.ReloadMessages(c.Request.Context())
 		if err != nil {
-			log.Error("Error al recargar caché de mensajes",
+			log.Error(logger.LogMessageCacheReloadError,
 				"error", err,
 				"client_ip", c.ClientIP())
 			c.Error(domain.ErrInternalServer)
@@ -314,10 +390,10 @@ func (h handler) ReloadMessageCache() func(c *gin.Context) {
 			Success:     true,
 			BeforeCount: beforeCount,
 			AfterCount:  afterCount,
-			Message:     "Caché de mensajes recargado exitosamente desde la base de datos",
+			Message:     logger.LogMessageCacheReloadedMsg,
 		}
 
-		log.Success("Caché de mensajes recargado exitosamente",
+		log.Success(logger.LogMessageCacheReloadSuccess,
 			"before_count", beforeCount,
 			"after_count", afterCount,
 			"client_ip", c.ClientIP())

@@ -69,7 +69,6 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 	existingEmployee, errDB := s.repository.GetEmployeeByEmail(ctx, employee.Email)
 	if errDB != nil {
 		if isConnectionError(errDB) || isTimeoutError(errDB) {
-			//TODO: Agregar mensaje de log aquí
 			s.logger.Error(logger.LogDatabaseUnavailable,
 				"email", employee.Email,
 				"error", errDB,

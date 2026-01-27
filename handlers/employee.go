@@ -33,8 +33,6 @@ type EmployeeResponse struct {
 	Links                []Link    `json:"_links,omitempty"`
 }
 
-// FromDomain convierte un domain.Employee a EmployeeResponse
-// Esta función excluye explícitamente el campo Password para no exponerlo en la API
 func FromDomain(employee *domain.Employee, encodedID string) EmployeeResponse {
 	return EmployeeResponse{
 		ID:                   encodedID,
@@ -66,54 +64,43 @@ type LoginResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
-// ResendVerificationEmailRequest - DTO para reenviar email de verificación
 type ResendVerificationEmailRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-// ResendVerificationEmailResponse - Respuesta de reenvío de email de verificación
 type ResendVerificationEmailResponse struct {
 	Sent  bool   `json:"sent"`
 	Email string `json:"email,omitempty"`
 }
 
-// PasswordResetRequest - DTO para solicitar recuperación de contraseña
 type PasswordResetRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-// PasswordResetResponse - Respuesta de solicitud de recuperación de contraseña
 type PasswordResetResponse struct {
 	Sent bool `json:"sent"`
 }
 
-// VerifyEmailRequest - DTO para verificar email mediante token proxy
-// Este token es un JWT que contiene el email del usuario
 type VerifyEmailRequest struct {
 	Token string `json:"token" binding:"required"`
 }
 
-// VerifyEmailResponse - Respuesta de verificación de email
 type VerifyEmailResponse struct {
 	Verified bool   `json:"verified"`
 	Email    string `json:"email,omitempty"`
 }
 
-// UpdatePasswordRequest - DTO para actualizar contraseña con token de Keycloak
 type UpdatePasswordRequest struct {
 	Token           string `json:"token" binding:"required"`
 	NewPassword     string `json:"new_password" binding:"required,min=8"`
 	ConfirmPassword string `json:"confirm_password" binding:"required,min=8"`
 }
 
-// UpdatePasswordResponse - Respuesta de actualización de contraseña
 type UpdatePasswordResponse struct {
 	Updated bool   `json:"updated"`
 	Email   string `json:"email,omitempty"`
 }
 
-// ChangePasswordRequest - DTO para cambiar contraseña cuando el usuario conoce su contraseña actual
-// Este flujo no requiere salir de la API, el usuario está autenticado y cambia su contraseña directamente
 type ChangePasswordRequest struct {
 	Email           string `json:"email" binding:"required,email"`
 	CurrentPassword string `json:"current_password" binding:"required"`
@@ -121,14 +108,11 @@ type ChangePasswordRequest struct {
 	ConfirmPassword string `json:"confirm_password" binding:"required,min=8"`
 }
 
-// ChangePasswordResponse - Respuesta de cambio de contraseña
 type ChangePasswordResponse struct {
 	Changed bool   `json:"changed"`
 	Email   string `json:"email,omitempty"`
 }
 
-// UpdateEmployeeRequest - DTO para actualizar información básica del empleado
-// Excluye: email, password (endpoints separados), airline, bp (HU24 - Empleado Aerolínea)
 type UpdateEmployeeRequest struct {
 	Name                 string `json:"name"`
 	IdentificationNumber string `json:"identificationNumber"`
@@ -138,16 +122,10 @@ type UpdateEmployeeRequest struct {
 	Role                 string `json:"role"`
 }
 
-// ===== SANITIZE METHODS =====
-// These methods implement the Sanitizable interface and clean input data
-// NOTE: Passwords are NOT trimmed - whitespace could be intentional in passwords
-
-// Sanitize trims whitespace from all string fields in EmployeeRequest
 func (e *EmployeeRequest) Sanitize() {
 	e.Name = TrimString(e.Name)
 	e.Airline = TrimString(e.Airline)
 	e.Email = TrimString(e.Email)
-	// Password NOT trimmed - whitespace could be intentional
 	e.IdentificationNumber = TrimString(e.IdentificationNumber)
 	e.Bp = TrimString(e.Bp)
 	e.StartDate = TrimString(e.StartDate)
@@ -155,29 +133,22 @@ func (e *EmployeeRequest) Sanitize() {
 	e.Role = TrimString(e.Role)
 }
 
-// Sanitize trims whitespace from LoginRequest fields
 func (l *LoginRequest) Sanitize() {
 	l.Email = TrimString(l.Email)
-	// Password NOT trimmed
 }
 
-// Sanitize trims whitespace from ResendVerificationEmailRequest fields
 func (r *ResendVerificationEmailRequest) Sanitize() {
 	r.Email = TrimString(r.Email)
 }
 
-// Sanitize trims whitespace from PasswordResetRequest fields
 func (p *PasswordResetRequest) Sanitize() {
 	p.Email = TrimString(p.Email)
 }
 
-// Sanitize trims whitespace from ChangePasswordRequest fields
 func (c *ChangePasswordRequest) Sanitize() {
 	c.Email = TrimString(c.Email)
-	// Passwords NOT trimmed
 }
 
-// Sanitize trims whitespace from UpdateEmployeeRequest fields
 func (u *UpdateEmployeeRequest) Sanitize() {
 	u.Name = TrimString(u.Name)
 	u.IdentificationNumber = TrimString(u.IdentificationNumber)
@@ -186,8 +157,6 @@ func (u *UpdateEmployeeRequest) Sanitize() {
 	u.Role = TrimString(u.Role)
 }
 
-// ToUpdateData convierte el request a un domain.Employee para actualización
-// Preserva: email, password, keycloak_user_id, airline, bp del empleado existente
 func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.Employee, error) {
 	layout := "2006-01-02"
 
@@ -209,7 +178,6 @@ func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.E
 		endDate = parsed
 	}
 
-	// Validate: start_date cannot be after end_date
 	if !endDate.IsZero() && startDate.After(endDate) {
 		return domain.Employee{}, domain.ErrStartDateAfterEndDate
 	}
@@ -217,11 +185,11 @@ func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.E
 	return domain.Employee{
 		ID:                   existing.ID,
 		Name:                 u.Name,
-		Airline:              existing.Airline,  // Preservar airline (HU24)
-		Email:                existing.Email,    // Preservar email
-		Password:             existing.Password, // Preservar password
+		Airline:              existing.Airline,
+		Email:                existing.Email,
+		Password:             existing.Password,
 		IdentificationNumber: u.IdentificationNumber,
-		Bp:                   existing.Bp, // Preservar bp (HU24)
+		Bp:                   existing.Bp,
 		StartDate:            startDate,
 		EndDate:              endDate,
 		Active:               u.Active,
@@ -230,7 +198,6 @@ func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.E
 	}, nil
 }
 
-// UpdateEmployeeResponse - Respuesta de actualización de empleado
 type UpdateEmployeeResponse struct {
 	ID      string `json:"id"`
 	Updated bool   `json:"updated"`
@@ -252,7 +219,6 @@ func (e EmployeeRequest) ToDomain() (domain.Employee, error) {
 			return domain.Employee{}, domain.ErrInvalidDateFormat
 		}
 
-		// Validate: start_date cannot be after end_date
 		if startDate.After(endDate) {
 			return domain.Employee{}, domain.ErrStartDateAfterEndDate
 		}

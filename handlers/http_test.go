@@ -189,6 +189,8 @@ func newTestMessageCache(t *testing.T) *messaging.MessageCache {
 		{Code: domain.MsgValJSONInvalid, Type: cachetypes.TypeError, Content: "invalid json"},
 		{Code: domain.MsgUserDuplicate, Type: cachetypes.TypeError, Content: "duplicate"},
 		{Code: domain.MsgIncompleteRegistration, Type: cachetypes.TypeError, Content: "incomplete"},
+		{Code: domain.MsgUserUpdated, Type: cachetypes.TypeSuccess, Content: "user updated"},
+		{Code: domain.MsgValStartDateAfterEndDate, Type: cachetypes.TypeError, Content: "start date after end date"},
 	}}
 	cache := messaging.NewMessageCache(repo, 0)
 	if err := cache.LoadMessages(context.Background()); err != nil {
@@ -318,6 +320,99 @@ func TestHTTP_RegisterEmployee(t *testing.T) {
 		r.ServeHTTP(w, req)
 		if w.Code != http.StatusConflict {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusConflict, w.Code, w.Body.String())
+		}
+	})
+}
+
+func TestHTTP_UpdateEmployee(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	existingEmployee := &domain.Employee{
+		ID:                   "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+		Name:                 "John Doe",
+		Email:                "john@example.com",
+		Airline:              "ACME",
+		Bp:                   "bp123",
+		IdentificationNumber: "ID123",
+		Role:                 "user",
+		Active:               true,
+	}
+
+	newRouter := func(svc input.Service) *gin.Engine {
+		inter := interactor.NewInteractor(svc, noopLogger{})
+		h := New(nil, inter, enc, resp, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.Use(func(c *gin.Context) {
+			c.Set("authenticated_user", existingEmployee)
+			c.Next()
+		})
+		r.PUT("/flighthours/api/v1/employees/me", h.UpdateEmployee())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		r := newRouter(&fakeService{})
+		body := map[string]any{
+			"name":                 "John Updated",
+			"identificationNumber": "ID456",
+			"start_date":           "2025-01-01",
+			"end_date":             "2025-12-31",
+			"active":               true,
+			"role":                 "admin",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPut, "/flighthours/api/v1/employees/me", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("invalid json => 400", func(t *testing.T) {
+		r := newRouter(&fakeService{})
+		req := httptest.NewRequest(http.MethodPut, "/flighthours/api/v1/employees/me", bytes.NewBufferString("{"))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("start_date after end_date => 400", func(t *testing.T) {
+		r := newRouter(&fakeService{})
+		body := map[string]any{
+			"name":                 "John Updated",
+			"identificationNumber": "ID456",
+			"start_date":           "2026-01-01",
+			"end_date":             "2025-12-31",
+			"active":               true,
+			"role":                 "admin",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPut, "/flighthours/api/v1/employees/me", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
 		}
 	})
 }

@@ -9,7 +9,15 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "FlightHours Support",
+            "email": "support@flighthours.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -17,7 +25,12 @@ const docTemplate = `{
     "paths": {
         "/auth/change-password": {
             "post": {
-                "description": "Permite a un usuario cambiar su contraseña conociendo la contraseña actual. Este flujo no requiere salir de la API ni tokens por email.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permite a un usuario cambiar su contraseña conociendo la contraseña actual",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,7 +43,7 @@ const docTemplate = `{
                 "summary": "Cambiar contraseña de usuario autenticado",
                 "parameters": [
                     {
-                        "description": "Email, contraseña actual y nueva contraseña",
+                        "description": "Email, contraseña actual y nueva",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -72,70 +85,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Usuario no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/login": {
-            "post": {
-                "description": "Autentica un usuario y retorna tokens de acceso",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Autenticación"
-                ],
-                "summary": "Login de usuario",
-                "parameters": [
-                    {
-                        "description": "Credenciales de login",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Login exitoso",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.LoginResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Credenciales inválidas",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Email no verificado o credenciales incorrectas",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
@@ -204,6 +153,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
+                    "409": {
+                        "description": "Email ya verificado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
@@ -215,7 +170,7 @@ const docTemplate = `{
         },
         "/auth/verify-email": {
             "post": {
-                "description": "Verifica el email de un usuario usando un token JWT. Este endpoint actúa como proxy para no exponer Keycloak directamente.",
+                "description": "Verifica el email de un usuario usando un token JWT proxy",
                 "consumes": [
                     "application/json"
                 ],
@@ -223,12 +178,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Autenticación"
+                    "authentication"
                 ],
-                "summary": "Verificar email de usuario (Proxy)",
+                "summary": "Verificar email de usuario",
                 "parameters": [
                     {
-                        "description": "Token de verificación del email",
+                        "description": "Token de verificación",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -290,7 +245,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la información del empleado que realiza la petición usando el token JWT. No requiere pasar ID.",
+                "description": "Obtiene la información del empleado que realiza la petición usando el token JWT",
                 "consumes": [
                     "application/json"
                 ],
@@ -335,59 +290,153 @@ const docTemplate = `{
                 }
             }
         },
-        "/messages": {
-            "get": {
-                "description": "Obtiene una lista de mensajes del sistema con filtros opcionales. Permite filtrar por módulo, tipo, categoría y estado activo.",
+        "/employees/me": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza la información básica del empleado autenticado usando el token JWT. Preserva: email, password, airline, bp (estos campos requieren otros endpoints).",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "employees"
                 ],
-                "summary": "Listar mensajes del sistema",
+                "summary": "Actualizar información del empleado autenticado",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Filtrar por módulo (ej: users, flights, bookings)",
-                        "name": "module",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filtrar por tipo (ERROR, WARNING, INFO, SUCCESS)",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filtrar por categoría (usuario_final, sistema, validacion)",
-                        "name": "category",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filtrar por estado activo (true, false)",
-                        "name": "active",
-                        "in": "query"
+                        "description": "Datos a actualizar",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateEmployeeRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lista de mensajes obtenida exitosamente",
+                        "description": "Empleado actualizado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/handlers.MessageListResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.UpdateEmployeeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación - Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Empleado no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     }
                 }
-            },
+            }
+        },
+        "/login": {
             "post": {
-                "description": "Crea un nuevo mensaje del sistema con tipo, categoría y contenido. Los mensajes se utilizan para mostrar información, advertencias y errores a los usuarios.",
+                "description": "Autentica un usuario y retorna tokens de acceso",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Login de usuario",
+                "parameters": [
+                    {
+                        "description": "Credenciales de login",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login exitoso",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.LoginResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Credenciales inválidas",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Email no verificado o credenciales incorrectas",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lista todos los mensajes del sistema con filtros opcionales",
                 "consumes": [
                     "application/json"
                 ],
@@ -397,11 +446,75 @@ const docTemplate = `{
                 "tags": [
                     "messages"
                 ],
-                "summary": "Crear un nuevo mensaje del sistema",
+                "summary": "Listar todos los mensajes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filtrar por módulo",
+                        "name": "module",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por tipo (SUCCESS, ERROR, WARNING, INFO)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filtrar por categoría",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por estado activo",
+                        "name": "active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de mensajes",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Crea un nuevo mensaje para el sistema de mensajes centralizados",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "messages"
+                ],
+                "summary": "Crear nuevo mensaje del sistema",
                 "parameters": [
                     {
                         "description": "Datos del mensaje a crear",
-                        "name": "message",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -413,104 +526,56 @@ const docTemplate = `{
                     "201": {
                         "description": "Mensaje creado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/handlers.MessageCreatedResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.MessageCreatedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Datos de entrada inválidos",
+                        "description": "Error de validación",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "409": {
-                        "description": "El código del mensaje ya existe",
+                        "description": "Código de mensaje duplicado",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/messages/reload": {
+        "/messages/cache/reload": {
             "post": {
-                "description": "Recarga el caché de mensajes desde la base de datos. Útil después de hacer cambios masivos a mensajes.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "messages"
-                ],
-                "summary": "Recargar caché de mensajes",
-                "responses": {
-                    "200": {
-                        "description": "Caché recargado exitosamente",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CacheReloadResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/messages/{id}": {
-            "get": {
-                "description": "Obtiene los detalles de un mensaje del sistema específico por su ID.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "messages"
-                ],
-                "summary": "Obtener un mensaje por ID",
-                "parameters": [
+                "security": [
                     {
-                        "type": "string",
-                        "description": "ID del mensaje (encoded)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "BearerAuth": []
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "Mensaje encontrado exitosamente",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "ID inválido",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Mensaje no encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Actualiza un mensaje del sistema existente. Permite modificar tipo, categoría, contenido y estado activo.",
+                "description": "Recarga todos los mensajes desde la base de datos al cache en memoria",
                 "consumes": [
                     "application/json"
                 ],
@@ -520,18 +585,117 @@ const docTemplate = `{
                 "tags": [
                     "messages"
                 ],
-                "summary": "Actualizar un mensaje del sistema",
+                "summary": "Recargar cache de mensajes",
+                "responses": {
+                    "200": {
+                        "description": "Cache recargado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CacheReloadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al recargar cache",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Obtiene un mensaje específico por su ID ofuscado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "messages"
+                ],
+                "summary": "Obtener mensaje por ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID del mensaje (encoded)",
+                        "description": "ID ofuscado del mensaje",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mensaje encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Mensaje no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza un mensaje del sistema por su ID ofuscado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "messages"
+                ],
+                "summary": "Actualizar mensaje existente",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID ofuscado del mensaje",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Datos del mensaje a actualizar",
-                        "name": "message",
+                        "description": "Datos actualizados del mensaje",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -543,42 +707,68 @@ const docTemplate = `{
                     "200": {
                         "description": "Mensaje actualizado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/handlers.MessageUpdatedResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.MessageUpdatedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Datos de entrada inválidos",
+                        "description": "Error de validación o ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Mensaje no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Elimina un mensaje del sistema de forma permanente. Esta acción no se puede deshacer.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina un mensaje del sistema por su ID ofuscado",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "messages"
                 ],
-                "summary": "Eliminar un mensaje del sistema",
+                "summary": "Eliminar mensaje",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID del mensaje (encoded)",
+                        "description": "ID ofuscado del mensaje",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -588,25 +778,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Mensaje eliminado exitosamente",
                         "schema": {
-                            "$ref": "#/definitions/handlers.MessageDeletedResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "400": {
                         "description": "ID inválido",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Mensaje no encontrado",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Error interno del servidor",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     }
                 }
@@ -614,7 +810,7 @@ const docTemplate = `{
         },
         "/register": {
             "post": {
-                "description": "Crea una nueva cuenta de empleado en el sistema con sincronización a Keycloak. Incluye validación de datos, verificación de duplicados y creación de usuario en el sistema de autenticación.",
+                "description": "Crea una nueva cuenta de empleado en el sistema con sincronización a Keycloak",
                 "consumes": [
                     "application/json"
                 ],
@@ -628,7 +824,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Datos del empleado a registrar",
-                        "name": "account",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -656,7 +852,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Datos inválidos o incompletos",
+                        "description": "Error de validación - Datos inválidos",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
@@ -884,9 +1080,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.MessageDeletedResponse": {
-            "type": "object"
-        },
         "handlers.MessageListResponse": {
             "type": "object",
             "properties": {
@@ -1012,6 +1205,46 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpdateEmployeeRequest": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "identificationNumber": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "updated": {
+                    "type": "boolean"
+                }
+            }
+        },
         "handlers.VerifyEmailRequest": {
             "type": "object",
             "required": [
@@ -1038,25 +1271,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "description": "Business message code",
                     "type": "string"
                 },
                 "data": {},
-                "message": {
-                    "description": "Business message content",
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "middleware.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
                 "message": {
                     "type": "string"
                 },
@@ -1065,16 +1282,25 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Ingrese el token en formato: Bearer {token}",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
+// SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8082",
+	BasePath:         "/flighthours/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "FlightHours API",
+	Description:      "API para gestión de empleados de aerolínea y control de horas de vuelo",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

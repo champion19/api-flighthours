@@ -6,7 +6,6 @@ import (
 	uuid "github.com/champion19/flighthours-api/tools/utils"
 )
 
-	// MessageType represents system message types
 type MessageType string
 
 const (
@@ -17,7 +16,6 @@ const (
 	TypeDebug   MessageType = "DEBUG"
 )
 
-// Message represents a system message in the domain
 type Message struct {
 	ID        string      `json:"id"`
 	Code      string      `json:"code"`
@@ -31,12 +29,10 @@ type Message struct {
 	UpdatedAt time.Time   `json:"updated_at"`
 }
 
-// SetID generates a new UUID for the message
 func (m *Message) SetID() {
 	m.ID = uuid.Generate()
 }
 
-// ToLogger returns a slice of strings for logging
 func (m *Message) ToLogger() []string {
 	return []string{
 		"id:" + m.ID,
@@ -46,8 +42,6 @@ func (m *Message) ToLogger() []string {
 	}
 }
 
-// TODO: quitar estas validaciones de aqui
-// IsValid validates the message fields
 func (m *Message) Validate() error {
 	if m.Code == "" {
 		return ErrMessageCodeRequired
