@@ -13,20 +13,19 @@ import (
 func (r *repository) UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error {
 	employeeToUpdate := FromDomain(employee)
 
-	log.Debug("UpdateEmployee: Starting update",
+	log.Debug(logger.LogRepoEmployeeUpdateStart,
 		"employee_id", employeeToUpdate.ID,
 		"name", employeeToUpdate.Name,
-		"airline", employeeToUpdate.Airline,
 		"email", employeeToUpdate.Email,
 		"active", employeeToUpdate.Active)
 
 	dbTx, ok := tx.(*common.SQLTX)
 	if !ok {
-		log.Error(logger.LogEmployeeUpdateError, "error", "invalid transaction type")
+		log.Error(logger.LogRepoEmployeeUpdateTxErr, "error", "invalid transaction type")
 		return domain.ErrInvalidTransaction
 	}
 
-	log.Debug("UpdateEmployee: Transaction cast successful, executing query")
+	log.Debug(logger.LogRepoEmployeeUpdateTxOK)
 
 	result, err := dbTx.ExecContext(ctx, QueryUpdate,
 		employeeToUpdate.Name,
@@ -70,7 +69,7 @@ func (r *repository) UpdateEmployee(ctx context.Context, tx output.Tx, employee 
 	}
 
 	rowsAffected, _ := result.RowsAffected()
-	log.Debug("UpdateEmployee: Query executed successfully", "rows_affected", rowsAffected)
+	log.Debug(logger.LogRepoEmployeeUpdateQueryOK, "rows_affected", rowsAffected)
 
 	return nil
 }

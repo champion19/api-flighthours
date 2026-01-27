@@ -1,6 +1,17 @@
 package logger
 
+// ============================================
+// CENTRALIZED LOG MESSAGES
+// ============================================
+// All log messages are defined here as constants to:
+// 1. Avoid hardcoded strings across the codebase
+// 2. Enable easy maintenance and updates
+// 3. Support future internationalization
+// 4. Ensure consistency
 
+// ============================================
+// APPLICATION LIFECYCLE
+// ============================================
 const (
 	LogAppStarting          = "Iniciando aplicación FlighHours Backend"
 	LogAppConfigLoaded      = "Configuración cargada exitosamente"
@@ -15,7 +26,9 @@ const (
 	LogAppShuttingDown      = "Apagando aplicación gracefully"
 )
 
-
+// ============================================
+// REGISTRATION / AUTHENTICATION
+// ============================================
 const (
 	LogRegRequestReceived   = "Nueva solicitud de registro recibida"
 	LogRegProcessing        = "Procesando registro de usuario"
@@ -28,7 +41,9 @@ const (
 	LogRegKeycloakSyncError = "Error sincronizando con Keycloak"
 )
 
-
+// ============================================
+// DATABASE OPERATIONS
+// ============================================
 const (
 	LogDBQueryExecuting       = "Ejecutando query de base de datos"
 	LogDBQuerySuccess         = "Query ejecutado exitosamente"
@@ -49,6 +64,9 @@ const (
 	LogDBConnected            = "Base de datos conectada exitosamente"
 )
 
+// ============================================
+// MESSAGING / CACHE
+// ============================================
 const (
 	LogMsgCacheInit            = "Inicializando cache de mensajes"
 	LogMsgCacheLoaded          = "Mensajes del sistema cargados en cache"
@@ -65,6 +83,9 @@ const (
 	LogMsgInactive             = "Mensaje existe pero está desactivado"
 )
 
+// ============================================
+// ROUTING / MIDDLEWARE
+// ============================================
 const (
 	LogRouteConfiguring      = "Configurando rutas de la aplicación"
 	LogRouteConfigured       = "Rutas configuradas correctamente"
@@ -75,6 +96,9 @@ const (
 	LogMiddlewareInternalErr = "Error interno del servidor"
 )
 
+// ============================================
+// VALIDATION
+// ============================================
 const (
 	LogValidationStart   = "Iniciando validación de request"
 	LogValidationOK      = "Validación de request exitosa"
@@ -82,6 +106,9 @@ const (
 	LogValidationDetails = "Detalles de validación"
 )
 
+// ============================================
+// KEYCLOAK / EXTERNAL SERVICES
+// ============================================
 const (
 	LogKeycloakClientInit                 = "Inicializando cliente Keycloak"
 	LogKeycloakClientOK                   = "Cliente Keycloak inicializado correctamente"
@@ -151,13 +178,14 @@ const (
 	LogKeycloakPasswordTokenValidation    = "Validando token de actualización de contraseña"
 	LogKeycloakPasswordTokenValidOK       = "Token de actualización validado"
 	LogKeycloakPasswordTokenInvalid       = "Token de actualización inválido"
+	// Login with verification
 	LogKeycloakLoginCheckingVerification    = "Verificando estado de email antes de login"
 	LogKeycloakLoginEmailNotVerified        = "Login rechazado: email no verificado"
 	LogKeycloakLoginEmailVerified           = "Email verificado, procediendo con login"
 	LogKeycloakLoginResendingVerification   = "Reenviando email de verificación automáticamente"
 	LogKeycloakLoginResendVerificationOK    = "Email de verificación reenviado exitosamente"
 	LogKeycloakLoginResendVerificationError = "Error reenviando email de verificación"
-
+	// Change Password (authenticated user)
 	LogKeycloakChangePassword           = "Cambiando contraseña de usuario autenticado"
 	LogKeycloakChangePasswordValidating = "Validando contraseña actual del usuario"
 	LogKeycloakChangePasswordInvalid    = "Contraseña actual incorrecta"
@@ -166,6 +194,9 @@ const (
 	LogKeycloakChangePasswordMismatch   = "Las contraseñas nuevas no coinciden"
 )
 
+// ============================================
+// KEYCLOAK AVAILABILITY
+// ============================================
 const (
 	LogKeycloakAvailabilityCheck = "Verificando disponibilidad de Keycloak"
 	LogKeycloakAvailable         = "Keycloak disponible y respondiendo"
@@ -174,6 +205,9 @@ const (
 	LogKeycloakTimeoutError      = "Timeout en conexión con Keycloak"
 )
 
+// ============================================
+// DATABASE AVAILABILITY
+// ============================================
 const (
 	LogDatabaseAvailabilityCheck = "Verificando disponibilidad de base de datos"
 	LogDatabaseAvailable         = "Base de datos disponible y respondiendo"
@@ -181,6 +215,9 @@ const (
 	LogDatabaseConnectionError   = "Error de conexión con base de datos"
 )
 
+// ============================================
+// DUAL SYSTEM VALIDATION
+// ============================================
 const (
 	LogDualSystemCheck          = "Validando existencia en ambos sistemas"
 	LogUserExistsInBoth         = "Usuario existe en ambos sistemas"
@@ -190,6 +227,9 @@ const (
 	LogInconsistentStateDetect  = "Estado inconsistente detectado entre sistemas"
 )
 
+// ============================================
+// REPOSITORY / MESSAGE REPOSITORY
+// ============================================
 const (
 	LogRepoMsgInit           = "Inicializando repositorio de mensajes"
 	LogRepoMsgInitOK         = "Repositorio de mensajes inicializado"
@@ -201,6 +241,9 @@ const (
 	LogIDEncoderInitError    = "Error inicializando ID encoder"
 )
 
+// ============================================
+// HTTP REQUESTS
+// ============================================
 const (
 	LogHTTPRequestIncoming = "Request HTTP entrante"
 	LogHTTPResponseSent    = "Respuesta HTTP enviada"
@@ -210,6 +253,9 @@ const (
 	LogHTTPStatus          = "Status HTTP"
 )
 
+// ============================================
+// EMPLOYEE / USER SERVICES
+// ============================================
 const (
 	LogEmployeeCreating              = "Creando empleado en base de datos"
 	LogEmployeeCreated               = "Empleado creado exitosamente"
@@ -238,28 +284,55 @@ const (
 	LogEmployeeDeleteError           = "Error eliminando empleado de base de datos"
 	LogEmployeeLocating              = "Localizando empleado"
 	LogEmployeeLocateError           = "Error localizando empleado"
+	// Update specific logs
 	LogEmployeeUpdateRequest         = "Solicitud de actualización de empleado recibida"
 	LogEmployeeUpdateComplete        = "Empleado actualizado exitosamente"
 	LogEmployeeKeycloakStatusUpdate  = "Actualizando estado del usuario en Keycloak"
 	LogEmployeeKeycloakStatusUpdated = "Estado del usuario actualizado en Keycloak"
 	LogEmployeeKeycloakRoleUpdate    = "Actualizando rol del usuario en Keycloak"
 	LogEmployeeKeycloakRoleUpdated   = "Rol del usuario actualizado en Keycloak"
+	// Delete specific logs
 	LogEmployeeDeletingKeycloak    = "Eliminando usuario de Keycloak"
 	LogEmployeeDeleteKeycloakError = "Error eliminando usuario de Keycloak"
 	LogEmployeeDeletedKeycloak     = "Usuario eliminado de Keycloak exitosamente"
 	LogEmployeeDeletingDB          = "Eliminando empleado de base de datos"
 	LogEmployeeDeleteDBError       = "Error eliminando empleado de base de datos"
 	LogEmployeeDeleteComplete      = "Empleado eliminado exitosamente"
+	// Repository layer - Employee Update
+	LogRepoEmployeeUpdateStart   = "Iniciando actualización de empleado en repositorio"
+	LogRepoEmployeeUpdateTxOK    = "Transacción de repositorio validada correctamente"
+	LogRepoEmployeeUpdateQueryOK = "Query de actualización ejecutado exitosamente"
+	LogRepoEmployeeUpdateTxErr   = "Error: tipo de transacción inválido"
+	// Registration success
+	LogEmployeeRegisterSuccessLog = "register employee success"
 )
 
+// ============================================
+// DEPENDENCY INJECTION
+// ============================================
 const (
 	LogDepInit          = "Inicializando dependencias"
 	LogDepInitComplete  = "Dependencias inicializadas exitosamente"
 	LogDepInitError     = "Error inicializando dependencias"
 	LogDepWiringService = "Inyectando servicio"
 	LogDepConfigError   = "Error cargando configuración de dependencias"
+	// JWKS Validator
+	LogJWKSValidatorInitFailed = "JWKS validator initialization failed, using fallback validation"
+	LogJWKSValidatorInitOK     = "JWKS validator initialized"
 )
 
+// ============================================
+// DTO RESPONSE MESSAGES
+// ============================================
+const (
+	DtoMsgUserRegistered  = "user registered successfully"
+	DtoMsgEmployeeUpdated = "employee updated successfully"
+	DtoMsgEmployeeLocated = "Employee located successfully"
+)
+
+// ============================================
+// SECURITY / ENCODING
+// ============================================
 const (
 	LogIDEncode               = "Codificando ID"
 	LogIDEncodeOK             = "ID codificado exitosamente"
@@ -277,6 +350,9 @@ const (
 	LogIDEncoderMinLengthWarn = "MinLength es igual a 36, lo cual es el valor por defecto"
 )
 
+// ============================================
+// UTILS / HELPERS
+// ============================================
 const (
 	LogUtilsModuleRootSearch = "Buscando raíz del módulo"
 	LogUtilsModuleRootFound  = "Raíz del módulo encontrada"
@@ -286,7 +362,9 @@ const (
 	LogUtilsPathError        = "Error resolviendo ruta"
 )
 
-
+// ============================================
+// MIDDLEWARE / VALIDATORS
+// ============================================
 const (
 	LogMiddlewareValidationStart    = "Iniciando validación de request body"
 	LogMiddlewareValidationOK       = "Validación exitosa"
@@ -300,7 +378,9 @@ const (
 	LogMiddlewareNotFound           = "Endpoint no encontrado"
 )
 
-
+// ============================================
+// SCHEMA VALIDATION
+// ============================================
 const (
 	LogSchemaValidatorInit      = "Inicializando validador de esquemas"
 	LogSchemaValidatorInitOK    = "Validador de esquemas inicializado"
@@ -317,7 +397,9 @@ const (
 	LogSchemaNotInitialized     = "Validador no inicializado"
 )
 
-
+// ============================================
+// CONFIG LOADING
+// ============================================
 const (
 	LogConfigFileNotFound    = "Archivo de configuración no encontrado"
 	LogConfigFallback        = "Usando configuración por defecto"
@@ -330,7 +412,9 @@ const (
 	LogConfigValidationError = "Error validando configuración"
 )
 
-
+// ============================================
+// MESSAGES MODULE / SYSTEM MESSAGES
+// ============================================
 const (
 	LogMessageServiceInit       = "Inicializando servicio de mensajes"
 	LogMessageServiceInitOK     = "Servicio de mensajes inicializado"
@@ -372,7 +456,9 @@ const (
 	LogMessageIDDecodeError     = "Error decodificando ID"
 )
 
-
+// ============================================
+// PROMETHEUS / OBSERVABILITY
+// ============================================
 const (
 	LogPrometheusInit          = "Inicializando métricas de Prometheus"
 	LogPrometheusInitOK        = "Métricas de Prometheus inicializadas correctamente"
@@ -383,7 +469,9 @@ const (
 	LogPrometheusScrapeError   = "Error durante scraping de métricas"
 )
 
-
+// ============================================
+// EMPLOYEE SERVICES
+// ============================================
 const (
 	LogEmployeeServiceSearchByEmail             = "Buscando persona por email"
 	LogEmployeeServiceSearchByID                = "Buscando persona por ID"
@@ -424,7 +512,9 @@ const (
 	LogEmployeeServiceRollbackEmployeeError     = "Error en rollback de empleado"
 )
 
-
+// ============================================
+// EMPLOYEE INTERACTOR
+// ============================================
 const (
 	LogEmployeeInteractorRegStart             = "Iniciando proceso de registro"
 	LogEmployeeInteractorStep1_Error          = "[PASO 1/8] Validaciones fallidas"
@@ -456,15 +546,17 @@ const (
 	LogEmployeeInteractorCleanup_OK           = "Estado inconsistente limpiado exitosamente"
 )
 
-
+// DEPENDENCY INITIALIZATION
 const (
 	LogDependencyMessageRepoInit = "Dependencia de repositorio de mensajes inicializada exitosamente"
 	LogDependencyMessageIntInit  = "Error inicializando dependencia de repositorio de mensajes"
 )
 
-
+// ============================================
+// MESSAGE INTERACTOR
+// ============================================
 const (
-
+	// CREATE flow
 	LogMessageInteractorCreateStep1Error = "[PASO 1/3] Validación de mensaje fallida"
 	LogMessageInteractorCreateStep1OK    = "[PASO 1/3] Validación de mensaje completada"
 	LogMessageInteractorCreateStep2Error = "[PASO 2/3] Error iniciando transacción"
@@ -475,7 +567,7 @@ const (
 	LogMessageInteractorCreateCommitOK   = "Transacción confirmada exitosamente"
 	LogMessageInteractorCreateComplete   = "Mensaje creado exitosamente"
 
-
+	// UPDATE flow
 	LogMessageInteractorUpdateStep1Error = "[PASO 1/4] Mensaje no encontrado"
 	LogMessageInteractorUpdateStep1OK    = "[PASO 1/4] Mensaje encontrado"
 	LogMessageInteractorUpdateStep2Error = "[PASO 2/4] Validación de mensaje fallida"
@@ -488,7 +580,7 @@ const (
 	LogMessageInteractorUpdateCommitOK   = "Transacción confirmada exitosamente"
 	LogMessageInteractorUpdateComplete   = "Mensaje actualizado exitosamente"
 
-
+	// DELETE flow
 	LogMessageInteractorDeleteStep1Error = "[PASO 1/3] Mensaje no encontrado"
 	LogMessageInteractorDeleteStep1OK    = "[PASO 1/3] Mensaje encontrado"
 	LogMessageInteractorDeleteStep2Error = "[PASO 2/3] Error iniciando transacción"
@@ -499,12 +591,25 @@ const (
 	LogMessageInteractorDeleteCommitOK   = "Transacción confirmada exitosamente"
 	LogMessageInteractorDeleteComplete   = "Mensaje eliminado exitosamente"
 
-
+	// Common rollback
 	LogMessageInteractorRollbackError = "ROLLBACK BD FALLÓ - ALERTA CRÍTICA"
 	LogMessageInteractorRollbackOK    = "Rollback BD ejecutado correctamente"
+
+	// Controller success logs
+	LogMessageCreatedSuccess = "Mensaje creado exitosamente"
+	LogMessageUpdatedSuccess = "Mensaje actualizado exitosamente"
+	LogMessageDeletedSuccess = "Mensaje eliminado exitosamente"
+
+	// Cache reload logs
+	LogMessageCacheReloading     = "Recargando caché de mensajes"
+	LogMessageCacheReloadError   = "Error al recargar caché de mensajes"
+	LogMessageCacheReloadSuccess = "Caché de mensajes recargado exitosamente"
+	LogMessageCacheReloadedMsg   = "Caché de mensajes recargado exitosamente desde la base de datos"
 )
 
-
+// ============================================
+// AIRLINE INTERACTOR
+// ============================================
 const (
 	LogAirlineGet             = "Obteniendo información de aerolínea"
 	LogAirlineGetOK           = "Aerolínea obtenida exitosamente"
@@ -524,7 +629,9 @@ const (
 	LogAirlineRepoInitError   = "Error inicializando repositorio de aerolíneas"
 )
 
-
+// ============================================
+// AIRPORT INTERACTOR
+// ============================================
 const (
 	LogAirportGet             = "Obteniendo información de aeropuerto"
 	LogAirportGetOK           = "Aeropuerto obtenido exitosamente"
@@ -544,7 +651,9 @@ const (
 	LogAirportListError       = "Error listando aeropuertos"
 )
 
-
+// ============================================
+// DAILY LOGBOOK INTERACTOR
+// ============================================
 const (
 	LogDailyLogbookGet             = "Obteniendo información de bitácora diaria"
 	LogDailyLogbookGetOK           = "Bitácora diaria obtenida exitosamente"
@@ -573,6 +682,9 @@ const (
 	LogDailyLogbookRepoInitError   = "Error inicializando repositorio de bitácoras diarias"
 )
 
+// ============================================
+// AIRCRAFT REGISTRATION INTERACTOR
+// ============================================
 const (
 	LogAircraftRegistrationGet           = "Obteniendo información de matrícula"
 	LogAircraftRegistrationGetOK         = "Matrícula obtenida exitosamente"
@@ -592,7 +704,9 @@ const (
 	LogAircraftRegistrationRepoInitError = "Error inicializando repositorio de matrículas"
 )
 
-
+// ============================================
+// AIRCRAFT MODEL INTERACTOR
+// ============================================
 const (
 	LogAircraftModelGet             = "Obteniendo información de modelo de aeronave"
 	LogAircraftModelGetOK           = "Modelo de aeronave obtenido exitosamente"
@@ -612,6 +726,9 @@ const (
 	LogAircraftModelDeactivateError = "Error desactivando modelo de aeronave"
 )
 
+// ============================================
+// AIRCRAFT FAMILY (HU32)
+// ============================================
 const (
 	LogAircraftFamilyGet      = "Obteniendo información de familia de aeronave"
 	LogAircraftFamilyGetOK    = "Familia de aeronave obtenida exitosamente"
@@ -619,6 +736,9 @@ const (
 	LogAircraftFamilyNotFound = "Familia de aeronave no encontrada"
 )
 
+// ============================================
+// ROUTE INTERACTOR
+// ============================================
 const (
 	LogRouteGet           = "Obteniendo información de ruta"
 	LogRouteGetOK         = "Ruta obtenida exitosamente"
@@ -632,6 +752,9 @@ const (
 	LogRouteRepoInitError = "Error inicializando repositorio de rutas"
 )
 
+// ============================================
+// AIRLINE ROUTE INTERACTOR
+// ============================================
 const (
 	LogAirlineRouteGet             = "Obteniendo información de ruta aerolínea"
 	LogAirlineRouteGetOK           = "Ruta aerolínea obtenida exitosamente"
@@ -651,6 +774,9 @@ const (
 	LogAirlineRouteRepoInitError   = "Error inicializando repositorio de rutas aerolínea"
 )
 
+// ============================================
+// FLIGHT INTERACTOR
+// ============================================
 const (
 	LogFlightGet           = "Obteniendo información de vuelo"
 	LogFlightGetOK         = "Vuelo obtenido exitosamente"
@@ -673,6 +799,9 @@ const (
 	LogFlightRepoInitError = "Error inicializando repositorio de vuelos"
 )
 
+// ============================================
+// DAILY LOGBOOK DETAIL INTERACTOR
+// ============================================
 const (
 	LogDailyLogbookDetailGet           = "Obteniendo información de detalle de bitácora"
 	LogDailyLogbookDetailGetOK         = "Detalle de bitácora obtenido exitosamente"
@@ -695,6 +824,9 @@ const (
 	LogDailyLogbookDetailRepoInitError = "Error inicializando repositorio de detalles de bitácora"
 )
 
+// ============================================
+// ENGINE INTERACTOR
+// ============================================
 const (
 	LogEngineGet           = "Obteniendo información de motor"
 	LogEngineGetOK         = "Motor obtenido exitosamente"
@@ -708,6 +840,9 @@ const (
 	LogEngineRepoInitError = "Error inicializando repositorio de motores"
 )
 
+// ============================================
+// MANUFACTURER INTERACTOR
+// ============================================
 const (
 	LogManufacturerGet           = "Obteniendo información de fabricante"
 	LogManufacturerGetOK         = "Fabricante obtenido exitosamente"
@@ -721,6 +856,9 @@ const (
 	LogManufacturerRepoInitError = "Error inicializando repositorio de fabricantes"
 )
 
+// ============================================
+// CITY INTERACTOR (- Virtual Entity pattern)
+// ============================================
 const (
 	LogCityGet      = "Obteniendo aeropuertos por ciudad"
 	LogCityGetOK    = "Aeropuertos por ciudad obtenidos exitosamente"
@@ -728,7 +866,9 @@ const (
 	LogCityNotFound = "Ciudad no encontrada (sin aeropuertos)"
 )
 
-
+// ============================================
+// COUNTRY INTERACTOR (- Virtual Entity pattern)
+// ============================================
 const (
 	LogCountryGet      = "Obteniendo aeropuertos por país"
 	LogCountryGetOK    = "Aeropuertos por país obtenidos exitosamente"
@@ -736,6 +876,9 @@ const (
 	LogCountryNotFound = "País no encontrado (sin aeropuertos)"
 )
 
+// ============================================
+// AIRPORT TYPE INTERACTOR (HU46 - Virtual Entity pattern)
+// ============================================
 const (
 	LogAirportTypeGet      = "Obteniendo aeropuertos por tipo"
 	LogAirportTypeGetOK    = "Aeropuertos por tipo obtenidos exitosamente"
@@ -743,6 +886,9 @@ const (
 	LogAirportTypeNotFound = "Tipo de aeropuerto no encontrado (sin aeropuertos)"
 )
 
+// ============================================
+// CREW MEMBER TYPE INTERACTOR (HU47 - Virtual Entity pattern)
+// ============================================
 const (
 	LogCrewMemberTypeGet      = "Obteniendo empleados por tipo de rol"
 	LogCrewMemberTypeGetOK    = "Empleados por tipo de rol obtenidos exitosamente"
@@ -750,6 +896,9 @@ const (
 	LogCrewMemberTypeNotFound = "Tipo de integrante no encontrado (sin empleados)"
 )
 
+// ============================================
+// AIRLINE EMPLOYEE INTERACTOR (Release 15)
+// ============================================
 const (
 	LogAirlineEmployeeGet             = "Obteniendo información de empleado aerolínea"
 	LogAirlineEmployeeGetOK           = "Empleado aerolínea obtenido exitosamente"

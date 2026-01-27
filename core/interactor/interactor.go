@@ -32,7 +32,6 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 		if err == domain.ErrIncompleteRegistration {
 			log.Warn(logger.LogEmployeeInteractorIncompleteDetected, "email", employee.Email)
 
-
 			if cleanErr := i.service.CheckAndCleanInconsistentState(ctx, employee.Email); cleanErr != nil {
 				log.Error(logger.LogEmployeeInteractorCleanup_Error, "email", employee.Email, "error", cleanErr)
 				return nil, cleanErr
@@ -127,7 +126,7 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 
 	employee.KeycloakUserID = keycloakUserID
 	result.Employee = employee
-	result.Message = "user registered successfully"
+	result.Message = logger.DtoMsgUserRegistered
 
 	if sendErr := i.service.SendVerificationEmail(ctx, keycloakUserID); sendErr != nil {
 		log.Warn(logger.LogKeycloakSendVerificationEmailError,
@@ -333,4 +332,43 @@ func (i *Interactor) GetEmployeesByRole(ctx context.Context, role string) ([]dom
 
 	log.Success(logger.LogCrewMemberTypeGetOK, "role", role, "count", len(employees))
 	return employees, nil
+}
+
+func (i *Interactor) UpdateEmployee(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := i.logger.WithTraceID(traceID)
+
+	log.Info(logger.LogEmployeeUpdateRequest, employee.ToLogger())
+
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDBTransactionBeginErr, "error", err)
+		return nil, domain.ErrDatabaseUnavailable
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogDBTransactionRollback, "rollback_error", rbErr, "original_error", err)
+			}
+		}
+	}()
+
+	if err = i.service.UpdateEmployee(ctx, tx, employee); err != nil {
+		log.Error(logger.LogEmployeeUpdateError, "employee_id", employee.ID, "error", err)
+		return nil, err
+	}
+	log.Debug(logger.LogEmployeeUpdated, "employee_id", employee.ID)
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDBTransactionCommitErr, "error", err)
+		return nil, domain.ErrDatabaseUnavailable
+	}
+
+	log.Success(logger.LogEmployeeUpdateComplete, employee.ToLogger())
+	return &dto.UpdateEmployee{
+		ID:      employee.ID,
+		Updated: true,
+		Message: logger.DtoMsgEmployeeUpdated,
+	}, nil
 }

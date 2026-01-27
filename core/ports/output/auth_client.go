@@ -8,7 +8,7 @@ import (
 )
 
 type AuthClient interface {
-	LoginUser(ctx context.Context, username, password string) (*gocloak.JWT, error) // Login de usuario normal
+	LoginUser(ctx context.Context, username, password string) (*gocloak.JWT, error)
 
 	CreateUser(ctx context.Context, employee *domain.Employee) (string, error)
 	GetUserByEmail(ctx context.Context, email string) (*gocloak.User, error)

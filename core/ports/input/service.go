@@ -12,7 +12,6 @@ import (
 type Service interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 
-
 	RegisterEmployee(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error)
 	GetEmployeeByEmail(ctx context.Context, email string) (*domain.Employee, error)
 	GetEmployeeByID(ctx context.Context, id string) (*domain.Employee, error)
@@ -22,6 +21,7 @@ type Service interface {
 	GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error)
 
 	SaveEmployeeToDB(ctx context.Context, tx output.Tx, employee domain.Employee) error
+	UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error
 	UpdateEmployeeKeycloakID(ctx context.Context, tx output.Tx, employeeID string, keycloakUserID string) error
 	DeleteEmployee(ctx context.Context, employeeID string, keycloakUserID string) error
 

@@ -20,7 +20,6 @@ import (
 func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	dependencies.Logger.Info(logger.LogRouteConfiguring)
 
-
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:8081", "http://localhost:3001"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -32,15 +31,11 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	app.Use(cors.New(corsConfig))
 	dependencies.Logger.Info("CORS middleware configured")
 
-
 	app.GET("/metrics", gin.WrapH(promhttp.Handler()))
-
 
 	app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-
 	app.Use(middleware.RequestID())
-
 
 	app.Use(middleware.TrackMetrics())
 
@@ -65,7 +60,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	dependencies.Logger.Success(logger.LogRouteValidatorOK)
 	validator := middleware.NewMiddlewareValidator(validators)
 
-
 	app.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
@@ -74,7 +68,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	})
 
 	app.NoRoute(middleware.NotFoundHandler())
-
 
 	public := app.Group("flighthours/api/v1")
 	{
@@ -92,7 +85,9 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	{
 		protected.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
 
-		protected.GET("/employee/me", handler.GetMe())
+		protected.GET("/employee/me", handler.GetEmployee())
+
+		protected.PUT("/employees/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 
 		protected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
 

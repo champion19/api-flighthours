@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/champion19/flighthours-api/core/interactor/services/domain"
+	"github.com/champion19/flighthours-api/platform/logger"
 )
 
 type RegisterEmployee struct {
@@ -23,11 +24,15 @@ type TokenResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
+type UpdateEmployee struct {
+	ID      string `json:"id"`
+	Updated bool   `json:"updated"`
+	Message string `json:"message"`
+}
 
 func FromDomainToDTO(employee *domain.Employee) *RegisterEmployee {
 	return &RegisterEmployee{
 		Employee: *employee,
-		Message:  "Employee located successfully",
+		Message:  logger.DtoMsgEmployeeLocated,
 	}
 }
-
