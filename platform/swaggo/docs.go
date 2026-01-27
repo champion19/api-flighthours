@@ -98,6 +98,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/password-reset": {
+            "post": {
+                "description": "Envía un email con instrucciones para restablecer la contraseña. Por seguridad, siempre retorna éxito independientemente de si el email existe.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Solicitar recuperación de contraseña",
+                "parameters": [
+                    {
+                        "description": "Email del usuario",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PasswordResetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email de recuperación enviado",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.PasswordResetResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación - Email inválido",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/resend-verification": {
             "post": {
                 "description": "Reenvía el email de verificación a un usuario registrado que no ha verificado su cuenta",
@@ -155,6 +213,70 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Email ya verificado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/update-password": {
+            "post": {
+                "description": "Permite actualizar la contraseña usando el token recibido por email. El token expira en 12 horas.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Actualizar contraseña con token de recuperación",
+                "parameters": [
+                    {
+                        "description": "Token y nueva contraseña",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contraseña actualizada exitosamente",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.UpdatePasswordResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación - Contraseñas no coinciden o token inválido",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Token expirado o inválido",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
@@ -340,6 +462,50 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Error de validación - Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Empleado no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina permanentemente la cuenta del empleado autenticado del sistema (Keycloak + DB)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Eliminar cuenta del empleado autenticado",
+                "responses": {
+                    "200": {
+                        "description": "Cuenta eliminada exitosamente",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
@@ -1172,6 +1338,25 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.PasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.PasswordResetResponse": {
+            "type": "object",
+            "properties": {
+                "sent": {
+                    "type": "boolean"
+                }
+            }
+        },
         "handlers.RegisterEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -1238,6 +1423,38 @@ const docTemplate = `{
                     }
                 },
                 "id": {
+                    "type": "string"
+                },
+                "updated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.UpdatePasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "new_password",
+                "token"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdatePasswordResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
                     "type": "string"
                 },
                 "updated": {

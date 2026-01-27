@@ -199,3 +199,42 @@ func BuildEmployeeMeLinks(baseURL string) []Link {
 }
 
 
+func BuildAirlineLinks(baseURL string, airlineID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airlines", airlineID)
+	collectionURL := BuildCollectionURL(baseURL, "airlines")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL + "/activate",
+			Rel:    "activate",
+			Method: "PATCH",
+		},
+		{
+			Href:   resourceURL + "/deactivate",
+			Rel:    "deactivate",
+			Method: "PATCH",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
+
+func BuildAirlineListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "airlines")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}

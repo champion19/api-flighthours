@@ -7,8 +7,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/champion19/flighthours-api/platform/logger"
-	json_schema "github.com/champion19/flighthours-api/platform/schema"
+	"github.com/champion19/api-flighthours/platform/logger"
+	json_schema "github.com/champion19/api-flighthours/platform/schema"
 	"github.com/gin-gonic/gin"
 	"github.com/kaptinlin/jsonschema"
 )

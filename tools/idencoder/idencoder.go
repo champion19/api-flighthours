@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/champion19/flighthours-api/platform/logger"
+	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/google/uuid"
 	hashids "github.com/speps/go-hashids/v2"
 )

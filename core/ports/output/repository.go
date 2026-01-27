@@ -3,7 +3,7 @@ package output
 import (
 	"context"
 
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
 type Tx interface {
@@ -35,4 +35,11 @@ type MessageRepository interface {
 	GetByCode(ctx context.Context, code string) (*domain.Message, error)
 	GetByType(ctx context.Context, msgType string) ([]domain.Message, error)
 	GetByModule(ctx context.Context, module string) ([]domain.Message, error)
+}
+
+// AirlineRepository defines the interface for airline data persistence operations
+type AirlineRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
+	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 }

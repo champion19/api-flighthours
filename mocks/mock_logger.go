@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/champion19/flighthours-api/platform/logger"
+	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/stretchr/testify/mock"
 )
 

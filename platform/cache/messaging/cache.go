@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
-	"github.com/champion19/flighthours-api/platform/logger"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 type MessageType = cachetypes.MessageType
@@ -180,7 +180,7 @@ func (c *MessageCache) GetMessageResponse(code string, params ...string) *Messag
 	}
 }
 
-// replaceAll is a simple helper for placeholder replacement
+
 func replaceAll(s, old, new string) string {
 	result := ""
 	for i := 0; i < len(s); {
@@ -325,14 +325,14 @@ var messageCodeToHTTPStatus = map[string]int{
 	"MOD_APT_DEACTIVATE_ERR_00003": http.StatusUnprocessableEntity, // 422 - Error deactivating airport
 
 	// ========================================
-	// City Module (CIU_*) - Ciudad (HU13 - Virtual Entity pattern)
+	// City Module (CIU_*) - Ciudad (Virtual Entity pattern)
 	// ========================================
 	"CIU_CON_EXI_01301": http.StatusOK,                  // 200 - City airports retrieved successfully
 	"CIU_CON_ERR_01302": http.StatusNotFound,            // 404 - City not found (no airports in this city)
 	"CIU_CON_ERR_01303": http.StatusInternalServerError, // 500 - Technical error querying city
 
 	// ========================================
-	// Country Module (PAI_*) - País (HU38 - Virtual Entity pattern)
+	// Country Module (PAI_*) - País (Virtual Entity pattern)
 	// ========================================
 	"PAI_CON_EXI_03801": http.StatusOK,                  // 200 - Country airports retrieved successfully
 	"PAI_CON_ERR_03802": http.StatusNotFound,            // 404 - Country not found (no airports in this country)
@@ -355,37 +355,37 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// DailyLogbook Module (BIT_*) - Bitácora Diaria
 	// ========================================
-	// Consultar (HU7)
+	// Consultar
 	"BIT_CON_EXI_01901": http.StatusOK,                  // 200 - Bitácora consultada exitosamente
 	"BIT_CON_ERR_01902": http.StatusBadRequest,          // 400 - Bitácora no seleccionada
 	"BIT_CON_ERR_01903": http.StatusNotFound,            // 404 - Bitácora no encontrada
 	"BIT_CON_ERR_01904": http.StatusInternalServerError, // 500 - Error técnico al consultar
 
-	// Agregar (HU8)
+	// Agregar
 	"BIT_AGR_EXI_01801": http.StatusCreated,             // 201 - Bitácora creada exitosamente
 	"BIT_AGR_ERR_01802": http.StatusBadRequest,          // 400 - Campos requeridos incompletos
 	"BIT_AGR_ERR_01803": http.StatusBadRequest,          // 400 - Formato inválido
 	"BIT_AGR_ERR_01804": http.StatusInternalServerError, // 500 - Error técnico al crear
 
-	// Editar (HU9)
+	// Editar
 	"BIT_EDI_EXI_01701": http.StatusOK,                  // 200 - Bitácora actualizada exitosamente
 	"BIT_EDI_ERR_01702": http.StatusBadRequest,          // 400 - Bitácora no seleccionada
 	"BIT_EDI_ERR_01703": http.StatusBadRequest,          // 400 - Datos inválidos
 	"BIT_EDI_ERR_01704": http.StatusInternalServerError, // 500 - Error técnico al editar
 
-	// Eliminar (HU10)
+	// Eliminar
 	"BIT_DEL_EXI_01601": http.StatusOK,                  // 200 - Bitácora eliminada exitosamente
 	"BIT_DEL_ERR_01602": http.StatusBadRequest,          // 400 - Bitácora no seleccionada
 	"BIT_DEL_ERR_01603": http.StatusNotFound,            // 404 - Bitácora no existe o ya eliminada
 	"BIT_DEL_ERR_01604": http.StatusInternalServerError, // 500 - Error técnico al eliminar
 
-	// Activar (HU11)
+	// Activar
 	"BIT_ACT_EXI_01501": http.StatusOK,                  // 200 - Bitácora activada exitosamente
 	"BIT_ACT_ERR_01502": http.StatusBadRequest,          // 400 - Bitácora no seleccionada
 	"BIT_ACT_ERR_01503": http.StatusConflict,            // 409 - Bitácora ya está activa
 	"BIT_ACT_ERR_01504": http.StatusInternalServerError, // 500 - Error técnico al activar
 
-	// Inactivar (HU12)
+	// Inactivar
 	"BIT_INA_EXI_01401": http.StatusOK,                  // 200 - Bitácora inactivada exitosamente
 	"BIT_INA_ERR_01402": http.StatusBadRequest,          // 400 - Bitácora no seleccionada
 	"BIT_INA_ERR_01403": http.StatusConflict,            // 409 - Bitácora ya está inactiva
@@ -401,17 +401,17 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Aircraft Registration Module (MAT_*) - Matrícula
 	// ========================================
-	// Consultar (HU33)
+	// Consultar
 	"MAT_CON_EXI_03301": http.StatusOK,                  // 200 - Matrícula consultada exitosamente
 	"MAT_CON_ERR_03302": http.StatusNotFound,            // 404 - Matrícula no encontrada
 	"MAT_CON_ERR_03303": http.StatusInternalServerError, // 500 - Error técnico al consultar
 
-	// Agregar (HU34)
+	// Agregar
 	"MAT_AGR_EXI_03401": http.StatusCreated,    // 201 - Matrícula creada exitosamente
 	"MAT_AGR_ERR_03402": http.StatusBadRequest, // 400 - Error al crear matrícula
 	"MAT_AGR_ERR_03403": http.StatusConflict,   // 409 - Matrícula duplicada
 
-	// Editar (HU35)
+	// Editar
 	"MAT_EDI_EXI_03501": http.StatusOK,         // 200 - Matrícula actualizada exitosamente
 	"MAT_EDI_ERR_03502": http.StatusBadRequest, // 400 - Error al actualizar matrícula
 
@@ -426,20 +426,20 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Aircraft Model Module (MOD_AM_*) - Modelo de Aeronave
 	// ========================================
-	// Consultar (HU36)
+	// Consultar
 	"MOD_AM_CON_EXI_03601": http.StatusOK,                  // 200 - Modelo de aeronave consultado
 	"MOD_AM_CON_ERR_03602": http.StatusNotFound,            // 404 - Modelo de aeronave no encontrado
 	"MOD_AM_CON_ERR_03603": http.StatusInternalServerError, // 500 - Error técnico al consultar
 
-	// Listar tipos (HU43)
+	// Listar tipos
 	"MOD_AM_LIST_EXI_04301": http.StatusOK,                  // 200 - Lista de modelos/tipos obtenida
 	"MOD_AM_LIST_ERR_04302": http.StatusInternalServerError, // 500 - Error al listar modelos/tipos
 
-	// Inactivar (HU41)
+	// Inactivar
 	"MOD_AM_INA_EXI_04101": http.StatusOK,                  // 200 - Modelo de aeronave inactivado
 	"MOD_AM_INA_ERR_04102": http.StatusInternalServerError, // 500 - Error técnico al inactivar
 
-	// Activar (HU42)
+	// Activar
 	"MOD_AM_ACT_EXI_04201": http.StatusOK,                  // 200 - Modelo de aeronave activado
 	"MOD_AM_ACT_ERR_04202": http.StatusInternalServerError, // 500 - Error técnico al activar
 
@@ -451,7 +451,7 @@ var messageCodeToHTTPStatus = map[string]int{
 	"FAM_CON_ERR_03203": http.StatusInternalServerError, // 500 - Error técnico al consultar familia
 
 	// ========================================
-	// Engine Module (MOT_*) - Motor (HU37)
+	// Engine Module (MOT_*) - Motor
 	// ========================================
 	"MOT_CON_EXI_03701": http.StatusOK,                  // 200 - Motor consultado exitosamente
 	"MOT_CON_ERR_03702": http.StatusNotFound,            // 404 - Motor no encontrado
@@ -461,7 +461,7 @@ var messageCodeToHTTPStatus = map[string]int{
 	"MOT_LIST_ERR_03705": http.StatusInternalServerError, // 500 - Error al listar motores
 
 	// ========================================
-	// Manufacturer Module (FAB_*) - Fabricante (HU31)
+	// Manufacturer Module (FAB_*) - Fabricante
 	// ========================================
 	"FAB_CON_EXI_03101": http.StatusOK,                  // 200 - Fabricante consultado exitosamente
 	"FAB_CON_ERR_03102": http.StatusNotFound,            // 404 - Fabricante no encontrado
@@ -473,7 +473,7 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Route Module (RUT_*) - Ruta
 	// ========================================
-	// Consultar (HU39)
+	// Consultar
 	"RUT_CON_EXI_03901": http.StatusOK,                  // 200 - Ruta consultada exitosamente
 	"RUT_CON_ERR_03902": http.StatusNotFound,            // 404 - Ruta no encontrada
 	"RUT_CON_ERR_03903": http.StatusInternalServerError, // 500 - Error técnico al consultar
@@ -485,16 +485,16 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Airline Route Module (RUT_AIR_*) - Ruta Aerolínea
 	// ========================================
-	// Consultar (HU40)
+	// Consultar
 	"RUT_AIR_CON_EXI_04001": http.StatusOK,                  // 200 - Ruta aerolínea consultada exitosamente
 	"RUT_AIR_CON_ERR_04002": http.StatusNotFound,            // 404 - Ruta aerolínea no encontrada
 	"RUT_AIR_CON_ERR_04003": http.StatusInternalServerError, // 500 - Error técnico al consultar
 
-	// Desactivar (HU41)
+	// Desactivar
 	"RUT_AIR_INA_EXI_04101": http.StatusOK,                  // 200 - Ruta aerolínea desactivada
 	"RUT_AIR_INA_ERR_04102": http.StatusInternalServerError, // 500 - Error técnico al desactivar
 
-	// Activar (HU42)
+	// Activar
 	"RUT_AIR_ACT_EXI_04201": http.StatusOK,                  // 200 - Ruta aerolínea activada
 	"RUT_AIR_ACT_ERR_04202": http.StatusInternalServerError, // 500 - Error técnico al activar
 
@@ -509,19 +509,19 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Flight Module (VUE_*) - Vuelo
 	// ========================================
-	// Consultar (HU48)
+	// Consultar
 	"VUE_CON_EXI_04801": http.StatusOK,                  // 200 - Vuelo consultado exitosamente
 	"VUE_CON_ERR_04802": http.StatusBadRequest,          // 400 - Vuelo no seleccionado
 	"VUE_CON_ERR_04803": http.StatusNotFound,            // 404 - Vuelo no encontrado
 	"VUE_CON_ERR_04804": http.StatusInternalServerError, // 500 - Error técnico al consultar
 
-	// Editar (HU49)
+	// Editar
 	"VUE_EDI_EXI_04901": http.StatusOK,                  // 200 - Vuelo actualizado exitosamente
 	"VUE_EDI_ERR_04902": http.StatusBadRequest,          // 400 - Vuelo no seleccionado
 	"VUE_EDI_ERR_04903": http.StatusBadRequest,          // 400 - Datos inválidos
 	"VUE_EDI_ERR_04904": http.StatusInternalServerError, // 500 - Error técnico al editar
 
-	// Registrar (HU50)
+	// Registrar
 	"VUE_REG_EXI_05001": http.StatusCreated,             // 201 - Vuelo registrado exitosamente
 	"VUE_REG_ERR_05002": http.StatusBadRequest,          // 400 - Campos requeridos incompletos
 	"VUE_REG_ERR_05003": http.StatusBadRequest,          // 400 - Formato inválido
@@ -537,7 +537,7 @@ var messageCodeToHTTPStatus = map[string]int{
 	"VUE_VAL_ERR_04807": http.StatusBadRequest, // 400 - Matrícula de aeronave inválida
 	"VUE_VAL_ERR_04808": http.StatusBadRequest, // 400 - Secuencia de tiempos inválida
 
-	// Eliminar (HU18)
+	// Eliminar
 	"VUE_DEL_EXI_01801": http.StatusOK,                  // 200 - Vuelo eliminado exitosamente
 	"VUE_DEL_ERR_01802": http.StatusBadRequest,          // 400 - Vuelo no seleccionado
 	"VUE_DEL_ERR_01803": http.StatusNotFound,            // 404 - Vuelo no existe o ya eliminado
@@ -549,25 +549,25 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Airline Employee Module (EMP_AIR_*) - Empleado Aerolínea
 	// ========================================
-	// Consultar (HU26)
+	// Consultar
 	"EMP_AIR_CON_EXI_02601": http.StatusOK,                  // 200 - Airline employee retrieved successfully
 	"EMP_AIR_CON_ERR_02602": http.StatusNotFound,            // 404 - Airline employee not found
 	"EMP_AIR_CON_ERR_02603": http.StatusInternalServerError, // 500 - Technical error querying
 
-	// Editar (HU27)
+	// Editar
 	"EMP_AIR_EDI_EXI_02701": http.StatusOK,                  // 200 - Airline employee updated successfully
 	"EMP_AIR_EDI_ERR_02702": http.StatusInternalServerError, // 500 - Technical error updating
 
-	// Agregar (HU28)
+	// Agregar
 	"EMP_AIR_AGR_EXI_02801": http.StatusCreated,             // 201 - Airline employee created successfully
 	"EMP_AIR_AGR_ERR_02802": http.StatusInternalServerError, // 500 - Technical error creating
 	"EMP_AIR_AGR_ERR_02803": http.StatusConflict,            // 409 - Duplicate airline employee
 
-	// Activar (HU29)
+	// Activar
 	"EMP_AIR_ACT_EXI_02901": http.StatusOK,                  // 200 - Airline employee activated successfully
 	"EMP_AIR_ACT_ERR_02902": http.StatusInternalServerError, // 500 - Technical error activating
 
-	// Inactivar (HU30)
+	// Inactivar
 	"EMP_AIR_INA_EXI_03001": http.StatusOK,                  // 200 - Airline employee deactivated successfully
 	"EMP_AIR_INA_ERR_03002": http.StatusInternalServerError, // 500 - Technical error deactivating
 

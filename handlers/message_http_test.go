@@ -9,14 +9,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/champion19/flighthours-api/core/interactor"
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/input"
-	"github.com/champion19/flighthours-api/core/ports/output"
-	"github.com/champion19/flighthours-api/middleware"
-	"github.com/champion19/flighthours-api/platform/cache/messaging"
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
-	"github.com/champion19/flighthours-api/tools/idencoder"
+	"github.com/champion19/api-flighthours/core/interactor"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/cache/messaging"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
+	"github.com/champion19/api-flighthours/tools/idencoder"
 	"github.com/gin-gonic/gin"
 )
 
@@ -72,7 +72,7 @@ func newMessageRouter(msgSvc input.MessageService) *gin.Engine {
 	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
 
 	msgInter := interactor.NewMessageInteractor(msgSvc, noopLogger{})
-	h := New(nil, nil, enc, resp, msgInter, cache)
+	h := New(nil, nil, enc, resp, msgInter, cache, nil)
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

@@ -3,7 +3,7 @@ package handlers
 import (
 	"time"
 
-	domain "github.com/champion19/flighthours-api/core/interactor/services/domain"
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
 type EmployeeRequest struct {
@@ -159,10 +159,11 @@ func (u *UpdateEmployeeRequest) Sanitize() {
 
 func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.Employee, error) {
 	layout := "2006-01-02"
+	loc := time.Local 
 
 	startDate := existing.StartDate
 	if u.StartDate != "" {
-		parsed, err := time.Parse(layout, u.StartDate)
+		parsed, err := time.ParseInLocation(layout, u.StartDate, loc)
 		if err != nil {
 			return domain.Employee{}, domain.ErrInvalidDateFormat
 		}
@@ -171,7 +172,7 @@ func (u UpdateEmployeeRequest) ToUpdateData(existing *domain.Employee) (domain.E
 
 	endDate := existing.EndDate
 	if u.EndDate != "" {
-		parsed, err := time.Parse(layout, u.EndDate)
+		parsed, err := time.ParseInLocation(layout, u.EndDate, loc)
 		if err != nil {
 			return domain.Employee{}, domain.ErrInvalidDateFormat
 		}
@@ -206,15 +207,16 @@ type UpdateEmployeeResponse struct {
 
 func (e EmployeeRequest) ToDomain() (domain.Employee, error) {
 	layout := "2006-01-02"
+	loc := time.Local
 
-	startDate, err := time.Parse(layout, e.StartDate)
+	startDate, err := time.ParseInLocation(layout, e.StartDate, loc)
 	if err != nil {
 		return domain.Employee{}, domain.ErrInvalidDateFormat
 	}
 
 	var endDate time.Time
 	if e.EndDate != "" {
-		endDate, err = time.Parse(layout, e.EndDate)
+		endDate, err = time.ParseInLocation(layout, e.EndDate, loc)
 		if err != nil {
 			return domain.Employee{}, domain.ErrInvalidDateFormat
 		}

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/champion19/flighthours-api/config"
-	loggerPkg "github.com/champion19/flighthours-api/platform/logger"
+	"github.com/champion19/api-flighthours/config"
+	loggerPkg "github.com/champion19/api-flighthours/platform/logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 

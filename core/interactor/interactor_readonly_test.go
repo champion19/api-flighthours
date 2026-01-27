@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/champion19/flighthours-api/core/interactor/dto"
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/input"
-	"github.com/champion19/flighthours-api/core/ports/output"
+	"github.com/champion19/api-flighthours/core/interactor/dto"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
 type fakeServiceForReadOnly struct {

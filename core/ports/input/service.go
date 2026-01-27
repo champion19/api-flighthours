@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/champion19/flighthours-api/core/interactor/dto"
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/output"
+	"github.com/champion19/api-flighthours/core/interactor/dto"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
 type Service interface {
@@ -50,4 +50,11 @@ type MessageService interface {
 	SaveMessageToDB(ctx context.Context, tx output.Tx, message domain.Message) error
 	UpdateMessageInDB(ctx context.Context, tx output.Tx, message domain.Message) error
 	DeleteMessageFromDB(ctx context.Context, tx output.Tx, id string) error
+}
+
+// AirlineService defines the interface for airline business operations
+type AirlineService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
+	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 }

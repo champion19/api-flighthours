@@ -1,4 +1,4 @@
-module github.com/champion19/flighthours-api
+module github.com/champion19/api-flighthours
 
 go 1.25
 

@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/platform/cache/messaging"
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/platform/cache/messaging"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
 	"github.com/gin-gonic/gin"
 )
 

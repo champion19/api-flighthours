@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/champion19/flighthours-api/tools/utils"
+	"github.com/champion19/api-flighthours/tools/utils"
 	"github.com/kaptinlin/jsonschema"
 )
 
@@ -140,7 +140,7 @@ func (v *Validators) ValidateUpdateEmployee(data interface{}) error {
 
 	result := v.UpdateEmployeeValidator.Validate(data)
 	if !result.IsValid() {
-		
+
 		var errorMessages []string
 		for _, err := range result.Errors {
 			errorMessages = append(errorMessages, err.Message)

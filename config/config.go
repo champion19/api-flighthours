@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/champion19/flighthours-api/platform/logger"
-	"github.com/champion19/flighthours-api/tools/utils"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/champion19/api-flighthours/tools/utils"
 )
 
 type Config struct {

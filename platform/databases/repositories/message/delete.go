@@ -2,9 +2,9 @@ package message
 
 import(
 	"context"
-"github.com/champion19/flighthours-api/platform/databases/common"
-"github.com/champion19/flighthours-api/core/interactor/services/domain"
-"github.com/champion19/flighthours-api/core/ports/output"
+"github.com/champion19/api-flighthours/platform/databases/common"
+"github.com/champion19/api-flighthours/core/interactor/services/domain"
+"github.com/champion19/api-flighthours/core/ports/output"
 )
 
 

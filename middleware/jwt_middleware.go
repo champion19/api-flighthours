@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/input"
-	"github.com/champion19/flighthours-api/platform/cache/messaging"
-	"github.com/champion19/flighthours-api/platform/jwt"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/platform/cache/messaging"
+	"github.com/champion19/api-flighthours/platform/jwt"
 	"github.com/gin-gonic/gin"
 )
 

@@ -3,10 +3,10 @@ package interactor
 import (
 	"context"
 
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/input"
-	"github.com/champion19/flighthours-api/middleware"
-	"github.com/champion19/flighthours-api/platform/logger"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 type MessageInteractor struct {
