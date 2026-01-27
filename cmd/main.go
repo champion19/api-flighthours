@@ -3,9 +3,9 @@ package main
 import (
 	"log/slog"
 
-	"github.com/champion19/flighthours-api/platform/logger"
-	_ "github.com/champion19/flighthours-api/platform/swaggo" // Importar documentos generados por Swag
-	"github.com/champion19/flighthours-api/server"
+	"github.com/champion19/api-flighthours/platform/logger"
+	_ "github.com/champion19/api-flighthours/platform/swaggo" // Importar documentos generados por Swag
+	"github.com/champion19/api-flighthours/server"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )

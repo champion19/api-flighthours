@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/champion19/flighthours-api/core/ports/output"
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
-	"github.com/champion19/flighthours-api/platform/databases/common"
-	"github.com/champion19/flighthours-api/platform/logger"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
+	"github.com/champion19/api-flighthours/platform/databases/common"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 const (

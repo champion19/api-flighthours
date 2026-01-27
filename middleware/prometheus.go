@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	promConstants "github.com/champion19/flighthours-api/platform/prometheus"
+	promConstants "github.com/champion19/api-flighthours/platform/prometheus"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )

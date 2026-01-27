@@ -10,16 +10,16 @@ import (
 	"testing"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/champion19/flighthours-api/core/interactor"
-	"github.com/champion19/flighthours-api/core/interactor/dto"
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/input"
-	"github.com/champion19/flighthours-api/core/ports/output"
-	"github.com/champion19/flighthours-api/middleware"
-	"github.com/champion19/flighthours-api/platform/cache/messaging"
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
-	platformLogger "github.com/champion19/flighthours-api/platform/logger"
-	"github.com/champion19/flighthours-api/tools/idencoder"
+	"github.com/champion19/api-flighthours/core/interactor"
+	"github.com/champion19/api-flighthours/core/interactor/dto"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/cache/messaging"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
+	platformLogger "github.com/champion19/api-flighthours/platform/logger"
+	"github.com/champion19/api-flighthours/tools/idencoder"
 	"github.com/gin-gonic/gin"
 )
 
@@ -213,7 +213,7 @@ func TestHTTP_RegisterEmployee(t *testing.T) {
 
 	newRouter := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc, noopLogger{})
-		h := New(nil, inter, enc, resp, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -349,7 +349,7 @@ func TestHTTP_UpdateEmployee(t *testing.T) {
 
 	newRouter := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc, noopLogger{})
-		h := New(nil, inter, enc, resp, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -443,7 +443,7 @@ func TestHTTP_DeleteEmployee(t *testing.T) {
 
 	newRouterWithAuth := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc, noopLogger{})
-		h := New(nil, inter, enc, resp, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -458,7 +458,7 @@ func TestHTTP_DeleteEmployee(t *testing.T) {
 
 	newRouterWithoutAuth := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc, noopLogger{})
-		h := New(nil, inter, enc, resp, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -523,7 +523,6 @@ func TestHTTP_DeleteEmployee(t *testing.T) {
 	})
 }
 
-
 type fakeServiceWithDelete struct {
 	fakeService
 }
@@ -539,7 +538,6 @@ func (f *fakeServiceWithDelete) GetEmployeeByID(ctx context.Context, id string) 
 func (f *fakeServiceWithDelete) DeleteEmployee(context.Context, string, string) error {
 	return nil
 }
-
 
 type fakeServiceWithDeleteErr struct {
 	fakeServiceErr
@@ -638,7 +636,7 @@ func TestHTTP_RequestPasswordReset(t *testing.T) {
 
 	newRouter := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc, noopLogger{})
-		h := New(nil, inter, enc, resp, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -718,7 +716,7 @@ func TestHTTP_UpdatePassword(t *testing.T) {
 
 	newRouter := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc, noopLogger{})
-		h := New(nil, inter, enc, resp, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

@@ -4,20 +4,21 @@ import (
 	"context"
 	"time"
 
-	"github.com/champion19/flighthours-api/config"
-	"github.com/champion19/flighthours-api/core/interactor"
-	"github.com/champion19/flighthours-api/core/interactor/services"
-	"github.com/champion19/flighthours-api/core/ports/input"
-	"github.com/champion19/flighthours-api/core/ports/output"
-	"github.com/champion19/flighthours-api/middleware"
-	messagingCache "github.com/champion19/flighthours-api/platform/cache/messaging"
-	mysql "github.com/champion19/flighthours-api/platform/databases/mysql"
-	repo "github.com/champion19/flighthours-api/platform/databases/repositories/employee"
-	messageRepo "github.com/champion19/flighthours-api/platform/databases/repositories/message"
-	"github.com/champion19/flighthours-api/platform/identity_provider/keycloak"
-	"github.com/champion19/flighthours-api/platform/jwt"
-	"github.com/champion19/flighthours-api/platform/logger"
-	"github.com/champion19/flighthours-api/tools/idencoder"
+	"github.com/champion19/api-flighthours/config"
+	"github.com/champion19/api-flighthours/core/interactor"
+	"github.com/champion19/api-flighthours/core/interactor/services"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/middleware"
+	messagingCache "github.com/champion19/api-flighthours/platform/cache/messaging"
+	mysql "github.com/champion19/api-flighthours/platform/databases/mysql"
+	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
+	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
+	messageRepo "github.com/champion19/api-flighthours/platform/databases/repositories/message"
+	"github.com/champion19/api-flighthours/platform/identity_provider/keycloak"
+	"github.com/champion19/api-flighthours/platform/jwt"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/champion19/api-flighthours/tools/idencoder"
 )
 
 type Dependencies struct {
@@ -32,6 +33,7 @@ type Dependencies struct {
 	MessagingCache    *messagingCache.MessageCache
 	MessageInteractor *interactor.MessageInteractor
 	JWTValidator      *jwt.JWKSValidator
+	AirlineInteractor *interactor.AirlineInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -104,6 +106,17 @@ func Init() (*Dependencies, error) {
 	messageInteractor := interactor.NewMessageInteractor(messageService, log)
 	log.Success(logger.LogDependencyMessageIntInit)
 
+	// Airline dependencies
+	airlineRepository, err := airlineRepo.NewAirlineRepository(db)
+	if err != nil {
+		log.Error(logger.LogAirlineRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogAirlineRepoInitOK)
+
+	airlineService := services.NewAirlineService(airlineRepository, log)
+	airlineInteractor := interactor.NewAirlineInteractor(airlineService, log)
+
 	var jwtValidator *jwt.JWKSValidator
 	jwtConfig := jwt.JWKSConfig{
 		JWKSURL:         cfg.GetKeycloakJWKSURL(),
@@ -130,5 +143,6 @@ func Init() (*Dependencies, error) {
 		MessagingCache:    messagingCache,
 		MessageInteractor: messageInteractor,
 		JWTValidator:      jwtValidator,
+		AirlineInteractor: airlineInteractor,
 	}, nil
 }

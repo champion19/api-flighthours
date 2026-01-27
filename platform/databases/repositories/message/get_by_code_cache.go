@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
 )
 
 func (r *repository) GetByCodeForCache(ctx context.Context, code string) (*cachetypes.CachedMessage, error) {

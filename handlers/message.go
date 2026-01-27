@@ -1,7 +1,7 @@
 package handlers
 import (
 
-	domain "github.com/champion19/flighthours-api/core/interactor/services/domain"
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 type MessageRequest struct {
 	Code     string             `json:"code" binding:"omitempty"`

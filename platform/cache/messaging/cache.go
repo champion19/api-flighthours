@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
-	"github.com/champion19/flighthours-api/platform/logger"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 type MessageType = cachetypes.MessageType

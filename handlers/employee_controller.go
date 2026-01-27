@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	domain "github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/middleware"
-	"github.com/champion19/flighthours-api/platform/logger"
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/gin-gonic/gin"
 )
 

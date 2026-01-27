@@ -4,12 +4,12 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/champion19/flighthours-api/cmd/dependency"
-	"github.com/champion19/flighthours-api/handlers"
-	"github.com/champion19/flighthours-api/middleware"
-	"github.com/champion19/flighthours-api/platform/logger"
-	"github.com/champion19/flighthours-api/platform/schema"
-	_ "github.com/champion19/flighthours-api/platform/swaggo"
+	"github.com/champion19/api-flighthours/cmd/dependency"
+	"github.com/champion19/api-flighthours/handlers"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/champion19/api-flighthours/platform/schema"
+	_ "github.com/champion19/api-flighthours/platform/swaggo"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -49,6 +49,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.ResponseHandler,
 		dependencies.MessageInteractor,
 		dependencies.MessagingCache,
+		dependencies.AirlineInteractor,
 	)
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -80,10 +81,15 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.POST("/auth/verify-email", handler.VerifyEmailByToken())
 
-	
 		public.POST("/auth/password-reset", validator.WithValidatePasswordResetRequest(), handler.PasswordReset())
 
 		public.POST("/auth/update-password", validator.WithValidateUpdatePassword(), handler.UpdatePassword())
+
+		public.GET("/airlines", handler.ListAirlines())
+
+		public.GET("/airlines/:id", handler.GetAirlineByID())
+
+
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
@@ -107,6 +113,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.GET("/messages", handler.ListMessages())
 
 		protected.POST("/messages/cache/reload", handler.ReloadMessageCache())
+
 	}
 
 	dependencies.Logger.Success(logger.LogRouteConfigured)

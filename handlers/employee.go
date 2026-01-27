@@ -3,7 +3,7 @@ package handlers
 import (
 	"time"
 
-	domain "github.com/champion19/flighthours-api/core/interactor/services/domain"
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
 type EmployeeRequest struct {

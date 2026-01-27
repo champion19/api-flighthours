@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/stretchr/testify/mock"
 )
 
