@@ -33,6 +33,7 @@ type Dependencies struct {
 	MessagingCache    *messagingCache.MessageCache
 	MessageInteractor *interactor.MessageInteractor
 	JWTValidator      *jwt.JWKSValidator
+	AirlineInteractor *interactor.AirlineInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -105,6 +106,17 @@ func Init() (*Dependencies, error) {
 	messageInteractor := interactor.NewMessageInteractor(messageService, log)
 	log.Success(logger.LogDependencyMessageIntInit)
 
+	// Airline dependencies
+	airlineRepository, err := airlineRepo.NewAirlineRepository(db)
+	if err != nil {
+		log.Error(logger.LogAirlineRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogAirlineRepoInitOK)
+
+	airlineService := services.NewAirlineService(airlineRepository, log)
+	airlineInteractor := interactor.NewAirlineInteractor(airlineService, log)
+
 	var jwtValidator *jwt.JWKSValidator
 	jwtConfig := jwt.JWKSConfig{
 		JWKSURL:         cfg.GetKeycloakJWKSURL(),
@@ -131,5 +143,6 @@ func Init() (*Dependencies, error) {
 		MessagingCache:    messagingCache,
 		MessageInteractor: messageInteractor,
 		JWTValidator:      jwtValidator,
+		AirlineInteractor: airlineInteractor,
 	}, nil
 }
