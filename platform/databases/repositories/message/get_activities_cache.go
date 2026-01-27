@@ -3,7 +3,7 @@ package message
 import (
 	"context"
 
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
 )
 
 func (r *repository) GetAllActiveForCache(ctx context.Context) ([]cachetypes.CachedMessage, error) {

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/champion19/flighthours-api/tools/utils"
+	"github.com/champion19/api-flighthours/tools/utils"
 	"github.com/kaptinlin/jsonschema"
 )
 

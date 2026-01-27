@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	cachetypes "github.com/champion19/flighthours-api/platform/cache/types"
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
 	"github.com/stretchr/testify/mock"
 )
 

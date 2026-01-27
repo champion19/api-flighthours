@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/champion19/flighthours-api/config"
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/output"
-	"github.com/champion19/flighthours-api/platform/logger"
+	"github.com/champion19/api-flighthours/config"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 type client struct {

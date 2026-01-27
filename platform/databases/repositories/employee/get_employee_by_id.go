@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
 func (r *repository) GetEmployeeByID(ctx context.Context, id string) (*domain.Employee, error) {

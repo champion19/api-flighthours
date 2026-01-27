@@ -3,8 +3,8 @@ package employee
 import (
 	"context"
 
-	"github.com/champion19/flighthours-api/core/interactor/services/domain"
-	"github.com/champion19/flighthours-api/core/ports/output"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
 func (r *repository) DeleteEmployee(ctx context.Context, tx output.Tx, id string) error {

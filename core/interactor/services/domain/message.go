@@ -3,7 +3,7 @@ package domain
 import (
 	"time"
 
-	uuid "github.com/champion19/flighthours-api/tools/utils"
+	uuid "github.com/champion19/api-flighthours/tools/utils"
 )
 
 type MessageType string

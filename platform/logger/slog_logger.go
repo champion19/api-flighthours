@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/champion19/flighthours-api/tools/utils"
+	"github.com/champion19/api-flighthours/tools/utils"
 )
 
 type SlogLogger struct {

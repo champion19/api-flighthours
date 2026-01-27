@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-   messagingCache "github.com/champion19/flighthours-api/platform/cache/messaging"
+   messagingCache "github.com/champion19/api-flighthours/platform/cache/messaging"
 	"github.com/gin-gonic/gin"
 )
 
