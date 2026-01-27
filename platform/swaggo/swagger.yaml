@@ -199,6 +199,18 @@ definitions:
           $ref: '#/definitions/handlers.Link'
         type: array
     type: object
+  handlers.PasswordResetRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  handlers.PasswordResetResponse:
+    properties:
+      sent:
+        type: boolean
+    type: object
   handlers.RegisterEmployeeResponse:
     properties:
       _links:
@@ -242,6 +254,28 @@ definitions:
           $ref: '#/definitions/handlers.Link'
         type: array
       id:
+        type: string
+      updated:
+        type: boolean
+    type: object
+  handlers.UpdatePasswordRequest:
+    properties:
+      confirm_password:
+        minLength: 8
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - confirm_password
+    - new_password
+    - token
+    type: object
+  handlers.UpdatePasswordResponse:
+    properties:
+      email:
         type: string
       updated:
         type: boolean
@@ -329,6 +363,42 @@ paths:
       summary: Cambiar contraseña de usuario autenticado
       tags:
       - authentication
+  /auth/password-reset:
+    post:
+      consumes:
+      - application/json
+      description: Envía un email con instrucciones para restablecer la contraseña.
+        Por seguridad, siempre retorna éxito independientemente de si el email existe.
+      parameters:
+      - description: Email del usuario
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PasswordResetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email de recuperación enviado
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.PasswordResetResponse'
+              type: object
+        "400":
+          description: Error de validación - Email inválido
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: Solicitar recuperación de contraseña
+      tags:
+      - authentication
   /auth/resend-verification:
     post:
       consumes:
@@ -371,6 +441,46 @@ paths:
           schema:
             $ref: '#/definitions/middleware.APIResponse'
       summary: Reenviar email de verificación
+      tags:
+      - authentication
+  /auth/update-password:
+    post:
+      consumes:
+      - application/json
+      description: Permite actualizar la contraseña usando el token recibido por email.
+        El token expira en 12 horas.
+      parameters:
+      - description: Token y nueva contraseña
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contraseña actualizada exitosamente
+          schema:
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.UpdatePasswordResponse'
+              type: object
+        "400":
+          description: Error de validación - Contraseñas no coinciden o token inválido
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Token expirado o inválido
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      summary: Actualizar contraseña con token de recuperación
       tags:
       - authentication
   /auth/verify-email:
@@ -448,6 +558,35 @@ paths:
       tags:
       - employees
   /employees/me:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina permanentemente la cuenta del empleado autenticado del
+        sistema (Keycloak + DB)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cuenta eliminada exitosamente
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Empleado no encontrado
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar cuenta del empleado autenticado
+      tags:
+      - employees
     put:
       consumes:
       - application/json
@@ -492,34 +631,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Actualizar información del empleado autenticado
-      tags:
-      - employees
-    delete:
-      consumes:
-      - application/json
-      description: Elimina permanentemente la cuenta del empleado autenticado del sistema (Keycloak + DB)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Cuenta eliminada exitosamente
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: No autenticado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Empleado no encontrado
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Error interno del servidor
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Eliminar cuenta del empleado autenticado
       tags:
       - employees
   /login:

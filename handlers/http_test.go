@@ -523,7 +523,7 @@ func TestHTTP_DeleteEmployee(t *testing.T) {
 	})
 }
 
-// fakeServiceWithDelete is a fake service that supports DeleteEmployee
+
 type fakeServiceWithDelete struct {
 	fakeService
 }
@@ -540,7 +540,7 @@ func (f *fakeServiceWithDelete) DeleteEmployee(context.Context, string, string) 
 	return nil
 }
 
-// fakeServiceWithDeleteErr is a fake service that returns errors for DeleteEmployee
+
 type fakeServiceWithDeleteErr struct {
 	fakeServiceErr
 	err error
@@ -574,10 +574,277 @@ func newTestMessageCacheWithDelete(t *testing.T) *messaging.MessageCache {
 		{Code: domain.MsgUserDeleted, Type: cachetypes.TypeSuccess, Content: "user deleted"},
 		{Code: domain.MsgUserNotFound, Type: cachetypes.TypeError, Content: "user not found"},
 		{Code: domain.MsgUserCannotDelete, Type: cachetypes.TypeError, Content: "cannot delete user"},
+		{Code: domain.MsgPersonNotFound, Type: cachetypes.TypeError, Content: "person not found"},
 	}}
 	cache := messaging.NewMessageCache(repo, 0)
 	if err := cache.LoadMessages(context.Background()); err != nil {
 		t.Fatalf("failed to load message cache: %v", err)
 	}
 	return cache
+}
+
+// ============================================
+// HU19 - PASSWORD RESET TESTS
+// ============================================
+
+// fakeServicePasswordReset is a fake service for password reset tests
+type fakeServicePasswordReset struct {
+	fakeService
+	sendPasswordResetErr error
+	updatePasswordErr    error
+	updatePasswordEmail  string
+}
+
+func (f *fakeServicePasswordReset) SendPasswordResetEmail(ctx context.Context, email string) error {
+	return f.sendPasswordResetErr
+}
+
+func (f *fakeServicePasswordReset) UpdatePassword(ctx context.Context, token, password string) (string, error) {
+	if f.updatePasswordErr != nil {
+		return "", f.updatePasswordErr
+	}
+	return f.updatePasswordEmail, nil
+}
+
+func newTestMessageCacheWithPasswordReset(t *testing.T) *messaging.MessageCache {
+	t.Helper()
+
+	repo := fakeMessageCacheRepo{messages: []cachetypes.CachedMessage{
+		{Code: domain.MsgKCPwdResetSent, Type: cachetypes.TypeSuccess, Content: "password reset email sent"},
+		{Code: domain.MsgKCPwdUpdated, Type: cachetypes.TypeSuccess, Content: "password updated"},
+		{Code: domain.MsgKCPwdMismatch, Type: cachetypes.TypeError, Content: "passwords do not match"},
+		{Code: domain.MsgKCPwdUpdateTokenInvalid, Type: cachetypes.TypeError, Content: "invalid token"},
+		{Code: domain.MsgKCPwdUpdateError, Type: cachetypes.TypeError, Content: "password update error"},
+		{Code: domain.MsgValBadFormat, Type: cachetypes.TypeError, Content: "bad format"},
+	}}
+	cache := messaging.NewMessageCache(repo, 0)
+	if err := cache.LoadMessages(context.Background()); err != nil {
+		t.Fatalf("failed to load message cache: %v", err)
+	}
+	return cache
+}
+
+func TestHTTP_RequestPasswordReset(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestMessageCacheWithPasswordReset(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.Service) *gin.Engine {
+		inter := interactor.NewInteractor(svc, noopLogger{})
+		h := New(nil, inter, enc, resp, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.POST("/flighthours/api/v1/auth/password-reset", h.PasswordReset())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{})
+		body := map[string]any{
+			"email": "test@example.com",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/password-reset", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		if !out.Success {
+			t.Errorf("expected success=true, got %v", out.Success)
+		}
+		if out.Code != domain.MsgKCPwdResetSent {
+			t.Errorf("expected code %s, got %s", domain.MsgKCPwdResetSent, out.Code)
+		}
+	})
+
+	t.Run("success_even_if_email_not_found (security pattern)", func(t *testing.T) {
+
+		r := newRouter(&fakeServicePasswordReset{sendPasswordResetErr: domain.ErrUserNotFound})
+		body := map[string]any{
+			"email": "nonexistent@example.com",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/password-reset", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d (security: always return success), got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("invalid_json => 400", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{})
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/password-reset", bytes.NewReader([]byte("invalid json")))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+}
+
+func TestHTTP_UpdatePassword(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestMessageCacheWithPasswordReset(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.Service) *gin.Engine {
+		inter := interactor.NewInteractor(svc, noopLogger{})
+		h := New(nil, inter, enc, resp, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.POST("/flighthours/api/v1/auth/update-password", h.UpdatePassword())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{updatePasswordEmail: "test@example.com"})
+		body := map[string]any{
+			"token":            "valid-jwt-token",
+			"new_password":     "NewPassword123!",
+			"confirm_password": "NewPassword123!",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/update-password", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		if !out.Success {
+			t.Errorf("expected success=true, got %v", out.Success)
+		}
+		if out.Code != domain.MsgKCPwdUpdated {
+			t.Errorf("expected code %s, got %s", domain.MsgKCPwdUpdated, out.Code)
+		}
+	})
+
+	t.Run("password_mismatch => 400", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{})
+		body := map[string]any{
+			"token":            "valid-jwt-token",
+			"new_password":     "NewPassword123!",
+			"confirm_password": "DifferentPassword123!",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/update-password", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		if out.Code != domain.MsgKCPwdMismatch {
+			t.Errorf("expected code %s, got %s", domain.MsgKCPwdMismatch, out.Code)
+		}
+	})
+
+	t.Run("invalid_token => 401", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{updatePasswordErr: domain.ErrInvalidToken})
+		body := map[string]any{
+			"token":            "invalid-token",
+			"new_password":     "NewPassword123!",
+			"confirm_password": "NewPassword123!",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/update-password", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusUnauthorized {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusUnauthorized, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("expired_token => 401", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{updatePasswordErr: domain.ErrTokenExpired})
+		body := map[string]any{
+			"token":            "expired-token",
+			"new_password":     "NewPassword123!",
+			"confirm_password": "NewPassword123!",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/update-password", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusUnauthorized {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusUnauthorized, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("update_failed => 500", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{updatePasswordErr: domain.ErrPasswordUpdateFailed})
+		body := map[string]any{
+			"token":            "valid-token",
+			"new_password":     "NewPassword123!",
+			"confirm_password": "NewPassword123!",
+		}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/update-password", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("invalid_json => 400", func(t *testing.T) {
+		r := newRouter(&fakeServicePasswordReset{})
+		req := httptest.NewRequest(http.MethodPost, "/flighthours/api/v1/auth/update-password", bytes.NewReader([]byte("invalid json")))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
 }
