@@ -1,23 +1,23 @@
 package employee
 
 import (
-"time"
+	"time"
 
-"github.com/champion19/flighthours-api/core/interactor/services/domain"
+	"github.com/champion19/flighthours-api/core/interactor/services/domain"
 )
 
 type Employee struct {
 	ID                   string    `db:"id"`
 	Name                 string    `db:"name"`
-	Airline              *string    `db:"airline"`
+	Airline              *string   `db:"airline"`
 	Email                string    `db:"email"`
 	IdentificationNumber string    `db:"identification_number"`
-	Bp                   *string    `db:"bp"`
+	Bp                   *string   `db:"bp"`
 	StartDate            time.Time `db:"start_date"`
 	EndDate              time.Time `db:"end_date"`
 	Active               bool      `db:"active"`
 	Role                 string    `db:"role"`
-	KeycloakUserID       *string    `db:"keycloak_user_id"`
+	KeycloakUserID       *string   `db:"keycloak_user_id"`
 }
 
 func (e Employee) ToDomain() domain.Employee {
@@ -49,7 +49,6 @@ func (e Employee) ToDomain() domain.Employee {
 	}
 }
 
-// stringPtrOrNil returns nil for empty strings, otherwise a pointer to the string
 func stringPtrOrNil(s string) *string {
 	if s == "" {
 		return nil

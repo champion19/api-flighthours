@@ -69,7 +69,6 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 	existingEmployee, errDB := s.repository.GetEmployeeByEmail(ctx, employee.Email)
 	if errDB != nil {
 		if isConnectionError(errDB) || isTimeoutError(errDB) {
-			//TODO: Agregar mensaje de log aquí
 			s.logger.Error(logger.LogDatabaseUnavailable,
 				"email", employee.Email,
 				"error", errDB,
@@ -132,6 +131,17 @@ func (s service) SaveEmployeeToDB(ctx context.Context, tx output.Tx, employee do
 		return err
 	}
 	s.logger.Success(logger.LogEmployeeServiceSavedToDB, employee.ToLogger())
+	return nil
+}
+
+func (s service) UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error {
+	s.logger.Info(logger.LogEmployeeUpdating, employee.ToLogger())
+	err := s.repository.UpdateEmployee(ctx, tx, employee)
+	if err != nil {
+		s.logger.Error(logger.LogEmployeeUpdateError, employee.ToLogger(), "error", err)
+		return err
+	}
+	s.logger.Success(logger.LogEmployeeUpdated, employee.ToLogger())
 	return nil
 }
 

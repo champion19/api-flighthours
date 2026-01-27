@@ -45,7 +45,6 @@ func Init() (*Dependencies, error) {
 	}
 	log.Info(logger.LogAppConfigLoaded)
 
-	//initialize metrics prometheus
 	middleware.PrometheusInit()
 	log.Success(logger.LogPrometheusInitOK)
 
@@ -69,12 +68,9 @@ func Init() (*Dependencies, error) {
 		return nil, err
 	}
 
-	// Crear EmployeeService con todas las dependencias
 	employeeService := services.NewService(employeeRepo, keycloakClient, log)
-
 	interactorFacade := interactor.NewInteractor(employeeService, log)
 
-	//initialize id encoder
 	encoder, err := idencoder.NewHashidsEncoder(idencoder.Config{
 		Secret:    cfg.IDEncoder.Secret,
 		MinLength: cfg.IDEncoder.MinLength,
@@ -85,7 +81,6 @@ func Init() (*Dependencies, error) {
 	}
 	log.Success(logger.LogIDEncodeOK)
 
-	// Inicializar repositorio de mensajes (implementa ambas interfaces)
 	msgRepo, err := messageRepo.NewMessageRepository(db)
 	if err != nil {
 		log.Error(logger.LogRepoMsgInitError, "error", err)
@@ -98,36 +93,29 @@ func Init() (*Dependencies, error) {
 
 	if err := messagingCache.LoadMessages(context.Background()); err != nil {
 		log.Warn(logger.LogMsgCacheLoadError, "error", err)
-		// Don't return error, continue with fallback
 	}
 	log.Success(logger.LogMsgCacheInit, "messages_loaded", messagingCache.MessageCount())
 
-	// Iniciar auto-refresh en background
 	messagingCache.StartAutoRefresh(context.Background())
 
 	responseHandler := middleware.NewResponseHandler(messagingCache)
 
-	// Inicializar servicio de mensajes (msgRepo también implementa output.MessageRepository)
 	messageService := services.NewMessageService(msgRepo, log)
 	messageInteractor := interactor.NewMessageInteractor(messageService, log)
 	log.Success(logger.LogDependencyMessageIntInit)
 
-// JWKS Validator (JWT signature and expiration validation)
-	// This fetches Keycloak's public keys for local token validation
 	var jwtValidator *jwt.JWKSValidator
 	jwtConfig := jwt.JWKSConfig{
 		JWKSURL:         cfg.GetKeycloakJWKSURL(),
 		Issuer:          cfg.GetKeycloakIssuerURL(),
-		RefreshInterval: 15 * time.Minute, // Refresh keys every 15 minutes
+		RefreshInterval: 15 * time.Minute,
 	}
 	jwtValidator, err = jwt.NewJWKSValidator(context.Background(), jwtConfig)
 	if err != nil {
-		log.Warn("JWKS validator initialization failed, using fallback validation", "error", err)
-		// Don't fail startup - middleware will fall back to simple parsing
-		// This allows the app to start even if Keycloak is temporarily unavailable
+		log.Warn(logger.LogJWKSValidatorInitFailed, "error", err)
 		jwtValidator = nil
 	} else {
-		log.Success("JWKS validator initialized", "jwks_url", jwtConfig.JWKSURL)
+		log.Success(logger.LogJWKSValidatorInitOK, "jwks_url", jwtConfig.JWKSURL)
 	}
 
 	return &Dependencies{
