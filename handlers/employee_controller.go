@@ -421,3 +421,40 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 		h.Response.SuccessWithData(c, domain.MsgUserUpdated, response)
 	}
 }
+
+// DeleteEmployee godoc
+// @Summary      Eliminar cuenta del empleado autenticado
+// @Description  Elimina permanentemente la cuenta del empleado autenticado del sistema (Keycloak + DB)
+// @Tags         employees
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200 {object} middleware.APIResponse "Cuenta eliminada exitosamente"
+// @Failure      401 {object} middleware.APIResponse "No autenticado"
+// @Failure      404 {object} middleware.APIResponse "Empleado no encontrado"
+// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Router       /employees/me [delete]
+func (h handler) DeleteEmployee() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogEmployeeDeleting, "endpoint", "DELETE /employees/me", "client_ip", c.ClientIP())
+
+		employee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			log.Error(logger.LogEmployeeNotFound, "error", "authenticated user not in context", "client_ip", c.ClientIP())
+			c.Error(domain.ErrUserNotFound)
+			return
+		}
+
+		if err := h.Interactor.DeleteEmployee(c, employee.ID); err != nil {
+			log.Error(logger.LogEmployeeDeleteError, "employee_id", employee.ID, "error", err, "client_ip", c.ClientIP())
+			c.Error(err)
+			return
+		}
+
+		log.Success(logger.LogEmployeeDeleteComplete, "employee_id", employee.ID, "email", employee.Email, "client_ip", c.ClientIP())
+		h.Response.Success(c, domain.MsgUserDeleted)
+	}
+}
