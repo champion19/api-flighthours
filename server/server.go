@@ -89,6 +89,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PUT("/employees/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 
+		protected.DELETE("/employees/me", handler.DeleteEmployee())
+
 		protected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
 
 		protected.PUT("/messages/:id", validator.WithValidateMessage(), handler.UpdateMessage())

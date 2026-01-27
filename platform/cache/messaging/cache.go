@@ -98,10 +98,9 @@ func (c *MessageCache) StopAutoRefresh() {
 	}
 }
 
-// GetMessage retrieves a message by its code from cache
-// If not found in cache, falls back to DB and caches it
+
 func (c *MessageCache) GetMessage(code string) *CachedMessage {
-	// Try cache first (read lock)
+
 	c.mu.RLock()
 	msg, found := c.messages[code]
 	c.mu.RUnlock()
@@ -110,7 +109,7 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 		return msg
 	}
 
-	// Not in cache, try DB
+
 	log.Debug(logger.LogMsgNotInCache, "code", code)
 	dbMsg, err := c.repo.GetByCodeForCache(context.Background(), code)
 	if err != nil {
@@ -124,7 +123,7 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 
 	if dbMsg != nil {
 
-		// Cache it for future use (write lock)
+
 		c.mu.Lock()
 		c.messages[code] = dbMsg
 		c.mu.Unlock()
@@ -133,11 +132,11 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 		return dbMsg
 	}
 
-	// Not found in active messages, check if it exists but is inactive
+
 	inactiveMsg, err := c.repo.GetByCodeWithStatusForCache(context.Background(), code)
 	if err != nil {
 		log.Warn(logger.LogMsgNotInDB, "code", code, "error", err)
-		// Avoid infinite recursion
+
 		if code == "GEN_MSG_INACTIVE_ERR_00002" {
 			return nil
 		}
@@ -145,28 +144,28 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 	}
 
 	if inactiveMsg != nil && !inactiveMsg.Active {
-		// Message exists but is inactive - return specific error message
+
 		log.Warn(logger.LogMsgInactive, "code", code)
 		return c.GetMessage("GEN_MSG_INACTIVE_ERR_00002")
 	}
 
-	// Message truly doesn't exist (not even in DB)
+
 	log.Warn(logger.LogMsgNotInDB, "code", code)
-	// Avoid infinite recursion
+
 	if code == "GEN_MSG_INACTIVE_ERR_00002" {
 		return nil
 	}
 	return c.GetMessage("GEN_MSG_INACTIVE_ERR_00002")
 }
 
-// GetMessageResponse retrieves formatted message response
+
 func (c *MessageCache) GetMessageResponse(code string, params ...string) *MessageResponse {
 	msg := c.GetMessage(code)
 	if msg == nil {
 		return nil
 	}
 
-	// Replace placeholders in content
+
 	content := msg.Content
 	for i, param := range params {
 		placeholder := "${" + string(rune('0'+i)) + "}"
