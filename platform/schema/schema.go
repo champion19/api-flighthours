@@ -140,7 +140,7 @@ func (v *Validators) ValidateUpdateEmployee(data interface{}) error {
 
 	result := v.UpdateEmployeeValidator.Validate(data)
 	if !result.IsValid() {
-		
+
 		var errorMessages []string
 		for _, err := range result.Errors {
 			errorMessages = append(errorMessages, err.Message)

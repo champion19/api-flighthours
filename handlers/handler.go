@@ -18,6 +18,7 @@ type handler struct {
 	Response          *middleware.ResponseHandler
 	MessageInteractor *interactor.MessageInteractor
 	MessagingCache    *messaging.MessageCache
+	AirlineInteractor *interactor.AirlineInteractor
 }
 
 func New(
@@ -26,7 +27,8 @@ func New(
 	idEncoder *idencoder.HashidsEncoder,
 	response *middleware.ResponseHandler,
 	messageInteractor *interactor.MessageInteractor,
-	messagingCache *messaging.MessageCache) *handler {
+	messagingCache *messaging.MessageCache,
+	airlineInteractor *interactor.AirlineInteractor) *handler {
 	return &handler{
 		EmployeeService:   service,
 		Interactor:        interactor,
@@ -34,10 +36,12 @@ func New(
 		Response:          response,
 		MessageInteractor: messageInteractor,
 		MessagingCache:    messagingCache,
+		AirlineInteractor: airlineInteractor,
 	}
 }
 
 var Logger = logger.NewSlogLogger()
+
 func (h *handler) EncodeID(uuid string) (string, error) {
 	encodedID, err := h.IDEncoder.Encode(uuid)
 	if err != nil {

@@ -72,7 +72,7 @@ func newMessageRouter(msgSvc input.MessageService) *gin.Engine {
 	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
 
 	msgInter := interactor.NewMessageInteractor(msgSvc, noopLogger{})
-	h := New(nil, nil, enc, resp, msgInter, cache)
+	h := New(nil, nil, enc, resp, msgInter, cache, nil)
 
 	r := gin.New()
 	r.Use(middleware.RequestID())
