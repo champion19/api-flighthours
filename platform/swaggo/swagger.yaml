@@ -13,33 +13,36 @@ definitions:
     - TypeWarning
     - TypeInfo
     - TypeDebug
-  handlers.AirlineEmployeeRequest:
+  handlers.AddEmployeeAirlineRequest:
     properties:
-      active:
-        type: boolean
       airline_id:
         type: string
       bp:
         type: string
-      email:
-        type: string
       end_date:
-        type: string
-      identification_number:
-        type: string
-      name:
-        type: string
-      role:
         type: string
       start_date:
         type: string
     required:
     - airline_id
-    - email
-    - identification_number
-    - name
-    - role
     - start_date
+    type: object
+  handlers.AddEmployeeAirlineResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      airline_id:
+        type: string
+      airline_name:
+        type: string
+      bp:
+        type: string
+      end_date:
+        type: string
+      start_date:
+        type: string
     type: object
   handlers.AirlineListResponse:
     properties:
@@ -122,15 +125,7 @@ definitions:
     type: object
   handlers.EmployeeRequest:
     properties:
-      active:
-        type: boolean
-      airline:
-        type: string
-      bp:
-        type: string
       email:
-        type: string
-      end_date:
         type: string
       identificationNumber:
         type: string
@@ -140,8 +135,6 @@ definitions:
         type: string
       role:
         type: string
-      start_date:
-        type: string
     type: object
   handlers.EmployeeResponse:
     properties:
@@ -149,15 +142,7 @@ definitions:
         items:
           $ref: '#/definitions/handlers.Link'
         type: array
-      active:
-        type: boolean
-      airline:
-        type: string
-      bp:
-        type: string
       email:
-        type: string
-      end_date:
         type: string
       id:
         type: string
@@ -166,8 +151,6 @@ definitions:
       name:
         type: string
       role:
-        type: string
-      start_date:
         type: string
     type: object
   handlers.Link:
@@ -297,24 +280,17 @@ definitions:
     type: object
   handlers.UpdateEmployeeAirlineRequest:
     properties:
-      active:
-        type: boolean
       airline_id:
         type: string
       bp:
         type: string
       end_date:
         type: string
-      identification_number:
-        type: string
-      name:
-        type: string
-      role:
-        type: string
       start_date:
         type: string
     required:
     - airline_id
+    - start_date
     type: object
   handlers.UpdateEmployeeAirlineResponse:
     properties:
@@ -322,8 +298,6 @@ definitions:
         items:
           $ref: '#/definitions/handlers.Link'
         type: array
-      active:
-        type: boolean
       airline_id:
         type: string
       airline_name:
@@ -332,12 +306,6 @@ definitions:
         type: string
       end_date:
         type: string
-      identification_number:
-        type: string
-      name:
-        type: string
-      role:
-        type: string
       start_date:
         type: string
       updated:
@@ -345,17 +313,9 @@ definitions:
     type: object
   handlers.UpdateEmployeeRequest:
     properties:
-      active:
-        type: boolean
-      end_date:
-        type: string
       identificationNumber:
         type: string
       name:
-        type: string
-      role:
-        type: string
-      start_date:
         type: string
     type: object
   handlers.UpdateEmployeeResponse:
@@ -427,44 +387,11 @@ definitions:
 info:
   contact: {}
 paths:
-  /airline-employees:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new airline employee
-      parameters:
-      - description: Airline Employee data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AirlineEmployeeRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Create airline employee
-      tags:
-      - AirlineEmployees
   /airlines:
     get:
-      description: Returns a list of all airlines with optional filters
+      description: Returns a list of all airlines with optional status filter
       parameters:
-      - description: Filter by status (true/false/active/inactive)
+      - description: Filter by status (true for active, false for inactive)
         in: query
         name: status
         type: string
@@ -476,17 +403,20 @@ paths:
           schema:
             $ref: '#/definitions/handlers.AirlineListResponse'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            additionalProperties: true
+            type: object
       summary: List all airlines
       tags:
       - Airlines
   /airlines/{id}:
     get:
-      description: Returns an airline's information by its obfuscated ID
+      consumes:
+      - application/json
+      description: Retrieves airline information by its unique identifier
       parameters:
-      - description: Airline ID (obfuscated)
+      - description: Airline ID (encoded or UUID)
         in: path
         name: id
         required: true
@@ -495,24 +425,35 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Airline retrieved successfully
           schema:
-            $ref: '#/definitions/handlers.AirlineResponse'
+            allOf:
+            - $ref: '#/definitions/middleware.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handlers.AirlineResponse'
+              type: object
         "400":
-          description: Invalid ID
+          description: Invalid ID format
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
         "404":
           description: Airline not found
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
       summary: Get airline by ID
       tags:
-      - Airlines
+      - airlines
   /auth/change-password:
     post:
       consumes:
@@ -751,10 +692,55 @@ paths:
     put:
       consumes:
       - application/json
-      description: Updates all employee fields including airline_id, bp, name, dates,
-        role for the authenticated employee
+      description: Adds airline information (airline_id, bp, start_date, end_date)
+        for the authenticated employee. New employees are set as active=true by default.
+        The 'active' field is not accepted - use activate/deactivate endpoints for
+        that.
       parameters:
-      - description: Employee airline information to update
+      - description: Airline information to add (airline_id, bp, start_date, end_date)
+        in: body
+        name: airline
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddEmployeeAirlineRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline info added successfully
+          schema:
+            $ref: '#/definitions/handlers.AddEmployeeAirlineResponse'
+        "400":
+          description: Invalid request data or date format
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "422":
+          description: Invalid airline_id reference
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add airline information for authenticated employee (HU26)
+      tags:
+      - AirlineEmployees
+  /employee/me/airline-info:
+    put:
+      consumes:
+      - application/json
+      description: Updates the airline information (airline_id, bp, start_date, end_date)
+        for the authenticated employee who already has airline info. The 'active'
+        field is not editable - use activate/deactivate endpoints. Requires existing
+        airline info.
+      parameters:
+      - description: Airline information to update (airline_id, bp, start_date, end_date)
         in: body
         name: airline
         required: true
@@ -764,11 +750,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Airline info updated successfully
           schema:
             $ref: '#/definitions/handlers.UpdateEmployeeAirlineResponse'
         "400":
-          description: Invalid request data
+          description: Invalid request data or date format
           schema:
             $ref: '#/definitions/middleware.ErrorResponse'
         "401":
@@ -776,11 +762,11 @@ paths:
           schema:
             $ref: '#/definitions/middleware.ErrorResponse'
         "404":
-          description: Employee not found
+          description: Employee has no airline info to update
           schema:
             $ref: '#/definitions/middleware.ErrorResponse'
         "422":
-          description: Invalid airline reference
+          description: Invalid airline_id reference
           schema:
             $ref: '#/definitions/middleware.ErrorResponse'
         "500":
@@ -789,7 +775,7 @@ paths:
             $ref: '#/definitions/middleware.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Update authenticated employee's airline information (HU26)
+      summary: Edit airline information for authenticated employee (HU25)
       tags:
       - AirlineEmployees
   /employees/me:

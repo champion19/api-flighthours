@@ -9,8 +9,6 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-
-
 // AirlineEmployeeInteractor orchestrates airline employee operations (Release 15)
 type AirlineEmployeeInteractor struct {
 	service input.AirlineEmployeeService
@@ -20,7 +18,6 @@ type AirlineEmployeeInteractor struct {
 func NewAirlineEmployeeInteractor(service input.AirlineEmployeeService) *AirlineEmployeeInteractor {
 	return &AirlineEmployeeInteractor{
 		service: service,
-
 	}
 }
 
@@ -54,6 +51,26 @@ func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, empl
 
 	if err := i.service.AddAirlineEmployee(ctx, airlineInfo); err != nil {
 		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	log.Success(logger.LogAirlineEmployeeUpdateOK, "employee_id", employeeID, "airline_id", airlineInfo.AirlineID)
+	return nil
+}
+
+// UpdateAirlineEmployee updates airline info for an existing employee (HU25)
+// The employee must already have airline info assigned
+func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) error {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogAirlineEmployeeUpdate, "operation", "update_airline_employee", "employee_id", employeeID)
+
+	// Set the ID to match the employee
+	airlineInfo.ID = employeeID
+
+	if err := i.service.UpdateAirlineEmployee(ctx, airlineInfo); err != nil {
+		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "error", err)
 		return err
 	}
 

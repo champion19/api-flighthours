@@ -12,7 +12,6 @@ var log logger.Logger = logger.NewSlogLogger()
 
 type airlineEmployeeService struct {
 	repository output.AirlineEmployeeRepository
-
 }
 
 func NewAirlineEmployeeService(repository output.AirlineEmployeeRepository) *airlineEmployeeService {
@@ -57,5 +56,33 @@ func (s *airlineEmployeeService) AddAirlineEmployee(ctx context.Context, employe
 	}
 
 	log.Info(logger.LogDatabaseAvailable, "operation", "add_airline_employee", "employee_id", employee.ID)
+	return nil
+}
+
+// UpdateAirlineEmployee updates airline info for an existing employee (HU25)
+func (s *airlineEmployeeService) UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error {
+	tx, err := s.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err = s.repository.UpdateAirlineEmployee(ctx, tx, employee); err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "operation", "update", "employee_id", employee.ID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "operation", "commit", "employee_id", employee.ID, "error", err)
+		return err
+	}
+
+	log.Info(logger.LogDatabaseAvailable, "operation", "update_airline_employee", "employee_id", employee.ID)
 	return nil
 }

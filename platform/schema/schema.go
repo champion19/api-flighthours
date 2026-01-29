@@ -18,6 +18,8 @@ type Validators struct {
 	UpdatePasswordValidator          *jsonschema.Schema
 	UpdateEmployeeValidator          *jsonschema.Schema
 	ChangePasswordValidator          *jsonschema.Schema
+	AddAirlineEmployeeValidator      *jsonschema.Schema
+	UpdateAirlineEmployeeValidator   *jsonschema.Schema
 }
 
 type FileReaderInterface interface {
@@ -77,6 +79,14 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	if err != nil {
 		return nil, err
 	}
+	addAirlineEmployee, err := validator.createSchema("add_airline_employee_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	updateAirlineEmployee, err := validator.createSchema("update_airline_employee_schema.json")
+	if err != nil {
+		return nil, err
+	}
 
 	validator.RegisterValidator = register
 	validator.MessageValidator = message
@@ -85,6 +95,8 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	validator.UpdatePasswordValidator = updatePassword
 	validator.UpdateEmployeeValidator = updateEmployee
 	validator.ChangePasswordValidator = changePassword
+	validator.AddAirlineEmployeeValidator = addAirlineEmployee
+	validator.UpdateAirlineEmployeeValidator = updateAirlineEmployee
 
 	return validator, nil
 
@@ -110,7 +122,6 @@ func (v *Validators) createSchema(resourcePath string) (*jsonschema.Schema, erro
 	return schema, nil
 }
 
-
 func (v *Validators) ValidateRegister(data interface{}) error {
 	if v.RegisterValidator == nil {
 		return ErrSchemaEmpty
@@ -131,7 +142,6 @@ func (v *Validators) ValidateRegister(data interface{}) error {
 
 	return nil
 }
-
 
 func (v *Validators) ValidateUpdateEmployee(data interface{}) error {
 	if v.UpdateEmployeeValidator == nil {

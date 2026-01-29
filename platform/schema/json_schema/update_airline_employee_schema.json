@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Update Airline Employee Request",
+  "description": "Schema for validating airline employee update requests (HU25) - Active field is not editable here, use activate/deactivate endpoints",
+  "type": "object",
+  "properties": {
+    "airline_id": {
+      "type": "string",
+      "description": "Encoded airline ID (required)",
+      "minLength": 1
+    },
+    "bp": {
+      "type": "string",
+      "description": "Business partner code (optional)",
+      "maxLength": 50
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    }
+  },
+  "required": [
+    "airline_id",
+    "start_date"
+  ],
+  "additionalProperties": false
+}
