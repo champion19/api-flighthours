@@ -10,10 +10,12 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-func (r *repository) AddAirlineEmployee(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+// UpdateAirlineEmployee updates airline-specific fields for an existing employee (HU25)
+// The employee must already have airline info assigned
+func (r *repository) UpdateAirlineEmployee(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
 	employeeToUpdate := FromDomain(&employee)
 
-	log.Debug("AddAirlineEmployee: Starting add",
+	log.Debug("UpdateAirlineEmployee: Starting update",
 		"employee_id", employeeToUpdate.ID,
 		"airline_id", employeeToUpdate.AirlineID,
 		"active", employeeToUpdate.Active)
@@ -25,7 +27,7 @@ func (r *repository) AddAirlineEmployee(ctx context.Context, tx output.Tx, emplo
 		return domain.ErrInvalidTransaction
 	}
 
-	// Only update airline-specific fields
+	// Update airline-specific fields
 	result, err := dbTx.ExecContext(ctx, QueryUpdateAirlineInfo,
 		employeeToUpdate.AirlineID,
 		employeeToUpdate.Bp,
@@ -46,20 +48,13 @@ func (r *repository) AddAirlineEmployee(ctx context.Context, tx output.Tx, emplo
 					"error", "invalid foreign key reference",
 					"mysql_error", mysqlErr.Message)
 				return domain.ErrInvalidForeignKey
-			case 1062:
-				// Duplicate entry
-				log.Error(logger.LogDatabaseUnavailable,
-					"employee_id", employee.ID,
-					"error", "duplicate entry",
-					"mysql_error", mysqlErr.Message)
-				return domain.ErrDuplicateUser
 			}
 		}
 		log.Error(logger.LogDatabaseUnavailable, "employee_id", employee.ID, "error", err)
 		return err
 	}
 
-	log.Debug("AddAirlineEmployee: Query executed successfully",
+	log.Debug("UpdateAirlineEmployee: Query executed successfully",
 		"employee_id", employeeToUpdate.ID,
 		"rows_affected", func() int64 { r, _ := result.RowsAffected(); return r }())
 

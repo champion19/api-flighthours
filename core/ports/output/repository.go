@@ -49,4 +49,5 @@ type AirlineEmployeeRepository interface {
 
 	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
 	AddAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
+	UpdateAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
 }

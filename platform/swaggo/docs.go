@@ -15,58 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/airline-employees": {
-            "post": {
-                "description": "Creates a new airline employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "AirlineEmployees"
-                ],
-                "summary": "Create airline employee",
-                "parameters": [
-                    {
-                        "description": "Airline Employee data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.AirlineEmployeeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
         "/airlines": {
             "get": {
-                "description": "Returns a list of all airlines with optional filters",
+                "description": "Returns a list of all airlines with optional status filter",
                 "produces": [
                     "application/json"
                 ],
@@ -77,7 +28,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by status (true/false/active/inactive)",
+                        "description": "Filter by status (true for active, false for inactive)",
                         "name": "status",
                         "in": "query"
                     }
@@ -90,9 +41,10 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -100,18 +52,26 @@ const docTemplate = `{
         },
         "/airlines/{id}": {
             "get": {
-                "description": "Returns an airline's information by its obfuscated ID",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves airline information by its unique identifier",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Airlines"
+                    "airlines"
                 ],
                 "summary": "Get airline by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Airline ID (obfuscated)",
+                        "description": "Airline ID (encoded or UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -119,27 +79,45 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Airline retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/handlers.AirlineResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/middleware.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handlers.AirlineResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid ID",
+                        "description": "Invalid ID format",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "404": {
                         "description": "Airline not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     }
                 }
@@ -507,7 +485,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Updates all employee fields including airline_id, bp, name, dates, role for the authenticated employee",
+                "description": "Adds airline information (airline_id, bp, start_date, end_date) for the authenticated employee. New employees are set as active=true by default. The 'active' field is not accepted - use activate/deactivate endpoints for that.",
                 "consumes": [
                     "application/json"
                 ],
@@ -517,10 +495,73 @@ const docTemplate = `{
                 "tags": [
                     "AirlineEmployees"
                 ],
-                "summary": "Update authenticated employee's airline information (HU26)",
+                "summary": "Add airline information for authenticated employee (HU26)",
                 "parameters": [
                     {
-                        "description": "Employee airline information to update",
+                        "description": "Airline information to add (airline_id, bp, start_date, end_date)",
+                        "name": "airline",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AddEmployeeAirlineRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline info added successfully",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AddEmployeeAirlineResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data or date format",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid airline_id reference",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employee/me/airline-info": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the airline information (airline_id, bp, start_date, end_date) for the authenticated employee who already has airline info. The 'active' field is not editable - use activate/deactivate endpoints. Requires existing airline info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AirlineEmployees"
+                ],
+                "summary": "Edit airline information for authenticated employee (HU25)",
+                "parameters": [
+                    {
+                        "description": "Airline information to update (airline_id, bp, start_date, end_date)",
                         "name": "airline",
                         "in": "body",
                         "required": true,
@@ -531,13 +572,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Airline info updated successfully",
                         "schema": {
                             "$ref": "#/definitions/handlers.UpdateEmployeeAirlineResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid request data",
+                        "description": "Invalid request data or date format",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
                         }
@@ -549,13 +590,13 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Employee not found",
+                        "description": "Employee has no airline info to update",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "422": {
-                        "description": "Invalid airline reference",
+                        "description": "Invalid airline_id reference",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
                         }
@@ -1139,39 +1180,46 @@ const docTemplate = `{
                 "TypeDebug"
             ]
         },
-        "handlers.AirlineEmployeeRequest": {
+        "handlers.AddEmployeeAirlineRequest": {
             "type": "object",
             "required": [
                 "airline_id",
-                "email",
-                "identification_number",
-                "name",
-                "role",
                 "start_date"
             ],
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
                 "airline_id": {
                     "type": "string"
                 },
                 "bp": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string"
-                },
                 "end_date": {
                     "type": "string"
                 },
-                "identification_number": {
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AddEmployeeAirlineResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airline_id": {
                     "type": "string"
                 },
-                "name": {
+                "airline_name": {
                     "type": "string"
                 },
-                "role": {
+                "bp": {
+                    "type": "string"
+                },
+                "end_date": {
                     "type": "string"
                 },
                 "start_date": {
@@ -1301,19 +1349,7 @@ const docTemplate = `{
         "handlers.EmployeeRequest": {
             "type": "object",
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "airline": {
-                    "type": "string"
-                },
-                "bp": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "end_date": {
                     "type": "string"
                 },
                 "identificationNumber": {
@@ -1327,9 +1363,6 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
                 }
             }
         },
@@ -1342,19 +1375,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/handlers.Link"
                     }
                 },
-                "active": {
-                    "type": "boolean"
-                },
-                "airline": {
-                    "type": "string"
-                },
-                "bp": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "end_date": {
                     "type": "string"
                 },
                 "id": {
@@ -1367,9 +1388,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
-                },
-                "start_date": {
                     "type": "string"
                 }
             }
@@ -1570,12 +1588,10 @@ const docTemplate = `{
         "handlers.UpdateEmployeeAirlineRequest": {
             "type": "object",
             "required": [
-                "airline_id"
+                "airline_id",
+                "start_date"
             ],
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
                 "airline_id": {
                     "type": "string"
                 },
@@ -1583,15 +1599,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "end_date": {
-                    "type": "string"
-                },
-                "identification_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role": {
                     "type": "string"
                 },
                 "start_date": {
@@ -1608,9 +1615,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/handlers.Link"
                     }
                 },
-                "active": {
-                    "type": "boolean"
-                },
                 "airline_id": {
                     "type": "string"
                 },
@@ -1621,15 +1625,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "end_date": {
-                    "type": "string"
-                },
-                "identification_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role": {
                     "type": "string"
                 },
                 "start_date": {
@@ -1643,22 +1638,10 @@ const docTemplate = `{
         "handlers.UpdateEmployeeRequest": {
             "type": "object",
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "end_date": {
-                    "type": "string"
-                },
                 "identificationNumber": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
                     "type": "string"
                 }
             }

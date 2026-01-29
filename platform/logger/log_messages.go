@@ -936,11 +936,12 @@ const (
 // ERROR DETAIL MESSAGES (for log attributes)
 // ============================================
 const (
-	LogErrAuthUserNotInContext = "authenticated user not in context"
-	LogErrInvalidAirlineID     = "invalid airline id"
-	LogErrAirlineNotFound      = "airline not found"
-	LogErrInvalidStartDate     = "invalid start date"
-	LogErrInvalidEndDate       = "invalid end date"
-	LogErrInvalidTransaction   = "invalid transaction type"
-	LogErrEmptyIDParam         = "empty id parameter"
+	LogErrAuthUserNotInContext  = "authenticated user not in context"
+	LogErrInvalidAirlineID      = "invalid airline id"
+	LogErrAirlineNotFound       = "airline not found"
+	LogErrInvalidStartDate      = "invalid start date"
+	LogErrInvalidEndDate        = "invalid end date"
+	LogErrInvalidTransaction    = "invalid transaction type"
+	LogErrEmptyIDParam          = "empty id parameter"
+	LogErrEmployeeNoAirlineInfo = "employee has no airline info assigned"
 )
