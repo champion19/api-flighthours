@@ -97,12 +97,12 @@ type EmployeeAirlineInfoResponse struct {
 }
 
 // AddEmployeeAirlineRequest to add airline info for the authenticated employee (HU26)
+// Note: 'active' field is not included - it will be managed by activate/deactivate HUs
 type AddEmployeeAirlineRequest struct {
 	AirlineID string `json:"airline_id" binding:"required"`
 	Bp        string `json:"bp"`
 	StartDate string `json:"start_date" binding:"required"`
 	EndDate   string `json:"end_date"`
-	Active    bool   `json:"active"`
 }
 
 func (u *AddEmployeeAirlineRequest) Sanitize() {
@@ -113,13 +113,38 @@ func (u *AddEmployeeAirlineRequest) Sanitize() {
 }
 
 // AddEmployeeAirlineResponse returns the result of adding airline info (HU26)
+// Note: 'active' is not returned - new employees default to active=true
 type AddEmployeeAirlineResponse struct {
-	Added       bool   `json:"added"`
 	AirlineID   string `json:"airline_id"`
 	AirlineName string `json:"airline_name,omitempty"`
 	Bp          string `json:"bp,omitempty"`
 	StartDate   string `json:"start_date,omitempty"`
 	EndDate     string `json:"end_date,omitempty"`
-	Active      bool   `json:"active"`
+	Links       []Link `json:"_links,omitempty"`
+}
+
+// UpdateEmployeeAirlineRequest to update airline info for the authenticated employee (HU25)
+type UpdateEmployeeAirlineRequest struct {
+	AirlineID string `json:"airline_id" binding:"required"`
+	Bp        string `json:"bp"`
+	StartDate string `json:"start_date" binding:"required"`
+	EndDate   string `json:"end_date"`
+}
+
+func (u *UpdateEmployeeAirlineRequest) Sanitize() {
+	u.AirlineID = TrimString(u.AirlineID)
+	u.Bp = TrimString(u.Bp)
+	u.StartDate = TrimString(u.StartDate)
+	u.EndDate = TrimString(u.EndDate)
+}
+
+// UpdateEmployeeAirlineResponse returns the result of updating airline info (HU25)
+type UpdateEmployeeAirlineResponse struct {
+	Updated     bool   `json:"updated"`
+	AirlineID   string `json:"airline_id"`
+	AirlineName string `json:"airline_name,omitempty"`
+	Bp          string `json:"bp,omitempty"`
+	StartDate   string `json:"start_date,omitempty"`
+	EndDate     string `json:"end_date,omitempty"`
 	Links       []Link `json:"_links,omitempty"`
 }

@@ -65,4 +65,5 @@ type AirlineEmployeeService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
 	AddAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
+	UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
 }

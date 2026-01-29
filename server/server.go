@@ -102,7 +102,9 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.GET("/employee/me/airline", handler.GetEmployeeAirlineInfo())
 
-		protected.PUT("/employee/me/airline", handler.AddEmployeeAirlineInfo())
+		protected.PUT("/employee/me/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
+
+		protected.PUT("/employee/me/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
 
 		protected.PUT("/employees/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 
