@@ -156,7 +156,7 @@ func TestInteractor_RegisterEmployee(t *testing.T) {
 				return nil
 			},
 		}
-		i := NewInteractor(svc, noopLogger{})
+		i := NewInteractor(svc)
 
 		res, err := i.RegisterEmployee(ctx, mkEmployee())
 		if res != nil {
@@ -180,7 +180,7 @@ func TestInteractor_RegisterEmployee(t *testing.T) {
 				return cleanupErr
 			},
 		}
-		i := NewInteractor(svc, noopLogger{})
+		i := NewInteractor(svc)
 
 		res, err := i.RegisterEmployee(ctx, mkEmployee())
 		if res != nil {
@@ -238,7 +238,7 @@ func TestInteractor_RegisterEmployee(t *testing.T) {
 			},
 		}
 
-		i := NewInteractor(svc, noopLogger{})
+		i := NewInteractor(svc)
 		res, err := i.RegisterEmployee(ctx, mkEmployee())
 		if err != nil {
 			t.Fatalf("expected nil error, got %v", err)
@@ -291,7 +291,7 @@ func TestInteractor_RegisterEmployee(t *testing.T) {
 			},
 		}
 
-		i := NewInteractor(svc, noopLogger{})
+		i := NewInteractor(svc)
 		_, err := i.RegisterEmployee(ctx, mkEmployee())
 		if err == nil {
 			t.Fatalf("expected error")

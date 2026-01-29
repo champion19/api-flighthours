@@ -101,7 +101,6 @@ func BuildMessageCreatedLinks(baseURL string, messageID string) []Link {
 	}
 }
 
-
 func BuildMessageUpdatedLinks(baseURL string, messageID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "messages", messageID)
 	collectionURL := BuildCollectionURL(baseURL, "messages")
@@ -142,11 +141,6 @@ func BuildMessageListLinks(baseURL string) []Link {
 	}
 }
 
-
-
-
-
-
 func BuildEmployeeLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "employees", employeeID)
 	collectionURL := BuildCollectionURL(baseURL, "employees")
@@ -175,7 +169,6 @@ func BuildEmployeeLinks(baseURL string, employeeID string) []Link {
 	}
 }
 
-
 func BuildEmployeeMeLinks(baseURL string) []Link {
 	meURL := baseURL + "/flighthours/api/v1/employees/me"
 
@@ -197,7 +190,6 @@ func BuildEmployeeMeLinks(baseURL string) []Link {
 		},
 	}
 }
-
 
 func BuildAirlineLinks(baseURL string, airlineID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airlines", airlineID)
@@ -234,6 +226,62 @@ func BuildAirlineListLinks(baseURL string) []Link {
 		{
 			Href:   collectionURL,
 			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}
+
+func BuildAirlineEmployeeLinks(baseURL string, employeeID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)
+	collectionURL := BuildCollectionURL(baseURL, "airline-employees")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL,
+			Rel:    "update",
+			Method: "PUT",
+		},
+		{
+			Href:   resourceURL + "/activate",
+			Rel:    "activate",
+			Method: "PATCH",
+		},
+		{
+			Href:   resourceURL + "/deactivate",
+			Rel:    "deactivate",
+			Method: "PATCH",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
+
+func BuildAirlineEmployeeCreatedLinks(baseURL string, employeeID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)
+	collectionURL := BuildCollectionURL(baseURL, "airline-employees")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL,
+			Rel:    "update",
+			Method: "PUT",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "list",
 			Method: "GET",
 		},
 	}

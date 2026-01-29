@@ -178,6 +178,11 @@ const (
 	LogKeycloakPasswordTokenValidation    = "Validando token de actualización de contraseña"
 	LogKeycloakPasswordTokenValidOK       = "Token de actualización validado"
 	LogKeycloakPasswordTokenInvalid       = "Token de actualización inválido"
+	LogKeycloakTokenExpirationValidated   = "Token expiration validated"
+	LogKeycloakTokenMissingExpiration     = "Token missing expiration claim, proceeding with caution"
+	LogKeycloakTokenIssuerValidated       = "Token issuer validated"
+	LogKeycloakTokenMissingIssuer         = "Token missing issuer claim"
+	LogKeycloakTokenType                  = "Token type"
 	// Login with verification
 	LogKeycloakLoginCheckingVerification    = "Verificando estado de email antes de login"
 	LogKeycloakLoginEmailNotVerified        = "Login rechazado: email no verificado"
@@ -913,6 +918,9 @@ const (
 	LogAirlineEmployeeUpdate          = "Actualizando empleado aerolínea"
 	LogAirlineEmployeeUpdateOK        = "Empleado aerolínea actualizado exitosamente"
 	LogAirlineEmployeeUpdateError     = "Error actualizando empleado aerolínea"
+	LogAirlineEmployeeAdd             = "Agregando información de aerolínea a empleado"
+	LogAirlineEmployeeAddOK           = "Información de aerolínea agregada exitosamente"
+	LogAirlineEmployeeAddError        = "Error agregando información de aerolínea"
 	LogAirlineEmployeeActivate        = "Activando empleado aerolínea"
 	LogAirlineEmployeeActivateOK      = "Empleado aerolínea activado exitosamente"
 	LogAirlineEmployeeActivateError   = "Error activando empleado aerolínea"
@@ -922,4 +930,17 @@ const (
 	LogAirlineEmployeeRepoInit        = "Inicializando repositorio de empleados aerolínea"
 	LogAirlineEmployeeRepoInitOK      = "Repositorio de empleados aerolínea inicializado"
 	LogAirlineEmployeeRepoInitError   = "Error inicializando repositorio de empleados aerolínea"
+)
+
+// ============================================
+// ERROR DETAIL MESSAGES (for log attributes)
+// ============================================
+const (
+	LogErrAuthUserNotInContext = "authenticated user not in context"
+	LogErrInvalidAirlineID     = "invalid airline id"
+	LogErrAirlineNotFound      = "airline not found"
+	LogErrInvalidStartDate     = "invalid start date"
+	LogErrInvalidEndDate       = "invalid end date"
+	LogErrInvalidTransaction   = "invalid transaction type"
+	LogErrEmptyIDParam         = "empty id parameter"
 )

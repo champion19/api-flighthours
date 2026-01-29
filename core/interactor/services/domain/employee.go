@@ -1,25 +1,19 @@
 package domain
 
 import (
-	"time"
-
 	"github.com/google/uuid"
-
 )
 
+// Employee represents core user data (authentication, identity)
+// Airline-specific data is handled by AirlineEmployee
 type Employee struct {
-	ID                   string    `json:"id"`
-	Name                 string    `json:"name"`
-	Airline              string    `json:"airline"`
-	Email                string    `json:"email"`
-	Password             string    `json:"password"`
-	IdentificationNumber string    `json:"identification_number"`
-	Bp                   string    `json:"bp"`
-	StartDate            time.Time `json:"start_date"`
-	EndDate              time.Time `json:"end_date"`
-	Active               bool      `json:"active"`
-	Role                 string    `json:"role,omitempty"`
-	KeycloakUserID       string    `json:"keycloak_user_id,omitempty"`
+	ID                   string `json:"id"`
+	Name                 string `json:"name"`
+	Email                string `json:"email"`
+	Password             string `json:"password"`
+	IdentificationNumber string `json:"identification_number"`
+	Role                 string `json:"role,omitempty"`
+	KeycloakUserID       string `json:"keycloak_user_id,omitempty"`
 }
 
 func (e *Employee) SetID() {
@@ -32,8 +26,4 @@ func (e *Employee) ToLogger() []string {
 		"email:" + e.Email,
 		"role:" + e.Role,
 	}
-
 }
-
-
-

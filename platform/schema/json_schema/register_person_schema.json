@@ -32,18 +32,18 @@
     "start_date": {
       "type": "string",
       "format": "date",
-      "description": "Start date in ISO 8601 format (YYYY-MM-DD)",
+      "description": "Start date in ISO 8601 format (YYYY-MM-DD) - Optional at registration",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
     "end_date": {
       "type": "string",
       "format": "date",
-      "description": "End date in ISO 8601 format (YYYY-MM-DD)",
+      "description": "End date in ISO 8601 format (YYYY-MM-DD) - Optional at registration",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
     "role": {
       "type": "string",
-      "description": "Role of the person",
+      "description": "Role of the person (immutable after registration)",
       "maxLength": 10,
       "minLength": 1,
       "enum": [
@@ -57,8 +57,6 @@
     "email",
     "password",
     "identificationnumber",
-    "start_date",
-    "end_date",
     "role"
   ],
   "additionalProperties": false
