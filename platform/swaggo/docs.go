@@ -9,28 +9,15 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "FlightHours Support",
-            "email": "support@flighthours.com"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/change-password": {
+        "/airline-employees": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Permite a un usuario cambiar su contraseña conociendo la contraseña actual",
+                "description": "Creates a new airline employee",
                 "consumes": [
                     "application/json"
                 ],
@@ -38,12 +25,147 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "authentication"
+                    "AirlineEmployees"
                 ],
-                "summary": "Cambiar contraseña de usuario autenticado",
+                "summary": "Create airline employee",
                 "parameters": [
                     {
-                        "description": "Email, contraseña actual y nueva",
+                        "description": "Airline Employee data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AirlineEmployeeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/airlines": {
+            "get": {
+                "description": "Returns a list of all airlines with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airlines"
+                ],
+                "summary": "List all airlines",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status (true/false/active/inactive)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AirlineListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/airlines/{id}": {
+            "get": {
+                "description": "Returns an airline's information by its obfuscated ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airlines"
+                ],
+                "summary": "Get airline by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airline ID (obfuscated)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AirlineResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Airline not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/change-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows an authenticated user to change their password by providing the current password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Change authenticated user password",
+                "parameters": [
+                    {
+                        "description": "Current and new password",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -54,45 +176,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Contraseña cambiada exitosamente",
+                        "description": "Password changed",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.ChangePasswordResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.ChangePasswordResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Contraseñas no coinciden",
+                        "description": "Passwords don't match",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "Contraseña actual incorrecta",
+                        "description": "Current password incorrect",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Usuario no encontrado",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -100,7 +210,7 @@ const docTemplate = `{
         },
         "/auth/password-reset": {
             "post": {
-                "description": "Envía un email con instrucciones para restablecer la contraseña. Por seguridad, siempre retorna éxito independientemente de si el email existe.",
+                "description": "Sends an email with instructions to reset the password. Always returns success for security.",
                 "consumes": [
                     "application/json"
                 ],
@@ -108,12 +218,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "Solicitar recuperación de contraseña",
+                "summary": "Request password reset",
                 "parameters": [
                     {
-                        "description": "Email del usuario",
+                        "description": "Email for password reset",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -124,33 +234,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Email de recuperación enviado",
+                        "description": "Reset email sent",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.PasswordResetResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.PasswordResetResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Email inválido",
+                        "description": "Invalid email",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -158,7 +256,7 @@ const docTemplate = `{
         },
         "/auth/resend-verification": {
             "post": {
-                "description": "Reenvía el email de verificación a un usuario registrado que no ha verificado su cuenta",
+                "description": "Resends the verification email to a registered user who hasn't verified their account",
                 "consumes": [
                     "application/json"
                 ],
@@ -166,12 +264,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "Reenviar email de verificación",
+                "summary": "Resend verification email",
                 "parameters": [
                     {
-                        "description": "Email del usuario",
+                        "description": "Email to resend verification",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -182,45 +280,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Email reenviado exitosamente",
+                        "description": "Email sent",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.ResendVerificationEmailResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.ResendVerificationEmailResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Email inválido",
+                        "description": "Invalid email",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Usuario no encontrado",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "Email ya verificado",
+                        "description": "Email already verified",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -228,7 +314,7 @@ const docTemplate = `{
         },
         "/auth/update-password": {
             "post": {
-                "description": "Permite actualizar la contraseña usando el token recibido por email. El token expira en 12 horas.",
+                "description": "Allows updating the password using a token received by email. Token expires in 12 hours.",
                 "consumes": [
                     "application/json"
                 ],
@@ -236,12 +322,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "Actualizar contraseña con token de recuperación",
+                "summary": "Update password with reset token",
                 "parameters": [
                     {
-                        "description": "Token y nueva contraseña",
+                        "description": "Token and new password",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -252,39 +338,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Contraseña actualizada exitosamente",
+                        "description": "Password updated",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.UpdatePasswordResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.UpdatePasswordResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Contraseñas no coinciden o token inválido",
+                        "description": "Passwords don't match or invalid token",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "Token expirado o inválido",
+                        "description": "Expired or invalid token",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -292,7 +366,7 @@ const docTemplate = `{
         },
         "/auth/verify-email": {
             "post": {
-                "description": "Verifica el email de un usuario usando un token JWT proxy",
+                "description": "Verifies the user's email using a JWT proxy token",
                 "consumes": [
                     "application/json"
                 ],
@@ -300,12 +374,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "Verificar email de usuario",
+                "summary": "Verify user email",
                 "parameters": [
                     {
-                        "description": "Token de verificación",
+                        "description": "Verification token",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -316,45 +390,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Email verificado exitosamente",
+                        "description": "Email verified",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.VerifyEmailResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.VerifyEmailResponse"
                         }
                     },
                     "400": {
-                        "description": "Token inválido o expirado",
+                        "description": "Invalid or expired token",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Usuario no encontrado",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "Email ya estaba verificado",
+                        "description": "Email already verified",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -367,7 +429,85 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene la información del empleado que realiza la petición usando el token JWT",
+                "description": "Returns the profile information of the authenticated employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Get authenticated user profile",
+                "responses": {
+                    "200": {
+                        "description": "User profile",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EmployeeResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employee/me/airline": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the airline information (airline_id, airline_name, bp) of the authenticated employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AirlineEmployees"
+                ],
+                "summary": "Get authenticated employee's airline information (HU24)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.EmployeeAirlineInfoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Employee not found or no airline assigned",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates all employee fields including airline_id, bp, name, dates, role for the authenticated employee",
                 "consumes": [
                     "application/json"
                 ],
@@ -375,38 +515,55 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employees"
+                    "AirlineEmployees"
                 ],
-                "summary": "Obtener perfil del usuario autenticado",
+                "summary": "Update authenticated employee's airline information (HU26)",
+                "parameters": [
+                    {
+                        "description": "Employee airline information to update",
+                        "name": "airline",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateEmployeeAirlineRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Datos del usuario autenticado",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.EmployeeResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.UpdateEmployeeAirlineResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Employee not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid airline reference",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -419,7 +576,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza la información básica del empleado autenticado usando el token JWT. Preserva: email, password, airline, bp (estos campos requieren otros endpoints).",
+                "description": "Updates the basic information of the authenticated employee. Preserves: email, password, airline, bp.",
                 "consumes": [
                     "application/json"
                 ],
@@ -427,12 +584,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "employees"
+                    "Employees"
                 ],
-                "summary": "Actualizar información del empleado autenticado",
+                "summary": "Update authenticated user information",
                 "parameters": [
                     {
-                        "description": "Datos a actualizar",
+                        "description": "Employee data to update",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -443,45 +600,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Empleado actualizado exitosamente",
+                        "description": "Employee updated",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.UpdateEmployeeResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.UpdateEmployeeResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Datos inválidos",
+                        "description": "Invalid data",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Empleado no encontrado",
+                        "description": "Employee not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -492,40 +637,37 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Elimina permanentemente la cuenta del empleado autenticado del sistema (Keycloak + DB)",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Permanently deletes the authenticated employee's account from the system (Keycloak + DB)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "employees"
+                    "Employees"
                 ],
-                "summary": "Eliminar cuenta del empleado autenticado",
+                "summary": "Delete authenticated user account",
                 "responses": {
                     "200": {
-                        "description": "Cuenta eliminada exitosamente",
+                        "description": "Account deleted",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Empleado no encontrado",
+                        "description": "Employee not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -533,7 +675,7 @@ const docTemplate = `{
         },
         "/login": {
             "post": {
-                "description": "Autentica un usuario y retorna tokens de acceso",
+                "description": "Authenticates a user and returns access tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -541,13 +683,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "Login de usuario",
+                "summary": "User login",
                 "parameters": [
                     {
-                        "description": "Credenciales de login",
-                        "name": "request",
+                        "description": "Login credentials",
+                        "name": "credentials",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -557,39 +699,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Login exitoso",
+                        "description": "Login successful",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.LoginResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.LoginResponse"
                         }
                     },
                     "400": {
-                        "description": "Credenciales inválidas",
+                        "description": "Invalid credentials format",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "Email no verificado o credenciales incorrectas",
+                        "description": "Email not verified or incorrect credentials",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -602,60 +732,57 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Lista todos los mensajes del sistema con filtros opcionales",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns a list of all system messages with optional filters",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "Messages"
                 ],
-                "summary": "Listar todos los mensajes",
+                "summary": "List all system messages",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filtrar por módulo",
+                        "description": "Filter by module",
                         "name": "module",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filtrar por tipo (SUCCESS, ERROR, WARNING, INFO)",
+                        "description": "Filter by type (ERROR, WARNING, INFO, SUCCESS)",
                         "name": "type",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filtrar por categoría",
+                        "description": "Filter by category",
                         "name": "category",
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
-                        "description": "Filtrar por estado activo",
+                        "type": "string",
+                        "description": "Filter by active status (true/false)",
                         "name": "active",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lista de mensajes",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.MessageListResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -666,7 +793,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Crea un nuevo mensaje para el sistema de mensajes centralizados",
+                "description": "Creates a new message for the centralized messaging system",
                 "consumes": [
                     "application/json"
                 ],
@@ -674,13 +801,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "Messages"
                 ],
-                "summary": "Crear nuevo mensaje del sistema",
+                "summary": "Create a new system message",
                 "parameters": [
                     {
-                        "description": "Datos del mensaje a crear",
-                        "name": "request",
+                        "description": "Message data",
+                        "name": "message",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -690,45 +817,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Mensaje creado exitosamente",
+                        "description": "Created",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.MessageCreatedResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.MessageCreatedResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación",
+                        "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "Código de mensaje duplicado",
+                        "description": "Message code already exists",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -741,34 +856,31 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Recarga todos los mensajes desde la base de datos al cache en memoria",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Reloads the message cache from the database",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "Messages"
                 ],
-                "summary": "Recargar cache de mensajes",
+                "summary": "Reload message cache",
                 "responses": {
                     "200": {
-                        "description": "Cache recargado exitosamente",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.CacheReloadResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error al recargar cache",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -781,21 +893,18 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Obtiene un mensaje específico por su ID ofuscado",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns a specific system message by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "Messages"
                 ],
-                "summary": "Obtener mensaje por ID",
+                "summary": "Get a message by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID ofuscado del mensaje",
+                        "description": "Message ID (obfuscated)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -803,33 +912,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Mensaje encontrado",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.MessageResponse"
                         }
                     },
                     "400": {
-                        "description": "ID inválido",
+                        "description": "Invalid ID",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Mensaje no encontrado",
+                        "description": "Message not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -840,7 +949,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza un mensaje del sistema por su ID ofuscado",
+                "description": "Updates an existing message in the system",
                 "consumes": [
                     "application/json"
                 ],
@@ -848,20 +957,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "Messages"
                 ],
-                "summary": "Actualizar mensaje existente",
+                "summary": "Update a system message",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID ofuscado del mensaje",
+                        "description": "Message ID (obfuscated)",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Datos actualizados del mensaje",
-                        "name": "request",
+                        "description": "Message data",
+                        "name": "message",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -871,45 +980,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Mensaje actualizado exitosamente",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.MessageUpdatedResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/handlers.MessageUpdatedResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación o ID inválido",
+                        "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Mensaje no encontrado",
+                        "description": "Message not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -920,21 +1017,18 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Elimina un mensaje del sistema por su ID ofuscado",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Permanently deletes a message from the system",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "messages"
+                    "Messages"
                 ],
-                "summary": "Eliminar mensaje",
+                "summary": "Delete a system message",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID ofuscado del mensaje",
+                        "description": "Message ID (obfuscated)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -942,33 +1036,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Mensaje eliminado exitosamente",
+                        "description": "Message deleted",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "400": {
-                        "description": "ID inválido",
+                        "description": "Invalid ID",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "No autenticado",
+                        "description": "Not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Mensaje no encontrado",
+                        "description": "Message not found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -976,7 +1070,7 @@ const docTemplate = `{
         },
         "/register": {
             "post": {
-                "description": "Crea una nueva cuenta de empleado en el sistema con sincronización a Keycloak",
+                "description": "Registers a new employee in the system and sends a verification email",
                 "consumes": [
                     "application/json"
                 ],
@@ -984,13 +1078,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "accounts"
+                    "Authentication"
                 ],
-                "summary": "Registrar nueva cuenta de empleado",
+                "summary": "Register a new employee",
                 "parameters": [
                     {
-                        "description": "Datos del empleado a registrar",
-                        "name": "request",
+                        "description": "Employee registration data",
+                        "name": "employee",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -1000,39 +1094,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Cuenta creada exitosamente",
+                        "description": "Employee registered successfully",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.RegisterEmployeeResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     },
                     "400": {
-                        "description": "Error de validación - Datos inválidos",
+                        "description": "Invalid request data",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "Conflicto - Email o número de identidad ya registrado",
+                        "description": "Email or ID already exists",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error interno del servidor",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "$ref": "#/definitions/middleware.ErrorResponse"
                         }
                     }
                 }
@@ -1040,7 +1122,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType": {
+        "github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType": {
             "type": "string",
             "enum": [
                 "ERROR",
@@ -1056,6 +1138,89 @@ const docTemplate = `{
                 "TypeInfo",
                 "TypeDebug"
             ]
+        },
+        "handlers.AirlineEmployeeRequest": {
+            "type": "object",
+            "required": [
+                "airline_id",
+                "email",
+                "identification_number",
+                "name",
+                "role",
+                "start_date"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "bp": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "identification_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AirlineListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airlines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AirlineResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.AirlineResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airline_code": {
+                    "type": "string"
+                },
+                "airline_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
         },
         "handlers.CacheReloadResponse": {
             "type": "object",
@@ -1106,6 +1271,29 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.EmployeeAirlineInfoResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airline_code": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "airline_name": {
+                    "type": "string"
+                },
+                "bp": {
                     "type": "string"
                 }
             }
@@ -1288,7 +1476,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType"
+                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
                 }
             }
         },
@@ -1323,7 +1511,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/github_com_champion19_flighthours-api_core_interactor_services_domain.MessageType"
+                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
                 }
             }
         },
@@ -1357,17 +1545,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.RegisterEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.Link"
-                    }
-                }
-            }
-        },
         "handlers.ResendVerificationEmailRequest": {
             "type": "object",
             "required": [
@@ -1386,6 +1563,79 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sent": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.UpdateEmployeeAirlineRequest": {
+            "type": "object",
+            "required": [
+                "airline_id"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "bp": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "identification_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateEmployeeAirlineResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "active": {
+                    "type": "boolean"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "airline_name": {
+                    "type": "string"
+                },
+                "bp": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "identification_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated": {
                     "type": "boolean"
                 }
             }
@@ -1498,26 +1748,32 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "description": "Ingrese el token en formato: Bearer {token}",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+        },
+        "middleware.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:8082",
-	BasePath:         "/flighthours/api/v1",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "FlightHours API",
-	Description:      "API para gestión de empleados de aerolínea y control de horas de vuelo",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

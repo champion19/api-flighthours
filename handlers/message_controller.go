@@ -8,18 +8,18 @@ import (
 )
 
 // CreateMessage godoc
-// @Summary      Crear nuevo mensaje del sistema
-// @Description  Crea un nuevo mensaje para el sistema de mensajes centralizados
-// @Tags         messages
+// @Summary      Create a new system message
+// @Description  Creates a new message for the centralized messaging system
+// @Tags         Messages
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request body handlers.MessageRequest true "Datos del mensaje a crear"
-// @Success      201 {object} middleware.APIResponse{data=handlers.MessageCreatedResponse} "Mensaje creado exitosamente"
-// @Failure      400 {object} middleware.APIResponse "Error de validación"
-// @Failure      401 {object} middleware.APIResponse "No autenticado"
-// @Failure      409 {object} middleware.APIResponse "Código de mensaje duplicado"
-// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Param        message body MessageRequest true "Message data"
+// @Success      201  {object}  MessageCreatedResponse
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid request data"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      409  {object}  middleware.ErrorResponse "Message code already exists"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
 // @Router       /messages [post]
 func (h handler) CreateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -39,6 +39,8 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 			c.Error(domain.ErrInvalidJSONFormat)
 			return
 		}
+
+		messageRequest.Sanitize()
 
 		log.Info(logger.LogMessageCreateProcessing,
 			"code", messageRequest.Code,
@@ -62,8 +64,10 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 			h.HandleIDEncodingError(c, result.ID, err)
 			return
 		}
+
 		baseURL := GetBaseURL(c)
 		links := BuildMessageCreatedLinks(baseURL, encodedID)
+
 		SetLocationHeader(c, baseURL, "messages", encodedID)
 
 		response := MessageCreatedResponse{
@@ -71,7 +75,7 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 			Links: links,
 		}
 
-		log.Success(logger.LogMessageCreatedSuccess,
+		log.Success(logger.LogMessageCreateOK,
 			"id", result.ID,
 			"encoded_id", encodedID,
 			"code", result.Code,
@@ -82,19 +86,19 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 }
 
 // UpdateMessage godoc
-// @Summary      Actualizar mensaje existente
-// @Description  Actualiza un mensaje del sistema por su ID ofuscado
-// @Tags         messages
+// @Summary      Update a system message
+// @Description  Updates an existing message in the system
+// @Tags         Messages
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id path string true "ID ofuscado del mensaje"
-// @Param        request body handlers.MessageRequest true "Datos actualizados del mensaje"
-// @Success      200 {object} middleware.APIResponse{data=handlers.MessageUpdatedResponse} "Mensaje actualizado exitosamente"
-// @Failure      400 {object} middleware.APIResponse "Error de validación o ID inválido"
-// @Failure      401 {object} middleware.APIResponse "No autenticado"
-// @Failure      404 {object} middleware.APIResponse "Mensaje no encontrado"
-// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Param        id path string true "Message ID (obfuscated)"
+// @Param        message body MessageRequest true "Message data"
+// @Success      200  {object}  MessageUpdatedResponse
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid request data"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Message not found"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
 // @Router       /messages/{id} [put]
 func (h handler) UpdateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -106,14 +110,13 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		encodedID := c.Param("id")
-		uuid, err := h.IDEncoder.Decode(encodedID)
-		if err != nil {
+		inputID := c.Param("id")
+		uuid, responseID := h.resolveID(inputID)
+		if uuid == "" {
 			log.Error(logger.LogMessageInvalidID,
-				"encoded_id", encodedID,
-				"error", err,
+				"input_id", inputID,
 				"client_ip", c.ClientIP())
-			c.Error(domain.ErrInvalidID)
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
 			return
 		}
 
@@ -125,6 +128,8 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 			c.Error(domain.ErrInvalidJSONFormat)
 			return
 		}
+
+		messageRequest.Sanitize()
 
 		log.Info(logger.LogMessageUpdateProcessing,
 			"id", uuid,
@@ -144,13 +149,13 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 		}
 
 		baseURL := GetBaseURL(c)
-		links := BuildMessageUpdatedLinks(baseURL, encodedID)
+		links := BuildMessageUpdatedLinks(baseURL, responseID)
 
 		response := MessageUpdatedResponse{
 			Links: links,
 		}
 
-		log.Success(logger.LogMessageUpdatedSuccess,
+		log.Success(logger.LogMessageUpdateOK,
 			"id", result.ID,
 			"code", result.Code,
 			"client_ip", c.ClientIP())
@@ -160,18 +165,17 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 }
 
 // DeleteMessage godoc
-// @Summary      Eliminar mensaje
-// @Description  Elimina un mensaje del sistema por su ID ofuscado
-// @Tags         messages
-// @Accept       json
+// @Summary      Delete a system message
+// @Description  Permanently deletes a message from the system
+// @Tags         Messages
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id path string true "ID ofuscado del mensaje"
-// @Success      200 {object} middleware.APIResponse "Mensaje eliminado exitosamente"
-// @Failure      400 {object} middleware.APIResponse "ID inválido"
-// @Failure      401 {object} middleware.APIResponse "No autenticado"
-// @Failure      404 {object} middleware.APIResponse "Mensaje no encontrado"
-// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Param        id path string true "Message ID (obfuscated)"
+// @Success      200  {object}  middleware.APIResponse "Message deleted"
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid ID"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Message not found"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
 // @Router       /messages/{id} [delete]
 func (h handler) DeleteMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -183,20 +187,19 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		encodedID := c.Param("id")
-		uuid, err := h.IDEncoder.Decode(encodedID)
-		if err != nil {
+		inputID := c.Param("id")
+		uuid, _ := h.resolveID(inputID)
+		if uuid == "" {
 			log.Error(logger.LogMessageInvalidID,
-				"encoded_id", encodedID,
-				"error", err,
+				"input_id", inputID,
 				"client_ip", c.ClientIP())
-			c.Error(domain.ErrInvalidID)
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
 			return
 		}
 
 		log.Info(logger.LogMessageDeleteProcessing, "id", uuid)
 
-		err = h.MessageInteractor.DeleteMessage(c, uuid)
+		err := h.MessageInteractor.DeleteMessage(c, uuid)
 		if err != nil {
 			log.Error(logger.LogMessageDeleteError,
 				"id", uuid,
@@ -206,7 +209,7 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 			return
 		}
 
-		log.Success(logger.LogMessageDeletedSuccess,
+		log.Success(logger.LogMessageDeleteOK,
 			"id", uuid,
 			"client_ip", c.ClientIP())
 
@@ -215,18 +218,17 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 }
 
 // GetMessageByID godoc
-// @Summary      Obtener mensaje por ID
-// @Description  Obtiene un mensaje específico por su ID ofuscado
-// @Tags         messages
-// @Accept       json
+// @Summary      Get a message by ID
+// @Description  Returns a specific system message by its ID
+// @Tags         Messages
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id path string true "ID ofuscado del mensaje"
-// @Success      200 {object} handlers.MessageResponse "Mensaje encontrado"
-// @Failure      400 {object} middleware.APIResponse "ID inválido"
-// @Failure      401 {object} middleware.APIResponse "No autenticado"
-// @Failure      404 {object} middleware.APIResponse "Mensaje no encontrado"
-// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Param        id path string true "Message ID (obfuscated)"
+// @Success      200  {object}  MessageResponse
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid ID"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Message not found"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
 // @Router       /messages/{id} [get]
 func (h handler) GetMessageByID() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -238,14 +240,13 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		encodedID := c.Param("id")
-		uuid, err := h.IDEncoder.Decode(encodedID)
-		if err != nil {
+		inputID := c.Param("id")
+		uuid, responseID := h.resolveID(inputID)
+		if uuid == "" {
 			log.Error(logger.LogMessageInvalidID,
-				"encoded_id", encodedID,
-				"error", err,
+				"input_id", inputID,
 				"client_ip", c.ClientIP())
-			c.Error(domain.ErrInvalidID)
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
 			return
 		}
 
@@ -259,16 +260,9 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 			return
 		}
 
-		encodedIDForResponse, err := h.IDEncoder.Encode(message.ID)
-		if err != nil {
-			h.HandleIDEncodingError(c, message.ID, err)
-			return
-		}
-
 		baseURL := GetBaseURL(c)
-		response := ToMessageResponse(message)
-		response.ID = encodedIDForResponse
-		response.Links = BuildMessageLinks(baseURL, encodedIDForResponse)
+		response := ToMessageResponse(message, responseID)
+		response.Links = BuildMessageLinks(baseURL, responseID)
 
 		log.Debug(logger.LogMessageGetOK,
 			"id", uuid,
@@ -280,19 +274,18 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 }
 
 // ListMessages godoc
-// @Summary      Listar todos los mensajes
-// @Description  Lista todos los mensajes del sistema con filtros opcionales
-// @Tags         messages
-// @Accept       json
+// @Summary      List all system messages
+// @Description  Returns a list of all system messages with optional filters
+// @Tags         Messages
 // @Produce      json
 // @Security     BearerAuth
-// @Param        module query string false "Filtrar por módulo"
-// @Param        type query string false "Filtrar por tipo (SUCCESS, ERROR, WARNING, INFO)"
-// @Param        category query string false "Filtrar por categoría"
-// @Param        active query boolean false "Filtrar por estado activo"
-// @Success      200 {object} handlers.MessageListResponse "Lista de mensajes"
-// @Failure      401 {object} middleware.APIResponse "No autenticado"
-// @Failure      500 {object} middleware.APIResponse "Error interno del servidor"
+// @Param        module query string false "Filter by module"
+// @Param        type query string false "Filter by type (ERROR, WARNING, INFO, SUCCESS)"
+// @Param        category query string false "Filter by category"
+// @Param        active query string false "Filter by active status (true/false)"
+// @Success      200  {object}  MessageListResponse
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
 // @Router       /messages [get]
 func (h handler) ListMessages() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -332,15 +325,10 @@ func (h handler) ListMessages() func(c *gin.Context) {
 		}
 
 		baseURL := GetBaseURL(c)
-		response := ToMessageListResponse(messages)
+		response := ToMessageListResponse(messages, h.EncodeID)
+
 		for i := range response.Messages {
-			encodedID, err := h.IDEncoder.Encode(messages[i].ID)
-			if err != nil {
-				h.HandleIDEncodingError(c, messages[i].ID, err)
-				return
-			}
-			response.Messages[i].ID = encodedID
-			response.Messages[i].Links = BuildMessageLinks(baseURL, encodedID)
+			response.Messages[i].Links = BuildMessageLinks(baseURL, response.Messages[i].ID)
 		}
 		response.Links = BuildMessageListLinks(baseURL)
 
@@ -353,15 +341,14 @@ func (h handler) ListMessages() func(c *gin.Context) {
 }
 
 // ReloadMessageCache godoc
-// @Summary      Recargar cache de mensajes
-// @Description  Recarga todos los mensajes desde la base de datos al cache en memoria
-// @Tags         messages
-// @Accept       json
+// @Summary      Reload message cache
+// @Description  Reloads the message cache from the database
+// @Tags         Messages
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {object} handlers.CacheReloadResponse "Cache recargado exitosamente"
-// @Failure      401 {object} middleware.APIResponse "No autenticado"
-// @Failure      500 {object} middleware.APIResponse "Error al recargar cache"
+// @Success      200  {object}  CacheReloadResponse
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
 // @Router       /messages/cache/reload [post]
 func (h handler) ReloadMessageCache() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -390,7 +377,7 @@ func (h handler) ReloadMessageCache() func(c *gin.Context) {
 			Success:     true,
 			BeforeCount: beforeCount,
 			AfterCount:  afterCount,
-			Message:     logger.LogMessageCacheReloadedMsg,
+			Message:     "Caché de mensajes recargado exitosamente desde la base de datos",
 		}
 
 		log.Success(logger.LogMessageCacheReloadSuccess,

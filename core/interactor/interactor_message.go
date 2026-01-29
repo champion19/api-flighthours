@@ -11,19 +11,18 @@ import (
 
 type MessageInteractor struct {
 	service input.MessageService
-	logger  logger.Logger
+
 }
 
-func NewMessageInteractor(service input.MessageService, log logger.Logger) *MessageInteractor {
+func NewMessageInteractor(service input.MessageService) *MessageInteractor {
 	return &MessageInteractor{
 		service: service,
-		logger:  log,
 	}
 }
 
 func (i *MessageInteractor) CreateMessage(ctx context.Context, message domain.Message) (result *domain.Message, err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageCreate, message.ToLogger())
 
@@ -71,7 +70,7 @@ func (i *MessageInteractor) CreateMessage(ctx context.Context, message domain.Me
 
 func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Message) (result *domain.Message, err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageUpdate, message.ToLogger())
 
@@ -129,7 +128,7 @@ func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Me
 
 func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogMessageDelete, "id", id)
 
@@ -182,7 +181,7 @@ func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err e
 
 func (i *MessageInteractor) GetMessageByID(ctx context.Context, id string) (*domain.Message, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageGet, "id", id)
 
@@ -198,7 +197,7 @@ func (i *MessageInteractor) GetMessageByID(ctx context.Context, id string) (*dom
 
 func (i *MessageInteractor) GetMessageByCode(ctx context.Context, code string) (*domain.Message, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageGet, "code", code)
 
@@ -214,7 +213,7 @@ func (i *MessageInteractor) GetMessageByCode(ctx context.Context, code string) (
 
 func (i *MessageInteractor) ListMessages(ctx context.Context, filters map[string]interface{}) ([]domain.Message, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageList, "filters", filters)
 
@@ -230,7 +229,7 @@ func (i *MessageInteractor) ListMessages(ctx context.Context, filters map[string
 
 func (i *MessageInteractor) ListActiveMessages(ctx context.Context) ([]domain.Message, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Debug(logger.LogMessageList, "filter", "active_only")
 

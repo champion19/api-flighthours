@@ -10,20 +10,21 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
+var log = logger.NewSlogLogger()
+
 type Interactor struct {
 	service input.Service
-	logger  logger.Logger
 }
 
-func NewInteractor(service input.Service, log logger.Logger) *Interactor {
+func NewInteractor(service input.Service) *Interactor {
 	return &Interactor{
 		service: service,
-		logger:  log,
+
 	}
 }
 func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Employee) (result *dto.RegisterEmployee, err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogEmployeeInteractorRegStart, employee.ToLogger())
 
@@ -146,7 +147,7 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 
 func (i *Interactor) Locate(ctx context.Context, id string) (*dto.RegisterEmployee, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	result, err := i.service.LocateEmployee(ctx, id)
 	if err != nil {
@@ -158,7 +159,7 @@ func (i *Interactor) Locate(ctx context.Context, id string) (*dto.RegisterEmploy
 
 func (i *Interactor) ResendVerificationEmail(ctx context.Context, email string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakSendVerificationEmail, "email", email)
 
@@ -184,7 +185,7 @@ func (i *Interactor) ResendVerificationEmail(ctx context.Context, email string) 
 
 func (i *Interactor) RequestPasswordReset(ctx context.Context, email string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakSendPasswordReset, "email", email)
 
@@ -199,7 +200,7 @@ func (i *Interactor) RequestPasswordReset(ctx context.Context, email string) err
 
 func (i *Interactor) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakEmailVerify)
 
@@ -224,7 +225,7 @@ func (i *Interactor) VerifyEmailByToken(ctx context.Context, token string) (stri
 
 func (i *Interactor) Login(ctx context.Context, email string, password string) (*dto.TokenResponse, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakUserLogin, "email", email, "client_ip")
 	token, err := i.service.Login(ctx, email, password)
@@ -244,7 +245,7 @@ func (i *Interactor) Login(ctx context.Context, email string, password string) (
 
 func (i *Interactor) UpdatePassword(ctx context.Context, token, newPassword, confirmPassword string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakPasswordUpdate)
 
@@ -272,7 +273,7 @@ func (i *Interactor) UpdatePassword(ctx context.Context, token, newPassword, con
 
 func (i *Interactor) ChangePassword(ctx context.Context, email, currentPassword, newPassword, confirmPassword string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogKeycloakChangePassword, "email", email)
 	if newPassword != confirmPassword {
@@ -301,7 +302,7 @@ func (i *Interactor) ChangePassword(ctx context.Context, email, currentPassword,
 
 func (i *Interactor) DeleteEmployee(ctx context.Context, employeeID string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogEmployeeDeleting, "employee_id", employeeID)
 	employee, err := i.service.GetEmployeeByID(ctx, employeeID)
@@ -320,7 +321,7 @@ func (i *Interactor) DeleteEmployee(ctx context.Context, employeeID string) erro
 }
 func (i *Interactor) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogCrewMemberTypeGet, "role", role)
 
@@ -336,7 +337,7 @@ func (i *Interactor) GetEmployeesByRole(ctx context.Context, role string) ([]dom
 
 func (i *Interactor) UpdateEmployee(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogEmployeeUpdateRequest, employee.ToLogger())
 

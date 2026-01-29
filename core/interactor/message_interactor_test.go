@@ -59,7 +59,7 @@ func TestMessageInteractor_CreateMessage(t *testing.T) {
 			beginTxFn:  func(context.Context) (output.Tx, error) { calledBegin++; return nil, nil },
 			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
 		}
-		i := NewMessageInteractor(svc, noopLogger{})
+		i := NewMessageInteractor(svc)
 
 		_, err := i.CreateMessage(ctx, msg)
 		if !errors.Is(err, validateErr) {
@@ -78,7 +78,7 @@ func TestMessageInteractor_CreateMessage(t *testing.T) {
 			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
 			saveFn:     func(context.Context, output.Tx, domain.Message) error { return saveErr },
 		}
-		i := NewMessageInteractor(svc, noopLogger{})
+		i := NewMessageInteractor(svc)
 
 		_, err := i.CreateMessage(ctx, msg)
 		if !errors.Is(err, saveErr) {
@@ -100,7 +100,7 @@ func TestMessageInteractor_CreateMessage(t *testing.T) {
 			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
 			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
 		}
-		i := NewMessageInteractor(svc, noopLogger{})
+		i := NewMessageInteractor(svc)
 
 		_, err := i.CreateMessage(ctx, msg)
 		if !errors.Is(err, commitErr) {
@@ -121,7 +121,7 @@ func TestMessageInteractor_CreateMessage(t *testing.T) {
 			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
 			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
 		}
-		i := NewMessageInteractor(svc, noopLogger{})
+		i := NewMessageInteractor(svc)
 
 		res, err := i.CreateMessage(ctx, msg)
 		if err != nil {
@@ -151,7 +151,7 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 			deleteFn:  func(context.Context, output.Tx, string) error { return nil },
 			saveFn:    func(context.Context, output.Tx, domain.Message) error { return nil },
 		}
-		i := NewMessageInteractor(svc, noopLogger{})
+		i := NewMessageInteractor(svc)
 
 		_, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
 		if !errors.Is(err, nf) {
@@ -172,7 +172,7 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 			updateFn: func(context.Context, output.Tx, domain.Message) error { return nil },
 			saveFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
 		}
-		i := NewMessageInteractor(svc, noopLogger{})
+		i := NewMessageInteractor(svc)
 
 		err := i.DeleteMessage(ctx, "x")
 		if !errors.Is(err, deleteErr) {

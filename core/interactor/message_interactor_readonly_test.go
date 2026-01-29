@@ -55,7 +55,7 @@ func TestMessageInteractor_GetMessageByID(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		msg := &domain.Message{ID: "msg-123", Code: "TEST_001", Title: "Test"}
 		svc := &fakeMessageServiceReadOnly{getByIDRes: msg}
-		inter := NewMessageInteractor(svc, noopLogger{})
+		inter := NewMessageInteractor(svc)
 
 		result, err := inter.GetMessageByID(context.Background(), "msg-123")
 
@@ -69,7 +69,7 @@ func TestMessageInteractor_GetMessageByID(t *testing.T) {
 
 	t.Run("not found", func(t *testing.T) {
 		svc := &fakeMessageServiceReadOnly{getByIDErr: domain.ErrMessageNotFound}
-		inter := NewMessageInteractor(svc, noopLogger{})
+		inter := NewMessageInteractor(svc)
 
 		_, err := inter.GetMessageByID(context.Background(), "nonexistent")
 
@@ -83,7 +83,7 @@ func TestMessageInteractor_GetMessageByCode(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		msg := &domain.Message{ID: "msg-123", Code: "TEST_001", Title: "Test"}
 		svc := &fakeMessageServiceReadOnly{getByCodeRes: msg}
-		inter := NewMessageInteractor(svc, noopLogger{})
+		inter := NewMessageInteractor(svc)
 
 		result, err := inter.GetMessageByCode(context.Background(), "TEST_001")
 
@@ -103,7 +103,7 @@ func TestMessageInteractor_ListMessages(t *testing.T) {
 			{ID: "2", Code: "TEST_002", Title: "Test 2"},
 		}
 		svc := &fakeMessageServiceReadOnly{listRes: msgs}
-		inter := NewMessageInteractor(svc, noopLogger{})
+		inter := NewMessageInteractor(svc)
 
 		filters := map[string]interface{}{"module": "test"}
 		result, err := inter.ListMessages(context.Background(), filters)
@@ -118,7 +118,7 @@ func TestMessageInteractor_ListMessages(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		svc := &fakeMessageServiceReadOnly{listRes: []domain.Message{}}
-		inter := NewMessageInteractor(svc, noopLogger{})
+		inter := NewMessageInteractor(svc)
 
 		result, err := inter.ListMessages(context.Background(), nil)
 
@@ -138,7 +138,7 @@ func TestMessageInteractor_ListActiveMessages(t *testing.T) {
 			{ID: "2", Code: "TEST_002", Active: true},
 		}
 		svc := &fakeMessageServiceReadOnly{listActiveRes: msgs}
-		inter := NewMessageInteractor(svc, noopLogger{})
+		inter := NewMessageInteractor(svc)
 
 		result, err := inter.ListActiveMessages(context.Background())
 

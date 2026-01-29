@@ -9,24 +9,22 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-// AirlineInteractor orchestrates airline business operations
+
 type AirlineInteractor struct {
 	service input.AirlineService
-	logger  logger.Logger
 }
 
-// NewAirlineInteractor creates a new airline interactor instance
-func NewAirlineInteractor(service input.AirlineService, log logger.Logger) *AirlineInteractor {
+
+func NewAirlineInteractor(service input.AirlineService) *AirlineInteractor {
 	return &AirlineInteractor{
 		service: service,
-		logger:  log,
 	}
 }
 
-// GetAirlineByID retrieves an airline by its ID
+
 func (i *AirlineInteractor) GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirlineGet, "airline_id", id)
 
@@ -46,7 +44,7 @@ func (i *AirlineInteractor) GetAirlineByID(ctx context.Context, id string) (*dom
 
 func (i *AirlineInteractor) ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirlineList, "filters", filters)
 

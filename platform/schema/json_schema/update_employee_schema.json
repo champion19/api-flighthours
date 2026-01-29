@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Update Employee Request",
-  "description": "Schema for validating employee update requests (excludes email and password)",
+  "description": "Schema for validating employee update requests (excludes email, password, and role)",
   "type": "object",
   "properties": {
     "name": {
@@ -11,24 +11,11 @@
       "minLength": 1,
       "pattern": ".*\\S.*"
     },
-    "airline": {
-      "type": "string",
-      "description": "Airline ID (obfuscated ID)",
-      "maxLength": 50,
-      "minLength": 1,
-      "pattern": "^[a-zA-Z0-9-]+$"
-    },
     "identificationNumber": {
       "type": "string",
       "description": "Identity document number (digits only)",
       "maxLength": 10,
       "minLength": 7,
-      "pattern": "^[0-9]+$"
-    },
-    "bp": {
-      "type": "string",
-      "description": "BP code (digits only)",
-      "maxLength": 20,
       "pattern": "^[0-9]+$"
     },
     "start_date": {
@@ -46,22 +33,11 @@
     "active": {
       "type": "boolean",
       "description": "Whether the employee is active"
-    },
-    "role": {
-      "type": "string",
-      "description": "Role of the employee",
-      "maxLength": 20,
-      "minLength": 1,
-      "enum": [
-        "pilot"
-      ]
     }
   },
   "required": [
     "name",
-    "identificationNumber",
-    "start_date",
-    "role"
+    "identificationNumber"
   ],
   "additionalProperties": false
 }

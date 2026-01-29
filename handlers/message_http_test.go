@@ -55,6 +55,7 @@ func (f *fakeMessageService) DeleteMessageFromDB(context.Context, output.Tx, str
 }
 
 func newMessageRouter(msgSvc input.MessageService) *gin.Engine {
+	// Inline cache creation without testing.T dependency
 	repo := fakeMessageCacheRepo{messages: []cachetypes.CachedMessage{
 		{Code: domain.MsgUserRegistered, Type: cachetypes.TypeSuccess, Content: "user registered"},
 		{Code: domain.MsgValJSONInvalid, Type: cachetypes.TypeError, Content: "invalid json"},
@@ -71,8 +72,8 @@ func newMessageRouter(msgSvc input.MessageService) *gin.Engine {
 
 	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
 
-	msgInter := interactor.NewMessageInteractor(msgSvc, noopLogger{})
-	h := New(nil, nil, enc, resp, msgInter, cache, nil)
+	msgInter := interactor.NewMessageInteractor(msgSvc)
+	h := New(nil, nil, enc, resp, msgInter, cache, nil, nil)
 
 	r := gin.New()
 	r.Use(middleware.RequestID())
@@ -133,6 +134,7 @@ func TestHTTP_CreateMessage(t *testing.T) {
 func TestHTTP_GetMessageByID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	// Create encoder with valid UUID
 	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
 	testUUID := "550e8400-e29b-41d4-a716-446655440000"
 	validID, _ := enc.Encode(testUUID)
@@ -177,6 +179,7 @@ func TestHTTP_GetMessageByID(t *testing.T) {
 func TestHTTP_ListMessages(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	// Use valid UUIDs for message IDs
 	uuid1 := "550e8400-e29b-41d4-a716-446655440001"
 	uuid2 := "550e8400-e29b-41d4-a716-446655440002"
 
@@ -217,6 +220,7 @@ func TestHTTP_ListMessages(t *testing.T) {
 func TestHTTP_UpdateMessage(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	// Create encoder with valid UUID
 	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
 	testUUID := "550e8400-e29b-41d4-a716-446655440000"
 	validID, _ := enc.Encode(testUUID)
@@ -263,6 +267,7 @@ func TestHTTP_UpdateMessage(t *testing.T) {
 func TestHTTP_DeleteMessage(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	// Create encoder with valid UUID
 	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
 	testUUID := "550e8400-e29b-41d4-a716-446655440000"
 	validID, _ := enc.Encode(testUUID)

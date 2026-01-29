@@ -25,7 +25,7 @@ func (h *handler) GetAirlineByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idParam := c.Param("id")
 		if idParam == "" {
-			Logger.Warn(logger.LogAirlineGet, "error", "empty id parameter")
+			Logger.Warn(logger.LogAirlineGet, "error", logger.LogErrEmptyIDParam)
 			c.Error(domain.ErrInvalidID)
 			return
 		}

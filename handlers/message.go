@@ -1,8 +1,9 @@
 package handlers
-import (
 
+import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
+
 type MessageRequest struct {
 	Code     string             `json:"code" binding:"omitempty"`
 	Type     domain.MessageType `json:"type" binding:"omitempty"`
@@ -13,6 +14,14 @@ type MessageRequest struct {
 	Active   bool               `json:"active"`
 }
 
+// Sanitize trims whitespace from MessageRequest fields
+func (m *MessageRequest) Sanitize() {
+	m.Code = TrimString(m.Code)
+	m.Category = TrimString(m.Category)
+	m.Module = TrimString(m.Module)
+	m.Title = TrimString(m.Title)
+	m.Content = TrimString(m.Content)
+}
 
 type MessageResponse struct {
 	ID       string             `json:"id"`
@@ -35,17 +44,14 @@ type MessageListResponse struct {
 type MessageCreatedResponse struct {
 	ID    string `json:"id"`
 	Links []Link `json:"_links"`
-
 }
 
 type MessageUpdatedResponse struct {
 	Links []Link `json:"_links"`
-
 }
 
 type MessageDeletedResponse struct {
 }
-
 
 type CacheReloadResponse struct {
 	Success     bool   `json:"success"`
@@ -53,7 +59,6 @@ type CacheReloadResponse struct {
 	AfterCount  int    `json:"after_count"`
 	Message     string `json:"message"`
 }
-
 
 func (m MessageRequest) ToDomain() domain.Message {
 	return domain.Message{
@@ -67,10 +72,9 @@ func (m MessageRequest) ToDomain() domain.Message {
 	}
 }
 
-
-func ToMessageResponse(m *domain.Message) MessageResponse {
+func ToMessageResponse(m *domain.Message, encodedID string) MessageResponse {
 	return MessageResponse{
-		ID:       m.ID,
+		ID:       encodedID,
 		Code:     m.Code,
 		Type:     m.Type,
 		Category: m.Category,
@@ -81,11 +85,15 @@ func ToMessageResponse(m *domain.Message) MessageResponse {
 	}
 }
 
-
-func ToMessageListResponse(messages []domain.Message) MessageListResponse {
+func ToMessageListResponse(messages []domain.Message, encodeFunc func(string) (string, error)) MessageListResponse {
 	responses := make([]MessageResponse, len(messages))
 	for i, msg := range messages {
-		responses[i] = ToMessageResponse(&msg)
+		encodedID, err := encodeFunc(msg.ID)
+		if err != nil {
+			
+			encodedID = msg.ID
+		}
+		responses[i] = ToMessageResponse(&msg, encodedID)
 	}
 	return MessageListResponse{
 		Messages: responses,

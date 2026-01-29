@@ -10,24 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @title           FlightHours API
-// @version         1.0
-// @description     API para gestión de empleados de aerolínea y control de horas de vuelo
-// @termsOfService  http://swagger.io/terms/
 
-// @contact.name   FlightHours Support
-// @contact.email  support@flighthours.com
-
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host      localhost:8082
-// @BasePath  /flighthours/api/v1
-
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Ingrese el token en formato: Bearer {token}
 
 func main() {
 	gin.SetMode(gin.ReleaseMode)
