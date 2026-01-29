@@ -58,3 +58,11 @@ type AirlineService interface {
 	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 }
+
+// AirlineEmployeeService defines the interface for airline employee business operations (Release 15)
+// This is a specialized module for employees assigned to airlines
+type AirlineEmployeeService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
+	AddAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
+}

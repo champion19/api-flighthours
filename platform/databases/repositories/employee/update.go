@@ -21,7 +21,7 @@ func (r *repository) UpdateEmployee(ctx context.Context, tx output.Tx, employee 
 
 	dbTx, ok := tx.(*common.SQLTX)
 	if !ok {
-		log.Error(logger.LogRepoEmployeeUpdateTxErr, "error", "invalid transaction type")
+		log.Error(logger.LogRepoEmployeeUpdateTxErr, "error", logger.LogErrInvalidTransaction)
 		return domain.ErrInvalidTransaction
 	}
 

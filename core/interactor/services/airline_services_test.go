@@ -9,7 +9,6 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
-// airlineFakeTx is a test transaction with tracking for commit/rollback
 type airlineFakeTx struct {
 	committed  bool
 	rolledBack bool
@@ -66,7 +65,7 @@ func TestAirlineService_GetAirlineByID(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
 				return expectedAirline, nil
 			},
-		}, noopLogger{})
+		})
 
 		result, err := svc.GetAirlineByID(ctx, "airline-123")
 		if err != nil {
@@ -85,7 +84,7 @@ func TestAirlineService_GetAirlineByID(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
 				return nil, domain.ErrAirlineNotFound
 			},
-		}, noopLogger{})
+		})
 
 		_, err := svc.GetAirlineByID(ctx, "non-existent")
 		if !errors.Is(err, domain.ErrAirlineNotFound) {
@@ -99,7 +98,7 @@ func TestAirlineService_GetAirlineByID(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
 				return nil, repoErr
 			},
-		}, noopLogger{})
+		})
 
 		_, err := svc.GetAirlineByID(ctx, "airline-123")
 		if !errors.Is(err, repoErr) {
@@ -115,7 +114,7 @@ func TestAirlineService_BeginTx(t *testing.T) {
 		expectedTx := &airlineFakeTx{}
 		svc := NewAirlineService(fakeAirlineRepo{
 			beginTxFn: func(context.Context) (output.Tx, error) { return expectedTx, nil },
-		}, noopLogger{})
+		})
 
 		tx, err := svc.BeginTx(ctx)
 		if err != nil {
@@ -130,7 +129,7 @@ func TestAirlineService_BeginTx(t *testing.T) {
 		beginErr := errors.New("cannot begin transaction")
 		svc := NewAirlineService(fakeAirlineRepo{
 			beginTxFn: func(context.Context) (output.Tx, error) { return nil, beginErr },
-		}, noopLogger{})
+		})
 
 		_, err := svc.BeginTx(ctx)
 		if !errors.Is(err, beginErr) {

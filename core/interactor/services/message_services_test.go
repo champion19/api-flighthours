@@ -85,7 +85,7 @@ func TestMessageService_ValidateMessage(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("empty code => ErrMessageCodeRequired", func(t *testing.T) {
-		svc := NewMessageService(fakeMsgRepo{}, noopLogger{})
+		svc := NewMessageService(fakeMsgRepo{})
 		err := svc.ValidateMessage(ctx, domain.Message{Code: ""})
 		if !errors.Is(err, domain.ErrMessageCodeRequired) {
 			t.Fatalf("expected %v, got %v", domain.ErrMessageCodeRequired, err)
@@ -95,7 +95,7 @@ func TestMessageService_ValidateMessage(t *testing.T) {
 	t.Run("create and code exists => ErrMessageCodeDuplicate", func(t *testing.T) {
 		svc := NewMessageService(fakeMsgRepo{getByCodeFn: func(context.Context, string) (*domain.Message, error) {
 			return &domain.Message{ID: "1", Code: "C1"}, nil
-		}}, noopLogger{})
+		}})
 
 		err := svc.ValidateMessage(ctx, domain.Message{ID: "", Code: "C1"})
 		if !errors.Is(err, domain.ErrMessageCodeDuplicate) {
@@ -106,7 +106,7 @@ func TestMessageService_ValidateMessage(t *testing.T) {
 	t.Run("update (ID not empty) => does not check duplicate", func(t *testing.T) {
 		svc := NewMessageService(fakeMsgRepo{getByCodeFn: func(context.Context, string) (*domain.Message, error) {
 			return &domain.Message{ID: "1", Code: "C1"}, nil
-		}}, noopLogger{})
+		}})
 
 		err := svc.ValidateMessage(ctx, domain.Message{ID: "existing", Code: "C1"})
 		if err != nil {
@@ -121,7 +121,7 @@ func TestMessageService_GetMessageByID(t *testing.T) {
 	t.Run("repo returns nil,nil => ErrMessageNotFound", func(t *testing.T) {
 		svc := NewMessageService(fakeMsgRepo{getByIDFn: func(context.Context, string) (*domain.Message, error) {
 			return nil, nil
-		}}, noopLogger{})
+		}})
 
 		_, err := svc.GetMessageByID(ctx, "x")
 		if !errors.Is(err, domain.ErrMessageNotFound) {
@@ -133,7 +133,7 @@ func TestMessageService_GetMessageByID(t *testing.T) {
 		repoErr := errors.New("db error")
 		svc := NewMessageService(fakeMsgRepo{getByIDFn: func(context.Context, string) (*domain.Message, error) {
 			return nil, repoErr
-		}}, noopLogger{})
+		}})
 
 		_, err := svc.GetMessageByID(ctx, "x")
 		if !errors.Is(err, repoErr) {
@@ -145,7 +145,7 @@ func TestMessageService_GetMessageByID(t *testing.T) {
 		msg := &domain.Message{ID: "123", Code: "TEST_001"}
 		svc := NewMessageService(fakeMsgRepo{getByIDFn: func(context.Context, string) (*domain.Message, error) {
 			return msg, nil
-		}}, noopLogger{})
+		}})
 
 		result, err := svc.GetMessageByID(ctx, "123")
 		if err != nil {
@@ -164,7 +164,7 @@ func TestMessageService_GetMessageByCode(t *testing.T) {
 		msg := &domain.Message{ID: "123", Code: "TEST_001"}
 		svc := NewMessageService(fakeMsgRepo{getByCodeFn: func(context.Context, string) (*domain.Message, error) {
 			return msg, nil
-		}}, noopLogger{})
+		}})
 
 		result, err := svc.GetMessageByCode(ctx, "TEST_001")
 		if err != nil {
@@ -179,7 +179,7 @@ func TestMessageService_GetMessageByCode(t *testing.T) {
 		repoErr := errors.New("db error")
 		svc := NewMessageService(fakeMsgRepo{getByCodeFn: func(context.Context, string) (*domain.Message, error) {
 			return nil, repoErr
-		}}, noopLogger{})
+		}})
 
 		_, err := svc.GetMessageByCode(ctx, "TEST_001")
 		if !errors.Is(err, repoErr) {
@@ -198,7 +198,7 @@ func TestMessageService_ListMessages(t *testing.T) {
 		}
 		svc := NewMessageService(fakeMsgRepo{getAllActive: func(context.Context) ([]domain.Message, error) {
 			return msgs, nil
-		}}, noopLogger{})
+		}})
 
 		result, err := svc.ListMessages(ctx, nil)
 		if err != nil {
@@ -213,7 +213,7 @@ func TestMessageService_ListMessages(t *testing.T) {
 		repoErr := errors.New("db error")
 		svc := NewMessageService(fakeMsgRepo{getAllActive: func(context.Context) ([]domain.Message, error) {
 			return nil, repoErr
-		}}, noopLogger{})
+		}})
 
 		_, err := svc.ListMessages(ctx, nil)
 		if !errors.Is(err, repoErr) {
@@ -232,7 +232,7 @@ func TestMessageService_ListActiveMessages(t *testing.T) {
 		}
 		svc := NewMessageService(fakeMsgRepo{getAllActive: func(context.Context) ([]domain.Message, error) {
 			return msgs, nil
-		}}, noopLogger{})
+		}})
 
 		result, err := svc.ListActiveMessages(ctx)
 		if err != nil {
@@ -251,7 +251,7 @@ func TestMessageService_SaveMessageToDB(t *testing.T) {
 		msg := domain.Message{ID: "123", Code: "TEST_001"}
 		svc := NewMessageService(fakeMsgRepo{saveMsgFn: func(context.Context, output.Tx, domain.Message) error {
 			return nil
-		}}, noopLogger{})
+		}})
 
 		err := svc.SaveMessageToDB(ctx, nil, msg)
 		if err != nil {
@@ -264,7 +264,7 @@ func TestMessageService_SaveMessageToDB(t *testing.T) {
 		msg := domain.Message{ID: "123", Code: "TEST_001"}
 		svc := NewMessageService(fakeMsgRepo{saveMsgFn: func(context.Context, output.Tx, domain.Message) error {
 			return repoErr
-		}}, noopLogger{})
+		}})
 
 		err := svc.SaveMessageToDB(ctx, nil, msg)
 		if !errors.Is(err, repoErr) {
@@ -285,7 +285,7 @@ func TestMessageService_UpdateMessageInDB(t *testing.T) {
 			updateMsgFn: func(context.Context, output.Tx, domain.Message) error {
 				return nil
 			},
-		}, noopLogger{})
+		})
 
 		err := svc.UpdateMessageInDB(ctx, nil, msg)
 		if err != nil {
@@ -303,7 +303,7 @@ func TestMessageService_UpdateMessageInDB(t *testing.T) {
 			updateMsgFn: func(context.Context, output.Tx, domain.Message) error {
 				return repoErr
 			},
-		}, noopLogger{})
+		})
 
 		err := svc.UpdateMessageInDB(ctx, nil, msg)
 		if !errors.Is(err, repoErr) {
@@ -318,7 +318,7 @@ func TestMessageService_DeleteMessageFromDB(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := NewMessageService(fakeMsgRepo{deleteMsgFn: func(context.Context, output.Tx, string) error {
 			return nil
-		}}, noopLogger{})
+		}})
 
 		err := svc.DeleteMessageFromDB(ctx, nil, "123")
 		if err != nil {
@@ -330,7 +330,7 @@ func TestMessageService_DeleteMessageFromDB(t *testing.T) {
 		repoErr := errors.New("db error")
 		svc := NewMessageService(fakeMsgRepo{deleteMsgFn: func(context.Context, output.Tx, string) error {
 			return repoErr
-		}}, noopLogger{})
+		}})
 
 		err := svc.DeleteMessageFromDB(ctx, nil, "123")
 		if !errors.Is(err, repoErr) {
@@ -346,7 +346,7 @@ func TestMessageService_BeginTx(t *testing.T) {
 		fakeTx := &fakeTx{}
 		svc := NewMessageService(fakeMsgRepo{beginTxFn: func(context.Context) (output.Tx, error) {
 			return fakeTx, nil
-		}}, noopLogger{})
+		}})
 
 		tx, err := svc.BeginTx(ctx)
 		if err != nil {

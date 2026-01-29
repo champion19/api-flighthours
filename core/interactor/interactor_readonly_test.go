@@ -100,7 +100,7 @@ func TestInteractor_Locate(t *testing.T) {
 		result := &dto.RegisterEmployee{Employee: employee, Message: "found"}
 
 		svc := &fakeServiceForReadOnly{locateRes: result}
-		inter := NewInteractor(svc, noopLogger{})
+		inter := NewInteractor(svc)
 
 		res, err := inter.Locate(context.Background(), "123")
 
@@ -114,7 +114,7 @@ func TestInteractor_Locate(t *testing.T) {
 
 	t.Run("not found", func(t *testing.T) {
 		svc := &fakeServiceForReadOnly{locateErr: domain.ErrPersonNotFound}
-		inter := NewInteractor(svc, noopLogger{})
+		inter := NewInteractor(svc)
 
 		_, err := inter.Locate(context.Background(), "999")
 

@@ -13,6 +13,7 @@ import (
 	messagingCache "github.com/champion19/api-flighthours/platform/cache/messaging"
 	mysql "github.com/champion19/api-flighthours/platform/databases/mysql"
 	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
+	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
 	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
 	messageRepo "github.com/champion19/api-flighthours/platform/databases/repositories/message"
 	"github.com/champion19/api-flighthours/platform/identity_provider/keycloak"
@@ -21,19 +22,21 @@ import (
 	"github.com/champion19/api-flighthours/tools/idencoder"
 )
 
+var log logger.Logger = logger.NewSlogLogger()
+
 type Dependencies struct {
 	EmployeeService   input.Service
 	EmployeeRepo      output.Repository
 	Interactor        *interactor.Interactor
 	KeycloakClient    output.AuthClient
 	Config            *config.Config
-	Logger            logger.Logger
 	IDEncoder         *idencoder.HashidsEncoder
 	ResponseHandler   *middleware.ResponseHandler
 	MessagingCache    *messagingCache.MessageCache
 	MessageInteractor *interactor.MessageInteractor
 	JWTValidator      *jwt.JWKSValidator
 	AirlineInteractor *interactor.AirlineInteractor
+	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -50,14 +53,14 @@ func Init() (*Dependencies, error) {
 	middleware.PrometheusInit()
 	log.Success(logger.LogPrometheusInitOK)
 
-	db, err := mysql.GetDB(cfg.Database, log)
+	db, err := mysql.GetDB(cfg.Database)
 	if err != nil {
 		log.Error(logger.LogAppDatabaseError, "error", err)
 		return nil, err
 	}
 	log.Success(logger.LogAppDatabaseConnected)
 
-	keycloakClient, err := keycloak.NewClient(&cfg.Keycloak, log)
+	keycloakClient, err := keycloak.NewClient(&cfg.Keycloak)
 	if err != nil {
 		log.Error(logger.LogKeycloakClientError, "error", err)
 		return nil, err
@@ -70,8 +73,8 @@ func Init() (*Dependencies, error) {
 		return nil, err
 	}
 
-	employeeService := services.NewService(employeeRepo, keycloakClient, log)
-	interactorFacade := interactor.NewInteractor(employeeService, log)
+	employeeService := services.NewService(employeeRepo, keycloakClient)
+	interactorFacade := interactor.NewInteractor(employeeService)
 
 	encoder, err := idencoder.NewHashidsEncoder(idencoder.Config{
 		Secret:    cfg.IDEncoder.Secret,
@@ -102,8 +105,8 @@ func Init() (*Dependencies, error) {
 
 	responseHandler := middleware.NewResponseHandler(messagingCache)
 
-	messageService := services.NewMessageService(msgRepo, log)
-	messageInteractor := interactor.NewMessageInteractor(messageService, log)
+	messageService := services.NewMessageService(msgRepo)
+	messageInteractor := interactor.NewMessageInteractor(messageService)
 	log.Success(logger.LogDependencyMessageIntInit)
 
 	// Airline dependencies
@@ -114,8 +117,18 @@ func Init() (*Dependencies, error) {
 	}
 	log.Success(logger.LogAirlineRepoInitOK)
 
-	airlineService := services.NewAirlineService(airlineRepository, log)
-	airlineInteractor := interactor.NewAirlineInteractor(airlineService, log)
+	airlineService := services.NewAirlineService(airlineRepository)
+	airlineInteractor := interactor.NewAirlineInteractor(airlineService)
+
+	airlineEmployeeRepository, err := airlineEmployeeRepo.NewAirlineEmployeeRepository(db)
+	if err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "error", err, "repository", "airline_employee")
+		return nil, err
+	}
+	log.Success(logger.LogDatabaseAvailable, "repository", "airline_employee")
+
+	airlineEmployeeService := services.NewAirlineEmployeeService(airlineEmployeeRepository)
+	airlineEmployeeInteractor := interactor.NewAirlineEmployeeInteractor(airlineEmployeeService)
 
 	var jwtValidator *jwt.JWKSValidator
 	jwtConfig := jwt.JWKSConfig{
@@ -137,12 +150,12 @@ func Init() (*Dependencies, error) {
 		Interactor:        interactorFacade,
 		KeycloakClient:    keycloakClient,
 		Config:            cfg,
-		Logger:            log,
 		IDEncoder:         encoder,
 		ResponseHandler:   responseHandler,
 		MessagingCache:    messagingCache,
 		MessageInteractor: messageInteractor,
 		JWTValidator:      jwtValidator,
 		AirlineInteractor: airlineInteractor,
+		AirlineEmployeeInteractor: airlineEmployeeInteractor,
 	}, nil
 }

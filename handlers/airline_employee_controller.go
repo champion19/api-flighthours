@@ -1,0 +1,182 @@
+package handlers
+
+import (
+	"time"
+
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/gin-gonic/gin"
+)
+
+// GetEmployeeAirlineInfo godoc
+// @Summary      Get authenticated employee's airline information (HU24)
+// @Description  Returns the airline information (airline_id, airline_name, bp) of the authenticated employee
+// @Tags         AirlineEmployees
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  EmployeeAirlineInfoResponse
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Employee not found or no airline assigned"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /employee/me/airline [get]
+func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogAirlineEmployeeGet, "endpoint", "GET /employee/me/airline", "client_ip", c.ClientIP())
+
+		// Get authenticated employee (core data)
+		employee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			log.Error(logger.LogEmployeeNotFound, "error", logger.LogErrAuthUserNotInContext, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgUnauthorized)
+			return
+		}
+
+		// Get airline info for this employee
+		airlineInfo, err := h.AirlineEmployeeInteractor.GetAirlineEmployeeByID(c.Request.Context(), employee.ID)
+
+		response := EmployeeAirlineInfoResponse{}
+
+		// If airline info exists, populate the response
+		if err == nil && airlineInfo != nil && airlineInfo.AirlineID != "" {
+			airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), airlineInfo.AirlineID)
+			if err == nil && airline != nil {
+				encodedAirlineID, _ := h.EncodeID(airline.ID)
+				response.AirlineID = encodedAirlineID
+				response.AirlineName = airline.AirlineName
+				response.AirlineCode = airline.AirlineCode
+			}
+			response.Bp = airlineInfo.Bp
+		}
+
+		baseURL := GetBaseURL(c)
+		response.Links = []Link{
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "update", Method: "PUT"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+		}
+
+		log.Success(logger.LogAirlineEmployeeGetOK, "employee_id", employee.ID, "has_airline", response.AirlineID != "", "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirlineEmployeeGetOK, response)
+	}
+}
+
+// AddEmployeeAirlineInfo godoc
+// @Summary      Add authenticated employee's airline information (HU26)
+// @Description  Adds all employee fields including airline_id, bp, name, dates, role for the authenticated employee
+// @Tags         AirlineEmployees
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        airline body AddEmployeeAirlineRequest true "Employee airline information to add"
+// @Success      200  {object}  AddEmployeeAirlineResponse
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid request data"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Employee not found"
+// @Failure      422  {object}  middleware.ErrorResponse "Invalid airline reference"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /employee/me/airline [put]
+func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogAirlineEmployeeAdd, "endpoint", "PUT /employee/me/airline", "client_ip", c.ClientIP())
+
+		// Get authenticated employee (core data)
+		employee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			log.Error(logger.LogEmployeeNotFound, "error", logger.LogErrAuthUserNotInContext, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgUnauthorized)
+			return
+		}
+
+		var req AddEmployeeAirlineRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Error(logger.LogRegJSONParseError, "error", err, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgValInvalidReq)
+			return
+		}
+
+		req.Sanitize()
+
+		// Decode the airline_id
+		airlineUUID, _ := h.resolveID(req.AirlineID)
+		if airlineUUID == "" {
+			log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrInvalidAirlineID, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
+			return
+		}
+
+		// Verify airline exists
+		airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), airlineUUID)
+		if err != nil || airline == nil {
+			log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrAirlineNotFound, "airline_id", airlineUUID, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
+			return
+		}
+
+		// Parse dates
+		layout := "2006-01-02"
+		startDate, err := time.Parse(layout, req.StartDate)
+		if err != nil {
+			log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrInvalidStartDate, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgValInvalidDateFormat)
+			return
+		}
+
+		var endDate time.Time
+		if req.EndDate != "" {
+			endDate, err = time.Parse(layout, req.EndDate)
+			if err != nil {
+				log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrInvalidEndDate, "client_ip", c.ClientIP())
+				h.Response.Error(c, domain.MsgValInvalidDateFormat)
+				return
+			}
+		}
+
+		// Create AirlineEmployee domain object
+		airlineEmployeeInfo := domain.AirlineEmployee{
+			ID:        employee.ID,
+			AirlineID: airlineUUID,
+			Bp:        req.Bp,
+			StartDate: startDate,
+			EndDate:   endDate,
+			Active:    req.Active,
+		}
+
+		// Add airline info via AirlineEmployeeInteractor
+		if err := h.AirlineEmployeeInteractor.AddAirlineEmployee(c.Request.Context(), employee.ID, airlineEmployeeInfo); err != nil {
+			log.Error(logger.LogAirlineEmployeeAddError, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrInvalidForeignKey {
+				h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
+				return
+			}
+			h.Response.Error(c, domain.MsgAirlineEmployeeUpdateError)
+			return
+		}
+
+		encodedAirlineID, _ := h.EncodeID(airline.ID)
+		response := AddEmployeeAirlineResponse{
+			Added:       true,
+			AirlineID:   encodedAirlineID,
+			AirlineName: airline.AirlineName,
+			Bp:          req.Bp,
+			StartDate:   startDate.Format(layout),
+			EndDate:     endDate.Format(layout),
+			Active:      req.Active,
+		}
+
+		baseURL := GetBaseURL(c)
+		response.Links = []Link{
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+		}
+
+		log.Success(logger.LogAirlineEmployeeUpdateOK, "employee_id", employee.ID, "airline_id", airlineUUID, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirlineEmployeeUpdated, response)
+	}
+}

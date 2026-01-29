@@ -55,7 +55,7 @@ func NewAirlineRepository(db *sql.DB) (*repository, error) {
 	}, nil
 }
 
-// BeginTx starts a new database transaction
+
 func (r *repository) BeginTx(ctx context.Context) (output.Tx, error) {
 	return r.db.BeginTx(ctx, nil)
 }

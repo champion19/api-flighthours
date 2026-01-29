@@ -7,12 +7,15 @@ import (
 	"time"
 
 	"github.com/champion19/api-flighthours/config"
-	loggerPkg "github.com/champion19/api-flighthours/platform/logger"
+	 "github.com/champion19/api-flighthours/platform/logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetDB(dbConfig config.Database, logger loggerPkg.Logger) (*sql.DB, error) {
-	logger.Info(loggerPkg.LogDBConnecting,
+var log logger.Logger = logger.NewSlogLogger()
+
+
+func GetDB(dbConfig config.Database) (*sql.DB, error) {
+	log.Info(logger.LogDBConnecting,
 		"host", dbConfig.Host,
 		"port", dbConfig.Port,
 		"database", dbConfig.Name,
@@ -29,20 +32,20 @@ func GetDB(dbConfig config.Database, logger loggerPkg.Logger) (*sql.DB, error) {
 	)
 
 	if dbConfig.SSL != "" {
-		logger.Debug(loggerPkg.LogDBSSLEnabled, "tsl", dbConfig.SSL)
+		log.Debug(logger.LogDBSSLEnabled, "tsl", dbConfig.SSL)
 		dsn += "&tls=" + dbConfig.SSL
 	}
 
 	db, err := sql.Open(dbConfig.Driver, dsn)
 	if err != nil {
-		logger.Error(loggerPkg.LogDBConnectionError,
+		log.Error(logger.LogDBConnectionError,
 			"error", err,
 			"host", dbConfig.Host,
 			"database", dbConfig.Name)
 		return nil, fmt.Errorf("error to connect to database: %w", err)
 	}
 
-	logger.Debug(loggerPkg.LogDBPoolConfig,
+	log.Debug(logger.LogDBPoolConfig,
 		"max_open_conns", dbConfig.MaxOpenConns,
 		"max_idle_conns", dbConfig.MaxIdleConns,
 		"conn_max_lifetime", dbConfig.ConnMaxLifetime,
@@ -54,20 +57,20 @@ func GetDB(dbConfig config.Database, logger loggerPkg.Logger) (*sql.DB, error) {
 	db.SetConnMaxLifetime(time.Duration(dbConfig.ConnMaxLifetime))
 	db.SetConnMaxIdleTime(time.Duration(dbConfig.ConnMaxIdleTime))
 
-	logger.Info(loggerPkg.LogDBPinging)
+	log.Info(logger.LogDBPinging)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	err = db.PingContext(ctx)
 	if err != nil {
-		logger.Error(loggerPkg.LogDBPingError,
+		log.Error(logger.LogDBPingError,
 			"error", err,
 			"host", dbConfig.Host,
 			"database", dbConfig.Name)
 		return nil, fmt.Errorf("error pinging database: %w", err)
 	}
-	logger.Success(loggerPkg.LogDBConnected,
+	log.Success(logger.LogDBConnected,
 		"host", dbConfig.Host,
 		"database", dbConfig.Name)
 

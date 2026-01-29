@@ -17,8 +17,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+var log = logger.NewSlogLogger()
+
 func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
-	dependencies.Logger.Info(logger.LogRouteConfiguring)
+	log.Info(logger.LogRouteConfiguring)
 
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:8081", "http://localhost:3001"},
@@ -29,7 +31,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		MaxAge:           12 * time.Hour,
 	}
 	app.Use(cors.New(corsConfig))
-	dependencies.Logger.Info("CORS middleware configured")
+	log.Info("CORS middleware configured")
 
 	app.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
@@ -50,15 +52,16 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.MessageInteractor,
 		dependencies.MessagingCache,
 		dependencies.AirlineInteractor,
+		dependencies.AirlineEmployeeInteractor,
 	)
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
 	if err != nil {
-		dependencies.Logger.Error(logger.LogRouteValidatorError, err)
-		dependencies.Logger.Fatal(logger.LogRouteValidatorError, err)
+		log.Error(logger.LogRouteValidatorError, err)
+		log.Fatal(logger.LogRouteValidatorError, err)
 		return
 	}
-	dependencies.Logger.Success(logger.LogRouteValidatorOK)
+	log.Success(logger.LogRouteValidatorOK)
 	validator := middleware.NewMiddlewareValidator(validators)
 
 	app.GET("/health", func(c *gin.Context) {
@@ -89,7 +92,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/airlines/:id", handler.GetAirlineByID())
 
-
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
@@ -97,6 +99,10 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
 
 		protected.GET("/employee/me", handler.GetEmployee())
+
+		protected.GET("/employee/me/airline", handler.GetEmployeeAirlineInfo())
+
+		protected.PUT("/employee/me/airline", handler.AddEmployeeAirlineInfo())
 
 		protected.PUT("/employees/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 
@@ -116,7 +122,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 	}
 
-	dependencies.Logger.Success(logger.LogRouteConfigured)
+	log.Success(logger.LogRouteConfigured)
 }
 
 func Bootstrap(app *gin.Engine) *dependency.Dependencies {

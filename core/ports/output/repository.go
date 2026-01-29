@@ -43,3 +43,10 @@ type AirlineRepository interface {
 	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 }
+
+type AirlineEmployeeRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+
+	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
+	AddAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
+}
