@@ -12,14 +12,15 @@ import (
 )
 
 type handler struct {
-	EmployeeService   input.Service
-	Interactor        *interactor.Interactor
-	IDEncoder         *idencoder.HashidsEncoder
-	Response          *middleware.ResponseHandler
-	MessageInteractor *interactor.MessageInteractor
-	MessagingCache    *messaging.MessageCache
-	AirlineInteractor *interactor.AirlineInteractor
+	EmployeeService           input.Service
+	Interactor                *interactor.Interactor
+	IDEncoder                 *idencoder.HashidsEncoder
+	Response                  *middleware.ResponseHandler
+	MessageInteractor         *interactor.MessageInteractor
+	MessagingCache            *messaging.MessageCache
+	AirlineInteractor         *interactor.AirlineInteractor
 	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
+	EngineInteractor          *interactor.EngineInteractor
 }
 
 func New(
@@ -29,17 +30,19 @@ func New(
 	response *middleware.ResponseHandler,
 	messageInteractor *interactor.MessageInteractor,
 	messagingCache *messaging.MessageCache,
-  airlineInteractor *interactor.AirlineInteractor,
-	airlineEmployeeInteractor *interactor.AirlineEmployeeInteractor) *handler {
-		return &handler{
-		EmployeeService:   service,
-		Interactor:        interactor,
-		IDEncoder:         idEncoder,
-		Response:          response,
-		MessageInteractor: messageInteractor,
-		MessagingCache:    messagingCache,
-		AirlineInteractor: airlineInteractor,
+	airlineInteractor *interactor.AirlineInteractor,
+	airlineEmployeeInteractor *interactor.AirlineEmployeeInteractor,
+	engineInteractor *interactor.EngineInteractor) *handler {
+	return &handler{
+		EmployeeService:           service,
+		Interactor:                interactor,
+		IDEncoder:                 idEncoder,
+		Response:                  response,
+		MessageInteractor:         messageInteractor,
+		MessagingCache:            messagingCache,
+		AirlineInteractor:         airlineInteractor,
 		AirlineEmployeeInteractor: airlineEmployeeInteractor,
+		EngineInteractor:          engineInteractor,
 	}
 }
 

@@ -10,8 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
+// @title           Flighthours API
+// @version         1.0
+// @description     API para gestión de horas de vuelo de pilotos y tripulantes
+// @termsOfService  http://swagger.io/terms/
+// @contact.name    Champion19 Support
+// @contact.email   support@champion19.com
+// @license.name    Apache 2.0
+// @license.url     http://www.apache.org/licenses/LICENSE-2.0.html
+// @host            localhost:8081
+// @BasePath        /flighthours/api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT Bearer token (format: "Bearer {token}")
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	app := gin.New()

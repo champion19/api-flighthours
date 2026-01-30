@@ -15,6 +15,7 @@ import (
 	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
 	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
 	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
+	engineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/engine"
 	messageRepo "github.com/champion19/api-flighthours/platform/databases/repositories/message"
 	"github.com/champion19/api-flighthours/platform/identity_provider/keycloak"
 	"github.com/champion19/api-flighthours/platform/jwt"
@@ -25,18 +26,19 @@ import (
 var log logger.Logger = logger.NewSlogLogger()
 
 type Dependencies struct {
-	EmployeeService   input.Service
-	EmployeeRepo      output.Repository
-	Interactor        *interactor.Interactor
-	KeycloakClient    output.AuthClient
-	Config            *config.Config
-	IDEncoder         *idencoder.HashidsEncoder
-	ResponseHandler   *middleware.ResponseHandler
-	MessagingCache    *messagingCache.MessageCache
-	MessageInteractor *interactor.MessageInteractor
-	JWTValidator      *jwt.JWKSValidator
-	AirlineInteractor *interactor.AirlineInteractor
+	EmployeeService           input.Service
+	EmployeeRepo              output.Repository
+	Interactor                *interactor.Interactor
+	KeycloakClient            output.AuthClient
+	Config                    *config.Config
+	IDEncoder                 *idencoder.HashidsEncoder
+	ResponseHandler           *middleware.ResponseHandler
+	MessagingCache            *messagingCache.MessageCache
+	MessageInteractor         *interactor.MessageInteractor
+	JWTValidator              *jwt.JWKSValidator
+	AirlineInteractor         *interactor.AirlineInteractor
 	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
+	EngineInteractor          *interactor.EngineInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -130,6 +132,17 @@ func Init() (*Dependencies, error) {
 	airlineEmployeeService := services.NewAirlineEmployeeService(airlineEmployeeRepository)
 	airlineEmployeeInteractor := interactor.NewAirlineEmployeeInteractor(airlineEmployeeService)
 
+	
+	engineRepository, err := engineRepo.NewEngineRepository(db)
+	if err != nil {
+		log.Error(logger.LogEngineRepoInitError, "error", err, "repository", "engine")
+		return nil, err
+	}
+	log.Success(logger.LogEngineRepoInitOK, "repository", "engine")
+
+	engineService := services.NewEngineService(engineRepository)
+	engineInteractor := interactor.NewEngineInteractor(engineService)
+
 	var jwtValidator *jwt.JWKSValidator
 	jwtConfig := jwt.JWKSConfig{
 		JWKSURL:         cfg.GetKeycloakJWKSURL(),
@@ -145,17 +158,18 @@ func Init() (*Dependencies, error) {
 	}
 
 	return &Dependencies{
-		EmployeeService:   employeeService,
-		EmployeeRepo:      employeeRepo,
-		Interactor:        interactorFacade,
-		KeycloakClient:    keycloakClient,
-		Config:            cfg,
-		IDEncoder:         encoder,
-		ResponseHandler:   responseHandler,
-		MessagingCache:    messagingCache,
-		MessageInteractor: messageInteractor,
-		JWTValidator:      jwtValidator,
-		AirlineInteractor: airlineInteractor,
+		EmployeeService:           employeeService,
+		EmployeeRepo:              employeeRepo,
+		Interactor:                interactorFacade,
+		KeycloakClient:            keycloakClient,
+		Config:                    cfg,
+		IDEncoder:                 encoder,
+		ResponseHandler:           responseHandler,
+		MessagingCache:            messagingCache,
+		MessageInteractor:         messageInteractor,
+		JWTValidator:              jwtValidator,
+		AirlineInteractor:         airlineInteractor,
 		AirlineEmployeeInteractor: airlineEmployeeInteractor,
+		EngineInteractor:          engineInteractor,
 	}, nil
 }

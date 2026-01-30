@@ -732,7 +732,7 @@ const (
 )
 
 // ============================================
-// AIRCRAFT FAMILY (HU32)
+// AIRCRAFT FAMILY 
 // ============================================
 const (
 	LogAircraftFamilyGet      = "Obteniendo información de familia de aeronave"

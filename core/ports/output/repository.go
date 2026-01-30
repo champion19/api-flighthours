@@ -37,11 +37,11 @@ type MessageRepository interface {
 	GetByModule(ctx context.Context, module string) ([]domain.Message, error)
 }
 
-// AirlineRepository defines the interface for airline data persistence operations
 type AirlineRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
 	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+	UpdateAirlineStatus(ctx context.Context, tx Tx, id string, active bool) error
 }
 
 type AirlineEmployeeRepository interface {
@@ -50,4 +50,10 @@ type AirlineEmployeeRepository interface {
 	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
 	AddAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
 	UpdateAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
+	UpdateAirlineEmployeeStatus(ctx context.Context, tx Tx, id string, active bool) error
+}
+
+type EngineRepository interface {
+	GetEngineByID(ctx context.Context, id string) (*domain.Engine, error)
+	ListEngines(ctx context.Context) ([]domain.Engine, error)
 }
