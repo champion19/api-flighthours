@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -55,7 +56,10 @@ func NewAirlineRepository(db *sql.DB) (*repository, error) {
 	}, nil
 }
 
-
 func (r *repository) BeginTx(ctx context.Context) (output.Tx, error) {
-	return r.db.BeginTx(ctx, nil)
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	return common.NewSQLTx(tx), nil
 }

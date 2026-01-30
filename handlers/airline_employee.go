@@ -148,3 +148,10 @@ type UpdateEmployeeAirlineResponse struct {
 	EndDate     string `json:"end_date,omitempty"`
 	Links       []Link `json:"_links,omitempty"`
 }
+
+// StatusChangeResponse returns the result of activating/deactivating airline info (HU27/HU28)
+type StatusChangeResponse struct {
+	Success bool   `json:"success"`
+	Active  bool   `json:"active"`
+	Links   []Link `json:"_links,omitempty"`
+}

@@ -355,20 +355,20 @@ const (
 	MsgCountryGetErr   = "PAI_CON_ERR_03803" // Error - Error técnico al consultar
 )
 
-// Airport Type Module (TAE_*) - Tipo Aeropuerto (HU46 - Virtual Entity pattern)
+// Airport Type Module (TAE_*) - Tipo Aeropuerto (- Virtual Entity pattern)
 const (
 	// ========================================
-	// Consultar (HU46) - TAE_CON_*
+	// Consultar  - TAE_CON_*
 	// ========================================
 	MsgAirportTypeGetOK    = "TAE_CON_EXI_04601" // Éxito - Tipo de aeropuerto consultado (aeropuertos de ese tipo)
 	MsgAirportTypeNotFound = "TAE_CON_ERR_04602" // Error - Tipo de aeropuerto no encontrado (sin aeropuertos)
 	MsgAirportTypeGetErr   = "TAE_CON_ERR_04603" // Error - Error técnico al consultar
 )
 
-// Crew Member Type Module (TIN_*) - Tipo Integrante (HU47 - Virtual Entity pattern)
+// Crew Member Type Module (TIN_*) - Tipo Integrante (- Virtual Entity pattern)
 const (
 	// ========================================
-	// Consultar (HU47) - TIN_CON_*
+	// Consultar  - TIN_CON_*
 	// ========================================
 	MsgCrewMemberTypeGetOK    = "TIN_CON_EXI_04701" // Éxito - Tipo de integrante consultado (empleados de ese rol)
 	MsgCrewMemberTypeNotFound = "TIN_CON_ERR_04702" // Error - Tipo de integrante no encontrado (sin empleados)
@@ -385,7 +385,7 @@ const (
 	MsgAircraftRegistrationGetErr   = "MAT_CON_ERR_03303" // Error - Error técnico al consultar
 
 	// ========================================
-	// Agregar (HU34) - MAT_AGR_*
+	// Agregar  - MAT_AGR_*
 	// ========================================
 	MsgAircraftRegistrationCreated   = "MAT_AGR_EXI_03401" // Éxito - Matrícula creada
 	MsgAircraftRegistrationSaveError = "MAT_AGR_ERR_03402" // Error - Error técnico al crear

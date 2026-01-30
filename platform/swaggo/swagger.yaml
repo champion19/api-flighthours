@@ -1,3 +1,4 @@
+basePath: /flighthours/api/v1
 definitions:
   github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType:
     enum:
@@ -71,6 +72,17 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  handlers.AirlineStatusChangeResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      active:
+        type: boolean
+      success:
+        type: boolean
     type: object
   handlers.CacheReloadResponse:
     properties:
@@ -151,6 +163,30 @@ definitions:
       name:
         type: string
       role:
+        type: string
+    type: object
+  handlers.EngineListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      engines:
+        items:
+          $ref: '#/definitions/handlers.EngineResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.EngineResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      id:
+        type: string
+      name:
         type: string
     type: object
   handlers.Link:
@@ -278,6 +314,17 @@ definitions:
       sent:
         type: boolean
     type: object
+  handlers.StatusChangeResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      active:
+        type: boolean
+      success:
+        type: boolean
+    type: object
   handlers.UpdateEmployeeAirlineRequest:
     properties:
       airline_id:
@@ -384,8 +431,18 @@ definitions:
       success:
         type: boolean
     type: object
+host: localhost:8081
 info:
-  contact: {}
+  contact:
+    email: support@champion19.com
+    name: Champion19 Support
+  description: API para gestión de horas de vuelo de pilotos y tripulantes
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Flighthours API
+  version: "1.0"
 paths:
   /airlines:
     get:
@@ -454,6 +511,43 @@ paths:
       summary: Get airline by ID
       tags:
       - airlines
+  /airlines/{id}/activate:
+    patch:
+      description: Activates an airline by its ID. The airline must exist.
+      parameters:
+      - description: Airline ID (encoded or UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline activated successfully
+          schema:
+            $ref: '#/definitions/handlers.AirlineStatusChangeResponse'
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Airline not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Activate an airline (HU3)
+      tags:
+      - Airlines
   /auth/change-password:
     post:
       consumes:
@@ -778,6 +872,62 @@ paths:
       summary: Edit airline information for authenticated employee (HU25)
       tags:
       - AirlineEmployees
+  /employee/me/airline/activate:
+    patch:
+      description: Activates the airline information for the authenticated employee.
+        The employee must already have airline info assigned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline info activated successfully
+          schema:
+            $ref: '#/definitions/handlers.StatusChangeResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Employee has no airline info to activate
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Activate airline information for authenticated employee (HU27)
+      tags:
+      - AirlineEmployees
+  /employee/me/airline/deactivate:
+    patch:
+      description: Deactivates the airline information for the authenticated employee.
+        The employee must already have airline info assigned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline info deactivated successfully
+          schema:
+            $ref: '#/definitions/handlers.StatusChangeResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Employee has no airline info to deactivate
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Deactivate airline information for authenticated employee (HU28)
+      tags:
+      - AirlineEmployees
   /employees/me:
     delete:
       description: Permanently deletes the authenticated employee's account from the
@@ -846,6 +996,62 @@ paths:
       summary: Update authenticated user information
       tags:
       - Employees
+  /engines:
+    get:
+      description: Returns a list of all engine types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.EngineListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all engines
+      tags:
+      - Engines
+  /engines/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns engine information by ID (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Engine ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get engine by ID
+      tags:
+      - Engines
   /login:
     post:
       consumes:
@@ -1134,4 +1340,10 @@ paths:
       summary: Register a new employee
       tags:
       - Authentication
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT Bearer token (format: "Bearer {token}")'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

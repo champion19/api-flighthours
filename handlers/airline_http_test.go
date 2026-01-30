@@ -23,9 +23,9 @@ type fakeAirlineService struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.Airline, error)
 	updateStatusFn func(ctx context.Context, id string, status bool) error
 	activateFn     func(ctx context.Context, id string) error
-	deactivateFn   func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirlinesFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+	// deactivateFn será implementado en un release posterior (HU4)
 }
 
 var _ input.AirlineService = (*fakeAirlineService)(nil)
@@ -58,12 +58,7 @@ func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) err
 	return errors.New("not implemented")
 }
 
-func (f *fakeAirlineService) DeactivateAirline(ctx context.Context, id string) error {
-	if f.deactivateFn != nil {
-		return f.deactivateFn(ctx, id)
-	}
-	return errors.New("not implemented")
-}
+// DeactivateAirline será implementado en un release posterior (HU4)
 
 func (f *fakeAirlineService) ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
 	if f.listAirlinesFn != nil {
@@ -104,7 +99,7 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -215,6 +210,89 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 		// Gin returns 301 redirect or 404 for missing param
 		if w.Code != http.StatusMovedPermanently && w.Code != http.StatusNotFound {
 			// This is expected for empty route param
+		}
+	})
+}
+
+func TestHTTP_ActivateAirline(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirlineMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirlineService) *gin.Engine {
+		airlineInteractor := interactor.NewAirlineInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.PATCH("/airlines/:id/activate", h.ActivateAirline())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(airlineUUID)
+		activateCalled := false
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return &domain.Airline{ID: airlineUUID, Status: "inactive"}, nil
+			},
+			activateFn: func(ctx context.Context, id string) error {
+				activateCalled = true
+				return nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+		if !activateCalled {
+			t.Fatal("expected activate to be called")
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("invalid json response: %v; body=%s", err, w.Body.String())
+		}
+		if !out.Success {
+			t.Fatalf("expected success=true, got false")
+		}
+	})
+
+	t.Run("airline not found => 404", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return nil, domain.ErrAirlineNotFound
+			},
+			activateFn: func(context.Context, string) error {
+				return domain.ErrAirlineNotFound
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusNotFound, w.Code, w.Body.String())
 		}
 	})
 }

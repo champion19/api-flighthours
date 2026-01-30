@@ -52,18 +52,24 @@ type MessageService interface {
 	DeleteMessageFromDB(ctx context.Context, tx output.Tx, id string) error
 }
 
-// AirlineService defines the interface for airline business operations
 type AirlineService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+	ActivateAirline(ctx context.Context, id string) error
+	// DeactivateAirline será implementado en un release posterior (HU4)
 }
 
-// AirlineEmployeeService defines the interface for airline employee business operations (Release 15)
-// This is a specialized module for employees assigned to airlines
 type AirlineEmployeeService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
 	AddAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
 	UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
+	ActivateAirlineEmployee(ctx context.Context, id string) error
+	DeactivateAirlineEmployee(ctx context.Context, id string) error
+}
+
+type EngineService interface {
+	GetEngineByID(ctx context.Context, id string) (*domain.Engine, error)
+	ListEngines(ctx context.Context) ([]domain.Engine, error)
 }
