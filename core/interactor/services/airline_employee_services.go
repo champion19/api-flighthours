@@ -59,7 +59,6 @@ func (s *airlineEmployeeService) AddAirlineEmployee(ctx context.Context, employe
 	return nil
 }
 
-// UpdateAirlineEmployee updates airline info for an existing employee (HU25)
 func (s *airlineEmployeeService) UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error {
 	tx, err := s.BeginTx(ctx)
 	if err != nil {
@@ -84,5 +83,59 @@ func (s *airlineEmployeeService) UpdateAirlineEmployee(ctx context.Context, empl
 	}
 
 	log.Info(logger.LogDatabaseAvailable, "operation", "update_airline_employee", "employee_id", employee.ID)
+	return nil
+}
+
+func (s *airlineEmployeeService) ActivateAirlineEmployee(ctx context.Context, id string) error {
+	tx, err := s.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err = s.repository.UpdateAirlineEmployeeStatus(ctx, tx, id, true); err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "operation", "activate", "employee_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "operation", "commit", "employee_id", id, "error", err)
+		return err
+	}
+
+	log.Info(logger.LogDatabaseAvailable, "operation", "activate_airline_employee", "employee_id", id)
+	return nil
+}
+
+func (s *airlineEmployeeService) DeactivateAirlineEmployee(ctx context.Context, id string) error {
+	tx, err := s.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err = s.repository.UpdateAirlineEmployeeStatus(ctx, tx, id, false); err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "operation", "deactivate", "employee_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "operation", "commit", "employee_id", id, "error", err)
+		return err
+	}
+
+	log.Info(logger.LogDatabaseAvailable, "operation", "deactivate_airline_employee", "employee_id", id)
 	return nil
 }

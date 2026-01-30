@@ -1,10 +1,8 @@
 package handlers
 
-import (
-	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
-)
+import domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 
-// AirlineResponse is the DTO for airline data in API responses
+// AirlineResponse - Response DTO for airline data
 type AirlineResponse struct {
 	ID          string `json:"id"`
 	AirlineName string `json:"airline_name"`
@@ -13,7 +11,7 @@ type AirlineResponse struct {
 	Links       []Link `json:"_links,omitempty"`
 }
 
-// FromDomainAirline converts a domain Airline to an AirlineResponse DTO
+// FromDomainAirline converts domain.Airline to AirlineResponse with encoded ID
 func FromDomainAirline(airline *domain.Airline, encodedID string) AirlineResponse {
 	return AirlineResponse{
 		ID:          encodedID,
@@ -21,6 +19,24 @@ func FromDomainAirline(airline *domain.Airline, encodedID string) AirlineRespons
 		AirlineCode: airline.AirlineCode,
 		Status:      airline.Status,
 	}
+}
+
+// UpdateAirlineStatusRequest - Request DTO for updating airline status
+type UpdateAirlineStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=active inactive"`
+}
+
+// Sanitize trims whitespace from UpdateAirlineStatusRequest fields
+func (r *UpdateAirlineStatusRequest) Sanitize() {
+	r.Status = TrimString(r.Status)
+}
+
+// AirlineStatusResponse - Response DTO for status update
+type AirlineStatusResponse struct {
+	ID      string `json:"id"`
+	Status  string `json:"status"`
+	Updated bool   `json:"updated"`
+	Links   []Link `json:"_links,omitempty"`
 }
 
 // AirlineListResponse - Response DTO for listing airlines

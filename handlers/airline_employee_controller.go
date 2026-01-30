@@ -301,3 +301,111 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 		h.Response.SuccessWithData(c, domain.MsgAirlineEmployeeUpdated, response)
 	}
 }
+
+// ActivateEmployeeAirlineInfo godoc
+// @Summary      Activate airline information for authenticated employee (HU27)
+// @Description  Activates the airline information for the authenticated employee. The employee must already have airline info assigned.
+// @Tags         AirlineEmployees
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  StatusChangeResponse "Airline info activated successfully"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Employee has no airline info to activate"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /employee/me/airline/activate [patch]
+func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogAirlineEmployeeActivate, "endpoint", "PATCH /employee/me/airline/activate", "client_ip", c.ClientIP())
+
+		// Get authenticated employee (core data)
+		employee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			log.Error(logger.LogEmployeeNotFound, "error", logger.LogErrAuthUserNotInContext, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgUnauthorized)
+			return
+		}
+
+		// Activate via AirlineEmployeeInteractor
+		if err := h.AirlineEmployeeInteractor.ActivateAirlineEmployee(c.Request.Context(), employee.ID); err != nil {
+			log.Error(logger.LogAirlineEmployeeActivateError, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrAirlineEmployeeNotFound {
+				h.Response.Error(c, domain.MsgAirlineEmployeeNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgAirlineEmployeeActivateErr)
+			return
+		}
+
+		response := StatusChangeResponse{
+			Success: true,
+			Active:  true,
+		}
+
+		baseURL := GetBaseURL(c)
+		response.Links = []Link{
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline/deactivate", Rel: "deactivate", Method: "PATCH"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+		}
+
+		log.Success(logger.LogAirlineEmployeeActivateOK, "employee_id", employee.ID, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirlineEmployeeActivateOK, response)
+	}
+}
+
+// DeactivateEmployeeAirlineInfo godoc
+// @Summary      Deactivate airline information for authenticated employee (HU28)
+// @Description  Deactivates the airline information for the authenticated employee. The employee must already have airline info assigned.
+// @Tags         AirlineEmployees
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  StatusChangeResponse "Airline info deactivated successfully"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Employee has no airline info to deactivate"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /employee/me/airline/deactivate [patch]
+func (h handler) DeactivateEmployeeAirlineInfo() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogAirlineEmployeeDeactivate, "endpoint", "PATCH /employee/me/airline/deactivate", "client_ip", c.ClientIP())
+
+		// Get authenticated employee (core data)
+		employee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			log.Error(logger.LogEmployeeNotFound, "error", logger.LogErrAuthUserNotInContext, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgUnauthorized)
+			return
+		}
+
+		// Deactivate via AirlineEmployeeInteractor
+		if err := h.AirlineEmployeeInteractor.DeactivateAirlineEmployee(c.Request.Context(), employee.ID); err != nil {
+			log.Error(logger.LogAirlineEmployeeDeactivateError, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrAirlineEmployeeNotFound {
+				h.Response.Error(c, domain.MsgAirlineEmployeeNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgAirlineEmployeeDeactivateErr)
+			return
+		}
+
+		response := StatusChangeResponse{
+			Success: true,
+			Active:  false,
+		}
+
+		baseURL := GetBaseURL(c)
+		response.Links = []Link{
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me/airline/activate", Rel: "activate", Method: "PATCH"},
+			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+		}
+
+		log.Success(logger.LogAirlineEmployeeDeactivateOK, "employee_id", employee.ID, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirlineEmployeeDeactivateOK, response)
+	}
+}

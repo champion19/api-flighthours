@@ -9,19 +9,15 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-// AirlineEmployeeInteractor orchestrates airline employee operations (Release 15)
 type AirlineEmployeeInteractor struct {
 	service input.AirlineEmployeeService
 }
-
-// NewAirlineEmployeeInteractor creates a new airline employee interactor
 func NewAirlineEmployeeInteractor(service input.AirlineEmployeeService) *AirlineEmployeeInteractor {
 	return &AirlineEmployeeInteractor{
 		service: service,
 	}
 }
 
-// GetAirlineEmployeeByID retrieves airline info for an employee by their ID (HU24)
 func (i *AirlineEmployeeInteractor) GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
@@ -38,15 +34,12 @@ func (i *AirlineEmployeeInteractor) GetAirlineEmployeeByID(ctx context.Context, 
 	return employee, nil
 }
 
-// AddAirlineEmployee adds or updates airline info for an existing employee (HU26)
-// The employee must already exist in the system
 func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirlineEmployeeCreate, "operation", "add_airline_employee", "employee_id", employeeID)
 
-	// Set the ID to match the employee
 	airlineInfo.ID = employeeID
 
 	if err := i.service.AddAirlineEmployee(ctx, airlineInfo); err != nil {
@@ -58,15 +51,12 @@ func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, empl
 	return nil
 }
 
-// UpdateAirlineEmployee updates airline info for an existing employee (HU25)
-// The employee must already have airline info assigned
 func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirlineEmployeeUpdate, "operation", "update_airline_employee", "employee_id", employeeID)
 
-	// Set the ID to match the employee
 	airlineInfo.ID = employeeID
 
 	if err := i.service.UpdateAirlineEmployee(ctx, airlineInfo); err != nil {
@@ -75,5 +65,47 @@ func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, e
 	}
 
 	log.Success(logger.LogAirlineEmployeeUpdateOK, "employee_id", employeeID, "airline_id", airlineInfo.AirlineID)
+	return nil
+}
+
+func (i *AirlineEmployeeInteractor) ActivateAirlineEmployee(ctx context.Context, employeeID string) error {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogAirlineEmployeeActivate, "operation", "activate_airline_employee", "employee_id", employeeID)
+
+	existingInfo, err := i.service.GetAirlineEmployeeByID(ctx, employeeID)
+	if err != nil || existingInfo == nil || existingInfo.AirlineID == "" {
+		log.Error(logger.LogAirlineEmployeeNotFound, "operation", "activate_airline_employee", "employee_id", employeeID, "error", "no airline info")
+		return domain.ErrAirlineEmployeeNotFound
+	}
+
+	if err := i.service.ActivateAirlineEmployee(ctx, employeeID); err != nil {
+		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	log.Success(logger.LogAirlineEmployeeActivateOK, "employee_id", employeeID)
+	return nil
+}
+
+func (i *AirlineEmployeeInteractor) DeactivateAirlineEmployee(ctx context.Context, employeeID string) error {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogAirlineEmployeeDeactivate, "operation", "deactivate_airline_employee", "employee_id", employeeID)
+
+	existingInfo, err := i.service.GetAirlineEmployeeByID(ctx, employeeID)
+	if err != nil || existingInfo == nil || existingInfo.AirlineID == "" {
+		log.Error(logger.LogAirlineEmployeeNotFound, "operation", "deactivate_airline_employee", "employee_id", employeeID, "error", "no airline info")
+		return domain.ErrAirlineEmployeeNotFound
+	}
+
+	if err := i.service.DeactivateAirlineEmployee(ctx, employeeID); err != nil {
+		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	log.Success(logger.LogAirlineEmployeeDeactivateOK, "employee_id", employeeID)
 	return nil
 }

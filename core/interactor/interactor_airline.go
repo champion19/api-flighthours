@@ -9,18 +9,15 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-
 type AirlineInteractor struct {
 	service input.AirlineService
 }
-
 
 func NewAirlineInteractor(service input.AirlineService) *AirlineInteractor {
 	return &AirlineInteractor{
 		service: service,
 	}
 }
-
 
 func (i *AirlineInteractor) GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
@@ -57,3 +54,26 @@ func (i *AirlineInteractor) ListAirlines(ctx context.Context, filters map[string
 	log.Success(logger.LogAirlineListOK, "count", len(airlines))
 	return airlines, nil
 }
+
+func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) error {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogAirlineActivate, "operation", "activate_airline", "airline_id", id)
+
+	airline, err := i.service.GetAirlineByID(ctx, id)
+	if err != nil || airline == nil {
+		log.Error(logger.LogAirlineNotFound, "operation", "activate_airline", "airline_id", id, "error", "airline not found")
+		return domain.ErrAirlineNotFound
+	}
+
+	if err := i.service.ActivateAirline(ctx, id); err != nil {
+		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "error", err)
+		return err
+	}
+
+	log.Success(logger.LogAirlineActivateOK, "airline_id", id)
+	return nil
+}
+
+// DeactivateAirline será implementado en un release posterior (HU4)

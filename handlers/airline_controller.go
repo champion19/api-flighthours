@@ -8,59 +8,117 @@ import (
 )
 
 // GetAirlineByID godoc
-// @Summary Get airline by ID
-// @Description Retrieves airline information by its unique identifier
-// @Tags airlines
-// @Accept json
-// @Produce json
-// @Param id path string true "Airline ID (encoded or UUID)"
-// @Security BearerAuth
-// @Success 200 {object} middleware.APIResponse{data=AirlineResponse} "Airline retrieved successfully"
-// @Failure 400 {object} middleware.APIResponse "Invalid ID format"
-// @Failure 401 {object} middleware.APIResponse "Unauthorized"
-// @Failure 404 {object} middleware.APIResponse "Airline not found"
-// @Failure 500 {object} middleware.APIResponse "Internal server error"
-// @Router /airlines/{id} [get]
+// @Summary      Get airline by ID
+// @Description  Returns airline information by ID (accepts both UUID and obfuscated ID)
+// @Tags         Airlines
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Airline ID (obfuscated ID)"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /airlines/{id} [get]
 func (h *handler) GetAirlineByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		idParam := c.Param("id")
-		if idParam == "" {
-			Logger.Warn(logger.LogAirlineGet, "error", logger.LogErrEmptyIDParam)
-			c.Error(domain.ErrInvalidID)
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		inputID := c.Param("id")
+		if inputID == "" {
+			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
 
-		// Try to decode the ID (hashids), if fails assume it's a raw UUID
-		resolvedID := idParam
-		encodedID := idParam
-		if uuid, err := h.DecodeID(idParam); err == nil {
-			resolvedID = uuid
+		log.Info(logger.LogAirlineGet, "input_id", inputID, "client_ip", c.ClientIP())
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		airlineUUID, responseID := h.resolveID(inputID)
+		if airlineUUID == "" {
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
+			return
 		}
 
-		airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), resolvedID)
+		// Get airline from interactor
+		airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), airlineUUID)
 		if err != nil {
-			switch err {
-			case domain.ErrAirlineNotFound:
-				c.Error(domain.ErrAirlineNotFound)
-			default:
-				c.Error(domain.ErrInternalServer)
+			log.Error(logger.LogAirlineGetError, "airline_id", airlineUUID, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrAirlineNotFound {
+				h.Response.Error(c, domain.MsgAirlineNotFound)
+				return
 			}
+			h.Response.Error(c, domain.MsgServerError)
 			return
 		}
 
-		// Encode the ID for response if not already encoded
-		if resolvedID != idParam {
-			encodedID = idParam
-		} else {
-			if enc, encErr := h.EncodeID(airline.ID); encErr == nil {
-				encodedID = enc
-			} else {
-				encodedID = airline.ID
-			}
+		response := FromDomainAirline(airline, responseID)
+
+		// Build HATEOAS links
+		baseURL := GetBaseURL(c)
+		response.Links = BuildAirlineLinks(baseURL, responseID)
+
+		log.Success(logger.LogAirlineGetOK, airline.ToLogger())
+		h.Response.SuccessWithData(c, domain.MsgAirlineGetOK, response)
+	}
+}
+
+// ActivateAirline godoc
+// @Summary      Activate airline
+// @Description  Sets airline status to active (accepts both UUID and obfuscated ID)
+// @Tags         Airlines
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Airline ID (obfuscated ID)"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /airlines/{id}/activate [patch]
+func (h *handler) ActivateAirline() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		inputID := c.Param("id")
+		if inputID == "" {
+			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
 		}
 
-		response := FromDomainAirline(airline, encodedID)
-		h.Response.SuccessWithData(c, domain.MsgAirlineGetOK, response)
+		log.Info(logger.LogAirlineActivate, "input_id", inputID, "client_ip", c.ClientIP())
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		airlineUUID, responseID := h.resolveID(inputID)
+		if airlineUUID == "" {
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
+			return
+		}
+
+		// Activate airline via interactor
+		if err := h.AirlineInteractor.ActivateAirline(c.Request.Context(), airlineUUID); err != nil {
+			log.Error(logger.LogAirlineActivateError, "airline_id", airlineUUID, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrAirlineNotFound {
+				h.Response.Error(c, domain.MsgAirlineNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgServerError)
+			return
+		}
+
+		response := AirlineStatusResponse{
+			ID:      responseID,
+			Status:  "active",
+			Updated: true,
+		}
+
+		// Build HATEOAS links (isActive=true, muestra link para deactivate)
+		baseURL := GetBaseURL(c)
+		response.Links = BuildAirlineStatusLinks(baseURL, responseID, true)
+
+		log.Success(logger.LogAirlineActivateOK, "airline_id", airlineUUID, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirlineActivateOK, response)
 	}
 }
 
@@ -113,3 +171,4 @@ func (h *handler) ListAirlines() gin.HandlerFunc {
 		h.Response.DataOnly(c, response)
 	}
 }
+

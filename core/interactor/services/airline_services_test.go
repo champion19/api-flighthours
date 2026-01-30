@@ -28,6 +28,7 @@ type fakeAirlineRepo struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.Airline, error)
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirlinesFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+	updateStatusFn func(ctx context.Context, tx output.Tx, id string, active bool) error
 }
 
 func (f fakeAirlineRepo) BeginTx(ctx context.Context) (output.Tx, error) {
@@ -49,6 +50,13 @@ func (f fakeAirlineRepo) ListAirlines(ctx context.Context, filters map[string]in
 		return f.listAirlinesFn(ctx, filters)
 	}
 	return nil, errors.New("not implemented")
+}
+
+func (f fakeAirlineRepo) UpdateAirlineStatus(ctx context.Context, tx output.Tx, id string, active bool) error {
+	if f.updateStatusFn != nil {
+		return f.updateStatusFn(ctx, tx, id, active)
+	}
+	return nil
 }
 
 func TestAirlineService_GetAirlineByID(t *testing.T) {
