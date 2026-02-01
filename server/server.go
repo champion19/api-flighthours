@@ -54,6 +54,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.AirlineInteractor,
 		dependencies.AirlineEmployeeInteractor,
 		dependencies.EngineInteractor,
+		dependencies.RouteInteractor,
+		dependencies.AirlineRouteInteractor,
 	)
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -97,15 +99,23 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/engines/:id", handler.GetEngineByID())
 
+		public.GET("/routes", handler.ListRoutes())
+
+		public.GET("/routes/:id", handler.GetRouteByID())
+
+		public.GET("/airline-routes", handler.ListAirlineRoutes())
+
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
 	{
-		protected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
-
 		protected.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
 
 		protected.GET("/employee/me", handler.GetEmployee())
+
+		protected.PUT("/employee/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
+
+		protected.DELETE("/employee/me", handler.DeleteEmployee())
 
 		protected.GET("/employee/me/airline", handler.GetEmployeeAirlineInfo())
 
@@ -116,10 +126,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.PATCH("/employee/me/airline/activate", handler.ActivateEmployeeAirlineInfo())
 
 		protected.PATCH("/employee/me/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
-
-		protected.PUT("/employees/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
-
-		protected.DELETE("/employees/me", handler.DeleteEmployee())
 
 		protected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
 
@@ -133,6 +139,13 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.POST("/messages/cache/reload", handler.ReloadMessageCache())
 
+		protected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
+
+		protected.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
+
+		protected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
+
+		protected.GET("/airline-routes/me", handler.ListMyAirlineRoutes())
 	}
 
 	log.Success(logger.LogRouteConfigured)

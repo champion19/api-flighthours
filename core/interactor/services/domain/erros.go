@@ -563,11 +563,13 @@ const (
 
 // AirlineRoute Management Errors (RUT_AIR_*)
 var (
-	ErrAirlineRouteNotFound       = errors.New("ERR_AIRLINE_ROUTE_NOT_FOUND")
-	ErrAirlineRouteCannotSave     = errors.New("ERR_AIRLINE_ROUTE_CANNOT_SAVE")
-	ErrAirlineRouteCannotUpdate   = errors.New("ERR_AIRLINE_ROUTE_CANNOT_UPDATE")
-	ErrAirlineRouteInvalidRoute   = errors.New("ERR_AIRLINE_ROUTE_INVALID_ROUTE")
-	ErrAirlineRouteInvalidAirline = errors.New("ERR_AIRLINE_ROUTE_INVALID_AIRLINE")
+	ErrAirlineRouteNotFound        = errors.New("ERR_AIRLINE_ROUTE_NOT_FOUND")
+	ErrAirlineRouteCannotSave      = errors.New("ERR_AIRLINE_ROUTE_CANNOT_SAVE")
+	ErrAirlineRouteCannotUpdate    = errors.New("ERR_AIRLINE_ROUTE_CANNOT_UPDATE")
+	ErrAirlineRouteInvalidRoute    = errors.New("ERR_AIRLINE_ROUTE_INVALID_ROUTE")
+	ErrAirlineRouteInvalidAirline  = errors.New("ERR_AIRLINE_ROUTE_INVALID_AIRLINE")
+	ErrAirlineRouteAlreadyActive   = errors.New("ERR_AIRLINE_ROUTE_ALREADY_ACTIVE")
+	ErrAirlineRouteAlreadyInactive = errors.New("ERR_AIRLINE_ROUTE_ALREADY_INACTIVE")
 )
 
 // Flight Management Errors (VUE_*) - Also used for DailyLogbookDetail
@@ -595,14 +597,16 @@ const (
 	// ========================================
 	// Desactivar - RUT_AIR_INA_*
 	// ========================================
-	MsgAirlineRouteDeactivateOK  = "RUT_AIR_INA_EXI_04101" // Éxito - Ruta aerolínea desactivada
-	MsgAirlineRouteDeactivateErr = "RUT_AIR_INA_ERR_04102" // Error - Error técnico al desactivar
+	MsgAirlineRouteDeactivateOK    = "RUT_AIR_INA_EXI_04101" // Éxito - Ruta aerolínea desactivada
+	MsgAirlineRouteDeactivateErr   = "RUT_AIR_INA_ERR_04102" // Error - Error técnico al desactivar
+	MsgAirlineRouteAlreadyInactive = "RUT_AIR_INA_ERR_04103" // Error - La ruta aerolínea ya está inactiva
 
 	// ========================================
 	// Activar - RUT_AIR_ACT_*
 	// ========================================
-	MsgAirlineRouteActivateOK  = "RUT_AIR_ACT_EXI_04201" // Éxito - Ruta aerolínea activada
-	MsgAirlineRouteActivateErr = "RUT_AIR_ACT_ERR_04202" // Error - Error técnico al activar
+	MsgAirlineRouteActivateOK    = "RUT_AIR_ACT_EXI_04201" // Éxito - Ruta aerolínea activada
+	MsgAirlineRouteActivateErr   = "RUT_AIR_ACT_ERR_04202" // Error - Error técnico al activar
+	MsgAirlineRouteAlreadyActive = "RUT_AIR_ACT_ERR_04203" // Error - La ruta aerolínea ya está activa
 
 	// ========================================
 	// Listar - RUT_AIR_LIST_*

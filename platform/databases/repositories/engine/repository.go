@@ -19,7 +19,7 @@ type repository struct {
 	db          *sql.DB
 }
 
-// NewEngineRepository creates a new engine repository with prepared statements
+
 func NewEngineRepository(db *sql.DB) (*repository, error) {
 	if db == nil {
 		return nil, sql.ErrConnDone

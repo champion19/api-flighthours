@@ -162,7 +162,6 @@ func (f *fakeServiceErr) GetEmployeeByKeycloakID(context.Context, string) (*doma
 	return nil, errors.New("not implemented")
 }
 
-// GetEmployeesByRole mock for HU47 - Virtual Entity pattern
 func (f *fakeServiceErr) GetEmployeesByRole(context.Context, string) ([]domain.Employee, error) {
 	return nil, errors.New("not implemented")
 }
@@ -211,7 +210,7 @@ func TestHTTP_RegisterEmployee(t *testing.T) {
 
 	newRouter := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc)
-		h := New(nil, inter, enc, resp, nil, nil, nil, nil, nil)
+		h := New(nil, inter, enc, resp, nil, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

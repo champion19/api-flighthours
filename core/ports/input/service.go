@@ -56,8 +56,8 @@ type AirlineService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
+	UpdateAirlineStatus(ctx context.Context, id string, status bool) error
 	ActivateAirline(ctx context.Context, id string) error
-	// DeactivateAirline será implementado en un release posterior (HU4)
 }
 
 type AirlineEmployeeService interface {
@@ -67,6 +67,20 @@ type AirlineEmployeeService interface {
 	UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
 	ActivateAirlineEmployee(ctx context.Context, id string) error
 	DeactivateAirlineEmployee(ctx context.Context, id string) error
+}
+
+type RouteService interface {
+	GetRouteByID(ctx context.Context, id string) (*domain.Route, error)
+	ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error)
+}
+
+type AirlineRouteService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetAirlineRouteByID(ctx context.Context, id string) (*domain.AirlineRoute, error)
+	ListAirlineRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error)
+	ListAirlineRoutesByAirlineID(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
+	ActivateAirlineRoute(ctx context.Context, id string) error
+	DeactivateAirlineRoute(ctx context.Context, id string) error
 }
 
 type EngineService interface {

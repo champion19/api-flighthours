@@ -25,7 +25,6 @@ type fakeAirlineService struct {
 	activateFn     func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirlinesFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
-	// deactivateFn será implementado en un release posterior (HU4)
 }
 
 var _ input.AirlineService = (*fakeAirlineService)(nil)
@@ -58,7 +57,7 @@ func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) err
 	return errors.New("not implemented")
 }
 
-// DeactivateAirline será implementado en un release posterior (HU4)
+
 
 func (f *fakeAirlineService) ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
 	if f.listAirlinesFn != nil {
@@ -99,7 +98,7 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -201,13 +200,13 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 		svc := &fakeAirlineService{}
 
 		r := newRouter(svc)
-		// Note: This test might behave differently since Gin requires the param
-		// We test the behavior of empty id validation
+
+
 		req := httptest.NewRequest(http.MethodGet, "/airlines/", nil)
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)
-		// Gin returns 301 redirect or 404 for missing param
+
 		if w.Code != http.StatusMovedPermanently && w.Code != http.StatusNotFound {
 			// This is expected for empty route param
 		}
@@ -228,7 +227,7 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
