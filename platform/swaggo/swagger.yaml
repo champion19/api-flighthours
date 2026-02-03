@@ -73,17 +73,6 @@ definitions:
       status:
         type: string
     type: object
-  handlers.AirlineStatusChangeResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      active:
-        type: boolean
-      success:
-        type: boolean
-    type: object
   handlers.CacheReloadResponse:
     properties:
       after_count:
@@ -133,6 +122,10 @@ definitions:
       airline_name:
         type: string
       bp:
+        type: string
+      end_date:
+        type: string
+      start_date:
         type: string
     type: object
   handlers.EmployeeRequest:
@@ -314,6 +307,50 @@ definitions:
       sent:
         type: boolean
     type: object
+  handlers.RouteListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      routes:
+        items:
+          $ref: '#/definitions/handlers.RouteResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.RouteResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      airport_type:
+        type: string
+      destination_airport_id:
+        type: string
+      destination_airport_name:
+        type: string
+      destination_country:
+        type: string
+      destination_iata_code:
+        type: string
+      estimated_flight_time:
+        type: string
+      id:
+        type: string
+      origin_airport_id:
+        type: string
+      origin_airport_name:
+        type: string
+      origin_country:
+        type: string
+      origin_iata_code:
+        type: string
+      route_code:
+        type: string
+    type: object
   handlers.StatusChangeResponse:
     properties:
       _links:
@@ -471,9 +508,10 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves airline information by its unique identifier
+      description: Returns airline information by ID (accepts both UUID and obfuscated
+        ID)
       parameters:
-      - description: Airline ID (encoded or UUID)
+      - description: Airline ID (obfuscated ID)
         in: path
         name: id
         required: true
@@ -482,40 +520,36 @@ paths:
       - application/json
       responses:
         "200":
-          description: Airline retrieved successfully
+          description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/middleware.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.AirlineResponse'
-              type: object
+            additionalProperties: true
+            type: object
         "400":
-          description: Invalid ID format
+          description: Bad Request
           schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
+            additionalProperties: true
+            type: object
         "404":
-          description: Airline not found
+          description: Not Found
           schema:
-            $ref: '#/definitions/middleware.APIResponse'
+            additionalProperties: true
+            type: object
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      security:
-      - BearerAuth: []
+            additionalProperties: true
+            type: object
       summary: Get airline by ID
       tags:
-      - airlines
+      - Airlines
   /airlines/{id}/activate:
     patch:
-      description: Activates an airline by its ID. The airline must exist.
+      consumes:
+      - application/json
+      description: Sets airline status to active (accepts both UUID and obfuscated
+        ID)
       parameters:
-      - description: Airline ID (encoded or UUID)
+      - description: Airline ID (obfuscated ID)
         in: path
         name: id
         required: true
@@ -524,28 +558,26 @@ paths:
       - application/json
       responses:
         "200":
-          description: Airline activated successfully
+          description: OK
           schema:
-            $ref: '#/definitions/handlers.AirlineStatusChangeResponse'
+            additionalProperties: true
+            type: object
         "400":
-          description: Invalid ID format
+          description: Bad Request
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            additionalProperties: true
+            type: object
         "404":
-          description: Airline not found
+          description: Not Found
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Activate an airline (HU3)
+            additionalProperties: true
+            type: object
+      summary: Activate airline
       tags:
       - Airlines
   /auth/change-password:
@@ -732,7 +764,34 @@ paths:
       summary: Verify user email
       tags:
       - Authentication
-  /employee/me:
+  /employees:
+    delete:
+      description: Permanently deletes the authenticated employee's account from the
+        system (Keycloak + DB)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account deleted
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Employee not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete authenticated user account
+      tags:
+      - Employees
     get:
       description: Returns the profile information of the authenticated employee
       produces:
@@ -755,7 +814,47 @@ paths:
       summary: Get authenticated user profile
       tags:
       - Employees
-  /employee/me/airline:
+    put:
+      consumes:
+      - application/json
+      description: 'Updates the basic information of the authenticated employee. Preserves:
+        email, password, airline, bp.'
+      parameters:
+      - description: Employee data to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateEmployeeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Employee updated
+          schema:
+            $ref: '#/definitions/handlers.UpdateEmployeeResponse'
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Employee not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update authenticated user information
+      tags:
+      - Employees
+  /employees/airline:
     get:
       description: Returns the airline information (airline_id, airline_name, bp)
         of the authenticated employee
@@ -825,7 +924,7 @@ paths:
       summary: Add airline information for authenticated employee (HU26)
       tags:
       - AirlineEmployees
-  /employee/me/airline-info:
+  /employees/airline-info:
     put:
       consumes:
       - application/json
@@ -872,7 +971,7 @@ paths:
       summary: Edit airline information for authenticated employee (HU25)
       tags:
       - AirlineEmployees
-  /employee/me/airline/activate:
+  /employees/airline/activate:
     patch:
       description: Activates the airline information for the authenticated employee.
         The employee must already have airline info assigned.
@@ -900,7 +999,7 @@ paths:
       summary: Activate airline information for authenticated employee (HU27)
       tags:
       - AirlineEmployees
-  /employee/me/airline/deactivate:
+  /employees/airline/deactivate:
     patch:
       description: Deactivates the airline information for the authenticated employee.
         The employee must already have airline info assigned.
@@ -928,74 +1027,6 @@ paths:
       summary: Deactivate airline information for authenticated employee (HU28)
       tags:
       - AirlineEmployees
-  /employees/me:
-    delete:
-      description: Permanently deletes the authenticated employee's account from the
-        system (Keycloak + DB)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Account deleted
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "404":
-          description: Employee not found
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete authenticated user account
-      tags:
-      - Employees
-    put:
-      consumes:
-      - application/json
-      description: 'Updates the basic information of the authenticated employee. Preserves:
-        email, password, airline, bp.'
-      parameters:
-      - description: Employee data to update
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateEmployeeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Employee updated
-          schema:
-            $ref: '#/definitions/handlers.UpdateEmployeeResponse'
-        "400":
-          description: Invalid data
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "404":
-          description: Employee not found
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update authenticated user information
-      tags:
-      - Employees
   /engines:
     get:
       description: Returns a list of all engine types
@@ -1340,6 +1371,71 @@ paths:
       summary: Register a new employee
       tags:
       - Authentication
+  /routes:
+    get:
+      description: Returns a list of all routes with optional filters
+      parameters:
+      - description: Filter by airport type (e.g., Nacional, Internacional)
+        in: query
+        name: airport_type
+        type: string
+      - description: Filter by origin country (e.g., Colombia)
+        in: query
+        name: origin_country
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RouteListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all routes
+      tags:
+      - Routes
+  /routes/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns route information by ID (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Route ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get route by ID
+      tags:
+      - Routes
 securityDefinitions:
   BearerAuth:
     description: 'JWT Bearer token (format: "Bearer {token}")'
