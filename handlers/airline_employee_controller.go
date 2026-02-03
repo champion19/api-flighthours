@@ -19,13 +19,13 @@ import (
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      404  {object}  middleware.ErrorResponse "Employee not found or no airline assigned"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employee/me/airline [get]
+// @Router       /employees/airline [get]
 func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogAirlineEmployeeGet, "endpoint", "GET /employee/me/airline", "client_ip", c.ClientIP())
+		log.Info(logger.LogAirlineEmployeeGet, "endpoint", "GET /employees/airline", "client_ip", c.ClientIP())
 
 		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
@@ -50,13 +50,19 @@ func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 				response.AirlineCode = airline.AirlineCode
 			}
 			response.Bp = airlineInfo.Bp
+			if !airlineInfo.StartDate.IsZero() {
+				response.StartDate = airlineInfo.StartDate.Format("2006-01-02")
+			}
+			if !airlineInfo.EndDate.IsZero() {
+				response.EndDate = airlineInfo.EndDate.Format("2006-01-02")
+			}
 		}
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "update", Method: "PUT"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "update", Method: "PUT"},
+			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeGetOK, "employee_id", employee.ID, "has_airline", response.AirlineID != "", "client_ip", c.ClientIP())
@@ -77,13 +83,13 @@ func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      422  {object}  middleware.ErrorResponse "Invalid airline_id reference"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employee/me/airline [put]
+// @Router       /employees/airline [put]
 func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogAirlineEmployeeAdd, "endpoint", "PUT /employee/me/airline", "client_ip", c.ClientIP())
+		log.Info(logger.LogAirlineEmployeeAdd, "endpoint", "PUT /employees/airline", "client_ip", c.ClientIP())
 
 		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
@@ -169,8 +175,8 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeAddOK, "employee_id", employee.ID, "airline_id", airlineUUID, "client_ip", c.ClientIP())
@@ -192,13 +198,13 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 // @Failure      404  {object}  middleware.ErrorResponse "Employee has no airline info to update"
 // @Failure      422  {object}  middleware.ErrorResponse "Invalid airline_id reference"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employee/me/airline-info [put]
+// @Router       /employees/airline-info [put]
 func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogAirlineEmployeeUpdate, "endpoint", "PUT /employee/me/airline-info", "client_ip", c.ClientIP())
+		log.Info(logger.LogAirlineEmployeeUpdate, "endpoint", "PUT /employees/airline-info", "client_ip", c.ClientIP())
 
 		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
@@ -293,8 +299,8 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeUpdateOK, "employee_id", employee.ID, "airline_id", airlineUUID, "client_ip", c.ClientIP())
@@ -312,13 +318,13 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      404  {object}  middleware.ErrorResponse "Employee has no airline info to activate"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employee/me/airline/activate [patch]
+// @Router       /employees/airline/activate [patch]
 func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogAirlineEmployeeActivate, "endpoint", "PATCH /employee/me/airline/activate", "client_ip", c.ClientIP())
+		log.Info(logger.LogAirlineEmployeeActivate, "endpoint", "PATCH /employees/airline/activate", "client_ip", c.ClientIP())
 
 		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
@@ -346,9 +352,9 @@ func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline/deactivate", Rel: "deactivate", Method: "PATCH"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline/deactivate", Rel: "deactivate", Method: "PATCH"},
+			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeActivateOK, "employee_id", employee.ID, "client_ip", c.ClientIP())
@@ -366,13 +372,13 @@ func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      404  {object}  middleware.ErrorResponse "Employee has no airline info to deactivate"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employee/me/airline/deactivate [patch]
+// @Router       /employees/airline/deactivate [patch]
 func (h handler) DeactivateEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogAirlineEmployeeDeactivate, "endpoint", "PATCH /employee/me/airline/deactivate", "client_ip", c.ClientIP())
+		log.Info(logger.LogAirlineEmployeeDeactivate, "endpoint", "PATCH /employees/airline/deactivate", "client_ip", c.ClientIP())
 
 		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
@@ -400,9 +406,9 @@ func (h handler) DeactivateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me/airline/activate", Rel: "activate", Method: "PATCH"},
-			{Href: baseURL + "/flighthours/api/v1/employee/me", Rel: "profile", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
+			{Href: baseURL + "/flighthours/api/v1/employees/airline/activate", Rel: "activate", Method: "PATCH"},
+			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeDeactivateOK, "employee_id", employee.ID, "client_ip", c.ClientIP())

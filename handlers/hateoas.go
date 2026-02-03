@@ -170,7 +170,7 @@ func BuildEmployeeLinks(baseURL string, employeeID string) []Link {
 }
 
 func BuildEmployeeMeLinks(baseURL string) []Link {
-	meURL := baseURL + "/flighthours/api/v1/employees/me"
+	meURL := baseURL + "/flighthours/api/v1/employees"
 
 	return []Link{
 		{
@@ -384,8 +384,6 @@ func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActiv
 	return links
 }
 
-
-
 func BuildEngineLinks(baseURL string, engineID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "engines", engineID)
 	collectionURL := BuildCollectionURL(baseURL, "engines")
@@ -403,7 +401,6 @@ func BuildEngineLinks(baseURL string, engineID string) []Link {
 		},
 	}
 }
-
 
 func BuildEngineListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "engines")
@@ -461,7 +458,6 @@ func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive
 		},
 	}
 
-	
 	if isActive {
 		links = append(links, Link{
 			Href:   resourceURL + "/deactivate",
@@ -484,7 +480,6 @@ func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive
 
 	return links
 }
-
 
 func BuildAirlineEmployeeCreatedLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)

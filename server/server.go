@@ -111,21 +111,21 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	{
 		protected.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
 
-		protected.GET("/employee/me", handler.GetEmployee())
+		protected.GET("/employees", handler.GetEmployee())
 
-		protected.PUT("/employee/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
+		protected.PUT("/employees", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 
-		protected.DELETE("/employee/me", handler.DeleteEmployee())
+		protected.DELETE("/employees", handler.DeleteEmployee())
 
-		protected.GET("/employee/me/airline", handler.GetEmployeeAirlineInfo())
+		protected.GET("/employees/airline", handler.GetEmployeeAirlineInfo())
 
-		protected.PUT("/employee/me/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
+		protected.PUT("/employees/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
 
-		protected.PUT("/employee/me/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
+		protected.PUT("/employees/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
 
-		protected.PATCH("/employee/me/airline/activate", handler.ActivateEmployeeAirlineInfo())
+		protected.PATCH("/employees/airline/activate", handler.ActivateEmployeeAirlineInfo())
 
-		protected.PATCH("/employee/me/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
+		protected.PATCH("/employees/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
 
 		protected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
 
@@ -145,9 +145,19 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
 
-		protected.GET("/airline-routes/me", handler.ListMyAirlineRoutes())
+		protected.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
 	}
+	admin := app.Group("flighthours/api/v1/admin")
+	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
+	admin.Use(middleware.RequireRole("admin"))
+	{
+		admin.GET("/routes", handler.ListRoutes())
+		admin.GET("/airlines", handler.ListAirlines())
+		admin.GET("/airlines/:id", handler.GetAirlineByID())
+		admin.PATCH("/airlines/:id/activate", handler.ActivateAirline())
+		admin.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
 
+	}
 	log.Success(logger.LogRouteConfigured)
 }
 

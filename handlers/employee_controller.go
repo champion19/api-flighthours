@@ -236,13 +236,13 @@ func (h handler) VerifyEmailByToken() gin.HandlerFunc {
 // @Success      200  {object}  EmployeeResponse "User profile"
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employee/me [get]
+// @Router       /employees [get]
 func (h handler) GetEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogEmployeeGetByID, "endpoint", "GET /employee/me", "client_ip", c.ClientIP())
+		log.Info(logger.LogEmployeeGetByID, "endpoint", "GET /employees", "client_ip", c.ClientIP())
 
 		employee, exists := middleware.GetAuthenticatedUser(c)
 		if !exists {
@@ -343,13 +343,13 @@ func (h handler) ChangePassword() gin.HandlerFunc {
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      404  {object}  middleware.ErrorResponse "Employee not found"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employees/me [put]
+// @Router       /employees [put]
 func (h handler) UpdateEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogEmployeeUpdateRequest, "endpoint", "PUT /employees/me", "client_ip", c.ClientIP())
+		log.Info(logger.LogEmployeeUpdateRequest, "endpoint", "PUT /employees", "client_ip", c.ClientIP())
 
 		existingEmployee, exists := middleware.GetAuthenticatedUser(c)
 		if !exists {
@@ -404,13 +404,13 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      404  {object}  middleware.ErrorResponse "Employee not found"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /employees/me [delete]
+// @Router       /employees [delete]
 func (h handler) DeleteEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := Logger.WithTraceID(traceID)
 
-		log.Info(logger.LogEmployeeDeleting, "endpoint", "DELETE /employees/me", "client_ip", c.ClientIP())
+		log.Info(logger.LogEmployeeDeleting, "endpoint", "DELETE /employees", "client_ip", c.ClientIP())
 
 		employee, exists := middleware.GetAuthenticatedUser(c)
 		if !exists {

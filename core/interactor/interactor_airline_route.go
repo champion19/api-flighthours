@@ -61,7 +61,7 @@ func (i *AirlineRouteInteractor) ListAirlineRoutes(ctx context.Context, traceID 
 func (i *AirlineRouteInteractor) ListMyAirlineRoutes(ctx context.Context, traceID, airlineID string) ([]domain.AirlineRoute, error) {
 	log := airlineRouteLog.WithTraceID(traceID)
 
-	log.Info(logger.LogAirlineRouteList, "airline_id", airlineID, "endpoint", "/airline-routes/me")
+	log.Info(logger.LogAirlineRouteList, "airline_id", airlineID, "endpoint", "/employees/airline-routes")
 
 	airlineRoutes, err := i.service.ListAirlineRoutesByAirlineID(ctx, airlineID)
 	if err != nil {

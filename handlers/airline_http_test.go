@@ -57,8 +57,6 @@ func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) err
 	return errors.New("not implemented")
 }
 
-
-
 func (f *fakeAirlineService) ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
 	if f.listAirlinesFn != nil {
 		return f.listAirlinesFn(ctx, filters)
@@ -201,7 +199,6 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 		r := newRouter(svc)
 
-
 		req := httptest.NewRequest(http.MethodGet, "/airlines/", nil)
 		w := httptest.NewRecorder()
 
@@ -320,6 +317,78 @@ func TestFromDomainAirline(t *testing.T) {
 		}
 		if result.Status != airline.Status {
 			t.Errorf("expected Status %s, got %s", airline.Status, result.Status)
+		}
+	})
+}
+
+func TestToAirlineListResponse(t *testing.T) {
+	t.Run("converts airline slice to list response", func(t *testing.T) {
+		airlines := []domain.Airline{
+			{ID: "uuid-1", AirlineName: "Avianca", AirlineCode: "AV", Status: "active"},
+			{ID: "uuid-2", AirlineName: "LATAM", AirlineCode: "LA", Status: "inactive"},
+		}
+		encodeFunc := func(id string) (string, error) {
+			return "encoded-" + id, nil
+		}
+
+		result := ToAirlineListResponse(airlines, encodeFunc, "http://localhost:8080")
+
+		if result.Total != 2 {
+			t.Errorf("expected Total 2, got %d", result.Total)
+		}
+		if len(result.Airlines) != 2 {
+			t.Errorf("expected 2 airlines, got %d", len(result.Airlines))
+		}
+		if result.Airlines[0].ID != "encoded-uuid-1" {
+			t.Errorf("expected encoded ID, got %s", result.Airlines[0].ID)
+		}
+		if len(result.Airlines[0].Links) == 0 {
+			t.Error("expected HATEOAS links on airline response")
+		}
+	})
+
+	t.Run("handles empty airline slice", func(t *testing.T) {
+		airlines := []domain.Airline{}
+		encodeFunc := func(id string) (string, error) {
+			return id, nil
+		}
+
+		result := ToAirlineListResponse(airlines, encodeFunc, "")
+
+		if result.Total != 0 {
+			t.Errorf("expected Total 0, got %d", result.Total)
+		}
+		if len(result.Airlines) != 0 {
+			t.Errorf("expected 0 airlines, got %d", len(result.Airlines))
+		}
+	})
+
+	t.Run("uses original ID when encoding fails", func(t *testing.T) {
+		airlines := []domain.Airline{
+			{ID: "uuid-1", AirlineName: "Avianca", AirlineCode: "AV"},
+		}
+		encodeFunc := func(id string) (string, error) {
+			return "", errors.New("encoding failed")
+		}
+
+		result := ToAirlineListResponse(airlines, encodeFunc, "")
+
+		if result.Airlines[0].ID != "uuid-1" {
+			t.Errorf("expected original ID uuid-1, got %s", result.Airlines[0].ID)
+		}
+	})
+}
+
+func TestUpdateAirlineStatusRequest_Sanitize(t *testing.T) {
+	t.Run("trims whitespace from status", func(t *testing.T) {
+		req := &UpdateAirlineStatusRequest{
+			Status: "  active  ",
+		}
+
+		req.Sanitize()
+
+		if req.Status != "active" {
+			t.Errorf("expected 'active', got %q", req.Status)
 		}
 	})
 }
