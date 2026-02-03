@@ -1,0 +1,252 @@
+package messaging
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	cachetypes "github.com/champion19/api-flighthours/platform/cache/types"
+)
+
+type fakeMessageRepo struct {
+	messages []cachetypes.CachedMessage
+	getErr   error
+}
+
+func (f *fakeMessageRepo) GetAllActiveForCache(ctx context.Context) ([]cachetypes.CachedMessage, error) {
+	if f.getErr != nil {
+		return nil, f.getErr
+	}
+	return f.messages, nil
+}
+
+func (f *fakeMessageRepo) GetByCodeForCache(ctx context.Context, code string) (*cachetypes.CachedMessage, error) {
+	for _, m := range f.messages {
+		if m.Code == code {
+			return &m, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
+func (f *fakeMessageRepo) GetByCodeWithStatusForCache(ctx context.Context, code string) (*cachetypes.CachedMessage, error) {
+	return nil, errors.New("not found")
+}
+
+func TestNewMessageCache(t *testing.T) {
+	t.Run("creates cache with repo", func(t *testing.T) {
+		repo := &fakeMessageRepo{}
+		cache := NewMessageCache(repo, 0)
+		if cache == nil {
+			t.Error("expected non-nil cache")
+		}
+	})
+}
+
+func TestLoadMessages(t *testing.T) {
+	t.Run("loads messages successfully", func(t *testing.T) {
+		repo := &fakeMessageRepo{
+			messages: []cachetypes.CachedMessage{
+				{Code: "TEST_001", Type: TypeSuccess, Content: "test message"},
+				{Code: "TEST_002", Type: TypeError, Content: "error message"},
+			},
+		}
+		cache := NewMessageCache(repo, 0)
+		err := cache.LoadMessages(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cache.MessageCount() != 2 {
+			t.Errorf("expected 2 messages, got %d", cache.MessageCount())
+		}
+	})
+
+	t.Run("returns error when repo fails", func(t *testing.T) {
+		repo := &fakeMessageRepo{getErr: errors.New("db error")}
+		cache := NewMessageCache(repo, 0)
+		err := cache.LoadMessages(context.Background())
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+}
+
+func TestGetMessage(t *testing.T) {
+	repo := &fakeMessageRepo{
+		messages: []cachetypes.CachedMessage{
+			{Code: "TEST_001", Type: TypeSuccess, Content: "test message", Active: true},
+		},
+	}
+	cache := NewMessageCache(repo, 0)
+	cache.LoadMessages(context.Background())
+
+	t.Run("returns cached message", func(t *testing.T) {
+		msg := cache.GetMessage("TEST_001")
+		if msg == nil {
+			t.Fatal("expected non-nil message")
+		}
+		if msg.Code != "TEST_001" {
+			t.Errorf("expected code TEST_001, got %s", msg.Code)
+		}
+	})
+
+	t.Run("handles missing message", func(t *testing.T) {
+		msg := cache.GetMessage("NONEXISTENT")
+		// Will either return nil or fallback message
+		_ = msg
+	})
+}
+
+func TestGetMessageResponse(t *testing.T) {
+	repo := &fakeMessageRepo{
+		messages: []cachetypes.CachedMessage{
+			{Code: "TEST_PARAM", Type: TypeSuccess, Title: "Test", Content: "Hello ${0}", Active: true},
+		},
+	}
+	cache := NewMessageCache(repo, 0)
+	cache.LoadMessages(context.Background())
+
+	t.Run("returns response with parameters replaced", func(t *testing.T) {
+		resp := cache.GetMessageResponse("TEST_PARAM", "World")
+		if resp == nil {
+			t.Fatal("expected non-nil response")
+		}
+		if resp.Content != "Hello World" {
+			t.Errorf("expected 'Hello World', got %q", resp.Content)
+		}
+	})
+
+	t.Run("handles nil message", func(t *testing.T) {
+		resp := cache.GetMessageResponse("NONEXISTENT_CODE")
+		// Should handle gracefully
+		_ = resp
+	})
+}
+
+func TestGetHTTPStatus(t *testing.T) {
+	repo := &fakeMessageRepo{
+		messages: []cachetypes.CachedMessage{
+			{Code: "GEN_SRV_ERR_00001", Type: TypeError, Active: true},
+			{Code: "MOD_U_REG_EXI_00001", Type: TypeSuccess, Active: true},
+		},
+	}
+	cache := NewMessageCache(repo, 0)
+	cache.LoadMessages(context.Background())
+
+	tests := []struct {
+		code     string
+		expected int
+	}{
+		{"GEN_SRV_ERR_00001", 500},
+		{"MOD_U_REG_EXI_00001", 201},
+		{"MOD_AIR_GET_EXI_00001", 200},
+		{"MOD_V_VAL_ERR_00001", 400},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.code, func(t *testing.T) {
+			status := cache.GetHTTPStatus(tt.code)
+			if status != tt.expected {
+				t.Errorf("GetHTTPStatus(%q) = %d, expected %d", tt.code, status, tt.expected)
+			}
+		})
+	}
+}
+
+func TestMessageCount(t *testing.T) {
+	repo := &fakeMessageRepo{
+		messages: []cachetypes.CachedMessage{
+			{Code: "MSG_1"},
+			{Code: "MSG_2"},
+			{Code: "MSG_3"},
+		},
+	}
+	cache := NewMessageCache(repo, 0)
+	cache.LoadMessages(context.Background())
+
+	count := cache.MessageCount()
+	if count != 3 {
+		t.Errorf("expected 3, got %d", count)
+	}
+}
+
+func TestReloadMessages(t *testing.T) {
+	repo := &fakeMessageRepo{
+		messages: []cachetypes.CachedMessage{
+			{Code: "MSG_1"},
+		},
+	}
+	cache := NewMessageCache(repo, 0)
+	cache.LoadMessages(context.Background())
+
+	if cache.MessageCount() != 1 {
+		t.Errorf("expected 1 message initially")
+	}
+
+	// Add more messages to repo
+	repo.messages = append(repo.messages, cachetypes.CachedMessage{Code: "MSG_2"})
+	cache.ReloadMessages(context.Background())
+
+	if cache.MessageCount() != 2 {
+		t.Errorf("expected 2 messages after reload")
+	}
+}
+
+func TestReplaceAll(t *testing.T) {
+	tests := []struct {
+		s, old, new, expected string
+	}{
+		{"Hello ${0}", "${0}", "World", "Hello World"},
+		{"${0} and ${1}", "${0}", "A", "A and ${1}"},
+		{"no placeholder", "${0}", "X", "no placeholder"},
+		{"", "${0}", "X", ""},
+	}
+
+	for _, tt := range tests {
+		result := replaceAll(tt.s, tt.old, tt.new)
+		if result != tt.expected {
+			t.Errorf("replaceAll(%q, %q, %q) = %q, expected %q", tt.s, tt.old, tt.new, result, tt.expected)
+		}
+	}
+}
+
+func TestStartAutoRefresh(t *testing.T) {
+	t.Run("does not panic with zero interval", func(t *testing.T) {
+		repo := &fakeMessageRepo{}
+		cache := NewMessageCache(repo, 0)
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("StartAutoRefresh panicked: %v", r)
+			}
+		}()
+		cache.StartAutoRefresh(context.Background())
+	})
+
+	t.Run("starts with positive interval", func(t *testing.T) {
+		repo := &fakeMessageRepo{}
+		cache := NewMessageCache(repo, 100*time.Millisecond)
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("StartAutoRefresh panicked: %v", r)
+			}
+		}()
+		cache.StartAutoRefresh(context.Background())
+		// Give it a moment to start
+		time.Sleep(50 * time.Millisecond)
+		cache.StopAutoRefresh()
+	})
+}
+
+func TestStopAutoRefresh(t *testing.T) {
+	t.Run("does not panic with zero interval", func(t *testing.T) {
+		repo := &fakeMessageRepo{}
+		cache := NewMessageCache(repo, 0)
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("StopAutoRefresh panicked: %v", r)
+			}
+		}()
+		cache.StopAutoRefresh()
+	})
+}
