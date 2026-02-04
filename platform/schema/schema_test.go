@@ -298,3 +298,90 @@ func TestDefaultFileReader_Interface(t *testing.T) {
 		var _ FileReaderInterface = (*DefaultFileReader)(nil)
 	})
 }
+
+func TestNewValidator_Success(t *testing.T) {
+	// Use a mock that returns valid schemas
+	validSchema := []byte(`{
+		"$schema": "https://json-schema.org/draft/2020-12/schema",
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"}
+		}
+	}`)
+
+	t.Run("creates validator with all schemas", func(t *testing.T) {
+		mock := &mockFileReader{data: validSchema}
+		v, err := NewValidator(mock)
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if v == nil {
+			t.Fatal("expected non-nil validator")
+		}
+		if v.RegisterValidator == nil {
+			t.Error("expected RegisterValidator to be set")
+		}
+		if v.MessageValidator == nil {
+			t.Error("expected MessageValidator to be set")
+		}
+		if v.PasswordResetRequestValidator == nil {
+			t.Error("expected PasswordResetRequestValidator to be set")
+		}
+	})
+
+	t.Run("returns error when any schema fails", func(t *testing.T) {
+		callCount := 0
+		mockWithFailure := &mockConditionalFileReader{
+			failOnCall: 3, // Fail on the third schema
+			data:       validSchema,
+		}
+		_, err := NewValidator(mockWithFailure)
+		_ = callCount // used in mock
+
+		if err == nil {
+			t.Error("expected error when schema creation fails")
+		}
+	})
+}
+
+// Mock that fails on a specific call
+type mockConditionalFileReader struct {
+	callCount  int
+	failOnCall int
+	data       []byte
+}
+
+func (m *mockConditionalFileReader) ReadJsonSchema(resourcePath string) ([]byte, error) {
+	m.callCount++
+	if m.callCount == m.failOnCall {
+		return nil, errors.New("simulated failure")
+	}
+	return m.data, nil
+}
+
+func TestDefaultFileReader_ReadJsonSchema(t *testing.T) {
+	t.Run("reads existing schema file", func(t *testing.T) {
+		reader := &DefaultFileReader{}
+
+		// This should work if the schema files exist
+		data, err := reader.ReadJsonSchema("register_person_schema.json")
+
+		if err != nil {
+			t.Fatalf("unexpected error reading schema: %v", err)
+		}
+		if len(data) == 0 {
+			t.Error("expected non-empty data")
+		}
+	})
+
+	t.Run("returns error for non-existent file", func(t *testing.T) {
+		reader := &DefaultFileReader{}
+
+		_, err := reader.ReadJsonSchema("non_existent_schema.json")
+
+		if err == nil {
+			t.Error("expected error for non-existent file")
+		}
+	})
+}
