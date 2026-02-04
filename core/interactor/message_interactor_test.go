@@ -159,6 +159,120 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 		}
 	})
 
+	t.Run("update: validation fails => error", func(t *testing.T) {
+		validateErr := errors.New("invalid message")
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "x"}, nil
+			},
+			validateFn: func(context.Context, domain.Message) error { return validateErr },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return &fakeTx{}, nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
+		if !errors.Is(err, validateErr) {
+			t.Fatalf("expected %v, got %v", validateErr, err)
+		}
+	})
+
+	t.Run("update: BeginTx fails => error", func(t *testing.T) {
+		beginErr := errors.New("tx begin failed")
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "x"}, nil
+			},
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return nil, beginErr },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
+		if !errors.Is(err, beginErr) {
+			t.Fatalf("expected %v, got %v", beginErr, err)
+		}
+	})
+
+	t.Run("update: UpdateMessageInDB fails => rollback", func(t *testing.T) {
+		tx := &fakeTx{}
+		updateErr := errors.New("update failed")
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "x"}, nil
+			},
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return updateErr },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
+		if !errors.Is(err, updateErr) {
+			t.Fatalf("expected %v, got %v", updateErr, err)
+		}
+		if !tx.rolledBack {
+			t.Fatal("expected rollback")
+		}
+	})
+
+	t.Run("update: commit fails => error", func(t *testing.T) {
+		commitErr := errors.New("commit failed")
+		tx := &fakeTx{commitFn: func() error { return commitErr }}
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "x"}, nil
+			},
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
+		if !errors.Is(err, commitErr) {
+			t.Fatalf("expected %v, got %v", commitErr, err)
+		}
+	})
+
+	t.Run("update: success => returns message", func(t *testing.T) {
+		tx := &fakeTx{}
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "x"}, nil
+			},
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		result, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
+		if err != nil {
+			t.Fatalf("expected nil error, got %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+		if !tx.committed {
+			t.Fatal("expected commit")
+		}
+		if tx.rolledBack {
+			t.Fatal("did not expect rollback")
+		}
+	})
+
 	t.Run("delete: fails in db => rollback", func(t *testing.T) {
 		tx := &fakeTx{}
 		deleteErr := errors.New("delete failed")
@@ -180,6 +294,32 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 		}
 		if !tx.rolledBack {
 			t.Fatalf("expected rollback")
+		}
+	})
+
+	t.Run("delete: success => commit", func(t *testing.T) {
+		tx := &fakeTx{}
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) { return &domain.Message{ID: "x"}, nil },
+			beginTxFn: func(context.Context) (output.Tx, error) { return tx, nil },
+			deleteFn:  func(context.Context, output.Tx, string) error { return nil },
+			validateFn: func(context.Context, domain.Message) error {
+				return nil
+			},
+			updateFn: func(context.Context, output.Tx, domain.Message) error { return nil },
+			saveFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		err := i.DeleteMessage(ctx, "x")
+		if err != nil {
+			t.Fatalf("expected nil error, got %v", err)
+		}
+		if !tx.committed {
+			t.Fatal("expected commit")
+		}
+		if tx.rolledBack {
+			t.Fatal("did not expect rollback")
 		}
 	})
 }
