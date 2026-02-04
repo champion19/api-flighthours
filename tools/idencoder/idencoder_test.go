@@ -3,6 +3,7 @@ package idencoder
 import (
 	"testing"
 
+	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/google/uuid"
 )
 
@@ -114,6 +115,54 @@ func TestIsUUID(t *testing.T) {
 	t.Run("returns false for empty string", func(t *testing.T) {
 		if IsUUID("") {
 			t.Error("expected false for empty string")
+		}
+	})
+}
+
+// mockLogger for testing logger branches
+type mockLogger struct{}
+
+func (m *mockLogger) Info(msg string, args ...interface{})     {}
+func (m *mockLogger) Error(msg string, args ...interface{})    {}
+func (m *mockLogger) Debug(msg string, args ...interface{})    {}
+func (m *mockLogger) Warn(msg string, args ...interface{})     {}
+func (m *mockLogger) Success(msg string, args ...interface{})  {}
+func (m *mockLogger) Fatal(msg string, args ...interface{})    {}
+func (m *mockLogger) Panic(msg string, args ...interface{})    {}
+func (m *mockLogger) WithTraceID(traceID string) logger.Logger { return m }
+
+func TestHashidsEncoder_WithLogger(t *testing.T) {
+	logger := &mockLogger{}
+	enc, err := NewHashidsEncoder(Config{Secret: "secret", MinLength: 10}, logger)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	t.Run("Encode with invalid UUID logs error", func(t *testing.T) {
+		_, err := enc.Encode("not-a-uuid")
+		if err == nil {
+			t.Error("expected error for invalid UUID")
+		}
+	})
+
+	t.Run("Decode with empty string logs error", func(t *testing.T) {
+		_, err := enc.Decode("")
+		if err == nil {
+			t.Error("expected error for empty encoded")
+		}
+	})
+
+	t.Run("Decode with invalid encoded logs error", func(t *testing.T) {
+		_, err := enc.Decode("invalid-encoded-value!!!")
+		if err == nil {
+			t.Error("expected error for invalid encoded")
+		}
+	})
+
+	t.Run("MustEncode with invalid UUID logs error", func(t *testing.T) {
+		result := enc.MustEncode("not-a-uuid")
+		if result != "" {
+			t.Errorf("expected empty string, got %q", result)
 		}
 	})
 }
