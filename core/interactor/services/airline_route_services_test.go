@@ -221,6 +221,77 @@ func TestAirlineRouteService_ActivateAirlineRoute(t *testing.T) {
 			t.Error("expected error for non-existent airline route")
 		}
 	})
+
+	t.Run("returns error when BeginTx fails", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return &domain.AirlineRoute{ID: "ar-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx failed")
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.ActivateAirlineRoute(context.Background(), "ar-123")
+
+		if err == nil {
+			t.Error("expected error when BeginTx fails")
+		}
+	})
+
+	t.Run("returns error and rolls back when UpdateStatus fails", func(t *testing.T) {
+		rollbackCalled := false
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return &domain.AirlineRoute{ID: "ar-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{
+					rollbackFn: func() error {
+						rollbackCalled = true
+						return nil
+					},
+				}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("update failed")
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.ActivateAirlineRoute(context.Background(), "ar-123")
+
+		if err == nil {
+			t.Error("expected error when UpdateStatus fails")
+		}
+		if !rollbackCalled {
+			t.Error("expected rollback to be called")
+		}
+	})
+
+	t.Run("returns error when Commit fails", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return &domain.AirlineRoute{ID: "ar-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{
+					commitFn: func() error { return errors.New("commit failed") },
+				}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return nil
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.ActivateAirlineRoute(context.Background(), "ar-123")
+
+		if err == nil {
+			t.Error("expected error when Commit fails")
+		}
+	})
 }
 
 func TestAirlineRouteService_DeactivateAirlineRoute(t *testing.T) {
@@ -245,6 +316,92 @@ func TestAirlineRouteService_DeactivateAirlineRoute(t *testing.T) {
 
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("returns error when airline route not found", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return nil, errors.New("not found")
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.DeactivateAirlineRoute(context.Background(), "non-existent")
+
+		if err == nil {
+			t.Error("expected error for non-existent airline route")
+		}
+	})
+
+	t.Run("returns error when BeginTx fails", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return &domain.AirlineRoute{ID: "ar-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx failed")
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.DeactivateAirlineRoute(context.Background(), "ar-123")
+
+		if err == nil {
+			t.Error("expected error when BeginTx fails")
+		}
+	})
+
+	t.Run("returns error and rolls back when UpdateStatus fails", func(t *testing.T) {
+		rollbackCalled := false
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return &domain.AirlineRoute{ID: "ar-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{
+					rollbackFn: func() error {
+						rollbackCalled = true
+						return nil
+					},
+				}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("update failed")
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.DeactivateAirlineRoute(context.Background(), "ar-123")
+
+		if err == nil {
+			t.Error("expected error when UpdateStatus fails")
+		}
+		if !rollbackCalled {
+			t.Error("expected rollback to be called")
+		}
+	})
+
+	t.Run("returns error when Commit fails", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineRoute, error) {
+				return &domain.AirlineRoute{ID: "ar-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{
+					commitFn: func() error { return errors.New("commit failed") },
+				}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return nil
+			},
+		}
+
+		service := NewAirlineRouteService(repo)
+		err := service.DeactivateAirlineRoute(context.Background(), "ar-123")
+
+		if err == nil {
+			t.Error("expected error when Commit fails")
 		}
 	})
 }
