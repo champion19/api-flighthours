@@ -155,6 +155,25 @@ func TestAirlineEmployeeService_AddAirlineEmployee(t *testing.T) {
 			t.Error("expected error when add fails")
 		}
 	})
+
+	t.Run("returns error when commit fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			addFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return nil
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.AddAirlineEmployee(context.Background(), domain.AirlineEmployee{})
+
+		if err == nil {
+			t.Error("expected error when commit fails")
+		}
+	})
+
 }
 
 func TestAirlineEmployeeService_UpdateAirlineEmployee(t *testing.T) {
@@ -214,6 +233,24 @@ func TestAirlineEmployeeService_UpdateAirlineEmployee(t *testing.T) {
 
 		if err == nil {
 			t.Error("expected error when update fails")
+		}
+	})
+
+	t.Run("returns error when commit fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			updateFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return nil
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.UpdateAirlineEmployee(context.Background(), domain.AirlineEmployee{})
+
+		if err == nil {
+			t.Error("expected error when commit fails")
 		}
 	})
 }
