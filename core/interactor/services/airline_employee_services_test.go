@@ -239,6 +239,57 @@ func TestAirlineEmployeeService_ActivateAirlineEmployee(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 	})
+
+	t.Run("returns error when transaction fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx failed")
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.ActivateAirlineEmployee(context.Background(), "ae-123")
+
+		if err == nil {
+			t.Error("expected error when transaction fails")
+		}
+	})
+
+	t.Run("returns error and rolls back when update fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return errors.New("update failed")
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.ActivateAirlineEmployee(context.Background(), "ae-123")
+
+		if err == nil {
+			t.Error("expected error when update fails")
+		}
+	})
+
+	t.Run("returns error when commit fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return nil
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.ActivateAirlineEmployee(context.Background(), "ae-123")
+
+		if err == nil {
+			t.Error("expected error when commit fails")
+		}
+	})
 }
 
 func TestAirlineEmployeeService_DeactivateAirlineEmployee(t *testing.T) {
@@ -260,6 +311,57 @@ func TestAirlineEmployeeService_DeactivateAirlineEmployee(t *testing.T) {
 
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("returns error when transaction fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx failed")
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.DeactivateAirlineEmployee(context.Background(), "ae-123")
+
+		if err == nil {
+			t.Error("expected error when transaction fails")
+		}
+	})
+
+	t.Run("returns error and rolls back when update fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return errors.New("update failed")
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.DeactivateAirlineEmployee(context.Background(), "ae-123")
+
+		if err == nil {
+			t.Error("expected error when update fails")
+		}
+	})
+
+	t.Run("returns error when commit fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return nil
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.DeactivateAirlineEmployee(context.Background(), "ae-123")
+
+		if err == nil {
+			t.Error("expected error when commit fails")
 		}
 	})
 }
