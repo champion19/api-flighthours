@@ -208,6 +208,26 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 			// This is expected for empty route param
 		}
 	})
+
+	t.Run("interactor returns generic error => 500", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440003"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return nil, errors.New("database connection error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines/"+encodedID, nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_ActivateAirline(t *testing.T) {
@@ -289,6 +309,26 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 		r.ServeHTTP(w, req)
 		if w.Code != http.StatusNotFound {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusNotFound, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("interactor returns generic error => 500", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440004"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			activateFn: func(context.Context, string) error {
+				return errors.New("database connection error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
 		}
 	})
 }
