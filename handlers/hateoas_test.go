@@ -1,8 +1,61 @@
 package handlers
 
 import (
+	"crypto/tls"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	gin.SetMode(gin.TestMode)
+}
+
+func TestGetBaseURL(t *testing.T) {
+	t.Run("returns http scheme without TLS", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+		c.Request.Host = "localhost:8080"
+
+		result := GetBaseURL(c)
+		expected := "http://localhost:8080"
+		if result != expected {
+			t.Errorf("expected %q, got %q", expected, result)
+		}
+	})
+
+	t.Run("returns https scheme with TLS", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+		c.Request.Host = "api.example.com"
+		c.Request.TLS = &tls.ConnectionState{} // Simulate HTTPS
+
+		result := GetBaseURL(c)
+		expected := "https://api.example.com"
+		if result != expected {
+			t.Errorf("expected %q, got %q", expected, result)
+		}
+	})
+}
+
+func TestSetLocationHeader(t *testing.T) {
+	t.Run("sets Location header correctly", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		SetLocationHeader(c, "http://localhost:8080", "employees", "emp-123")
+
+		location := w.Header().Get("Location")
+		expected := "http://localhost:8080/flighthours/api/v1/employees/emp-123"
+		if location != expected {
+			t.Errorf("expected %q, got %q", expected, location)
+		}
+	})
+}
 
 func TestBuildResourceURL(t *testing.T) {
 	tests := []struct {
