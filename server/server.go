@@ -54,6 +54,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.AirlineInteractor,
 		dependencies.AirlineEmployeeInteractor,
 		dependencies.EngineInteractor,
+		dependencies.RouteInteractor,
+		dependencies.AirlineRouteInteractor,
 	)
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -97,29 +99,33 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/engines/:id", handler.GetEngineByID())
 
+		public.GET("/routes", handler.ListRoutes())
+
+		public.GET("/routes/:id", handler.GetRouteByID())
+
+		public.GET("/airline-routes", handler.ListAirlineRoutes())
+
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
 	{
-		protected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
-
 		protected.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
 
-		protected.GET("/employee/me", handler.GetEmployee())
+		protected.GET("/employees", handler.GetEmployee())
 
-		protected.GET("/employee/me/airline", handler.GetEmployeeAirlineInfo())
+		protected.PUT("/employees", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 
-		protected.PUT("/employee/me/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
+		protected.DELETE("/employees", handler.DeleteEmployee())
 
-		protected.PUT("/employee/me/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
+		protected.GET("/employees/airline", handler.GetEmployeeAirlineInfo())
 
-		protected.PATCH("/employee/me/airline/activate", handler.ActivateEmployeeAirlineInfo())
+		protected.PUT("/employees/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
 
-		protected.PATCH("/employee/me/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
+		protected.PUT("/employees/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
 
-		protected.PUT("/employees/me", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
+		protected.PATCH("/employees/airline/activate", handler.ActivateEmployeeAirlineInfo())
 
-		protected.DELETE("/employees/me", handler.DeleteEmployee())
+		protected.PATCH("/employees/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
 
 		protected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
 
@@ -133,8 +139,25 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.POST("/messages/cache/reload", handler.ReloadMessageCache())
 
-	}
+		protected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
 
+		protected.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
+
+		protected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
+
+		protected.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
+	}
+	admin := app.Group("flighthours/api/v1/admin")
+	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
+	admin.Use(middleware.RequireRole("admin"))
+	{
+		admin.GET("/routes", handler.ListRoutes())
+		admin.GET("/airlines", handler.ListAirlines())
+		admin.GET("/airlines/:id", handler.GetAirlineByID())
+		admin.PATCH("/airlines/:id/activate", handler.ActivateAirline())
+		admin.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
+
+	}
 	log.Success(logger.LogRouteConfigured)
 }
 

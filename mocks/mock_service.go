@@ -124,3 +124,44 @@ func (m *MockService) VerifyEmailByToken(ctx context.Context, token string) (str
 	args := m.Called(ctx, token)
 	return args.String(0), args.Error(1)
 }
+
+// Missing methods to fully implement input.Service
+
+func (m *MockService) GetEmployeeByKeycloakID(ctx context.Context, keycloakUserID string) (*domain.Employee, error) {
+	args := m.Called(ctx, keycloakUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Employee), args.Error(1)
+}
+
+func (m *MockService) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
+	args := m.Called(ctx, role)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.Employee), args.Error(1)
+}
+
+func (m *MockService) UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error {
+	args := m.Called(ctx, tx, employee)
+	return args.Error(0)
+}
+
+func (m *MockService) DeleteEmployee(ctx context.Context, employeeID string, keycloakUserID string) error {
+	args := m.Called(ctx, employeeID, keycloakUserID)
+	return args.Error(0)
+}
+
+func (m *MockService) UpdatePassword(ctx context.Context, token, newPassword string) (string, error) {
+	args := m.Called(ctx, token, newPassword)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockService) ChangePassword(ctx context.Context, email, currentPassword, newPassword string) (string, error) {
+	args := m.Called(ctx, email, currentPassword, newPassword)
+	return args.String(0), args.Error(1)
+}
+
+// Interface compliance check
+var _ = (interface{})((*MockService)(nil))

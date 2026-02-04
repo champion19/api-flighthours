@@ -23,6 +23,182 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/airline-routes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of all airline-route associations with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "List all airline routes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by airline code",
+                        "name": "airline_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (true/false/1/0)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline routes list",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/airline-routes/{id}/activate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets the airline route status to active. Idempotent operation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "Activate an airline route",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airline Route ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline route activated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Airline route not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/airline-routes/{id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets the airline route status to inactive. Idempotent operation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "Deactivate an airline route",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airline Route ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline route deactivated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Airline route not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/airlines": {
             "get": {
                 "description": "Returns a list of all airlines with optional status filter",
@@ -60,12 +236,7 @@ const docTemplate = `{
         },
         "/airlines/{id}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieves airline information by its unique identifier",
+                "description": "Returns airline information by ID (accepts both UUID and obfuscated ID)",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,13 +244,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "airlines"
+                    "Airlines"
                 ],
                 "summary": "Get airline by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Airline ID (encoded or UUID)",
+                        "description": "Airline ID (obfuscated ID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -87,45 +258,31 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Airline retrieved successfully",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/middleware.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handlers.AirlineResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Invalid ID format",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Airline not found",
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -133,23 +290,21 @@ const docTemplate = `{
         },
         "/airlines/{id}/activate": {
             "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
+                "description": "Sets airline status to active (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
                 ],
-                "description": "Activates an airline by its ID. The airline must exist.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Airlines"
                 ],
-                "summary": "Activate an airline (HU3)",
+                "summary": "Activate airline",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Airline ID (encoded or UUID)",
+                        "description": "Airline ID (obfuscated ID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -157,33 +312,31 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Airline activated successfully",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.AirlineStatusChangeResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Invalid ID format",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Airline not found",
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -466,7 +619,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/me": {
+        "/employees": {
             "get": {
                 "security": [
                     {
@@ -501,9 +654,111 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the basic information of the authenticated employee. Preserves: email, password, airline, bp.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Update authenticated user information",
+                "parameters": [
+                    {
+                        "description": "Employee data to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateEmployeeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Employee updated",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid data",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Employee not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permanently deletes the authenticated employee's account from the system (Keycloak + DB)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Delete authenticated user account",
+                "responses": {
+                    "200": {
+                        "description": "Account deleted",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Employee not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
-        "/employee/me/airline": {
+        "/employees/airline": {
             "get": {
                 "security": [
                     {
@@ -607,7 +862,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/me/airline-info": {
+        "/employees/airline-info": {
             "put": {
                 "security": [
                     {
@@ -676,7 +931,53 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/me/airline/activate": {
+        "/employees/airline-routes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the airline routes associated with the authenticated employee's airline",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "List routes for authenticated user's airline",
+                "responses": {
+                    "200": {
+                        "description": "My airline routes list",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Employee or airline association not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/airline/activate": {
             "patch": {
                 "security": [
                     {
@@ -719,7 +1020,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/me/airline/deactivate": {
+        "/employees/airline/deactivate": {
             "patch": {
                 "security": [
                     {
@@ -749,110 +1050,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Employee has no airline info to deactivate",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/employees/me": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Updates the basic information of the authenticated employee. Preserves: email, password, airline, bp.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employees"
-                ],
-                "summary": "Update authenticated user information",
-                "parameters": [
-                    {
-                        "description": "Employee data to update",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateEmployeeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Employee updated",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateEmployeeResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid data",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Employee not found",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Permanently deletes the authenticated employee's account from the system (Keycloak + DB)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employees"
-                ],
-                "summary": "Delete authenticated user account",
-                "responses": {
-                    "200": {
-                        "description": "Account deleted",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Employee not found",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
                         }
@@ -1393,10 +1590,105 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/routes": {
+            "get": {
+                "description": "Returns a list of all routes with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "List all routes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by airport type (e.g., Nacional, Internacional)",
+                        "name": "airport_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by origin country (e.g., Colombia)",
+                        "name": "origin_country",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RouteListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/routes/{id}": {
+            "get": {
+                "description": "Returns route information by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Get route by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Route ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType": {
+        "domain.MessageType": {
             "type": "string",
             "enum": [
                 "ERROR",
@@ -1503,23 +1795,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AirlineStatusChangeResponse": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.Link"
-                    }
-                },
-                "active": {
-                    "type": "boolean"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "handlers.CacheReloadResponse": {
             "type": "object",
             "properties": {
@@ -1592,6 +1867,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "bp": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 }
             }
@@ -1781,7 +2062,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
+                    "$ref": "#/definitions/domain.MessageType"
                 }
             }
         },
@@ -1816,7 +2097,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
+                    "$ref": "#/definitions/domain.MessageType"
                 }
             }
         },
@@ -1869,6 +2150,73 @@ const docTemplate = `{
                 },
                 "sent": {
                     "type": "boolean"
+                }
+            }
+        },
+        "handlers.RouteListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "routes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.RouteResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.RouteResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airport_type": {
+                    "type": "string"
+                },
+                "destination_airport_id": {
+                    "type": "string"
+                },
+                "destination_airport_name": {
+                    "type": "string"
+                },
+                "destination_country": {
+                    "type": "string"
+                },
+                "destination_iata_code": {
+                    "type": "string"
+                },
+                "estimated_flight_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "origin_airport_id": {
+                    "type": "string"
+                },
+                "origin_airport_name": {
+                    "type": "string"
+                },
+                "origin_country": {
+                    "type": "string"
+                },
+                "origin_iata_code": {
+                    "type": "string"
+                },
+                "route_code": {
+                    "type": "string"
                 }
             }
         },

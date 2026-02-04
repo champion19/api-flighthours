@@ -19,7 +19,9 @@
       "type": "string",
       "description": "Access password",
       "minLength": 8,
-      "maxLength": 50,
+      "maxLength": 64,
+      "SpecialCharacters": 1,
+      "UppercaseCharacters": 1,
       "pattern": ".*\\S.*"
     },
     "identificationnumber": {

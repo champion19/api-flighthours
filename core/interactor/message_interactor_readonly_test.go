@@ -94,6 +94,17 @@ func TestMessageInteractor_GetMessageByCode(t *testing.T) {
 			t.Fatalf("expected code TEST_001, got %s", result.Code)
 		}
 	})
+
+	t.Run("not found", func(t *testing.T) {
+		svc := &fakeMessageServiceReadOnly{getByCodeErr: domain.ErrMessageNotFound}
+		inter := NewMessageInteractor(svc)
+
+		_, err := inter.GetMessageByCode(context.Background(), "nonexistent")
+
+		if err != domain.ErrMessageNotFound {
+			t.Fatalf("expected ErrMessageNotFound, got %v", err)
+		}
+	})
 }
 
 func TestMessageInteractor_ListMessages(t *testing.T) {
@@ -129,6 +140,18 @@ func TestMessageInteractor_ListMessages(t *testing.T) {
 			t.Fatalf("expected 0 messages, got %d", len(result))
 		}
 	})
+
+	t.Run("service error", func(t *testing.T) {
+		serviceErr := errors.New("db error")
+		svc := &fakeMessageServiceReadOnly{listErr: serviceErr}
+		inter := NewMessageInteractor(svc)
+
+		_, err := inter.ListMessages(context.Background(), nil)
+
+		if err != serviceErr {
+			t.Fatalf("expected %v, got %v", serviceErr, err)
+		}
+	})
 }
 
 func TestMessageInteractor_ListActiveMessages(t *testing.T) {
@@ -147,6 +170,18 @@ func TestMessageInteractor_ListActiveMessages(t *testing.T) {
 		}
 		if len(result) != 2 {
 			t.Fatalf("expected 2 active messages, got %d", len(result))
+		}
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		serviceErr := errors.New("db error")
+		svc := &fakeMessageServiceReadOnly{listActiveErr: serviceErr}
+		inter := NewMessageInteractor(svc)
+
+		_, err := inter.ListActiveMessages(context.Background())
+
+		if err != serviceErr {
+			t.Fatalf("expected %v, got %v", serviceErr, err)
 		}
 	})
 }

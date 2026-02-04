@@ -169,3 +169,89 @@ func TestResponseHandler_DataOnly(t *testing.T) {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }
+
+// Empty cache helper for nil message tests
+func setupEmptyResponseHandler(t *testing.T) *ResponseHandler {
+	t.Helper()
+	repo := fakeMessageCacheRepoForResponse{messages: []cachetypes.CachedMessage{}}
+	cache := messaging.NewMessageCache(repo, 0)
+	_ = cache.LoadMessages(context.Background())
+	return NewResponseHandler(cache)
+}
+
+func TestResponseHandler_NilMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handler := setupEmptyResponseHandler(t)
+
+	t.Run("Error returns 500 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.Error(c, "UNKNOWN_CODE")
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("expected 500, got %d", w.Code)
+		}
+	})
+
+	t.Run("ErrorWithData returns 500 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.ErrorWithData(c, "UNKNOWN_CODE", map[string]string{"key": "value"})
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("expected 500, got %d", w.Code)
+		}
+	})
+
+	t.Run("Success returns 200 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.Success(c, "UNKNOWN_CODE")
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("SuccessWithData returns 200 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.SuccessWithData(c, "UNKNOWN_CODE", map[string]string{"key": "value"})
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("Warning returns 200 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.Warning(c, "UNKNOWN_CODE")
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("WarningWithData returns 200 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.WarningWithData(c, "UNKNOWN_CODE", map[string]string{"key": "value"})
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("Info returns 200 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.Info(c, "UNKNOWN_CODE")
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("InfoWithData returns 200 for unknown code", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		handler.InfoWithData(c, "UNKNOWN_CODE", map[string]string{"key": "value"})
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+	})
+}

@@ -242,6 +242,32 @@ func TestMessageService_ListActiveMessages(t *testing.T) {
 			t.Fatalf("expected 2 messages, got %d", len(result))
 		}
 	})
+
+	t.Run("repo error", func(t *testing.T) {
+		repoErr := errors.New("db error")
+		svc := NewMessageService(fakeMsgRepo{getAllActive: func(context.Context) ([]domain.Message, error) {
+			return nil, repoErr
+		}})
+
+		_, err := svc.ListActiveMessages(ctx)
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected %v, got %v", repoErr, err)
+		}
+	})
+
+	t.Run("empty result", func(t *testing.T) {
+		svc := NewMessageService(fakeMsgRepo{getAllActive: func(context.Context) ([]domain.Message, error) {
+			return []domain.Message{}, nil
+		}})
+
+		result, err := svc.ListActiveMessages(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 0 {
+			t.Fatalf("expected 0 messages, got %d", len(result))
+		}
+	})
 }
 
 func TestMessageService_SaveMessageToDB(t *testing.T) {
@@ -308,6 +334,48 @@ func TestMessageService_UpdateMessageInDB(t *testing.T) {
 		err := svc.UpdateMessageInDB(ctx, nil, msg)
 		if !errors.Is(err, repoErr) {
 			t.Fatalf("expected %v, got %v", repoErr, err)
+		}
+	})
+
+	t.Run("GetByID error => ErrMessageCannotUpdate", func(t *testing.T) {
+		msg := domain.Message{ID: "123", Code: "TEST_001"}
+		svc := NewMessageService(fakeMsgRepo{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return nil, errors.New("db error")
+			},
+		})
+
+		err := svc.UpdateMessageInDB(ctx, nil, msg)
+		if !errors.Is(err, domain.ErrMessageCannotUpdate) {
+			t.Fatalf("expected ErrMessageCannotUpdate, got %v", err)
+		}
+	})
+
+	t.Run("code mismatch => ErrMessageNotFound", func(t *testing.T) {
+		msg := domain.Message{ID: "123", Code: "NEW_CODE"}
+		svc := NewMessageService(fakeMsgRepo{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "123", Code: "OLD_CODE"}, nil
+			},
+		})
+
+		err := svc.UpdateMessageInDB(ctx, nil, msg)
+		if !errors.Is(err, domain.ErrMessageNotFound) {
+			t.Fatalf("expected ErrMessageNotFound, got %v", err)
+		}
+	})
+
+	t.Run("existingMsg nil => ErrMessageNotFound", func(t *testing.T) {
+		msg := domain.Message{ID: "123", Code: "TEST_001"}
+		svc := NewMessageService(fakeMsgRepo{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return nil, nil
+			},
+		})
+
+		err := svc.UpdateMessageInDB(ctx, nil, msg)
+		if !errors.Is(err, domain.ErrMessageNotFound) {
+			t.Fatalf("expected ErrMessageNotFound, got %v", err)
 		}
 	})
 }
