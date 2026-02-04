@@ -201,6 +201,23 @@ func TestHTTP_ListAirlineRoutes(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("service error returns 500", func(t *testing.T) {
+		svc := &fakeAirlineRouteService{
+			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error) {
+				return nil, errors.New("database error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airline-routes", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_ActivateAirlineRoute(t *testing.T) {

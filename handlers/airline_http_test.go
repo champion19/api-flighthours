@@ -422,6 +422,106 @@ func TestHTTP_ListAirlines(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("with status=true filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=true", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=false filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=false", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=1 filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=1", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=active filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=active", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=inactive filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=inactive", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
 }
 
 // Tests for DTO conversion functions
