@@ -130,6 +130,24 @@ func TestGetMessage(t *testing.T) {
 			_ = msg
 		}
 	})
+
+	t.Run("handles repo error for GetByCodeWithStatusForCache", func(t *testing.T) {
+		// Create a repo that returns error for GetByCodeWithStatusForCache
+		errRepo := &fakeMessageRepo{
+			getErr: errors.New("db error"),
+			messages: []cachetypes.CachedMessage{
+				{Code: "GEN_MSG_INACTIVE_ERR_00002", Type: TypeError, Content: "fallback error", Active: true},
+			},
+		}
+		errCache := NewMessageCache(errRepo, 0)
+		errCache.LoadMessages(context.Background())
+
+		msg := errCache.GetMessage("UNKNOWN_CODE")
+		// Should return fallback
+		if msg == nil {
+			t.Error("expected fallback message")
+		}
+	})
 }
 
 func TestGetMessageResponse(t *testing.T) {
