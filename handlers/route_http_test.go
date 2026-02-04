@@ -153,6 +153,26 @@ func TestHTTP_GetRouteByID(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("interactor returns generic error => 500", func(t *testing.T) {
+		routeUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedID, _ := enc.Encode(routeUUID)
+
+		svc := &fakeRouteService{
+			getByIDFn: func(context.Context, string) (*domain.Route, error) {
+				return nil, errors.New("database connection error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/routes/"+encodedID, nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_ListRoutes(t *testing.T) {
