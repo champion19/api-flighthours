@@ -317,6 +317,9 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 		encodedID, _ := enc.Encode(airlineUUID)
 
 		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return &domain.Airline{ID: airlineUUID, AirlineName: "Test"}, nil
+			},
 			activateFn: func(context.Context, string) error {
 				return errors.New("database connection error")
 			},
