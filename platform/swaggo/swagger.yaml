@@ -594,36 +594,6 @@ paths:
       summary: Deactivate an airline route
       tags:
       - Airline Routes
-  /airline-routes/my:
-    get:
-      consumes:
-      - application/json
-      description: Returns the airline routes associated with the authenticated employee's
-        airline
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: My airline routes list
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "404":
-          description: Employee or airline association not found
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List routes for authenticated user's airline
-      tags:
-      - Airline Routes
   /airlines:
     get:
       description: Returns a list of all airlines with optional status filter
@@ -1114,6 +1084,36 @@ paths:
       summary: Edit airline information for authenticated employee (HU25)
       tags:
       - AirlineEmployees
+  /employees/airline-routes:
+    get:
+      consumes:
+      - application/json
+      description: Returns the airline routes associated with the authenticated employee's
+        airline
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My airline routes list
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Employee or airline association not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List routes for authenticated user's airline
+      tags:
+      - Airline Routes
   /employees/airline/activate:
     patch:
       description: Activates the airline information for the authenticated employee.

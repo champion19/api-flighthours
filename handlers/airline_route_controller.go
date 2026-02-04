@@ -198,7 +198,7 @@ func (h *handler) DeactivateAirlineRoute() gin.HandlerFunc {
 // @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
 // @Failure      404  {object}  middleware.ErrorResponse "Employee or airline association not found"
 // @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
-// @Router       /airline-routes/my [get]
+// @Router       /employees/airline-routes [get]
 func (h *handler) ListMyAirlineRoutes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
