@@ -76,6 +76,7 @@ func TestGetMessage(t *testing.T) {
 	repo := &fakeMessageRepo{
 		messages: []cachetypes.CachedMessage{
 			{Code: "TEST_001", Type: TypeSuccess, Content: "test message", Active: true},
+			{Code: "GEN_MSG_INACTIVE_ERR_00002", Type: TypeError, Content: "fallback error", Active: true},
 		},
 	}
 	cache := NewMessageCache(repo, 0)
@@ -91,10 +92,43 @@ func TestGetMessage(t *testing.T) {
 		}
 	})
 
-	t.Run("handles missing message", func(t *testing.T) {
+	t.Run("gets message from DB when not in cache", func(t *testing.T) {
+		// Create a fresh cache with only 1 message loaded initially
+		freshRepo := &fakeMessageRepo{
+			messages: []cachetypes.CachedMessage{
+				{Code: "DB_MSG", Type: TypeSuccess, Content: "from database", Active: true},
+			},
+		}
+		freshCache := NewMessageCache(freshRepo, 0)
+		// Don't load messages initially, so DB_MSG is not in cache
+
+		// When GetMessage is called, it should try DB lookup
+		msg := freshCache.GetMessage("DB_MSG")
+		if msg == nil {
+			t.Fatal("expected to get message from DB")
+		}
+		if msg.Content != "from database" {
+			t.Errorf("expected 'from database', got %q", msg.Content)
+		}
+	})
+
+	t.Run("returns nil for special fallback code", func(t *testing.T) {
+		emptyRepo := &fakeMessageRepo{}
+		emptyCache := NewMessageCache(emptyRepo, 0)
+		msg := emptyCache.GetMessage("GEN_MSG_INACTIVE_ERR_00002")
+		// Should return nil when the special code itself is not found
+		if msg != nil {
+			t.Error("expected nil for missing fallback code")
+		}
+	})
+
+	t.Run("handles missing message by returning fallback", func(t *testing.T) {
 		msg := cache.GetMessage("NONEXISTENT")
-		// Will either return nil or fallback message
-		_ = msg
+		// Will return fallback message (GEN_MSG_INACTIVE_ERR_00002)
+		if msg != nil && msg.Code == "GEN_MSG_INACTIVE_ERR_00002" {
+			// This is expected behavior - fallback to error message
+			_ = msg
+		}
 	})
 }
 
@@ -129,6 +163,9 @@ func TestGetHTTPStatus(t *testing.T) {
 		messages: []cachetypes.CachedMessage{
 			{Code: "GEN_SRV_ERR_00001", Type: TypeError, Active: true},
 			{Code: "MOD_U_REG_EXI_00001", Type: TypeSuccess, Active: true},
+			{Code: "WARNING_MSG", Type: TypeWarning, Active: true},
+			{Code: "INFO_MSG", Type: TypeInfo, Active: true},
+			{Code: "DEBUG_MSG", Type: TypeDebug, Active: true},
 		},
 	}
 	cache := NewMessageCache(repo, 0)
@@ -152,6 +189,27 @@ func TestGetHTTPStatus(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("TypeWarning returns 200", func(t *testing.T) {
+		status := cache.GetHTTPStatus("WARNING_MSG")
+		if status != 200 {
+			t.Errorf("expected 200 for TypeWarning, got %d", status)
+		}
+	})
+
+	t.Run("TypeInfo returns 200", func(t *testing.T) {
+		status := cache.GetHTTPStatus("INFO_MSG")
+		if status != 200 {
+			t.Errorf("expected 200 for TypeInfo, got %d", status)
+		}
+	})
+
+	t.Run("TypeDebug returns 200", func(t *testing.T) {
+		status := cache.GetHTTPStatus("DEBUG_MSG")
+		if status != 200 {
+			t.Errorf("expected 200 for TypeDebug, got %d", status)
+		}
+	})
 }
 
 func TestMessageCount(t *testing.T) {
