@@ -306,6 +306,28 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 		}
 	})
 
+	t.Run("update: update fails with rollback error => logs rollback error", func(t *testing.T) {
+		rollbackErr := errors.New("rollback failed")
+		tx := &fakeTx{rollbackFn: func() error { return rollbackErr }}
+		updateErr := errors.New("update failed")
+		svc := &fakeMsgService{
+			getByIDFn: func(context.Context, string) (*domain.Message, error) {
+				return &domain.Message{ID: "x"}, nil
+			},
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return updateErr },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.UpdateMessage(ctx, domain.Message{ID: "x", Code: "C"})
+		if !errors.Is(err, updateErr) {
+			t.Fatalf("expected %v, got %v", updateErr, err)
+		}
+	})
+
 	t.Run("delete: GetMessageByID fails => returns error", func(t *testing.T) {
 		getErr := errors.New("not found")
 		svc := &fakeMsgService{
