@@ -129,6 +129,24 @@ func TestHTTP_CreateMessage(t *testing.T) {
 			t.Fatalf("expected status %d, got %d", http.StatusBadRequest, w.Code)
 		}
 	})
+
+	t.Run("interactor error => propagates", func(t *testing.T) {
+		svc := &fakeMessageService{
+			validateErr: errors.New("validation error"),
+		}
+		r := newMessageRouter(svc)
+
+		body := map[string]any{"code": "TEST", "type": "success", "title": "T", "content": "C"}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/messages", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code == http.StatusOK {
+			t.Fatalf("expected non-OK status, got %d. body=%s", w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_GetMessageByID(t *testing.T) {
@@ -325,6 +343,40 @@ func TestHTTP_UpdateMessage(t *testing.T) {
 		r.ServeHTTP(w, req)
 		if w.Code != http.StatusBadRequest {
 			t.Fatalf("expected status %d, got %d", http.StatusBadRequest, w.Code)
+		}
+	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeMessageService{}
+		r := newMessageRouter(svc)
+
+		body := map[string]any{"code": "TEST", "type": "success", "title": "T", "content": "C"}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPut, "/messages/invalid-id-!!", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("interactor error => propagates", func(t *testing.T) {
+		svc := &fakeMessageService{
+			getByIDErr: errors.New("database error"),
+		}
+		r := newMessageRouter(svc)
+
+		body := map[string]any{"code": "TEST", "type": "success", "title": "T", "content": "C"}
+		b, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPut, "/messages/"+validID, bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code == http.StatusOK {
+			t.Fatalf("expected non-OK status, got %d. body=%s", w.Code, w.Body.String())
 		}
 	})
 }
