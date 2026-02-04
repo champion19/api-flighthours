@@ -1,6 +1,6 @@
 basePath: /flighthours/api/v1
 definitions:
-  github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType:
+  domain.MessageType:
     enum:
     - ERROR
     - EXITO
@@ -249,7 +249,7 @@ definitions:
       title:
         type: string
       type:
-        $ref: '#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType'
+        $ref: '#/definitions/domain.MessageType'
     type: object
   handlers.MessageResponse:
     properties:
@@ -272,7 +272,7 @@ definitions:
       title:
         type: string
       type:
-        $ref: '#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType'
+        $ref: '#/definitions/domain.MessageType'
     type: object
   handlers.MessageUpdatedResponse:
     properties:
@@ -481,6 +481,149 @@ info:
   title: Flighthours API
   version: "1.0"
 paths:
+  /airline-routes:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of all airline-route associations with optional
+        filters
+      parameters:
+      - description: Filter by airline code
+        in: query
+        name: airline_code
+        type: string
+      - description: Filter by status (true/false/1/0)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline routes list
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all airline routes
+      tags:
+      - Airline Routes
+  /airline-routes/{id}/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets the airline route status to active. Idempotent operation.
+      parameters:
+      - description: Airline Route ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline route activated
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Airline route not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Activate an airline route
+      tags:
+      - Airline Routes
+  /airline-routes/{id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets the airline route status to inactive. Idempotent operation.
+      parameters:
+      - description: Airline Route ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline route deactivated
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Airline route not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Deactivate an airline route
+      tags:
+      - Airline Routes
+  /airline-routes/my:
+    get:
+      consumes:
+      - application/json
+      description: Returns the airline routes associated with the authenticated employee's
+        airline
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: My airline routes list
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "404":
+          description: Employee or airline association not found
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List routes for authenticated user's airline
+      tags:
+      - Airline Routes
   /airlines:
     get:
       description: Returns a list of all airlines with optional status filter

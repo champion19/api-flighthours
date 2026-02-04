@@ -17,6 +17,228 @@
     "host": "localhost:8081",
     "basePath": "/flighthours/api/v1",
     "paths": {
+        "/airline-routes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of all airline-route associations with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "List all airline routes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by airline code",
+                        "name": "airline_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (true/false/1/0)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline routes list",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/airline-routes/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the airline routes associated with the authenticated employee's airline",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "List routes for authenticated user's airline",
+                "responses": {
+                    "200": {
+                        "description": "My airline routes list",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Employee or airline association not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/airline-routes/{id}/activate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets the airline route status to active. Idempotent operation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "Activate an airline route",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airline Route ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline route activated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Airline route not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/airline-routes/{id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets the airline route status to inactive. Idempotent operation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airline Routes"
+                ],
+                "summary": "Deactivate an airline route",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airline Route ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Airline route deactivated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Airline route not found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/airlines": {
             "get": {
                 "description": "Returns a list of all airlines with optional status filter",
@@ -1460,7 +1682,7 @@
         }
     },
     "definitions": {
-        "github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType": {
+        "domain.MessageType": {
             "type": "string",
             "enum": [
                 "ERROR",
@@ -1834,7 +2056,7 @@
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
+                    "$ref": "#/definitions/domain.MessageType"
                 }
             }
         },
@@ -1869,7 +2091,7 @@
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
+                    "$ref": "#/definitions/domain.MessageType"
                 }
             }
         },

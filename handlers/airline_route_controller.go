@@ -8,6 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ListAirlineRoutes godoc
+// @Summary      List all airline routes
+// @Description  Returns a list of all airline-route associations with optional filters
+// @Tags         Airline Routes
+// @Accept       json
+// @Produce      json
+// @Param        airline_code query string false "Filter by airline code"
+// @Param        status query string false "Filter by status (true/false/1/0)"
+// @Security     BearerAuth
+// @Success      200  {object}  middleware.APIResponse "Airline routes list"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /airline-routes [get]
 func (h *handler) ListAirlineRoutes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -40,6 +53,20 @@ func (h *handler) ListAirlineRoutes() gin.HandlerFunc {
 	}
 }
 
+// ActivateAirlineRoute godoc
+// @Summary      Activate an airline route
+// @Description  Sets the airline route status to active. Idempotent operation.
+// @Tags         Airline Routes
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Airline Route ID (obfuscated ID)"
+// @Security     BearerAuth
+// @Success      200  {object}  middleware.APIResponse "Airline route activated"
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid ID"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Airline route not found"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /airline-routes/{id}/activate [patch]
 func (h *handler) ActivateAirlineRoute() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -93,6 +120,20 @@ func (h *handler) ActivateAirlineRoute() gin.HandlerFunc {
 	}
 }
 
+// DeactivateAirlineRoute godoc
+// @Summary      Deactivate an airline route
+// @Description  Sets the airline route status to inactive. Idempotent operation.
+// @Tags         Airline Routes
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Airline Route ID (obfuscated ID)"
+// @Security     BearerAuth
+// @Success      200  {object}  middleware.APIResponse "Airline route deactivated"
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid ID"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Airline route not found"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /airline-routes/{id}/deactivate [patch]
 func (h *handler) DeactivateAirlineRoute() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -146,6 +187,18 @@ func (h *handler) DeactivateAirlineRoute() gin.HandlerFunc {
 	}
 }
 
+// ListMyAirlineRoutes godoc
+// @Summary      List routes for authenticated user's airline
+// @Description  Returns the airline routes associated with the authenticated employee's airline
+// @Tags         Airline Routes
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  middleware.APIResponse "My airline routes list"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "Employee or airline association not found"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /airline-routes/my [get]
 func (h *handler) ListMyAirlineRoutes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
