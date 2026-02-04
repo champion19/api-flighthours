@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"os"
 	"testing"
 )
 
@@ -9,6 +10,32 @@ func TestNewSlogLogger(t *testing.T) {
 		logger := NewSlogLogger()
 		if logger == nil {
 			t.Error("expected non-nil logger")
+		}
+	})
+}
+
+func TestNewSlogLogger_WithLogDir(t *testing.T) {
+	t.Run("creates logger with LOG_DIR env set", func(t *testing.T) {
+		// Create a temp directory
+		tmpDir := t.TempDir()
+		os.Setenv("LOG_DIR", tmpDir)
+		defer os.Unsetenv("LOG_DIR")
+
+		logger := NewSlogLogger()
+		if logger == nil {
+			t.Error("expected non-nil logger")
+		}
+	})
+
+	t.Run("creates logger when LOG_DIR is invalid", func(t *testing.T) {
+		// Set LOG_DIR to a path that cannot be created
+		os.Setenv("LOG_DIR", "/this/path/should/not/exist/or/be/creatable/by/test")
+		defer os.Unsetenv("LOG_DIR")
+
+		logger := NewSlogLogger()
+		// Should still return a logger (console-only fallback)
+		if logger == nil {
+			t.Error("expected non-nil logger even with invalid LOG_DIR")
 		}
 	})
 }
