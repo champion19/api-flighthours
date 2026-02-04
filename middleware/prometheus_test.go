@@ -98,6 +98,82 @@ func TestPrometheusMiddleware(t *testing.T) {
 
 		r.ServeHTTP(w, req)
 	})
+
+	t.Run("tracks POST requests", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("PrometheusMiddleware panicked on POST: %v", r)
+			}
+		}()
+
+		r := gin.New()
+		r.Use(PrometheusMiddleware())
+		r.POST("/create", func(c *gin.Context) {
+			c.JSON(http.StatusCreated, gin.H{"created": true})
+		})
+
+		req := httptest.NewRequest(http.MethodPost, "/create", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+	})
+
+	t.Run("tracks error responses", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("PrometheusMiddleware panicked on error: %v", r)
+			}
+		}()
+
+		r := gin.New()
+		r.Use(PrometheusMiddleware())
+		r.GET("/error", func(c *gin.Context) {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "test"})
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/error", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+	})
+
+	t.Run("tracks 404 responses", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("PrometheusMiddleware panicked on 404: %v", r)
+			}
+		}()
+
+		r := gin.New()
+		r.Use(PrometheusMiddleware())
+		r.GET("/exists", func(c *gin.Context) {
+			c.Status(http.StatusOK)
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/not-exists", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+	})
+
+	t.Run("tracks auth error responses", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("PrometheusMiddleware panicked on auth error: %v", r)
+			}
+		}()
+
+		r := gin.New()
+		r.Use(PrometheusMiddleware())
+		r.GET("/auth", func(c *gin.Context) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/auth", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+	})
 }
 
 func TestRecordEmployeeRegistration(t *testing.T) {
