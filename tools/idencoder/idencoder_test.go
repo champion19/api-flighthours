@@ -120,10 +120,12 @@ func TestIsUUID(t *testing.T) {
 }
 
 // mockLogger for testing logger branches
-type mockLogger struct{}
+type mockLogger struct {
+	errorCalls int
+}
 
 func (m *mockLogger) Info(msg string, args ...interface{})     {}
-func (m *mockLogger) Error(msg string, args ...interface{})    {}
+func (m *mockLogger) Error(msg string, args ...interface{})    { m.errorCalls++ }
 func (m *mockLogger) Debug(msg string, args ...interface{})    {}
 func (m *mockLogger) Warn(msg string, args ...interface{})     {}
 func (m *mockLogger) Success(msg string, args ...interface{})  {}
@@ -163,6 +165,34 @@ func TestHashidsEncoder_WithLogger(t *testing.T) {
 		result := enc.MustEncode("not-a-uuid")
 		if result != "" {
 			t.Errorf("expected empty string, got %q", result)
+		}
+	})
+
+	t.Run("verifies logger is called on errors", func(t *testing.T) {
+		// Reset mock logger
+		mockLog := &mockLogger{}
+		logEnc, _ := NewHashidsEncoder(Config{Secret: "secret", MinLength: 10}, mockLog)
+
+		// Test Encode with invalid UUID
+		_, _ = logEnc.Encode("not-a-uuid")
+		if mockLog.errorCalls == 0 {
+			t.Error("expected logger.Error to be called on Encode error")
+		}
+
+		initialCalls := mockLog.errorCalls
+
+		// Test Decode with empty string
+		_, _ = logEnc.Decode("")
+		if mockLog.errorCalls <= initialCalls {
+			t.Error("expected logger.Error to be called on Decode empty string")
+		}
+
+		initialCalls = mockLog.errorCalls
+
+		// Test Decode with malformed encoded
+		_, _ = logEnc.Decode("malformed!!!")
+		if mockLog.errorCalls <= initialCalls {
+			t.Error("expected logger.Error to be called on Decode malformed")
 		}
 	})
 }
