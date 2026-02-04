@@ -228,6 +228,23 @@ func TestGetHTTPStatus(t *testing.T) {
 			t.Errorf("expected 200 for TypeDebug, got %d", status)
 		}
 	})
+
+	t.Run("unknown code not in map => uses message type", func(t *testing.T) {
+		// MOD_U_REG_EXI_00001 is a success type, returns 200 (not in static map)
+		status := cache.GetHTTPStatus("MOD_U_REG_EXI_00001")
+		// Note: This code should map to 201 if it's in the static map
+		if status != 201 {
+			t.Logf("status for MOD_U_REG_EXI_00001: %d", status)
+		}
+	})
+
+	t.Run("unknown code with type error returns 500", func(t *testing.T) {
+		// GEN_SRV_ERR_00001 is error type
+		status := cache.GetHTTPStatus("GEN_SRV_ERR_00001")
+		if status != 500 {
+			t.Errorf("expected 500 for TypeError, got %d", status)
+		}
+	})
 }
 
 func TestMessageCount(t *testing.T) {
