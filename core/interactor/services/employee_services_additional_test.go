@@ -126,18 +126,36 @@ func TestEmployeeService_SaveEmployeeToDB(t *testing.T) {
 }
 
 func TestEmployeeService_UpdateEmployeeKeycloakID(t *testing.T) {
-	mockRepo := new(mocks.MockRepository)
-	mockTx := new(mocks.MockTx)
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockTx := new(mocks.MockTx)
 
-	mockRepo.On("PatchEmployee", mock.Anything, mockTx, "emp123", "kc456").Return(nil)
+		mockRepo.On("PatchEmployee", mock.Anything, mockTx, "emp123", "kc456").Return(nil)
 
-	svc := NewService(mockRepo, nil)
-	err := svc.UpdateEmployeeKeycloakID(context.Background(), mockTx, "emp123", "kc456")
+		svc := NewService(mockRepo, nil)
+		err := svc.UpdateEmployeeKeycloakID(context.Background(), mockTx, "emp123", "kc456")
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	mockRepo.AssertExpectations(t)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("repo error", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockTx := new(mocks.MockTx)
+		patchErr := errors.New("db error")
+
+		mockRepo.On("PatchEmployee", mock.Anything, mockTx, "emp-fail", "kc-fail").Return(patchErr)
+
+		svc := NewService(mockRepo, nil)
+		err := svc.UpdateEmployeeKeycloakID(context.Background(), mockTx, "emp-fail", "kc-fail")
+
+		if !errors.Is(err, patchErr) {
+			t.Fatalf("expected %v, got %v", patchErr, err)
+		}
+		mockRepo.AssertExpectations(t)
+	})
 }
 
 func TestEmployeeService_SetUserPassword(t *testing.T) {
@@ -169,29 +187,61 @@ func TestEmployeeService_SetUserPassword(t *testing.T) {
 }
 
 func TestEmployeeService_AssignUserRole(t *testing.T) {
-	mockAuth := new(mocks.MockAuthClient)
-	mockAuth.On("AssignRole", mock.Anything, "user123", "admin").Return(nil)
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("AssignRole", mock.Anything, "user123", "admin").Return(nil)
 
-	svc := NewService(nil, mockAuth)
-	err := svc.AssignUserRole(context.Background(), "user123", "admin")
+		svc := NewService(nil, mockAuth)
+		err := svc.AssignUserRole(context.Background(), "user123", "admin")
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	mockAuth.AssertExpectations(t)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("keycloak error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		roleErr := errors.New("keycloak error")
+		mockAuth.On("AssignRole", mock.Anything, "user999", "admin").Return(roleErr)
+
+		svc := NewService(nil, mockAuth)
+		err := svc.AssignUserRole(context.Background(), "user999", "admin")
+
+		if !errors.Is(err, roleErr) {
+			t.Fatalf("expected %v, got %v", roleErr, err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
 }
 
 func TestEmployeeService_RollbackKeycloakUser(t *testing.T) {
-	mockAuth := new(mocks.MockAuthClient)
-	mockAuth.On("DeleteUser", mock.Anything, "kc123").Return(nil)
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("DeleteUser", mock.Anything, "kc123").Return(nil)
 
-	svc := NewService(nil, mockAuth)
-	err := svc.RollbackKeycloakUser(context.Background(), "kc123")
+		svc := NewService(nil, mockAuth)
+		err := svc.RollbackKeycloakUser(context.Background(), "kc123")
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	mockAuth.AssertExpectations(t)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("keycloak error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		deleteErr := errors.New("keycloak delete error")
+		mockAuth.On("DeleteUser", mock.Anything, "kc-fail").Return(deleteErr)
+
+		svc := NewService(nil, mockAuth)
+		err := svc.RollbackKeycloakUser(context.Background(), "kc-fail")
+
+		if !errors.Is(err, deleteErr) {
+			t.Fatalf("expected %v, got %v", deleteErr, err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
 }
 
 func TestEmployeeService_LocateEmployee(t *testing.T) {
@@ -388,6 +438,20 @@ func TestEmployeeService_GetEmployeesByRole(t *testing.T) {
 		}
 		if len(result) != 0 {
 			t.Fatalf("expected 0 employees, got %d", len(result))
+		}
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("repo error", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		repoErr := errors.New("db error")
+		mockRepo.On("GetEmployeesByRole", mock.Anything, "admin").Return(nil, repoErr)
+
+		svc := NewService(mockRepo, nil)
+		_, err := svc.GetEmployeesByRole(context.Background(), "admin")
+
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected %v, got %v", repoErr, err)
 		}
 		mockRepo.AssertExpectations(t)
 	})
