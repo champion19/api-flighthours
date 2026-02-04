@@ -273,6 +273,42 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 		}
 	})
 
+	t.Run("delete: GetMessageByID fails => returns error", func(t *testing.T) {
+		getErr := errors.New("not found")
+		svc := &fakeMsgService{
+			getByIDFn:  func(context.Context, string) (*domain.Message, error) { return nil, getErr },
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return &fakeTx{}, nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		err := i.DeleteMessage(ctx, "x")
+		if !errors.Is(err, getErr) {
+			t.Fatalf("expected %v, got %v", getErr, err)
+		}
+	})
+
+	t.Run("delete: BeginTx fails => returns error", func(t *testing.T) {
+		txErr := errors.New("tx failed")
+		svc := &fakeMsgService{
+			getByIDFn:  func(context.Context, string) (*domain.Message, error) { return &domain.Message{ID: "x"}, nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return nil, txErr },
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		err := i.DeleteMessage(ctx, "x")
+		if !errors.Is(err, txErr) {
+			t.Fatalf("expected %v, got %v", txErr, err)
+		}
+	})
+
 	t.Run("delete: fails in db => rollback", func(t *testing.T) {
 		tx := &fakeTx{}
 		deleteErr := errors.New("delete failed")
@@ -294,6 +330,28 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 		}
 		if !tx.rolledBack {
 			t.Fatalf("expected rollback")
+		}
+	})
+
+	t.Run("delete: Commit fails => rollback", func(t *testing.T) {
+		commitErr := errors.New("commit failed")
+		tx := &fakeTx{commitFn: func() error { return commitErr }}
+		svc := &fakeMsgService{
+			getByIDFn:  func(context.Context, string) (*domain.Message, error) { return &domain.Message{ID: "x"}, nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return nil },
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		err := i.DeleteMessage(ctx, "x")
+		if !errors.Is(err, commitErr) {
+			t.Fatalf("expected %v, got %v", commitErr, err)
+		}
+		if !tx.rolledBack {
+			t.Fatalf("expected rollback on commit failure")
 		}
 	})
 
