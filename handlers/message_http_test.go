@@ -215,6 +215,71 @@ func TestHTTP_ListMessages(t *testing.T) {
 			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
 		}
 	})
+
+	t.Run("with category filter", func(t *testing.T) {
+		svc := &fakeMessageService{listRes: []domain.Message{}}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/messages?category=validation", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with active filter true", func(t *testing.T) {
+		svc := &fakeMessageService{listRes: []domain.Message{}}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/messages?active=true", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with active filter false", func(t *testing.T) {
+		svc := &fakeMessageService{listRes: []domain.Message{}}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/messages?active=false", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with active filter numeric", func(t *testing.T) {
+		svc := &fakeMessageService{listRes: []domain.Message{}}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/messages?active=1", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("interactor error => propagates", func(t *testing.T) {
+		svc := &fakeMessageService{listErr: errors.New("database error")}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/messages", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code == http.StatusOK {
+			t.Fatalf("expected non-OK status, got %d", w.Code)
+		}
+	})
 }
 
 func TestHTTP_UpdateMessage(t *testing.T) {
