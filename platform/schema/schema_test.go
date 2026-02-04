@@ -133,3 +133,168 @@ func TestSchemaErrors(t *testing.T) {
 		}
 	})
 }
+
+func TestValidators_ValidateRegister_WithData(t *testing.T) {
+	// Valid schema for registration testing
+	registerSchema := []byte(`{
+		"$schema": "https://json-schema.org/draft/2020-12/schema",
+		"type": "object",
+		"required": ["email", "password"],
+		"properties": {
+			"email": {"type": "string", "format": "email"},
+			"password": {"type": "string", "minLength": 8}
+		}
+	}`)
+
+	t.Run("returns nil for valid data", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: registerSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.RegisterValidator = schema
+
+		err = v.ValidateRegister(map[string]interface{}{
+			"email":    "test@example.com",
+			"password": "password123",
+		})
+
+		if err != nil {
+			t.Errorf("expected nil error for valid data, got %v", err)
+		}
+	})
+
+	t.Run("returns error for invalid email format", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: registerSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.RegisterValidator = schema
+
+		err = v.ValidateRegister(map[string]interface{}{
+			"email":    "not-an-email",
+			"password": "password123",
+		})
+
+		if err == nil {
+			t.Error("expected error for invalid email format")
+		}
+	})
+
+	t.Run("returns error for short password", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: registerSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.RegisterValidator = schema
+
+		err = v.ValidateRegister(map[string]interface{}{
+			"email":    "test@example.com",
+			"password": "short",
+		})
+
+		if err == nil {
+			t.Error("expected error for short password")
+		}
+	})
+
+	t.Run("returns error for missing required fields", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: registerSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.RegisterValidator = schema
+
+		err = v.ValidateRegister(map[string]interface{}{})
+
+		if err == nil {
+			t.Error("expected error for missing required fields")
+		}
+	})
+}
+
+func TestValidators_ValidateUpdateEmployee_WithData(t *testing.T) {
+	// Valid schema for update employee testing
+	updateSchema := []byte(`{
+		"$schema": "https://json-schema.org/draft/2020-12/schema",
+		"type": "object",
+		"properties": {
+			"name": {"type": "string", "minLength": 1},
+			"role": {"type": "string", "enum": ["admin", "pilot", "user"]}
+		}
+	}`)
+
+	t.Run("returns nil for valid update data", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: updateSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.UpdateEmployeeValidator = schema
+
+		err = v.ValidateUpdateEmployee(map[string]interface{}{
+			"name": "John Doe",
+			"role": "pilot",
+		})
+
+		if err != nil {
+			t.Errorf("expected nil error for valid data, got %v", err)
+		}
+	})
+
+	t.Run("returns error for invalid role (not in enum)", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: updateSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.UpdateEmployeeValidator = schema
+
+		err = v.ValidateUpdateEmployee(map[string]interface{}{
+			"name": "John Doe",
+			"role": "invalid_role",
+		})
+
+		if err == nil {
+			t.Error("expected error for invalid role")
+		}
+	})
+
+	t.Run("returns nil for empty object (no required fields)", func(t *testing.T) {
+		v := &Validators{
+			FileReader: &mockFileReader{data: updateSchema},
+		}
+		schema, err := v.createSchema("test.json")
+		if err != nil {
+			t.Fatalf("failed to create schema: %v", err)
+		}
+		v.UpdateEmployeeValidator = schema
+
+		err = v.ValidateUpdateEmployee(map[string]interface{}{})
+
+		if err != nil {
+			t.Errorf("expected nil error for empty object (no required fields), got %v", err)
+		}
+	})
+}
+
+func TestDefaultFileReader_Interface(t *testing.T) {
+	t.Run("implements FileReaderInterface", func(t *testing.T) {
+		var _ FileReaderInterface = (*DefaultFileReader)(nil)
+	})
+}
