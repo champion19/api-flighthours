@@ -218,6 +218,66 @@ func TestHTTP_ListAirlineRoutes(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("success - list with status=false filter", func(t *testing.T) {
+		svc := &fakeAirlineRouteService{
+			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.AirlineRoute{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airline-routes?status=false", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("success - list with status=0 filter", func(t *testing.T) {
+		svc := &fakeAirlineRouteService{
+			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false (from 0), got %v", filters["status"])
+				}
+				return []domain.AirlineRoute{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airline-routes?status=0", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("success - list with status=1 filter", func(t *testing.T) {
+		svc := &fakeAirlineRouteService{
+			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true (from 1), got %v", filters["status"])
+				}
+				return []domain.AirlineRoute{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airline-routes?status=1", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_ActivateAirlineRoute(t *testing.T) {
@@ -329,6 +389,39 @@ func TestHTTP_ActivateAirlineRoute(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusNotFound, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeAirlineRouteService{}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airline-routes/invalid-id!!!/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("generic error => 500", func(t *testing.T) {
+		routeUUID := "550e8400-e29b-41d4-a716-446655440003"
+		encodedID, _ := enc.Encode(routeUUID)
+
+		svc := &fakeAirlineRouteService{
+			activateFn: func(ctx context.Context, id string) error {
+				return errors.New("database error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airline-routes/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
@@ -438,6 +531,39 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 		r.ServeHTTP(w, req)
 		if w.Code != http.StatusNotFound {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusNotFound, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeAirlineRouteService{}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airline-routes/invalid-id!!!/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("generic error => 500", func(t *testing.T) {
+		routeUUID := "550e8400-e29b-41d4-a716-446655440003"
+		encodedID, _ := enc.Encode(routeUUID)
+
+		svc := &fakeAirlineRouteService{
+			deactivateFn: func(ctx context.Context, id string) error {
+				return errors.New("database error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airline-routes/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
 		}
 	})
 }
