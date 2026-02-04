@@ -116,4 +116,36 @@ func TestRequireRole(t *testing.T) {
 			t.Error("expected request to be aborted when no user")
 		}
 	})
+
+	t.Run("allows pilot role specifically", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+
+		user := &domain.Employee{ID: "pilot-001", Role: "pilot"}
+		c.Set("authenticated_user", user)
+
+		middleware := RequireRole("pilot")
+		middleware(c)
+
+		if c.IsAborted() {
+			t.Error("expected pilot to be allowed")
+		}
+	})
+
+	t.Run("blocks empty role", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+
+		user := &domain.Employee{ID: "user-no-role", Role: ""}
+		c.Set("authenticated_user", user)
+
+		middleware := RequireRole("admin")
+		middleware(c)
+
+		if !c.IsAborted() {
+			t.Error("expected empty role to be blocked")
+		}
+	})
 }
