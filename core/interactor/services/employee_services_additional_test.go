@@ -59,6 +59,19 @@ func TestEmployeeService_GetEmployeeByID(t *testing.T) {
 		}
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("not found", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockRepo.On("GetEmployeeByID", mock.Anything, "not-found").Return(nil, domain.ErrPersonNotFound)
+
+		svc := NewService(mockRepo, nil)
+		_, err := svc.GetEmployeeByID(context.Background(), "not-found")
+
+		if !errors.Is(err, domain.ErrPersonNotFound) {
+			t.Fatalf("expected ErrPersonNotFound, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+	})
 }
 
 func TestEmployeeService_BeginTx(t *testing.T) {
