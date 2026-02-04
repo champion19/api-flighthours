@@ -192,6 +192,19 @@ func TestHTTP_GetMessageByID(t *testing.T) {
 			t.Fatalf("expected status %d, got %d", http.StatusNotFound, w.Code)
 		}
 	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeMessageService{}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/messages/invalid-id-!!", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_ListMessages(t *testing.T) {
