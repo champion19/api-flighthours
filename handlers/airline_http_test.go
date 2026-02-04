@@ -25,7 +25,6 @@ type fakeAirlineService struct {
 	activateFn     func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirlinesFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
-	// deactivateFn será implementado en un release posterior (HU4)
 }
 
 var _ input.AirlineService = (*fakeAirlineService)(nil)
@@ -57,8 +56,6 @@ func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) err
 	}
 	return errors.New("not implemented")
 }
-
-// DeactivateAirline será implementado en un release posterior (HU4)
 
 func (f *fakeAirlineService) ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
 	if f.listAirlinesFn != nil {
@@ -99,7 +96,7 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -201,15 +198,47 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 		svc := &fakeAirlineService{}
 
 		r := newRouter(svc)
-		// Note: This test might behave differently since Gin requires the param
-		// We test the behavior of empty id validation
+
 		req := httptest.NewRequest(http.MethodGet, "/airlines/", nil)
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)
-		// Gin returns 301 redirect or 404 for missing param
+
 		if w.Code != http.StatusMovedPermanently && w.Code != http.StatusNotFound {
 			// This is expected for empty route param
+		}
+	})
+
+	t.Run("interactor returns generic error => 500", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440003"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return nil, errors.New("database connection error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines/"+encodedID, nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("invalid non-decodable ID => 400", func(t *testing.T) {
+		svc := &fakeAirlineService{}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines/invalid-id-format!!!", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
 		}
 	})
 }
@@ -228,7 +257,7 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -295,6 +324,217 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusNotFound, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("interactor returns generic error => 500", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440004"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return &domain.Airline{ID: airlineUUID, AirlineName: "Test"}, nil
+			},
+			activateFn: func(context.Context, string) error {
+				return errors.New("database connection error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
+}
+
+func TestHTTP_ListAirlines(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirlineMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirlineService) *gin.Engine {
+		airlineInteractor := interactor.NewAirlineInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.GET("/airlines", h.ListAirlines())
+		return r
+	}
+
+	t.Run("success with airlines", func(t *testing.T) {
+		airlines := []domain.Airline{
+			{ID: "uuid-1", AirlineName: "Avianca", AirlineCode: "AV", Status: "active"},
+			{ID: "uuid-2", AirlineName: "LATAM", AirlineCode: "LA", Status: "active"},
+		}
+
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				return airlines, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("invalid json response: %v; body=%s", err, w.Body.String())
+		}
+		if !out.Success {
+			t.Fatalf("expected success=true, got false")
+		}
+	})
+
+	t.Run("success with empty list", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("service error returns 500", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				return nil, errors.New("database error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("with status=true filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=true", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=false filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=false", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=1 filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=1", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=active filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=active", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("with status=inactive filter", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines?status=inactive", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
 }
 
 // Tests for DTO conversion functions
@@ -321,6 +561,78 @@ func TestFromDomainAirline(t *testing.T) {
 		}
 		if result.Status != airline.Status {
 			t.Errorf("expected Status %s, got %s", airline.Status, result.Status)
+		}
+	})
+}
+
+func TestToAirlineListResponse(t *testing.T) {
+	t.Run("converts airline slice to list response", func(t *testing.T) {
+		airlines := []domain.Airline{
+			{ID: "uuid-1", AirlineName: "Avianca", AirlineCode: "AV", Status: "active"},
+			{ID: "uuid-2", AirlineName: "LATAM", AirlineCode: "LA", Status: "inactive"},
+		}
+		encodeFunc := func(id string) (string, error) {
+			return "encoded-" + id, nil
+		}
+
+		result := ToAirlineListResponse(airlines, encodeFunc, "http://localhost:8080")
+
+		if result.Total != 2 {
+			t.Errorf("expected Total 2, got %d", result.Total)
+		}
+		if len(result.Airlines) != 2 {
+			t.Errorf("expected 2 airlines, got %d", len(result.Airlines))
+		}
+		if result.Airlines[0].ID != "encoded-uuid-1" {
+			t.Errorf("expected encoded ID, got %s", result.Airlines[0].ID)
+		}
+		if len(result.Airlines[0].Links) == 0 {
+			t.Error("expected HATEOAS links on airline response")
+		}
+	})
+
+	t.Run("handles empty airline slice", func(t *testing.T) {
+		airlines := []domain.Airline{}
+		encodeFunc := func(id string) (string, error) {
+			return id, nil
+		}
+
+		result := ToAirlineListResponse(airlines, encodeFunc, "")
+
+		if result.Total != 0 {
+			t.Errorf("expected Total 0, got %d", result.Total)
+		}
+		if len(result.Airlines) != 0 {
+			t.Errorf("expected 0 airlines, got %d", len(result.Airlines))
+		}
+	})
+
+	t.Run("uses original ID when encoding fails", func(t *testing.T) {
+		airlines := []domain.Airline{
+			{ID: "uuid-1", AirlineName: "Avianca", AirlineCode: "AV"},
+		}
+		encodeFunc := func(id string) (string, error) {
+			return "", errors.New("encoding failed")
+		}
+
+		result := ToAirlineListResponse(airlines, encodeFunc, "")
+
+		if result.Airlines[0].ID != "uuid-1" {
+			t.Errorf("expected original ID uuid-1, got %s", result.Airlines[0].ID)
+		}
+	})
+}
+
+func TestUpdateAirlineStatusRequest_Sanitize(t *testing.T) {
+	t.Run("trims whitespace from status", func(t *testing.T) {
+		req := &UpdateAirlineStatusRequest{
+			Status: "  active  ",
+		}
+
+		req.Sanitize()
+
+		if req.Status != "active" {
+			t.Errorf("expected 'active', got %q", req.Status)
 		}
 	})
 }

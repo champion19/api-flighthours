@@ -1,46 +1,38 @@
 {
   "environment": "local",
   "database": {
-      "driver": "mysql",
-      "host": "localhost",
-      "port": "3309",
-      "username": "root",
-      "password": "1997",
-      "name": "flightDb",
-      "max_connections":20,
-      "max_idle_connections":10,
-      "max_lifetime":2700,
-      "max_idle_time":2600
+    "driver": "mysql",
+    "host": "localhost",
+    "port": "3309",
+    "username": "root",
+    "password": "1997",
+    "name": "flightDb",
+    "max_connections": 20,
+    "max_idle_connections": 10,
+    "max_lifetime": 2700,
+    "max_idle_time": 2600
   },
   "server": {
-      "port": "8081",
-      "host": "0.0.0.0"
+    "port": "8081",
+    "host": "0.0.0.0"
   },
   "resend": {
-      "api_key": "re_6w3aQQUe_EQaL4h4X3QpUizqcxbG725a8",
+    "api_key": "re_6w3aQQUe_EQaL4h4X3QpUizqcxbG725a8",
     "from_email": "flighthours@rbsuport.com"
   },
   "verification": {
-      "base_url": "http://localhost:8081"
+    "base_url": "http://localhost:8081"
   },
-  "keycloak":{
+  "keycloak": {
     "server_url": "http://localhost:8080",
     "realm": "flighthours",
     "client_id": "emma",
     "client_secret": "M9HfWmIWf6huAnpKPXIGNdDeTfrwcNMt",
     "admin_user": "admin",
-    "admin_pass": "1997"
+    "admin_pass": "Emma2026!"
   },
   "id_encoder": {
     "secret": "flighthours-secret-key-2024",
     "min_length": 10
   }
 }
-
-
-
-
-
-
-
-

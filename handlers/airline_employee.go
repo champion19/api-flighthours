@@ -93,6 +93,8 @@ type EmployeeAirlineInfoResponse struct {
 	AirlineName string `json:"airline_name,omitempty"`
 	AirlineCode string `json:"airline_code,omitempty"`
 	Bp          string `json:"bp,omitempty"`
+	StartDate   string `json:"start_date,omitempty"`
+	EndDate     string `json:"end_date,omitempty"`
 	Links       []Link `json:"_links,omitempty"`
 }
 

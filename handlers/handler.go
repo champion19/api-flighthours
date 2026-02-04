@@ -21,6 +21,8 @@ type handler struct {
 	AirlineInteractor         *interactor.AirlineInteractor
 	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
 	EngineInteractor          *interactor.EngineInteractor
+	RouteInteractor           *interactor.RouteInteractor
+	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
 }
 
 func New(
@@ -32,7 +34,9 @@ func New(
 	messagingCache *messaging.MessageCache,
 	airlineInteractor *interactor.AirlineInteractor,
 	airlineEmployeeInteractor *interactor.AirlineEmployeeInteractor,
-	engineInteractor *interactor.EngineInteractor) *handler {
+	engineInteractor *interactor.EngineInteractor,
+	routeInteractor *interactor.RouteInteractor,
+	airlineRouteInteractor *interactor.AirlineRouteInteractor) *handler {
 	return &handler{
 		EmployeeService:           service,
 		Interactor:                interactor,
@@ -43,6 +47,8 @@ func New(
 		AirlineInteractor:         airlineInteractor,
 		AirlineEmployeeInteractor: airlineEmployeeInteractor,
 		EngineInteractor:          engineInteractor,
+		RouteInteractor:           routeInteractor,
+		AirlineRouteInteractor:    airlineRouteInteractor,
 	}
 }
 

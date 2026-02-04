@@ -170,7 +170,7 @@ func BuildEmployeeLinks(baseURL string, employeeID string) []Link {
 }
 
 func BuildEmployeeMeLinks(baseURL string) []Link {
-	meURL := baseURL + "/flighthours/api/v1/employees/me"
+	meURL := baseURL + "/flighthours/api/v1/employees"
 
 	return []Link{
 		{
@@ -267,9 +267,123 @@ func BuildAirlineStatusLinks(baseURL string, airlineID string, isActive bool) []
 	return links
 }
 
+func BuildRouteLinks(baseURL string, routeID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "routes", routeID)
+	collectionURL := BuildCollectionURL(baseURL, "routes")
 
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
 
-// BuildEngineLinks construye links HATEOAS para un motor específico
+// BuildRouteListLinks construye links para la lista de rutas
+func BuildRouteListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "routes")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}
+
+func BuildAirlineRouteLinks(baseURL string, airlineRouteID string, isActive bool) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airline-routes", airlineRouteID)
+	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
+
+	links := []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+
+	// Si está activo, mostrar link para desactivar y viceversa
+	if isActive {
+		links = append(links, Link{
+			Href:   resourceURL + "/deactivate",
+			Rel:    "deactivate",
+			Method: "PATCH",
+		})
+	} else {
+		links = append(links, Link{
+			Href:   resourceURL + "/activate",
+			Rel:    "activate",
+			Method: "PATCH",
+		})
+	}
+
+	links = append(links, Link{
+		Href:   collectionURL,
+		Rel:    "collection",
+		Method: "GET",
+	})
+
+	return links
+}
+
+// BuildAirlineRouteListLinks construye links para la lista de rutas aerolínea
+func BuildAirlineRouteListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}
+
+// BuildAirlineRouteStatusLinks construye links para respuesta de cambio de status
+func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActive bool) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airline-routes", airlineRouteID)
+	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
+
+	links := []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+
+	// Si está activo, mostrar link para desactivar y viceversa
+	if isActive {
+		links = append(links, Link{
+			Href:   resourceURL + "/deactivate",
+			Rel:    "deactivate",
+			Method: "PATCH",
+		})
+	} else {
+		links = append(links, Link{
+			Href:   resourceURL + "/activate",
+			Rel:    "activate",
+			Method: "PATCH",
+		})
+	}
+
+	links = append(links, Link{
+		Href:   collectionURL,
+		Rel:    "collection",
+		Method: "GET",
+	})
+
+	return links
+}
+
 func BuildEngineLinks(baseURL string, engineID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "engines", engineID)
 	collectionURL := BuildCollectionURL(baseURL, "engines")
@@ -288,7 +402,6 @@ func BuildEngineLinks(baseURL string, engineID string) []Link {
 	}
 }
 
-// BuildEngineListLinks construye links para la lista de motores
 func BuildEngineListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "engines")
 
@@ -345,7 +458,6 @@ func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive
 		},
 	}
 
-	// Si está activo, mostrar link para desactivar y viceversa
 	if isActive {
 		links = append(links, Link{
 			Href:   resourceURL + "/deactivate",
@@ -368,7 +480,6 @@ func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive
 
 	return links
 }
-
 
 func BuildAirlineEmployeeCreatedLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)

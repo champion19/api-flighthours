@@ -98,7 +98,6 @@ func (c *MessageCache) StopAutoRefresh() {
 	}
 }
 
-
 func (c *MessageCache) GetMessage(code string) *CachedMessage {
 
 	c.mu.RLock()
@@ -108,7 +107,6 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 	if found {
 		return msg
 	}
-
 
 	log.Debug(logger.LogMsgNotInCache, "code", code)
 	dbMsg, err := c.repo.GetByCodeForCache(context.Background(), code)
@@ -123,7 +121,6 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 
 	if dbMsg != nil {
 
-
 		c.mu.Lock()
 		c.messages[code] = dbMsg
 		c.mu.Unlock()
@@ -131,7 +128,6 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 		log.Debug(logger.LogMsgCachedFromDB, "code", code)
 		return dbMsg
 	}
-
 
 	inactiveMsg, err := c.repo.GetByCodeWithStatusForCache(context.Background(), code)
 	if err != nil {
@@ -149,7 +145,6 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 		return c.GetMessage("GEN_MSG_INACTIVE_ERR_00002")
 	}
 
-
 	log.Warn(logger.LogMsgNotInDB, "code", code)
 
 	if code == "GEN_MSG_INACTIVE_ERR_00002" {
@@ -158,13 +153,11 @@ func (c *MessageCache) GetMessage(code string) *CachedMessage {
 	return c.GetMessage("GEN_MSG_INACTIVE_ERR_00002")
 }
 
-
 func (c *MessageCache) GetMessageResponse(code string, params ...string) *MessageResponse {
 	msg := c.GetMessage(code)
 	if msg == nil {
 		return nil
 	}
-
 
 	content := msg.Content
 	for i, param := range params {
@@ -179,7 +172,6 @@ func (c *MessageCache) GetMessageResponse(code string, params ...string) *Messag
 		Content: content,
 	}
 }
-
 
 func replaceAll(s, old, new string) string {
 	result := ""
@@ -493,10 +485,12 @@ var messageCodeToHTTPStatus = map[string]int{
 	// Desactivar
 	"RUT_AIR_INA_EXI_04101": http.StatusOK,                  // 200 - Ruta aerolínea desactivada
 	"RUT_AIR_INA_ERR_04102": http.StatusInternalServerError, // 500 - Error técnico al desactivar
+	"RUT_AIR_INA_ERR_04103": http.StatusOK,                  // 200 - Ruta aerolínea ya está inactiva (idempotencia)
 
 	// Activar
 	"RUT_AIR_ACT_EXI_04201": http.StatusOK,                  // 200 - Ruta aerolínea activada
 	"RUT_AIR_ACT_ERR_04202": http.StatusInternalServerError, // 500 - Error técnico al activar
+	"RUT_AIR_ACT_ERR_04203": http.StatusOK,                  // 200 - Ruta aerolínea ya está activa (idempotencia)
 
 	// Listar
 	"RUT_AIR_LIST_EXI_04001": http.StatusOK,                  // 200 - Lista de rutas aerolínea obtenida
