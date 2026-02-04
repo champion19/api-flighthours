@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	json_schema "github.com/champion19/api-flighthours/platform/schema"
 	"github.com/gin-gonic/gin"
 	"github.com/kaptinlin/jsonschema"
 )
@@ -275,5 +276,95 @@ func TestJsonValidator_EmptyBody(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		// Handler should not be reached due to abort
+	})
+}
+
+func TestWithValidateMethods(t *testing.T) {
+	compiler := jsonschema.NewCompiler()
+	schemaJSON := []byte(`{
+		"$schema": "https://json-schema.org/draft/2020-12/schema",
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"}
+		}
+	}`)
+	schema, _ := compiler.Compile(schemaJSON)
+
+	// Create mock validators structure
+	validators := &json_schema.Validators{
+		RegisterValidator:                schema,
+		MessageValidator:                 schema,
+		ResendVerificationEmailValidator: schema,
+		PasswordResetRequestValidator:    schema,
+		UpdatePasswordValidator:          schema,
+		UpdateEmployeeValidator:          schema,
+		ChangePasswordValidator:          schema,
+		AddAirlineEmployeeValidator:      schema,
+		UpdateAirlineEmployeeValidator:   schema,
+	}
+
+	builder := NewMiddlewareValidator(validators)
+
+	t.Run("WithValidateRegister returns handler", func(t *testing.T) {
+		handler := builder.WithValidateRegister()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateMessage returns handler", func(t *testing.T) {
+		handler := builder.WithValidateMessage()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateResendVerificationEmail returns handler", func(t *testing.T) {
+		handler := builder.WithValidateResendVerificationEmail()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidatePasswordResetRequest returns handler", func(t *testing.T) {
+		handler := builder.WithValidatePasswordResetRequest()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateUpdatePassword returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdatePassword()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateUpdateEmployee returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdateEmployee()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateChangePassword returns handler", func(t *testing.T) {
+		handler := builder.WithValidateChangePassword()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateAddAirlineEmployee returns handler", func(t *testing.T) {
+		handler := builder.WithValidateAddAirlineEmployee()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateUpdateAirlineEmployee returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdateAirlineEmployee()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
 	})
 }
