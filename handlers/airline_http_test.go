@@ -293,6 +293,94 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 	})
 }
 
+func TestHTTP_ListAirlines(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirlineMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirlineService) *gin.Engine {
+		airlineInteractor := interactor.NewAirlineInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.GET("/airlines", h.ListAirlines())
+		return r
+	}
+
+	t.Run("success with airlines", func(t *testing.T) {
+		airlines := []domain.Airline{
+			{ID: "uuid-1", AirlineName: "Avianca", AirlineCode: "AV", Status: "active"},
+			{ID: "uuid-2", AirlineName: "LATAM", AirlineCode: "LA", Status: "active"},
+		}
+
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				return airlines, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("invalid json response: %v; body=%s", err, w.Body.String())
+		}
+		if !out.Success {
+			t.Fatalf("expected success=true, got false")
+		}
+	})
+
+	t.Run("success with empty list", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				return []domain.Airline{}, nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("service error returns 500", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			listAirlinesFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error) {
+				return nil, errors.New("database error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airlines", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
+}
+
 // Tests for DTO conversion functions
 func TestFromDomainAirline(t *testing.T) {
 	t.Run("converts domain airline to response correctly", func(t *testing.T) {
