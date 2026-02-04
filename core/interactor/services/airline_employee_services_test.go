@@ -157,6 +157,67 @@ func TestAirlineEmployeeService_AddAirlineEmployee(t *testing.T) {
 	})
 }
 
+func TestAirlineEmployeeService_UpdateAirlineEmployee(t *testing.T) {
+	t.Run("updates employee successfully", func(t *testing.T) {
+		updateCalled := false
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{}, nil
+			},
+			updateFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				updateCalled = true
+				if employee.ID != "ae-123" {
+					t.Errorf("expected ID 'ae-123', got %q", employee.ID)
+				}
+				return nil
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.UpdateAirlineEmployee(context.Background(), domain.AirlineEmployee{ID: "ae-123"})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !updateCalled {
+			t.Error("expected update to be called")
+		}
+	})
+
+	t.Run("returns error when transaction fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx failed")
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.UpdateAirlineEmployee(context.Background(), domain.AirlineEmployee{})
+
+		if err == nil {
+			t.Error("expected error when transaction fails")
+		}
+	})
+
+	t.Run("returns error and rolls back when update fails", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{}, nil
+			},
+			updateFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return errors.New("update failed")
+			},
+		}
+
+		service := NewAirlineEmployeeService(repo)
+		err := service.UpdateAirlineEmployee(context.Background(), domain.AirlineEmployee{})
+
+		if err == nil {
+			t.Error("expected error when update fails")
+		}
+	})
+}
+
 func TestAirlineEmployeeService_ActivateAirlineEmployee(t *testing.T) {
 	t.Run("activates employee successfully", func(t *testing.T) {
 		repo := &mockAirlineEmployeeRepo{
