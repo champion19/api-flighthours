@@ -134,6 +134,39 @@ func TestMessageInteractor_CreateMessage(t *testing.T) {
 			t.Fatalf("unexpected tx state committed=%v rolledBack=%v", tx.committed, tx.rolledBack)
 		}
 	})
+
+	t.Run("BeginTx fails => returns error", func(t *testing.T) {
+		beginErr := errors.New("begin tx failed")
+		svc := &fakeMsgService{
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return nil, beginErr },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.CreateMessage(ctx, msg)
+		if !errors.Is(err, beginErr) {
+			t.Fatalf("expected %v, got %v", beginErr, err)
+		}
+	})
+
+	t.Run("save fails with rollback error => logs rollback error", func(t *testing.T) {
+		rollbackErr := errors.New("rollback failed")
+		tx := &fakeTx{rollbackFn: func() error { return rollbackErr }}
+		saveErr := errors.New("save failed")
+		svc := &fakeMsgService{
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return saveErr },
+		}
+		i := NewMessageInteractor(svc)
+
+		_, err := i.CreateMessage(ctx, msg)
+		// Main error is still the save error
+		if !errors.Is(err, saveErr) {
+			t.Fatalf("expected %v, got %v", saveErr, err)
+		}
+	})
 }
 
 func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
