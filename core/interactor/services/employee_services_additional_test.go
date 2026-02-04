@@ -274,6 +274,20 @@ func TestEmployeeService_LocateEmployee(t *testing.T) {
 		}
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("employee nil", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		// Repo returns nil, nil (no error but no employee)
+		mockRepo.On("GetEmployeeByID", mock.Anything, "empty").Return(nil, nil)
+
+		svc := NewService(mockRepo, nil)
+		_, err := svc.LocateEmployee(context.Background(), "empty")
+
+		if err != domain.ErrPersonNotFound {
+			t.Fatalf("expected ErrPersonNotFound, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+	})
 }
 
 func TestEmployeeService_GetEmployeeByKeycloakID(t *testing.T) {
