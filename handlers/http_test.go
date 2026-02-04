@@ -167,10 +167,14 @@ func (f *fakeServiceErr) GetEmployeesByRole(context.Context, string) ([]domain.E
 }
 
 type fakeMessageCacheRepo struct {
-	messages []cachetypes.CachedMessage
+	messages  []cachetypes.CachedMessage
+	reloadErr error
 }
 
 func (r fakeMessageCacheRepo) GetAllActiveForCache(context.Context) ([]cachetypes.CachedMessage, error) {
+	if r.reloadErr != nil {
+		return nil, r.reloadErr
+	}
 	return r.messages, nil
 }
 func (r fakeMessageCacheRepo) GetByCodeForCache(context.Context, string) (*cachetypes.CachedMessage, error) {
