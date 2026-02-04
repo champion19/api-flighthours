@@ -148,6 +148,54 @@ func TestGetMessage(t *testing.T) {
 			t.Error("expected fallback message")
 		}
 	})
+
+	t.Run("returns fallback for inactive message", func(t *testing.T) {
+		// This covers the inactiveMsg != nil && !inactiveMsg.Active branch
+		inactiveRepo := &fakeMessageRepoWithInactive{
+			activeMessages: []cachetypes.CachedMessage{
+				{Code: "GEN_MSG_INACTIVE_ERR_00002", Type: TypeError, Content: "fallback error", Active: true},
+			},
+			inactiveMsg: &cachetypes.CachedMessage{Code: "INACTIVE_MSG", Type: TypeSuccess, Content: "inactive", Active: false},
+		}
+		cache := NewMessageCache(inactiveRepo, 0)
+		cache.LoadMessages(context.Background())
+
+		msg := cache.GetMessage("INACTIVE_MSG")
+		// Should return fallback since the message is inactive
+		if msg == nil {
+			t.Error("expected fallback message")
+		}
+		if msg.Code != "GEN_MSG_INACTIVE_ERR_00002" {
+			t.Errorf("expected fallback code, got %s", msg.Code)
+		}
+	})
+}
+
+// fakeMessageRepoWithInactive provides more control over inactive message behavior
+type fakeMessageRepoWithInactive struct {
+	activeMessages []cachetypes.CachedMessage
+	inactiveMsg    *cachetypes.CachedMessage
+}
+
+func (f *fakeMessageRepoWithInactive) GetAllActiveForCache(ctx context.Context) ([]cachetypes.CachedMessage, error) {
+	return f.activeMessages, nil
+}
+
+func (f *fakeMessageRepoWithInactive) GetByCodeForCache(ctx context.Context, code string) (*cachetypes.CachedMessage, error) {
+	for _, m := range f.activeMessages {
+		if m.Code == code {
+			return &m, nil
+		}
+	}
+	// Return nil without error to trigger GetByCodeWithStatusForCache
+	return nil, nil
+}
+
+func (f *fakeMessageRepoWithInactive) GetByCodeWithStatusForCache(ctx context.Context, code string) (*cachetypes.CachedMessage, error) {
+	if f.inactiveMsg != nil && f.inactiveMsg.Code == code {
+		return f.inactiveMsg, nil
+	}
+	return nil, errors.New("not found")
 }
 
 func TestGetMessageResponse(t *testing.T) {
