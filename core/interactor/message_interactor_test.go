@@ -435,4 +435,25 @@ func TestMessageInteractor_UpdateAndDelete(t *testing.T) {
 			t.Fatal("did not expect rollback")
 		}
 	})
+
+	t.Run("delete: delete fails with rollback error => logs rollback error", func(t *testing.T) {
+		rollbackErr := errors.New("rollback failed")
+		tx := &fakeTx{rollbackFn: func() error { return rollbackErr }}
+		deleteErr := errors.New("delete failed")
+		svc := &fakeMsgService{
+			getByIDFn:  func(context.Context, string) (*domain.Message, error) { return &domain.Message{ID: "x"}, nil },
+			beginTxFn:  func(context.Context) (output.Tx, error) { return tx, nil },
+			deleteFn:   func(context.Context, output.Tx, string) error { return deleteErr },
+			validateFn: func(context.Context, domain.Message) error { return nil },
+			updateFn:   func(context.Context, output.Tx, domain.Message) error { return nil },
+			saveFn:     func(context.Context, output.Tx, domain.Message) error { return nil },
+		}
+		i := NewMessageInteractor(svc)
+
+		err := i.DeleteMessage(ctx, "x")
+		// Main error is still the delete error
+		if !errors.Is(err, deleteErr) {
+			t.Fatalf("expected %v, got %v", deleteErr, err)
+		}
+	})
 }
