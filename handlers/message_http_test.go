@@ -284,6 +284,35 @@ func TestHTTP_DeleteMessage(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeMessageService{}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodDelete, "/messages/invalid-id-!!", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("interactor error => propagates", func(t *testing.T) {
+		svc := &fakeMessageService{
+			getByIDErr: errors.New("database error"),
+		}
+		r := newMessageRouter(svc)
+
+		req := httptest.NewRequest(http.MethodDelete, "/messages/"+validID, nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		// Error handler will determine the final status
+		if w.Code == http.StatusOK {
+			t.Fatalf("expected non-OK status, got %d. body=%s", w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_ReloadMessageCache(t *testing.T) {
