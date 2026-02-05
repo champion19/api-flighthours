@@ -122,6 +122,65 @@ func (h *handler) ActivateAirline() gin.HandlerFunc {
 	}
 }
 
+// DeactivateAirline godoc
+// @Summary      Deactivate airline
+// @Description  Sets airline status to inactive (accepts both UUID and obfuscated ID)
+// @Tags         Airlines
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Airline ID (obfuscated ID)"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /airlines/{id}/deactivate [patch]
+func (h *handler) DeactivateAirline() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		inputID := c.Param("id")
+		if inputID == "" {
+			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		log.Info(logger.LogAirlineDeactivate, "input_id", inputID, "client_ip", c.ClientIP())
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		airlineUUID, responseID := h.resolveID(inputID)
+		if airlineUUID == "" {
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
+			return
+		}
+
+		// Deactivate airline via interactor
+		if err := h.AirlineInteractor.DeactivateAirline(c.Request.Context(), airlineUUID); err != nil {
+			log.Error(logger.LogAirlineDeactivateError, "airline_id", airlineUUID, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrAirlineNotFound {
+				h.Response.Error(c, domain.MsgAirlineNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgServerError)
+			return
+		}
+
+		response := AirlineStatusResponse{
+			ID:      responseID,
+			Status:  "inactive",
+			Updated: true,
+		}
+
+		// Build HATEOAS links (isActive=false, muestra link para activate)
+		baseURL := GetBaseURL(c)
+		response.Links = BuildAirlineStatusLinks(baseURL, responseID, false)
+
+		log.Success(logger.LogAirlineDeactivateOK, "airline_id", airlineUUID, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirlineDeactivateOK, response)
+	}
+}
+
 // ListAirlines godoc
 // @Summary      List all airlines
 // @Description  Returns a list of all airlines with optional status filter
@@ -171,4 +230,3 @@ func (h *handler) ListAirlines() gin.HandlerFunc {
 		h.Response.DataOnly(c, response)
 	}
 }
-

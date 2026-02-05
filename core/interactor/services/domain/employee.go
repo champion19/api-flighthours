@@ -3,9 +3,12 @@ package domain
 import (
 	"github.com/google/uuid"
 )
+const (
+	RoleAdmin = "admin"
+	RoleUser = "pilot"
+)
 
-// Employee represents core user data (authentication, identity)
-// Airline-specific data is handled by AirlineEmployee
+
 type Employee struct {
 	ID                   string `json:"id"`
 	Name                 string `json:"name"`

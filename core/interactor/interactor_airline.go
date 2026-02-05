@@ -76,4 +76,23 @@ func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) erro
 	return nil
 }
 
-// DeactivateAirline será implementado en un release posterior (HU4)
+func (i *AirlineInteractor) DeactivateAirline(ctx context.Context, id string) error {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogAirlineDeactivate, "operation", "deactivate_airline", "airline_id", id)
+
+	airline, err := i.service.GetAirlineByID(ctx, id)
+	if err != nil || airline == nil {
+		log.Error(logger.LogAirlineNotFound, "operation", "deactivate_airline", "airline_id", id, "error", "airline not found")
+		return domain.ErrAirlineNotFound
+	}
+
+	if err := i.service.DeactivateAirline(ctx, id); err != nil {
+		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "error", err)
+		return err
+	}
+
+	log.Success(logger.LogAirlineDeactivateOK, "airline_id", id)
+	return nil
+}

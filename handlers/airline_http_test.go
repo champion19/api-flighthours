@@ -23,6 +23,7 @@ type fakeAirlineService struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.Airline, error)
 	updateStatusFn func(ctx context.Context, id string, status bool) error
 	activateFn     func(ctx context.Context, id string) error
+	deactivateFn   func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirlinesFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 }
@@ -53,6 +54,13 @@ func (f *fakeAirlineService) UpdateAirlineStatus(ctx context.Context, id string,
 func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) error {
 	if f.activateFn != nil {
 		return f.activateFn(ctx, id)
+	}
+	return errors.New("not implemented")
+}
+
+func (f *fakeAirlineService) DeactivateAirline(ctx context.Context, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
 	}
 	return errors.New("not implemented")
 }
@@ -96,7 +104,7 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -257,7 +265,7 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -363,7 +371,7 @@ func TestHTTP_ListAirlines(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

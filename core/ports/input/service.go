@@ -58,6 +58,18 @@ type AirlineService interface {
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 	UpdateAirlineStatus(ctx context.Context, id string, status bool) error
 	ActivateAirline(ctx context.Context, id string) error
+	DeactivateAirline(ctx context.Context, id string) error
+}
+
+type AirportService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetAirportByID(ctx context.Context, id string) (*domain.Airport, error)
+	ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
+	GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error)
+	GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error)
+	GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error)
+	UpdateAirportStatus(ctx context.Context, id string, status bool) error
+	DeactivateAirport(ctx context.Context, id string) error
 }
 
 type AirlineEmployeeService interface {
@@ -86,4 +98,9 @@ type AirlineRouteService interface {
 type EngineService interface {
 	GetEngineByID(ctx context.Context, id string) (*domain.Engine, error)
 	ListEngines(ctx context.Context) ([]domain.Engine, error)
+}
+
+type ManufacturerService interface {
+	GetManufacturerByID(ctx context.Context, id string) (*domain.Manufacturer, error)
+	ListManufacturers(ctx context.Context) ([]domain.Manufacturer, error)
 }

@@ -55,6 +55,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.AirlineEmployeeInteractor,
 		dependencies.EngineInteractor,
 		dependencies.RouteInteractor,
+		dependencies.ManufacturerInteractor,
+		dependencies.AirportInteractor,
 		dependencies.AirlineRouteInteractor,
 	)
 
@@ -105,6 +107,20 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/airline-routes", handler.ListAirlineRoutes())
 
+		public.GET("/airports", handler.ListAirports())
+
+		public.GET("/airports/:id", handler.GetAirportByID())
+
+		public.GET("/manufacturers", handler.ListManufacturers())
+
+		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
+
+		public.GET("/cities/:city_name", handler.GetAirportsByCity())
+
+		public.GET("/countries/:country_name", handler.GetAirportsByCountry())
+
+		public.GET("/airport-types/:airport_type", handler.GetAirportsByType())
+
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
@@ -141,11 +157,16 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
 
+		protected.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
+
 		protected.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
 
 		protected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
 
 		protected.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
+
+		protected.PATCH("/airports/:id/deactivate", handler.DeactivateAirport())
+
 	}
 	admin := app.Group("flighthours/api/v1/admin")
 	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
@@ -155,6 +176,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		admin.GET("/airlines", handler.ListAirlines())
 		admin.GET("/airlines/:id", handler.GetAirlineByID())
 		admin.PATCH("/airlines/:id/activate", handler.ActivateAirline())
+		admin.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
 		admin.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
 
 	}

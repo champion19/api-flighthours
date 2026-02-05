@@ -44,6 +44,16 @@ type AirlineRepository interface {
 	UpdateAirlineStatus(ctx context.Context, tx Tx, id string, active bool) error
 }
 
+type AirportRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetAirportByID(ctx context.Context, id string) (*domain.Airport, error)
+	ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
+	GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error)
+	GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error)
+	GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error)
+	UpdateAirportStatus(ctx context.Context, tx Tx, id string, status bool) error
+}
+
 type RouteRepository interface {
 	GetRouteByID(ctx context.Context, id string) (*domain.Route, error)
 	ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error)
@@ -58,7 +68,6 @@ type AirlineRouteRepository interface {
 
 type AirlineEmployeeRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
-
 	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
 	AddAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
 	UpdateAirlineEmployee(ctx context.Context, tx Tx, employee domain.AirlineEmployee) error
@@ -68,4 +77,9 @@ type AirlineEmployeeRepository interface {
 type EngineRepository interface {
 	GetEngineByID(ctx context.Context, id string) (*domain.Engine, error)
 	ListEngines(ctx context.Context) ([]domain.Engine, error)
+}
+
+type ManufacturerRepository interface {
+	GetManufacturerByID(ctx context.Context, id string) (*domain.Manufacturer, error)
+	ListManufacturers(ctx context.Context) ([]domain.Manufacturer, error)
 }
