@@ -5,7 +5,6 @@ import(
   domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-// ListManufacturers retrieves all manufacturers
 func (r *repository) ListManufacturers(ctx context.Context) ([]domain.Manufacturer, error) {
 	rows, err := r.stmtGetAll.QueryContext(ctx)
 	if err != nil {

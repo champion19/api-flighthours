@@ -1,6 +1,6 @@
 package domain
 
-import(
+import (
 	"testing"
 )
 
@@ -9,8 +9,6 @@ func TestAirport_ToLogger(t *testing.T) {
 		airport := &Airport{
 			ID:          "airport-uuid-123",
 			Name:        "El Dorado International",
-			City:        "Bogota",
-			Country:     "Colombia",
 			IATACode:    "BOG",
 			Status:      true,
 			AirportType: "international",
@@ -18,16 +16,15 @@ func TestAirport_ToLogger(t *testing.T) {
 
 		result := airport.ToLogger()
 
-		if len(result) != 6 {
-			t.Fatalf("expected 6 log fields, got %d", len(result))
+		if len(result) != 5 {
+			t.Fatalf("expected 5 log fields, got %d", len(result))
 		}
 
 		expected := []string{
 			"id:airport-uuid-123",
 			"name:El Dorado International",
 			"iata_code:BOG",
-			"city:Bogota",
-			"country:Colombia",
+			"airport_type:international",
 			"status:active",
 		}
 
@@ -47,7 +44,6 @@ func TestAirport_ToLogger(t *testing.T) {
 
 		result := airport.ToLogger()
 
-		// Check status is "inactive"
 		found := false
 		for _, field := range result {
 			if field == "status:inactive" {
@@ -65,16 +61,15 @@ func TestAirport_ToLogger(t *testing.T) {
 
 		result := airport.ToLogger()
 
-		if len(result) != 6 {
-			t.Fatalf("expected 6 log fields, got %d", len(result))
+		if len(result) != 5 {
+			t.Fatalf("expected 5 log fields, got %d", len(result))
 		}
 
 		expected := []string{
 			"id:",
 			"name:",
 			"iata_code:",
-			"city:",
-			"country:",
+			"airport_type:",
 			"status:inactive",
 		}
 
@@ -114,4 +109,3 @@ func TestAirport_IsActive(t *testing.T) {
 		})
 	}
 }
-

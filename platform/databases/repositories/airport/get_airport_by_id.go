@@ -7,14 +7,12 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-// GetAirportByID retrieves an airport by its UUID
+
 func (r *repository) GetAirportByID(ctx context.Context, id string) (*domain.Airport, error) {
 	var a Airport
 	err := r.stmtGetByID.QueryRowContext(ctx, id).Scan(
 		&a.ID,
 		&a.Name,
-		&a.City,
-		&a.Country,
 		&a.IATACode,
 		&a.Status,
 		&a.AirportType,

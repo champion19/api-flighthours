@@ -48,8 +48,6 @@ type AirportRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
 	GetAirportByID(ctx context.Context, id string) (*domain.Airport, error)
 	ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
-	GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error)
-	GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error)
 	GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error)
 	UpdateAirportStatus(ctx context.Context, tx Tx, id string, status bool) error
 }

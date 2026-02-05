@@ -2,7 +2,6 @@ package route
 
 import domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 
-
 type Route struct {
 	ID                     string `db:"id"`
 	OriginAirportID        string `db:"origin_airport_id"`
@@ -11,13 +10,10 @@ type Route struct {
 	DestinationAirportID   string `db:"destination_airport_id"`
 	DestinationIataCode    string `db:"destination_iata_code"`
 	DestinationAirportName string `db:"destination_airport_name"`
-	OriginCountry          string `db:"origin_country"`
-	DestinationCountry     string `db:"destination_country"`
 	AirportType            string `db:"airport_type"`
 	EstimatedFlightTime    string `db:"estimated_flight_time"`
 	RouteCode              string `db:"route_code"`
 }
-
 
 func (r *Route) ToDomain() *domain.Route {
 	return &domain.Route{
@@ -28,14 +24,11 @@ func (r *Route) ToDomain() *domain.Route {
 		DestinationAirportID:   r.DestinationAirportID,
 		DestinationIataCode:    r.DestinationIataCode,
 		DestinationAirportName: r.DestinationAirportName,
-		OriginCountry:          r.OriginCountry,
-		DestinationCountry:     r.DestinationCountry,
 		AirportType:            r.AirportType,
 		EstimatedFlightTime:    r.EstimatedFlightTime,
 		RouteCode:              r.RouteCode,
 	}
 }
-
 
 func FromDomain(domainRoute *domain.Route) *Route {
 	return &Route{
@@ -46,8 +39,6 @@ func FromDomain(domainRoute *domain.Route) *Route {
 		DestinationAirportID:   domainRoute.DestinationAirportID,
 		DestinationIataCode:    domainRoute.DestinationIataCode,
 		DestinationAirportName: domainRoute.DestinationAirportName,
-		OriginCountry:          domainRoute.OriginCountry,
-		DestinationCountry:     domainRoute.DestinationCountry,
 		AirportType:            domainRoute.AirportType,
 		EstimatedFlightTime:    domainRoute.EstimatedFlightTime,
 		RouteCode:              domainRoute.RouteCode,

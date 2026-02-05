@@ -10,7 +10,6 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
-// airportFakeTx is a test transaction
 type airportFakeTx struct{}
 
 func (t *airportFakeTx) Commit() error   { return nil }
@@ -22,8 +21,6 @@ type fakeAirportServiceForInteractor struct {
 	deactivateFn   func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirportsFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
-	getByCityFn    func(ctx context.Context, city string) ([]domain.Airport, error)
-	getByCountryFn func(ctx context.Context, country string) ([]domain.Airport, error)
 	getByTypeFn    func(ctx context.Context, airportType string) ([]domain.Airport, error)
 }
 
@@ -64,20 +61,6 @@ func (f *fakeAirportServiceForInteractor) ListAirports(ctx context.Context, filt
 	return nil, errors.New("not implemented")
 }
 
-func (f *fakeAirportServiceForInteractor) GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error) {
-	if f.getByCityFn != nil {
-		return f.getByCityFn(ctx, city)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (f *fakeAirportServiceForInteractor) GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error) {
-	if f.getByCountryFn != nil {
-		return f.getByCountryFn(ctx, country)
-	}
-	return nil, errors.New("not implemented")
-}
-
 func (f *fakeAirportServiceForInteractor) GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error) {
 	if f.getByTypeFn != nil {
 		return f.getByTypeFn(ctx, airportType)
@@ -92,8 +75,6 @@ func TestAirportInteractor_GetAirportByID(t *testing.T) {
 		expectedAirport := &domain.Airport{
 			ID:       "airport-123",
 			Name:     "El Dorado International",
-			City:     "Bogota",
-			Country:  "Colombia",
 			IATACode: "BOG",
 			Status:   true,
 		}
@@ -203,6 +184,141 @@ func TestAirportInteractor_DeactivateAirport(t *testing.T) {
 		err := interactor.DeactivateAirport(ctx, "airport-123")
 		if !errors.Is(err, deactivateErr) {
 			t.Fatalf("expected %v, got %v", deactivateErr, err)
+		}
+	})
+}
+
+func TestAirportInteractor_ListAirports(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success => returns list of airports", func(t *testing.T) {
+		expectedAirports := []domain.Airport{
+			{ID: "airport-1", Name: "El Dorado", IATACode: "BOG"},
+			{ID: "airport-2", Name: "Jose Maria Cordova", IATACode: "MDE"},
+		}
+		svc := &fakeAirportServiceForInteractor{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return expectedAirports, nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		result, err := interactor.ListAirports(ctx, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 2 {
+			t.Errorf("expected 2 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("success with filters", func(t *testing.T) {
+		expectedFilters := map[string]interface{}{"status": true}
+		svc := &fakeAirportServiceForInteractor{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		_, err := interactor.ListAirports(ctx, expectedFilters)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("empty list => returns empty slice", func(t *testing.T) {
+		svc := &fakeAirportServiceForInteractor{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return []domain.Airport{}, nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		result, err := interactor.ListAirports(ctx, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 0 {
+			t.Errorf("expected 0 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("service error => propagate error", func(t *testing.T) {
+		serviceErr := errors.New("database error")
+		svc := &fakeAirportServiceForInteractor{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return nil, serviceErr
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		_, err := interactor.ListAirports(ctx, nil)
+		if !errors.Is(err, serviceErr) {
+			t.Fatalf("expected %v, got %v", serviceErr, err)
+		}
+	})
+}
+
+func TestAirportInteractor_GetAirportsByType(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success => returns airports of type", func(t *testing.T) {
+		expectedAirports := []domain.Airport{
+			{ID: "airport-1", Name: "El Dorado", AirportType: "INTERNACIONAL"},
+			{ID: "airport-2", Name: "Cali Alfonso", AirportType: "INTERNACIONAL"},
+		}
+		svc := &fakeAirportServiceForInteractor{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				if airportType != "INTERNACIONAL" {
+					t.Errorf("expected type INTERNACIONAL, got %s", airportType)
+				}
+				return expectedAirports, nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		result, err := interactor.GetAirportsByType(ctx, "INTERNACIONAL")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 2 {
+			t.Errorf("expected 2 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("empty => returns empty slice", func(t *testing.T) {
+		svc := &fakeAirportServiceForInteractor{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				return []domain.Airport{}, nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		result, err := interactor.GetAirportsByType(ctx, "NACIONAL")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 0 {
+			t.Errorf("expected 0 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("service error => propagate error", func(t *testing.T) {
+		serviceErr := errors.New("database error")
+		svc := &fakeAirportServiceForInteractor{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				return nil, serviceErr
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		_, err := interactor.GetAirportsByType(ctx, "INTERNACIONAL")
+		if !errors.Is(err, serviceErr) {
+			t.Fatalf("expected %v, got %v", serviceErr, err)
 		}
 	})
 }

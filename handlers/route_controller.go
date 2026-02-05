@@ -73,7 +73,6 @@ func (h *handler) GetRouteByID() gin.HandlerFunc {
 // @Tags         Routes
 // @Produce      json
 // @Param        airport_type query string false "Filter by airport type (e.g., Nacional, Internacional)"
-// @Param        origin_country query string false "Filter by origin country (e.g., Colombia)"
 // @Success      200  {object}  RouteListResponse
 // @Failure      500  {object}  map[string]interface{}
 // @Router       /routes [get]
@@ -91,9 +90,6 @@ func (h *handler) ListRoutes() gin.HandlerFunc {
 		filters := make(map[string]interface{})
 		if airportType := c.Query("airport_type"); airportType != "" {
 			filters["airport_type"] = airportType
-		}
-		if originCountry := c.Query("origin_country"); originCountry != "" {
-			filters["origin_country"] = originCountry
 		}
 
 		routes, err := h.RouteInteractor.ListRoutes(c.Request.Context(), filters)

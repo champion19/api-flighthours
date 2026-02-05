@@ -10,7 +10,7 @@ import (
 )
 
 // GetEmployeeAirlineInfo godoc
-// @Summary      Get authenticated employee's airline information (HU24)
+// @Summary      Get authenticated employee's airline information
 // @Description  Returns the airline information (airline_id, airline_name, bp) of the authenticated employee
 // @Tags         AirlineEmployees
 // @Produce      json
@@ -71,7 +71,7 @@ func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 }
 
 // AddEmployeeAirlineInfo godoc
-// @Summary      Add airline information for authenticated employee (HU26)
+// @Summary      Add airline information for authenticated employee
 // @Description  Adds airline information (airline_id, bp, start_date, end_date) for the authenticated employee. New employees are set as active=true by default. The 'active' field is not accepted - use activate/deactivate endpoints for that.
 // @Tags         AirlineEmployees
 // @Accept       json
@@ -185,7 +185,7 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 }
 
 // UpdateEmployeeAirlineInfo godoc
-// @Summary      Edit airline information for authenticated employee (HU25)
+// @Summary      Edit airline information for authenticated employee
 // @Description  Updates the airline information (airline_id, bp, start_date, end_date) for the authenticated employee who already has airline info. The 'active' field is not editable - use activate/deactivate endpoints. Requires existing airline info.
 // @Tags         AirlineEmployees
 // @Accept       json
@@ -309,7 +309,7 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 }
 
 // ActivateEmployeeAirlineInfo godoc
-// @Summary      Activate airline information for authenticated employee (HU27)
+// @Summary      Activate airline information for authenticated employee
 // @Description  Activates the airline information for the authenticated employee. The employee must already have airline info assigned.
 // @Tags         AirlineEmployees
 // @Produce      json
@@ -363,7 +363,7 @@ func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 }
 
 // DeactivateEmployeeAirlineInfo godoc
-// @Summary      Deactivate airline information for authenticated employee (HU28)
+// @Summary      Deactivate airline information for authenticated employee
 // @Description  Deactivates the airline information for the authenticated employee. The employee must already have airline info assigned.
 // @Tags         AirlineEmployees
 // @Produce      json

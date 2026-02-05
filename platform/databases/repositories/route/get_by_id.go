@@ -10,7 +10,7 @@ import (
 // GetRouteByID retrieves a route by ID with denormalized airport data
 func (r *repository) GetRouteByID(ctx context.Context, id string) (*domain.Route, error) {
 	var route Route
-	var originCountry, destinationCountry, estimatedFlightTime sql.NullString
+	var estimatedFlightTime sql.NullString
 
 	err := r.stmtGetByID.QueryRowContext(ctx, id).Scan(
 		&route.ID,
@@ -20,8 +20,6 @@ func (r *repository) GetRouteByID(ctx context.Context, id string) (*domain.Route
 		&route.DestinationAirportID,
 		&route.DestinationIataCode,
 		&route.DestinationAirportName,
-		&originCountry,
-		&destinationCountry,
 		&route.AirportType,
 		&estimatedFlightTime,
 		&route.RouteCode,
@@ -34,12 +32,6 @@ func (r *repository) GetRouteByID(ctx context.Context, id string) (*domain.Route
 		return nil, err
 	}
 
-	if originCountry.Valid {
-		route.OriginCountry = originCountry.String
-	}
-	if destinationCountry.Valid {
-		route.DestinationCountry = destinationCountry.String
-	}
 	if estimatedFlightTime.Valid {
 		route.EstimatedFlightTime = estimatedFlightTime.String
 	}

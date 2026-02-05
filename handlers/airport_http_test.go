@@ -26,8 +26,6 @@ type fakeAirportService struct {
 	deactivateFn   func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirportsFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
-	getByCityFn    func(ctx context.Context, city string) ([]domain.Airport, error)
-	getByCountryFn func(ctx context.Context, country string) ([]domain.Airport, error)
 	getByTypeFn    func(ctx context.Context, airportType string) ([]domain.Airport, error)
 }
 
@@ -75,23 +73,6 @@ func (f *fakeAirportService) ListAirports(ctx context.Context, filters map[strin
 	return nil, errors.New("not implemented")
 }
 
-// GetAirportsByCity mock for HU13
-func (f *fakeAirportService) GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error) {
-	if f.getByCityFn != nil {
-		return f.getByCityFn(ctx, city)
-	}
-	return nil, errors.New("not implemented")
-}
-
-// GetAirportsByCountry mock for HU38
-func (f *fakeAirportService) GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error) {
-	if f.getByCountryFn != nil {
-		return f.getByCountryFn(ctx, country)
-	}
-	return nil, errors.New("not implemented")
-}
-
-// GetAirportsByType mock for HU46
 func (f *fakeAirportService) GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error) {
 	if f.getByTypeFn != nil {
 		return f.getByTypeFn(ctx, airportType)
@@ -142,7 +123,6 @@ func TestHTTP_GetAirportByID(t *testing.T) {
 
 	t.Run("success with obfuscated ID", func(t *testing.T) {
 		airportUUID := "550e8400-e29b-41d4-a716-446655440000"
-		// Encode UUID to obfuscated ID
 		encodedID, err := enc.Encode(airportUUID)
 		if err != nil {
 			t.Fatalf("failed to encode ID: %v", err)
@@ -151,8 +131,6 @@ func TestHTTP_GetAirportByID(t *testing.T) {
 		expectedAirport := &domain.Airport{
 			ID:       airportUUID,
 			Name:     "El Dorado International",
-			City:     "Bogota",
-			Country:  "Colombia",
 			IATACode: "BOG",
 			Status:   true,
 		}
@@ -350,6 +328,389 @@ func TestHTTP_DeactivateAirport(t *testing.T) {
 
 		if response["success"] != false {
 			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeAirportService{}
+		router := newRouter(svc)
+
+		req := httptest.NewRequest(http.MethodPatch, "/airports/invalid-id!!!/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
+}
+
+func TestHTTP_ListAirports(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirportMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirportService) *gin.Engine {
+		airportInteractor := interactor.NewAirportInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.GET("/airports", h.ListAirports())
+		return r
+	}
+
+	t.Run("success - returns list of airports", func(t *testing.T) {
+		expectedAirports := []domain.Airport{
+			{ID: "uuid-1", Name: "El Dorado", IATACode: "BOG", Status: true},
+			{ID: "uuid-2", Name: "Jose Maria Cordova", IATACode: "MDE", Status: true},
+		}
+
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return expectedAirports, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d. body=%s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("success - empty list", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("success - with status=true filter", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports?status=true", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("success - with status=false filter", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports?status=false", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("success - with status=active filter", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports?status=active", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("success - with status=inactive filter", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports?status=inactive", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("success - with status=1 filter", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != true {
+					t.Errorf("expected status filter true, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports?status=1", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("success - with status=0 filter", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				if filters["status"] != false {
+					t.Errorf("expected status filter false, got %v", filters["status"])
+				}
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports?status=0", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("service error => 500", func(t *testing.T) {
+		svc := &fakeAirportService{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return nil, errors.New("database error")
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("expected status 500, got %d", w.Code)
+		}
+	})
+}
+
+func TestHTTP_GetAirportsByType(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirportMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirportService) *gin.Engine {
+		airportInteractor := interactor.NewAirportInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.GET("/airport-types/:airport_type", h.GetAirportsByType())
+		return r
+	}
+
+	t.Run("success - returns airports by type", func(t *testing.T) {
+		expectedAirports := []domain.Airport{
+			{ID: "uuid-1", Name: "El Dorado", IATACode: "BOG", AirportType: "INTERNACIONAL", Status: true},
+			{ID: "uuid-2", Name: "Aeropuerto Alfonso Bonilla", IATACode: "CLO", AirportType: "INTERNACIONAL", Status: true},
+		}
+
+		svc := &fakeAirportService{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				if airportType != "INTERNACIONAL" {
+					t.Errorf("expected type INTERNACIONAL, got %s", airportType)
+				}
+				return expectedAirports, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airport-types/INTERNACIONAL", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d. body=%s", w.Code, w.Body.String())
+		}
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != true {
+			t.Errorf("expected success=true, got %v", response["success"])
+		}
+	})
+
+	t.Run("success - empty list for type", func(t *testing.T) {
+		svc := &fakeAirportService{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				return []domain.Airport{}, nil
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airport-types/NACIONAL", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		svc := &fakeAirportService{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				return nil, errors.New("database error")
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airport-types/INTERNACIONAL", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		// Should return error response
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+}
+
+func TestHTTP_GetAirportByID_EdgeCases(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirportMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirportService) *gin.Engine {
+		airportInteractor := interactor.NewAirportInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.GET("/airports/:id", h.GetAirportByID())
+		return r
+	}
+
+	t.Run("invalid ID format => 400", func(t *testing.T) {
+		svc := &fakeAirportService{}
+		router := newRouter(svc)
+
+		req := httptest.NewRequest(http.MethodGet, "/airports/invalid-id!!!", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d. body=%s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("generic service error => 500", func(t *testing.T) {
+		airportUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(airportUUID)
+
+		svc := &fakeAirportService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.Airport, error) {
+				return nil, errors.New("database connection failed")
+			},
+		}
+
+		router := newRouter(svc)
+		req := httptest.NewRequest(http.MethodGet, "/airports/"+encodedID, nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("expected status 500, got %d. body=%s", w.Code, w.Body.String())
 		}
 	})
 }

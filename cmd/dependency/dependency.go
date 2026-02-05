@@ -119,7 +119,6 @@ func Init() (*Dependencies, error) {
 	messageInteractor := interactor.NewMessageInteractor(messageService)
 	log.Success(logger.LogDependencyMessageIntInit)
 
-	// Airline dependencies
 	airlineRepository, err := airlineRepo.NewAirlineRepository(db)
 	if err != nil {
 		log.Error(logger.LogAirlineRepoInitError, "error", err)
@@ -150,7 +149,6 @@ func Init() (*Dependencies, error) {
 	routeService := services.NewRouteService(routeRepository, log)
 	routeInteractor := interactor.NewRouteInteractor(routeService, log)
 
-	// Inicializar repositorio y servicio de rutas aerolínea
 	airlineRouteRepository, err := airlineRouteRepo.NewAirlineRouteRepository(db)
 	if err != nil {
 		log.Error(logger.LogAirlineRouteRepoInitError, "error", err)
@@ -171,7 +169,6 @@ func Init() (*Dependencies, error) {
 	engineService := services.NewEngineService(engineRepository)
 	engineInteractor := interactor.NewEngineInteractor(engineService)
 
-	// Inicializar repositorio y servicio de fabricantes (Manufacturer)
 	manufacturerRepository, err := manufacturerRepo.NewManufacturerRepository(db)
 	if err != nil {
 		log.Error(logger.LogManufacturerRepoInitError, "error", err)

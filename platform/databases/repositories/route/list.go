@@ -15,8 +15,6 @@ func (r *repository) ListRoutes(ctx context.Context, filters map[string]interfac
 	// Check if filtering by airport type
 	if airportType, ok := filters["airport_type"]; ok {
 		rows, err = r.stmtGetByAirportType.QueryContext(ctx, airportType)
-	} else if originCountry, ok := filters["origin_country"]; ok {
-		rows, err = r.stmtGetByOriginCountry.QueryContext(ctx, originCountry)
 	} else {
 		rows, err = r.stmtGetAll.QueryContext(ctx)
 	}
@@ -29,7 +27,7 @@ func (r *repository) ListRoutes(ctx context.Context, filters map[string]interfac
 	var routes []domain.Route
 	for rows.Next() {
 		var route Route
-		var originCountry, destinationCountry, estimatedFlightTime sql.NullString
+		var estimatedFlightTime sql.NullString
 
 		if err := rows.Scan(
 			&route.ID,
@@ -39,8 +37,6 @@ func (r *repository) ListRoutes(ctx context.Context, filters map[string]interfac
 			&route.DestinationAirportID,
 			&route.DestinationIataCode,
 			&route.DestinationAirportName,
-			&originCountry,
-			&destinationCountry,
 			&route.AirportType,
 			&estimatedFlightTime,
 			&route.RouteCode,
@@ -48,12 +44,6 @@ func (r *repository) ListRoutes(ctx context.Context, filters map[string]interfac
 			return nil, err
 		}
 
-		if originCountry.Valid {
-			route.OriginCountry = originCountry.String
-		}
-		if destinationCountry.Valid {
-			route.DestinationCountry = destinationCountry.String
-		}
 		if estimatedFlightTime.Valid {
 			route.EstimatedFlightTime = estimatedFlightTime.String
 		}

@@ -5,18 +5,17 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-
 )
 
 // AirportService implements the business logic for airport operations
 type AirportService struct {
-	repo   output.AirportRepository
+	repo output.AirportRepository
 }
 
 // NewAirportService creates a new airport service
 func NewAirportService(repo output.AirportRepository) *AirportService {
 	return &AirportService{
-		repo:   repo,
+		repo: repo,
 	}
 }
 
@@ -35,17 +34,7 @@ func (s *AirportService) ListAirports(ctx context.Context, filters map[string]in
 	return s.repo.ListAirports(ctx, filters)
 }
 
-// GetAirportsByCity retrieves all airports for a specific city (HU13 - Virtual Entity pattern)
-func (s *AirportService) GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error) {
-	return s.repo.GetAirportsByCity(ctx, city)
-}
-
-// GetAirportsByCountry retrieves all airports for a specific country (HU38 - Virtual Entity pattern)
-func (s *AirportService) GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error) {
-	return s.repo.GetAirportsByCountry(ctx, country)
-}
-
-// GetAirportsByType retrieves all airports for a specific airport type (HU46 - Virtual Entity pattern)
+// GetAirportsByType retrieves all airports for a specific airport type
 func (s *AirportService) GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error) {
 	return s.repo.GetAirportsByType(ctx, airportType)
 }

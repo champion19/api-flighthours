@@ -245,26 +245,6 @@ func TestHTTP_ListRoutes(t *testing.T) {
 		}
 	})
 
-	t.Run("success - list with origin_country filter", func(t *testing.T) {
-		svc := &fakeRouteService{
-			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error) {
-				if filters["origin_country"] != "Colombia" {
-					t.Errorf("expected origin_country filter 'Colombia', got %v", filters["origin_country"])
-				}
-				return []domain.Route{}, nil
-			},
-		}
-
-		r := newRouter(svc)
-		req := httptest.NewRequest(http.MethodGet, "/routes?origin_country=Colombia", nil)
-		w := httptest.NewRecorder()
-
-		r.ServeHTTP(w, req)
-		if w.Code != http.StatusOK {
-			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
-		}
-	})
-
 	t.Run("service error => 500", func(t *testing.T) {
 		svc := &fakeRouteService{
 			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error) {

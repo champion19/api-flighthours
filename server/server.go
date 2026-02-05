@@ -111,15 +111,13 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/airports/:id", handler.GetAirportByID())
 
+		public.GET("/airport-types/:airport_type", handler.GetAirportsByType())
+
 		public.GET("/manufacturers", handler.ListManufacturers())
 
 		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
 
-		public.GET("/cities/:city_name", handler.GetAirportsByCity())
 
-		public.GET("/countries/:country_name", handler.GetAirportsByCountry())
-
-		public.GET("/airport-types/:airport_type", handler.GetAirportsByType())
 
 	}
 	protected := app.Group("flighthours/api/v1")
@@ -178,7 +176,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		admin.PATCH("/airlines/:id/activate", handler.ActivateAirline())
 		admin.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
 		admin.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
-
+    admin.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
 	}
 	log.Success(logger.LogRouteConfigured)
 }

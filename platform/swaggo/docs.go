@@ -342,6 +342,252 @@ const docTemplate = `{
                 }
             }
         },
+        "/airlines/{id}/deactivate": {
+            "patch": {
+                "description": "Sets airline status to inactive (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airlines"
+                ],
+                "summary": "Deactivate airline",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airline ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/airport-types/{airport_type}": {
+            "get": {
+                "description": "Returns all airports of a specific type. No new tables needed - queries airport.airport_type field.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airport Types"
+                ],
+                "summary": "Get airports by type",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airport type (e.g., INTERNACIONAL, NACIONAL)",
+                        "name": "airport_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AirportListResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/airports": {
+            "get": {
+                "description": "Returns a list of all airports with optional status filter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airports"
+                ],
+                "summary": "List all airports",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status (true/false, active/inactive)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AirportListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/airports/{id}": {
+            "get": {
+                "description": "Returns airport information by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airports"
+                ],
+                "summary": "Get airport by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airport ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/airports/{id}/deactivate": {
+            "patch": {
+                "description": "Sets airport status to inactive (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airports"
+                ],
+                "summary": "Deactivate airport",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airport ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/change-password": {
             "post": {
                 "security": [
@@ -772,7 +1018,7 @@ const docTemplate = `{
                 "tags": [
                     "AirlineEmployees"
                 ],
-                "summary": "Get authenticated employee's airline information (HU24)",
+                "summary": "Get authenticated employee's airline information",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -816,7 +1062,7 @@ const docTemplate = `{
                 "tags": [
                     "AirlineEmployees"
                 ],
-                "summary": "Add airline information for authenticated employee (HU26)",
+                "summary": "Add airline information for authenticated employee",
                 "parameters": [
                     {
                         "description": "Airline information to add (airline_id, bp, start_date, end_date)",
@@ -879,7 +1125,7 @@ const docTemplate = `{
                 "tags": [
                     "AirlineEmployees"
                 ],
-                "summary": "Edit airline information for authenticated employee (HU25)",
+                "summary": "Edit airline information for authenticated employee",
                 "parameters": [
                     {
                         "description": "Airline information to update (airline_id, bp, start_date, end_date)",
@@ -991,7 +1237,7 @@ const docTemplate = `{
                 "tags": [
                     "AirlineEmployees"
                 ],
-                "summary": "Activate airline information for authenticated employee (HU27)",
+                "summary": "Activate airline information for authenticated employee",
                 "responses": {
                     "200": {
                         "description": "Airline info activated successfully",
@@ -1034,7 +1280,7 @@ const docTemplate = `{
                 "tags": [
                     "AirlineEmployees"
                 ],
-                "summary": "Deactivate airline information for authenticated employee (HU28)",
+                "summary": "Deactivate airline information for authenticated employee",
                 "responses": {
                     "200": {
                         "description": "Airline info deactivated successfully",
@@ -1191,6 +1437,87 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/manufacturers": {
+            "get": {
+                "description": "Returns a list of all manufacturers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Manufacturers"
+                ],
+                "summary": "List all manufacturers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ManufacturerListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/manufacturers/{id}": {
+            "get": {
+                "description": "Returns manufacturer information by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Manufacturers"
+                ],
+                "summary": "Get manufacturer by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Manufacturer ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1607,12 +1934,6 @@ const docTemplate = `{
                         "description": "Filter by airport type (e.g., Nacional, Internacional)",
                         "name": "airport_type",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by origin country (e.g., Colombia)",
-                        "name": "origin_country",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1688,7 +2009,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.MessageType": {
+        "github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType": {
             "type": "string",
             "enum": [
                 "ERROR",
@@ -1788,6 +2109,52 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AirportListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AirportResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.AirportResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airport_type": {
+                    "type": "string"
+                },
+                "iata_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "status": {
@@ -2006,6 +2373,43 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ManufacturerListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "manufacturers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.ManufacturerResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.ManufacturerResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.MessageCreatedResponse": {
             "type": "object",
             "properties": {
@@ -2062,7 +2466,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/domain.MessageType"
+                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
                 }
             }
         },
@@ -2097,7 +2501,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/domain.MessageType"
+                    "$ref": "#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType"
                 }
             }
         },
@@ -2191,9 +2595,6 @@ const docTemplate = `{
                 "destination_airport_name": {
                     "type": "string"
                 },
-                "destination_country": {
-                    "type": "string"
-                },
                 "destination_iata_code": {
                     "type": "string"
                 },
@@ -2207,9 +2608,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "origin_airport_name": {
-                    "type": "string"
-                },
-                "origin_country": {
                     "type": "string"
                 },
                 "origin_iata_code": {

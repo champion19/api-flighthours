@@ -9,12 +9,10 @@ import(
 
 
 
-// ListAirports retrieves all airports, optionally filtered by status
+
 func (r *repository) ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
 	var rows *sql.Rows
 	var err error
-
-	// Check if status filter is provided
 	if status, ok := filters["status"]; ok {
 		statusBool, isBool := status.(bool)
 		if isBool {
@@ -34,7 +32,7 @@ func (r *repository) ListAirports(ctx context.Context, filters map[string]interf
 	var airports []domain.Airport
 	for rows.Next() {
 		var a Airport
-		if err := rows.Scan(&a.ID, &a.Name, &a.City, &a.Country, &a.IATACode, &a.Status, &a.AirportType); err != nil {
+		if err := rows.Scan(&a.ID, &a.Name, &a.IATACode, &a.Status, &a.AirportType); err != nil {
 			return nil, err
 		}
 		airports = append(airports, *a.ToDomain())

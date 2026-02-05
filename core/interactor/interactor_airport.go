@@ -9,20 +9,16 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-
-// AirportInteractor orchestrates airport operations
 type AirportInteractor struct {
 	service input.AirportService
 }
 
-// NewAirportInteractor creates a new airport interactor
 func NewAirportInteractor(service input.AirportService) *AirportInteractor {
 	return &AirportInteractor{
 		service: service,
 	}
 }
 
-// GetAirportByID retrieves an airport by its ID
 func (i *AirportInteractor) GetAirportByID(ctx context.Context, id string) (*domain.Airport, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
@@ -39,14 +35,12 @@ func (i *AirportInteractor) GetAirportByID(ctx context.Context, id string) (*dom
 	return airport, nil
 }
 
-// DeactivateAirport sets an airport's status to inactive
 func (i *AirportInteractor) DeactivateAirport(ctx context.Context, id string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirportDeactivate, "airport_id", id)
 
-	// Verify airport exists
 	_, err := i.service.GetAirportByID(ctx, id)
 	if err != nil {
 		log.Error(logger.LogAirportNotFound, "airport_id", id)
@@ -62,7 +56,6 @@ func (i *AirportInteractor) DeactivateAirport(ctx context.Context, id string) er
 	return nil
 }
 
-// ListAirports retrieves all airports with optional filters
 func (i *AirportInteractor) ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
@@ -79,41 +72,6 @@ func (i *AirportInteractor) ListAirports(ctx context.Context, filters map[string
 	return airports, nil
 }
 
-// GetAirportsByCity retrieves all airports for a specific city (HU13 - Virtual Entity pattern)
-func (i *AirportInteractor) GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error) {
-	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := log.WithTraceID(traceID)
-
-	log.Info(logger.LogAirportList, "city", city)
-
-	airports, err := i.service.GetAirportsByCity(ctx, city)
-	if err != nil {
-		log.Error(logger.LogAirportListError, "city", city, "error", err)
-		return nil, err
-	}
-
-	log.Success(logger.LogAirportListOK, "city", city, "count", len(airports))
-	return airports, nil
-}
-
-// GetAirportsByCountry retrieves all airports for a specific country (HU38 - Virtual Entity pattern)
-func (i *AirportInteractor) GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error) {
-	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := log.WithTraceID(traceID)
-
-	log.Info(logger.LogAirportList, "country", country)
-
-	airports, err := i.service.GetAirportsByCountry(ctx, country)
-	if err != nil {
-		log.Error(logger.LogAirportListError, "country", country, "error", err)
-		return nil, err
-	}
-
-	log.Success(logger.LogAirportListOK, "country", country, "count", len(airports))
-	return airports, nil
-}
-
-// GetAirportsByType retrieves all airports for a specific airport type (HU46 - Virtual Entity pattern)
 func (i *AirportInteractor) GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)

@@ -19,7 +19,7 @@ type repository struct {
 	db          *sql.DB
 }
 
-// NewManufacturerRepository creates a new manufacturer repository with prepared statements
+
 func NewManufacturerRepository(db *sql.DB) (*repository, error) {
 	if db == nil {
 		return nil, sql.ErrConnDone

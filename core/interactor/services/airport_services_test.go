@@ -30,8 +30,6 @@ type fakeAirportRepo struct {
 	updateStatusFn func(ctx context.Context, tx output.Tx, id string, status bool) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirportsFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
-	getByCityFn    func(ctx context.Context, city string) ([]domain.Airport, error)
-	getByCountryFn func(ctx context.Context, country string) ([]domain.Airport, error)
 	getByTypeFn    func(ctx context.Context, airportType string) ([]domain.Airport, error)
 }
 
@@ -63,20 +61,6 @@ func (f fakeAirportRepo) ListAirports(ctx context.Context, filters map[string]in
 	return nil, errors.New("not implemented")
 }
 
-func (f fakeAirportRepo) GetAirportsByCity(ctx context.Context, city string) ([]domain.Airport, error) {
-	if f.getByCityFn != nil {
-		return f.getByCityFn(ctx, city)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (f fakeAirportRepo) GetAirportsByCountry(ctx context.Context, country string) ([]domain.Airport, error) {
-	if f.getByCountryFn != nil {
-		return f.getByCountryFn(ctx, country)
-	}
-	return nil, errors.New("not implemented")
-}
-
 func (f fakeAirportRepo) GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error) {
 	if f.getByTypeFn != nil {
 		return f.getByTypeFn(ctx, airportType)
@@ -91,8 +75,6 @@ func TestAirportService_GetAirportByID(t *testing.T) {
 		expectedAirport := &domain.Airport{
 			ID:       "airport-123",
 			Name:     "El Dorado International",
-			City:     "Bogota",
-			Country:  "Colombia",
 			IATACode: "BOG",
 			Status:   true,
 		}
@@ -228,6 +210,117 @@ func TestAirportService_DeactivateAirport(t *testing.T) {
 		err := svc.DeactivateAirport(ctx, "airport-123")
 		if !errors.Is(err, updateErr) {
 			t.Fatalf("expected %v, got %v", updateErr, err)
+		}
+	})
+}
+
+func TestAirportService_ListAirports(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success => returns list of airports", func(t *testing.T) {
+		expectedAirports := []domain.Airport{
+			{ID: "airport-1", Name: "El Dorado", IATACode: "BOG"},
+			{ID: "airport-2", Name: "Jose Maria Cordova", IATACode: "MDE"},
+		}
+		svc := NewAirportService(fakeAirportRepo{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return expectedAirports, nil
+			},
+		})
+
+		result, err := svc.ListAirports(ctx, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 2 {
+			t.Errorf("expected 2 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("empty list => returns empty slice", func(t *testing.T) {
+		svc := NewAirportService(fakeAirportRepo{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return []domain.Airport{}, nil
+			},
+		})
+
+		result, err := svc.ListAirports(ctx, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 0 {
+			t.Errorf("expected 0 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("propagates repository error", func(t *testing.T) {
+		repoErr := errors.New("database error")
+		svc := NewAirportService(fakeAirportRepo{
+			listAirportsFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
+				return nil, repoErr
+			},
+		})
+
+		_, err := svc.ListAirports(ctx, nil)
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected %v, got %v", repoErr, err)
+		}
+	})
+}
+
+func TestAirportService_GetAirportsByType(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success => returns airports of type", func(t *testing.T) {
+		expectedAirports := []domain.Airport{
+			{ID: "airport-1", Name: "El Dorado", AirportType: "INTERNACIONAL"},
+			{ID: "airport-2", Name: "Cali Alfonso", AirportType: "INTERNACIONAL"},
+		}
+		svc := NewAirportService(fakeAirportRepo{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				if airportType != "INTERNACIONAL" {
+					t.Errorf("expected type INTERNACIONAL, got %s", airportType)
+				}
+				return expectedAirports, nil
+			},
+		})
+
+		result, err := svc.GetAirportsByType(ctx, "INTERNACIONAL")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 2 {
+			t.Errorf("expected 2 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("empty => returns empty slice", func(t *testing.T) {
+		svc := NewAirportService(fakeAirportRepo{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				return []domain.Airport{}, nil
+			},
+		})
+
+		result, err := svc.GetAirportsByType(ctx, "NACIONAL")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(result) != 0 {
+			t.Errorf("expected 0 airports, got %d", len(result))
+		}
+	})
+
+	t.Run("propagates repository error", func(t *testing.T) {
+		repoErr := errors.New("database error")
+		svc := NewAirportService(fakeAirportRepo{
+			getByTypeFn: func(ctx context.Context, airportType string) ([]domain.Airport, error) {
+				return nil, repoErr
+			},
+		})
+
+		_, err := svc.GetAirportsByType(ctx, "INTERNACIONAL")
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected %v, got %v", repoErr, err)
 		}
 	})
 }

@@ -2,18 +2,15 @@ package airport
 
 import domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 
-// Airport is the database entity for airport table
+// Airport is the DB model - matches actual database columns
 type Airport struct {
 	ID          string  `db:"id"`
 	Name        string  `db:"name"`
-	City        *string `db:"city"`
-	Country     *string `db:"country"`
 	IATACode    *string `db:"iata_code"`
 	Status      bool    `db:"status"`
 	AirportType *string `db:"airport_type"`
 }
 
-// ToDomain converts the database entity to domain model
 func (a *Airport) ToDomain() *domain.Airport {
 	airport := &domain.Airport{
 		ID:     a.ID,
@@ -21,12 +18,6 @@ func (a *Airport) ToDomain() *domain.Airport {
 		Status: a.Status,
 	}
 
-	if a.City != nil {
-		airport.City = *a.City
-	}
-	if a.Country != nil {
-		airport.Country = *a.Country
-	}
 	if a.IATACode != nil {
 		airport.IATACode = *a.IATACode
 	}
@@ -37,7 +28,6 @@ func (a *Airport) ToDomain() *domain.Airport {
 	return airport
 }
 
-// FromDomain converts a domain model to database entity
 func FromDomain(domainAirport *domain.Airport) *Airport {
 	airport := &Airport{
 		ID:     domainAirport.ID,
@@ -45,12 +35,6 @@ func FromDomain(domainAirport *domain.Airport) *Airport {
 		Status: domainAirport.Status,
 	}
 
-	if domainAirport.City != "" {
-		airport.City = &domainAirport.City
-	}
-	if domainAirport.Country != "" {
-		airport.Country = &domainAirport.Country
-	}
 	if domainAirport.IATACode != "" {
 		airport.IATACode = &domainAirport.IATACode
 	}

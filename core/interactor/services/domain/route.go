@@ -1,13 +1,10 @@
 package domain
 
 // Route represents the route domain model
-// Contains origin and destination airports with denormalized country data
 type Route struct {
 	ID                   string `json:"id"`
 	OriginAirportID      string `json:"origin_airport_id"`
 	DestinationAirportID string `json:"destination_airport_id"`
-	OriginCountry        string `json:"origin_country"`
-	DestinationCountry   string `json:"destination_country"`
 	AirportType          string `json:"airport_type"`
 	EstimatedFlightTime  string `json:"estimated_flight_time"` // Format: "HH:MM:SS"
 	// Denormalized fields obtained via JOIN
