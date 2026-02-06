@@ -59,6 +59,11 @@ func (s *AirportService) UpdateAirportStatus(ctx context.Context, id string, sta
 	return tx.Commit()
 }
 
+// ActivateAirport sets the airport status to true (active)
+func (s *AirportService) ActivateAirport(ctx context.Context, id string) error {
+	return s.UpdateAirportStatus(ctx, id, true)
+}
+
 // DeactivateAirport sets the airport status to false (inactive)
 func (s *AirportService) DeactivateAirport(ctx context.Context, id string) error {
 	return s.UpdateAirportStatus(ctx, id, false)

@@ -12,6 +12,7 @@ import (
 	"github.com/champion19/api-flighthours/middleware"
 	messagingCache "github.com/champion19/api-flighthours/platform/cache/messaging"
 	mysql "github.com/champion19/api-flighthours/platform/databases/mysql"
+	aircraftModelRepo "github.com/champion19/api-flighthours/platform/databases/repositories/aircraft_model"
 	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
 	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
 	airlineRouteRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_route"
@@ -47,6 +48,7 @@ type Dependencies struct {
 	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
 	AirportInteractor         *interactor.AirportInteractor
 	ManufacturerInteractor    *interactor.ManufacturerInteractor
+	AircraftModelInteractor   *interactor.AircraftModelInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -139,6 +141,16 @@ func Init() (*Dependencies, error) {
 	airportService := services.NewAirportService(airportRepository)
 	airportInteractor := interactor.NewAirportInteractor(airportService)
 
+	aircraftModelRepository, err := aircraftModelRepo.NewAircraftModelRepository(db)
+	if err != nil {
+		log.Error(logger.LogAircraftModelRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogAircraftModelRepoInitOK)
+
+	aircraftModelService := services.NewAircraftModelService(aircraftModelRepository,log)
+	aircraftModelInteractor := interactor.NewAircraftModelInteractor(aircraftModelService)
+
 	routeRepository, err := routeRepo.NewRouteRepository(db)
 	if err != nil {
 		log.Error(logger.LogRouteRepoInitError, "error", err)
@@ -221,5 +233,6 @@ func Init() (*Dependencies, error) {
 		AirlineRouteInteractor:    airlineRouteInteractor,
 		AirportInteractor:         airportInteractor,
 		ManufacturerInteractor:    manufacturerInteractor,
+		AircraftModelInteractor:   aircraftModelInteractor,
 	}, nil
 }

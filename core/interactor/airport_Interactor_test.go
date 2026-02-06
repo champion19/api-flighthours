@@ -18,6 +18,7 @@ func (t *airportFakeTx) Rollback() error { return nil }
 type fakeAirportServiceForInteractor struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.Airport, error)
 	updateStatusFn func(ctx context.Context, id string, status bool) error
+	activateFn     func(ctx context.Context, id string) error
 	deactivateFn   func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirportsFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
@@ -43,6 +44,13 @@ func (f *fakeAirportServiceForInteractor) GetAirportByID(ctx context.Context, id
 func (f *fakeAirportServiceForInteractor) UpdateAirportStatus(ctx context.Context, id string, status bool) error {
 	if f.updateStatusFn != nil {
 		return f.updateStatusFn(ctx, id, status)
+	}
+	return errors.New("not implemented")
+}
+
+func (f *fakeAirportServiceForInteractor) ActivateAirport(ctx context.Context, id string) error {
+	if f.activateFn != nil {
+		return f.activateFn(ctx, id)
 	}
 	return errors.New("not implemented")
 }

@@ -60,6 +60,66 @@ func (h *handler) GetAirportByID() gin.HandlerFunc {
 	}
 }
 
+// ActivateAirport godoc
+// @Summary      Activate airport
+// @Description  Sets airport status to active (accepts both UUID and obfuscated ID)
+// @Tags         Airports
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Airport ID (obfuscated ID)"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /airports/{id}/activate [patch]
+func (h *handler) ActivateAirport() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		inputID := c.Param("id")
+		if inputID == "" {
+			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		log.Info(logger.LogAirportActivate, "input_id", inputID, "client_ip", c.ClientIP())
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		airportUUID, responseID := h.resolveID(inputID)
+		if airportUUID == "" {
+			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
+			return
+		}
+
+		// Activate airport via interactor
+		if err := h.AirportInteractor.ActivateAirport(c.Request.Context(), airportUUID); err != nil {
+			log.Error(logger.LogAirportActivateError, "airport_id", airportUUID, "error", err, "client_ip", c.ClientIP())
+			if err == domain.ErrAirportNotFound {
+				h.Response.Error(c, domain.MsgAirportNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgServerError)
+			return
+		}
+
+		response := AirportStatusResponse{
+			ID:      responseID,
+			Status:  "active",
+			Updated: true,
+		}
+
+		// Build HATEOAS links (isActive=true, muestra link para deactivate)
+		baseURL := GetBaseURL(c)
+		response.Links = BuildAirportStatusLinks(baseURL, responseID, true)
+
+		log.Success(logger.LogAirportActivateOK, "airport_id", airportUUID, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgAirportActivateOK, response)
+	}
+}
+
+
 // DeactivateAirport godoc
 // @Summary      Deactivate airport
 // @Description  Sets airport status to inactive (accepts both UUID and obfuscated ID)
