@@ -654,6 +654,34 @@ func TestHTTP_GetAirportsByType(t *testing.T) {
 			t.Errorf("expected success=false, got %v", response["success"])
 		}
 	})
+
+	t.Run("empty airport_type - returns error", func(t *testing.T) {
+		svc := &fakeAirportService{}
+
+		airportInteractor := interactor.NewAirportInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		// Route that matches empty type
+		r.GET("/airport-types/", h.GetAirportsByType())
+
+		req := httptest.NewRequest(http.MethodGet, "/airport-types/", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		// Should return error response for empty type
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false for empty type, got %v", response["success"])
+		}
+	})
 }
 
 func TestHTTP_GetAirportByID_EdgeCases(t *testing.T) {

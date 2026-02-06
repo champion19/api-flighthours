@@ -142,4 +142,19 @@ func TestExtractClaimsFromToken(t *testing.T) {
 			t.Errorf("expected ErrInvalidTokenFormat, got %v", err)
 		}
 	})
+
+	t.Run("invalid base64 payload", func(t *testing.T) {
+		_, err := parser.ExtractClaimsFromToken("header.!!!invalid!!!.signature")
+		if err != ErrPayloadDecode {
+			t.Errorf("expected ErrPayloadDecode, got %v", err)
+		}
+	})
+
+	t.Run("invalid JSON payload", func(t *testing.T) {
+		invalidJSON := base64.RawURLEncoding.EncodeToString([]byte("not json"))
+		_, err := parser.ExtractClaimsFromToken("header." + invalidJSON + ".signature")
+		if err != ErrClaimsParse {
+			t.Errorf("expected ErrClaimsParse, got %v", err)
+		}
+	})
 }
