@@ -13,7 +13,7 @@ import (
 
 type handler struct {
 	EmployeeService           input.Service
-	Interactor                *interactor.Interactor
+	Interactor                input.EmployeeInteractor
 	IDEncoder                 *idencoder.HashidsEncoder
 	Response                  *middleware.ResponseHandler
 	MessageInteractor         *interactor.MessageInteractor
@@ -24,12 +24,12 @@ type handler struct {
 	EngineInteractor          *interactor.EngineInteractor
 	RouteInteractor           *interactor.RouteInteractor
 	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
-  ManufacturerInteractor    *interactor.ManufacturerInteractor
+	ManufacturerInteractor    *interactor.ManufacturerInteractor
 }
 
 func New(
 	service input.Service,
-	interactor *interactor.Interactor,
+	employeeInteractor input.EmployeeInteractor,
 	idEncoder *idencoder.HashidsEncoder,
 	response *middleware.ResponseHandler,
 	messageInteractor *interactor.MessageInteractor,
@@ -43,7 +43,7 @@ func New(
 	airlineRouteInteractor *interactor.AirlineRouteInteractor) *handler {
 	return &handler{
 		EmployeeService:           service,
-		Interactor:                interactor,
+		Interactor:                employeeInteractor,
 		IDEncoder:                 idEncoder,
 		Response:                  response,
 		MessageInteractor:         messageInteractor,
