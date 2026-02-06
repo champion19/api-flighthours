@@ -14,16 +14,17 @@ import (
 	mysql "github.com/champion19/api-flighthours/platform/databases/mysql"
 	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
 	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
+	airlineRouteRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_route"
+	airportRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airport"
 	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
 	engineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/engine"
+	manufacturerRepo "github.com/champion19/api-flighthours/platform/databases/repositories/manufacturer"
 	messageRepo "github.com/champion19/api-flighthours/platform/databases/repositories/message"
-	airlineRouteRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_route"
 	routeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/route"
 	"github.com/champion19/api-flighthours/platform/identity_provider/keycloak"
 	"github.com/champion19/api-flighthours/platform/jwt"
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/tools/idencoder"
-
 )
 
 var log logger.Logger = logger.NewSlogLogger()
@@ -44,6 +45,8 @@ type Dependencies struct {
 	EngineInteractor          *interactor.EngineInteractor
 	RouteInteractor           *interactor.RouteInteractor
 	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
+	AirportInteractor         *interactor.AirportInteractor
+	ManufacturerInteractor    *interactor.ManufacturerInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -116,7 +119,6 @@ func Init() (*Dependencies, error) {
 	messageInteractor := interactor.NewMessageInteractor(messageService)
 	log.Success(logger.LogDependencyMessageIntInit)
 
-	// Airline dependencies
 	airlineRepository, err := airlineRepo.NewAirlineRepository(db)
 	if err != nil {
 		log.Error(logger.LogAirlineRepoInitError, "error", err)
@@ -127,16 +129,17 @@ func Init() (*Dependencies, error) {
 	airlineService := services.NewAirlineService(airlineRepository)
 	airlineInteractor := interactor.NewAirlineInteractor(airlineService)
 
-	airlineEmployeeRepository, err := airlineEmployeeRepo.NewAirlineEmployeeRepository(db)
+	airportRepository, err := airportRepo.NewAirportRepository(db)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error", err, "repository", "airline_employee")
+		log.Error(logger.LogAirportRepoInitError, "error", err)
 		return nil, err
 	}
-	log.Success(logger.LogDatabaseAvailable, "repository", "airline_employee")
+	log.Success(logger.LogAirportRepoInitOK)
 
-	airlineEmployeeService := services.NewAirlineEmployeeService(airlineEmployeeRepository)
-	airlineEmployeeInteractor := interactor.NewAirlineEmployeeInteractor(airlineEmployeeService)
-routeRepository, err := routeRepo.NewRouteRepository(db)
+	airportService := services.NewAirportService(airportRepository)
+	airportInteractor := interactor.NewAirportInteractor(airportService)
+
+	routeRepository, err := routeRepo.NewRouteRepository(db)
 	if err != nil {
 		log.Error(logger.LogRouteRepoInitError, "error", err)
 		return nil, err
@@ -146,7 +149,6 @@ routeRepository, err := routeRepo.NewRouteRepository(db)
 	routeService := services.NewRouteService(routeRepository, log)
 	routeInteractor := interactor.NewRouteInteractor(routeService, log)
 
-	// Inicializar repositorio y servicio de rutas aerolínea
 	airlineRouteRepository, err := airlineRouteRepo.NewAirlineRouteRepository(db)
 	if err != nil {
 		log.Error(logger.LogAirlineRouteRepoInitError, "error", err)
@@ -157,7 +159,6 @@ routeRepository, err := routeRepo.NewRouteRepository(db)
 	airlineRouteService := services.NewAirlineRouteService(airlineRouteRepository)
 	airlineRouteInteractor := interactor.NewAirlineRouteInteractor(airlineRouteService)
 
-
 	engineRepository, err := engineRepo.NewEngineRepository(db)
 	if err != nil {
 		log.Error(logger.LogEngineRepoInitError, "error", err, "repository", "engine")
@@ -167,6 +168,26 @@ routeRepository, err := routeRepo.NewRouteRepository(db)
 
 	engineService := services.NewEngineService(engineRepository)
 	engineInteractor := interactor.NewEngineInteractor(engineService)
+
+	manufacturerRepository, err := manufacturerRepo.NewManufacturerRepository(db)
+	if err != nil {
+		log.Error(logger.LogManufacturerRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogManufacturerRepoInitOK)
+
+	manufacturerService := services.NewManufacturerService(manufacturerRepository)
+	manufacturerInteractor := interactor.NewManufacturerInteractor(manufacturerService)
+
+	airlineEmployeeRepository, err := airlineEmployeeRepo.NewAirlineEmployeeRepository(db)
+	if err != nil {
+		log.Error(logger.LogDatabaseUnavailable, "error", err, "repository", "airline_employee")
+		return nil, err
+	}
+	log.Success(logger.LogDatabaseAvailable, "repository", "airline_employee")
+
+	airlineEmployeeService := services.NewAirlineEmployeeService(airlineEmployeeRepository)
+	airlineEmployeeInteractor := interactor.NewAirlineEmployeeInteractor(airlineEmployeeService)
 
 	var jwtValidator *jwt.JWKSValidator
 	jwtConfig := jwt.JWKSConfig{
@@ -198,5 +219,7 @@ routeRepository, err := routeRepo.NewRouteRepository(db)
 		EngineInteractor:          engineInteractor,
 		RouteInteractor:           routeInteractor,
 		AirlineRouteInteractor:    airlineRouteInteractor,
+		AirportInteractor:         airportInteractor,
+		ManufacturerInteractor:    manufacturerInteractor,
 	}, nil
 }

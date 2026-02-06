@@ -320,3 +320,59 @@ func TestAirlineService_ActivateAirline(t *testing.T) {
 		}
 	})
 }
+
+func TestAirlineService_DeactivateAirline(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("deactivates airline successfully", func(t *testing.T) {
+		tx := &airlineFakeTx{}
+		svc := NewAirlineService(fakeAirlineRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return tx, nil },
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				if active {
+					t.Error("expected active to be false for deactivation")
+				}
+				return nil
+			},
+		})
+
+		err := svc.DeactivateAirline(ctx, "airline-123")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !tx.committed {
+			t.Error("expected transaction to be committed")
+		}
+	})
+
+	t.Run("rolls back on error", func(t *testing.T) {
+		tx := &airlineFakeTx{}
+		repoErr := errors.New("update failed")
+		svc := NewAirlineService(fakeAirlineRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return tx, nil },
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return repoErr
+			},
+		})
+
+		err := svc.DeactivateAirline(ctx, "airline-123")
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected %v, got %v", repoErr, err)
+		}
+		if !tx.rolledBack {
+			t.Error("expected transaction to be rolled back")
+		}
+	})
+
+	t.Run("returns error if BeginTx fails", func(t *testing.T) {
+		beginErr := errors.New("cannot begin transaction")
+		svc := NewAirlineService(fakeAirlineRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return nil, beginErr },
+		})
+
+		err := svc.DeactivateAirline(ctx, "airline-123")
+		if !errors.Is(err, beginErr) {
+			t.Fatalf("expected %v, got %v", beginErr, err)
+		}
+	})
+}

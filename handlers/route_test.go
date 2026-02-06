@@ -17,8 +17,6 @@ func TestFromDomainRoute(t *testing.T) {
 			DestinationAirportID:   "dest-airport-id",
 			DestinationIataCode:    "MDE",
 			DestinationAirportName: "José María Córdova",
-			OriginCountry:          "Colombia",
-			DestinationCountry:     "Colombia",
 			AirportType:            "domestic",
 			EstimatedFlightTime:    "1h 10m",
 			RouteCode:              "BOG-MDE",

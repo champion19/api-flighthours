@@ -224,8 +224,6 @@ func (m *MySQLContainer) SetupAirportSchema(ctx context.Context) error {
 		CREATE TABLE IF NOT EXISTS airport (
 			id VARCHAR(36) NOT NULL,
 			name VARCHAR(50) NOT NULL,
-			city VARCHAR(20),
-			country VARCHAR(50),
 			iata_code VARCHAR(3),
 			status BOOLEAN NOT NULL,
 			airport_type VARCHAR(13),
@@ -237,10 +235,10 @@ func (m *MySQLContainer) SetupAirportSchema(ctx context.Context) error {
 }
 
 // InsertAirport inserts test data into airport table
-func (m *MySQLContainer) InsertAirport(ctx context.Context, id, name, city, country, iataCode, airportType string, status bool) error {
+func (m *MySQLContainer) InsertAirport(ctx context.Context, id, name, iataCode, airportType string, status bool) error {
 	_, err := m.DB.ExecContext(ctx,
-		"INSERT INTO airport (id, name, city, country, iata_code, status, airport_type) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, name, city, country, iataCode, status, airportType)
+		"INSERT INTO airport (id, name, iata_code, status, airport_type) VALUES (?, ?, ?, ?, ?)",
+		id, name, iataCode, status, airportType)
 	return err
 }
 
@@ -265,8 +263,6 @@ func (m *MySQLContainer) SetupRouteSchema(ctx context.Context) error {
 			id VARCHAR(36) NOT NULL,
 			origin_airport_id VARCHAR(36) NOT NULL,
 			destination_airport_id VARCHAR(36) NOT NULL,
-			origin_country VARCHAR(50),
-			destination_country VARCHAR(50),
 			airport_type VARCHAR(13) NOT NULL,
 			estimated_flight_time TIME,
 			PRIMARY KEY (id),
@@ -279,10 +275,10 @@ func (m *MySQLContainer) SetupRouteSchema(ctx context.Context) error {
 }
 
 // InsertRoute inserts test data into route table
-func (m *MySQLContainer) InsertRoute(ctx context.Context, id, originAirportID, destAirportID, originCountry, destCountry, airportType, estimatedTime string) error {
+func (m *MySQLContainer) InsertRoute(ctx context.Context, id, originAirportID, destAirportID, airportType, estimatedTime string) error {
 	_, err := m.DB.ExecContext(ctx,
-		"INSERT INTO route (id, origin_airport_id, destination_airport_id, origin_country, destination_country, airport_type, estimated_flight_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		id, originAirportID, destAirportID, originCountry, destCountry, airportType, estimatedTime)
+		"INSERT INTO route (id, origin_airport_id, destination_airport_id, airport_type, estimated_flight_time) VALUES (?, ?, ?, ?, ?)",
+		id, originAirportID, destAirportID, airportType, estimatedTime)
 	return err
 }
 

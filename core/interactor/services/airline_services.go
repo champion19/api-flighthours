@@ -51,4 +51,6 @@ func (s *AirlineService) ActivateAirline(ctx context.Context, id string) error {
 	return s.UpdateAirlineStatus(ctx, id, true)
 }
 
-// DeactivateAirline será implementado en un release posterior (HU4)
+func (s *AirlineService) DeactivateAirline(ctx context.Context, id string) error {
+	return s.UpdateAirlineStatus(ctx, id, false)
+}

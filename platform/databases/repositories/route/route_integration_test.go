@@ -38,10 +38,10 @@ func setupTestData(ctx context.Context, t *testing.T) {
 	testContainer.CleanAirportTable(ctx)
 
 	// Insert airports
-	testContainer.InsertAirport(ctx, "airport-bog", "El Dorado International", "Bogota", "Colombia", "BOG", "International", true)
-	testContainer.InsertAirport(ctx, "airport-jfk", "John F Kennedy International", "New York", "USA", "JFK", "International", true)
-	testContainer.InsertAirport(ctx, "airport-mde", "Jose Maria Cordova", "Medellin", "Colombia", "MDE", "Domestic", true)
-	testContainer.InsertAirport(ctx, "airport-clo", "Alfonso Bonilla Aragon", "Cali", "Colombia", "CLO", "Domestic", true)
+	testContainer.InsertAirport(ctx, "airport-bog", "El Dorado International", "BOG", "International", true)
+	testContainer.InsertAirport(ctx, "airport-jfk", "John F Kennedy International", "JFK", "International", true)
+	testContainer.InsertAirport(ctx, "airport-mde", "Jose Maria Cordova", "MDE", "Domestic", true)
+	testContainer.InsertAirport(ctx, "airport-clo", "Alfonso Bonilla Aragon", "CLO", "Domestic", true)
 }
 
 func TestNewRouteRepository_Integration(t *testing.T) {
@@ -76,9 +76,9 @@ func TestRepository_ListRoutes_Integration(t *testing.T) {
 	setupTestData(ctx, t)
 
 	// Insert routes
-	testContainer.InsertRoute(ctx, "route-bog-jfk", "airport-bog", "airport-jfk", "Colombia", "USA", "International", "05:30:00")
-	testContainer.InsertRoute(ctx, "route-bog-mde", "airport-bog", "airport-mde", "Colombia", "Colombia", "Domestic", "00:45:00")
-	testContainer.InsertRoute(ctx, "route-mde-clo", "airport-mde", "airport-clo", "Colombia", "Colombia", "Domestic", "00:35:00")
+	testContainer.InsertRoute(ctx, "route-bog-jfk", "airport-bog", "airport-jfk", "International", "05:30:00")
+	testContainer.InsertRoute(ctx, "route-bog-mde", "airport-bog", "airport-mde", "Domestic", "00:45:00")
+	testContainer.InsertRoute(ctx, "route-mde-clo", "airport-mde", "airport-clo", "Domestic", "00:35:00")
 
 	repo, _ := NewRouteRepository(testContainer.DB)
 
@@ -118,18 +118,6 @@ func TestRepository_ListRoutes_Integration(t *testing.T) {
 			}
 		}
 	})
-
-	t.Run("filters by origin_country", func(t *testing.T) {
-		routes, err := repo.ListRoutes(ctx, map[string]interface{}{"origin_country": "Colombia"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		for _, r := range routes {
-			if r.OriginCountry != "Colombia" {
-				t.Errorf("expected origin_country 'Colombia', got %q", r.OriginCountry)
-			}
-		}
-	})
 }
 
 func TestRepository_GetRouteByID_Integration(t *testing.T) {
@@ -139,7 +127,7 @@ func TestRepository_GetRouteByID_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	setupTestData(ctx, t)
-	testContainer.InsertRoute(ctx, "route-get-1", "airport-bog", "airport-jfk", "Colombia", "USA", "International", "05:30:00")
+	testContainer.InsertRoute(ctx, "route-get-1", "airport-bog", "airport-jfk", "International", "05:30:00")
 
 	repo, _ := NewRouteRepository(testContainer.DB)
 

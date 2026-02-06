@@ -267,6 +267,83 @@ func BuildAirlineStatusLinks(baseURL string, airlineID string, isActive bool) []
 	return links
 }
 
+func BuildAirportLinks(baseURL string, airportID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airports", airportID)
+	collectionURL := BuildCollectionURL(baseURL, "airports")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL + "/activate",
+			Rel:    "activate",
+			Method: "PATCH",
+		},
+		{
+			Href:   resourceURL + "/deactivate",
+			Rel:    "deactivate",
+			Method: "PATCH",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
+
+
+func BuildAirportListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "airports")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}
+
+
+func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []Link {
+	resourceURL := BuildResourceURL(baseURL, "airports", airportID)
+	collectionURL := BuildCollectionURL(baseURL, "airports")
+
+	links := []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+
+
+	if isActive {
+		links = append(links, Link{
+			Href:   resourceURL + "/deactivate",
+			Rel:    "deactivate",
+			Method: "PATCH",
+		})
+	} else {
+		links = append(links, Link{
+			Href:   resourceURL + "/activate",
+			Rel:    "activate",
+			Method: "PATCH",
+		})
+	}
+
+	links = append(links, Link{
+		Href:   collectionURL,
+		Rel:    "collection",
+		Method: "GET",
+	})
+
+	return links
+}
 func BuildRouteLinks(baseURL string, routeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "routes", routeID)
 	collectionURL := BuildCollectionURL(baseURL, "routes")
@@ -334,7 +411,7 @@ func BuildAirlineRouteLinks(baseURL string, airlineRouteID string, isActive bool
 	return links
 }
 
-// BuildAirlineRouteListLinks construye links para la lista de rutas aerolínea
+
 func BuildAirlineRouteListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
 
@@ -347,7 +424,7 @@ func BuildAirlineRouteListLinks(baseURL string) []Link {
 	}
 }
 
-// BuildAirlineRouteStatusLinks construye links para respuesta de cambio de status
+
 func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-routes", airlineRouteID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
@@ -360,7 +437,7 @@ func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActiv
 		},
 	}
 
-	// Si está activo, mostrar link para desactivar y viceversa
+	
 	if isActive {
 		links = append(links, Link{
 			Href:   resourceURL + "/deactivate",
@@ -413,6 +490,39 @@ func BuildEngineListLinks(baseURL string) []Link {
 		},
 	}
 }
+
+
+func BuildManufacturerLinks(baseURL string, manufacturerID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "manufacturers", manufacturerID)
+	collectionURL := BuildCollectionURL(baseURL, "manufacturers")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
+
+
+func BuildManufacturerListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "manufacturers")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}
+
 
 func BuildAirlineEmployeeLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)

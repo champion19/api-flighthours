@@ -13,21 +13,23 @@ import (
 
 type handler struct {
 	EmployeeService           input.Service
-	Interactor                *interactor.Interactor
+	Interactor                input.EmployeeInteractor
 	IDEncoder                 *idencoder.HashidsEncoder
 	Response                  *middleware.ResponseHandler
 	MessageInteractor         *interactor.MessageInteractor
 	MessagingCache            *messaging.MessageCache
 	AirlineInteractor         *interactor.AirlineInteractor
+	AirportInteractor         *interactor.AirportInteractor
 	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
 	EngineInteractor          *interactor.EngineInteractor
 	RouteInteractor           *interactor.RouteInteractor
 	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
+	ManufacturerInteractor    *interactor.ManufacturerInteractor
 }
 
 func New(
 	service input.Service,
-	interactor *interactor.Interactor,
+	employeeInteractor input.EmployeeInteractor,
 	idEncoder *idencoder.HashidsEncoder,
 	response *middleware.ResponseHandler,
 	messageInteractor *interactor.MessageInteractor,
@@ -36,10 +38,12 @@ func New(
 	airlineEmployeeInteractor *interactor.AirlineEmployeeInteractor,
 	engineInteractor *interactor.EngineInteractor,
 	routeInteractor *interactor.RouteInteractor,
+	manufacturerInteractor *interactor.ManufacturerInteractor,
+	airportInteractor *interactor.AirportInteractor,
 	airlineRouteInteractor *interactor.AirlineRouteInteractor) *handler {
 	return &handler{
 		EmployeeService:           service,
-		Interactor:                interactor,
+		Interactor:                employeeInteractor,
 		IDEncoder:                 idEncoder,
 		Response:                  response,
 		MessageInteractor:         messageInteractor,
@@ -49,6 +53,8 @@ func New(
 		EngineInteractor:          engineInteractor,
 		RouteInteractor:           routeInteractor,
 		AirlineRouteInteractor:    airlineRouteInteractor,
+		ManufacturerInteractor:    manufacturerInteractor,
+		AirportInteractor:         airportInteractor,
 	}
 }
 

@@ -16,8 +16,6 @@ func TestRoute_ToDomain(t *testing.T) {
 			DestinationAirportID:   "airport-002",
 			DestinationIataCode:    "JFK",
 			DestinationAirportName: "John F Kennedy",
-			OriginCountry:          "Colombia",
-			DestinationCountry:     "USA",
 			AirportType:            "International",
 			EstimatedFlightTime:    "5h 30m",
 			RouteCode:              "BOG-JFK",
@@ -39,12 +37,6 @@ func TestRoute_ToDomain(t *testing.T) {
 		}
 		if result.DestinationIataCode != "JFK" {
 			t.Errorf("expected DestinationIataCode 'JFK', got %q", result.DestinationIataCode)
-		}
-		if result.OriginCountry != "Colombia" {
-			t.Errorf("expected OriginCountry 'Colombia', got %q", result.OriginCountry)
-		}
-		if result.DestinationCountry != "USA" {
-			t.Errorf("expected DestinationCountry 'USA', got %q", result.DestinationCountry)
 		}
 		if result.RouteCode != "BOG-JFK" {
 			t.Errorf("expected RouteCode 'BOG-JFK', got %q", result.RouteCode)
@@ -75,8 +67,6 @@ func TestFromDomain(t *testing.T) {
 			DestinationAirportID:   "airport-004",
 			DestinationIataCode:    "MIA",
 			DestinationAirportName: "Miami International",
-			OriginCountry:          "Colombia",
-			DestinationCountry:     "USA",
 			AirportType:            "International",
 			EstimatedFlightTime:    "4h 15m",
 			RouteCode:              "MDE-MIA",
@@ -110,8 +100,6 @@ func TestFromDomain(t *testing.T) {
 			DestinationAirportID:   "dest-id",
 			DestinationIataCode:    "LAX",
 			DestinationAirportName: "Los Angeles International",
-			OriginCountry:          "Colombia",
-			DestinationCountry:     "USA",
 			AirportType:            "International",
 			EstimatedFlightTime:    "7h 00m",
 			RouteCode:              "CLO-LAX",
@@ -125,9 +113,6 @@ func TestFromDomain(t *testing.T) {
 		}
 		if restored.RouteCode != original.RouteCode {
 			t.Errorf("RouteCode mismatch: expected %s, got %s", original.RouteCode, restored.RouteCode)
-		}
-		if restored.OriginCountry != original.OriginCountry {
-			t.Errorf("OriginCountry mismatch: expected %s, got %s", original.OriginCountry, restored.OriginCountry)
 		}
 		if restored.EstimatedFlightTime != original.EstimatedFlightTime {
 			t.Errorf("EstimatedFlightTime mismatch: expected %s, got %s", original.EstimatedFlightTime, restored.EstimatedFlightTime)
