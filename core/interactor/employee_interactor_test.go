@@ -347,6 +347,64 @@ func TestInteractor_RegisterEmployee(t *testing.T) {
 			t.Fatalf("expected keycloak rollback called once, got %d", calledRollbackKC)
 		}
 	})
+
+	t.Run("error causes tx rollback to fail => logs error but still returns original error", func(t *testing.T) {
+		tx := &fakeTx{rollbackFn: func() error { return errors.New("rollback failed") }}
+
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn: func(context.Context, output.Tx, domain.Employee) error {
+				return errors.New("save failed")
+			},
+		}
+
+		i := NewInteractor(svc)
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		// tx.Rollback was called (even though it failed)
+		if !tx.rolledBack {
+			t.Fatalf("expected tx.Rollback to be called")
+		}
+	})
+
+	t.Run("keycloak rollback fails => logs error but still returns original error", func(t *testing.T) {
+		tx := &fakeTx{}
+		calledRollbackKC := 0
+
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn:  func(context.Context, output.Tx, domain.Employee) error { return nil },
+			createUserFn: func(context.Context, *domain.Employee) (string, error) {
+				return "kc1", nil
+			},
+			setPasswordFn: func(context.Context, string, string) error {
+				return errors.New("set password failed")
+			},
+			rollbackKcFn: func(context.Context, string) error {
+				calledRollbackKC++
+				return errors.New("keycloak rollback failed")
+			},
+		}
+
+		i := NewInteractor(svc)
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if calledRollbackKC != 1 {
+			t.Fatalf("expected keycloak rollback called once, got %d", calledRollbackKC)
+		}
+	})
 }
 
 func TestInteractor_Login(t *testing.T) {
@@ -563,6 +621,25 @@ func TestInteractor_RequestPasswordReset(t *testing.T) {
 			t.Fatalf("expected no error (masked), got %v", err)
 		}
 	})
+
+	t.Run("success => sends password reset email", func(t *testing.T) {
+		sendCalled := false
+		svc := &fakeService{
+			sendPasswordResetFn: func(ctx context.Context, email string) error {
+				sendCalled = true
+				return nil
+			},
+		}
+		i := NewInteractor(svc)
+
+		err := i.RequestPasswordReset(ctx, "test@example.com")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !sendCalled {
+			t.Fatal("expected SendPasswordResetEmail to be called")
+		}
+	})
 }
 
 func TestInteractor_UpdatePassword(t *testing.T) {
@@ -728,6 +805,34 @@ func TestInteractor_VerifyEmailByToken(t *testing.T) {
 		_, err := i.VerifyEmailByToken(ctx, "invalid-token")
 		if !errors.Is(err, domain.ErrInvalidToken) {
 			t.Fatalf("expected %v, got %v", domain.ErrInvalidToken, err)
+		}
+	})
+
+	t.Run("user not found => returns error", func(t *testing.T) {
+		svc := &fakeService{
+			verifyEmailByTokenFn: func(ctx context.Context, token string) (string, error) {
+				return "unknown@example.com", domain.ErrUserNotFound
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.VerifyEmailByToken(ctx, "token-for-unknown-user")
+		if !errors.Is(err, domain.ErrUserNotFound) {
+			t.Fatalf("expected %v, got %v", domain.ErrUserNotFound, err)
+		}
+	})
+
+	t.Run("email already verified => returns error", func(t *testing.T) {
+		svc := &fakeService{
+			verifyEmailByTokenFn: func(ctx context.Context, token string) (string, error) {
+				return "verified@example.com", domain.ErrEmailAlreadyVerified
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.VerifyEmailByToken(ctx, "token-for-verified-email")
+		if !errors.Is(err, domain.ErrEmailAlreadyVerified) {
+			t.Fatalf("expected %v, got %v", domain.ErrEmailAlreadyVerified, err)
 		}
 	})
 }
