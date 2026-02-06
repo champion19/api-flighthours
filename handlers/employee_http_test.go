@@ -629,3 +629,98 @@ func TestHTTP_UpdatePassword(t *testing.T) {
 		}
 	})
 }
+
+func TestHTTP_RegisterEmployee_WithMock(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestEmployeeMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
+		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.POST("/register", h.RegisterEmployee())
+		return r
+	}
+
+	t.Run("success - registers employee", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{
+					Employee: domain.Employee{
+						ID:    "12345678-1234-1234-1234-123456789abc",
+						Email: employee.Email,
+						Name:  employee.Name,
+					},
+				}, nil
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"email":"new@example.com","password":"Pass123!","name":"Test User","role":"employee"}`
+		req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK && w.Code != http.StatusCreated {
+			t.Errorf("expected status 200 or 201, got %d. body=%s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("interactor error - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return nil, errors.New("registration failed")
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"email":"new@example.com","password":"Pass123!","name":"Test User","role":"employee"}`
+		req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+
+	t.Run("invalid JSON - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{}
+
+		router := newRouter(fake)
+		body := `{invalid json`
+		req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+}
