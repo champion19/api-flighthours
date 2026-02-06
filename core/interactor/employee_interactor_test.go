@@ -50,25 +50,26 @@ func (t *fakeTx) Rollback() error {
 }
 
 type fakeService struct {
-	registerEmployeeFn   func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error)
-	checkAndCleanFn      func(ctx context.Context, email string) error
-	beginTxFn            func(ctx context.Context) (output.Tx, error)
-	saveEmployeeFn       func(ctx context.Context, tx output.Tx, employee domain.Employee) error
-	createUserFn         func(ctx context.Context, employee *domain.Employee) (string, error)
-	setPasswordFn        func(ctx context.Context, userID string, password string) error
-	assignRoleFn         func(ctx context.Context, userID string, role string) error
-	updateKcIDFn         func(ctx context.Context, tx output.Tx, employeeID string, keycloakUserID string) error
-	rollbackKcFn         func(ctx context.Context, kcID string) error
-	loginFn              func(ctx context.Context, email, password string) (*gocloak.JWT, error)
-	getEmployeeByIDFn    func(ctx context.Context, id string) (*domain.Employee, error)
-	deleteEmployeeFn     func(ctx context.Context, id, kcID string) error
-	getEmployeesByRoleFn func(ctx context.Context, role string) ([]domain.Employee, error)
-	updateEmployeeFn     func(ctx context.Context, tx output.Tx, e domain.Employee) error
-	sendPasswordResetFn  func(ctx context.Context, email string) error
-	updatePasswordFn     func(ctx context.Context, token, newPass string) (string, error)
-	changePasswordFn     func(ctx context.Context, email, current, newPass string) (string, error)
-	verifyEmailByTokenFn func(ctx context.Context, token string) (string, error)
-	getUserByEmailFn     func(ctx context.Context, email string) (*gocloak.User, error)
+	registerEmployeeFn      func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error)
+	checkAndCleanFn         func(ctx context.Context, email string) error
+	beginTxFn               func(ctx context.Context) (output.Tx, error)
+	saveEmployeeFn          func(ctx context.Context, tx output.Tx, employee domain.Employee) error
+	createUserFn            func(ctx context.Context, employee *domain.Employee) (string, error)
+	setPasswordFn           func(ctx context.Context, userID string, password string) error
+	assignRoleFn            func(ctx context.Context, userID string, role string) error
+	updateKcIDFn            func(ctx context.Context, tx output.Tx, employeeID string, keycloakUserID string) error
+	rollbackKcFn            func(ctx context.Context, kcID string) error
+	loginFn                 func(ctx context.Context, email, password string) (*gocloak.JWT, error)
+	getEmployeeByIDFn       func(ctx context.Context, id string) (*domain.Employee, error)
+	deleteEmployeeFn        func(ctx context.Context, id, kcID string) error
+	getEmployeesByRoleFn    func(ctx context.Context, role string) ([]domain.Employee, error)
+	updateEmployeeFn        func(ctx context.Context, tx output.Tx, e domain.Employee) error
+	sendPasswordResetFn     func(ctx context.Context, email string) error
+	updatePasswordFn        func(ctx context.Context, token, newPass string) (string, error)
+	changePasswordFn        func(ctx context.Context, email, current, newPass string) (string, error)
+	verifyEmailByTokenFn    func(ctx context.Context, token string) (string, error)
+	getUserByEmailFn        func(ctx context.Context, email string) (*gocloak.User, error)
+	sendVerificationEmailFn func(ctx context.Context, userID string) error
 }
 
 var _ input.Service = (*fakeService)(nil)
@@ -109,7 +110,10 @@ func (f *fakeService) SetUserPassword(ctx context.Context, userID string, passwo
 func (f *fakeService) AssignUserRole(ctx context.Context, userID string, role string) error {
 	return f.assignRoleFn(ctx, userID, role)
 }
-func (f *fakeService) SendVerificationEmail(context.Context, string) error {
+func (f *fakeService) SendVerificationEmail(ctx context.Context, userID string) error {
+	if f.sendVerificationEmailFn != nil {
+		return f.sendVerificationEmailFn(ctx, userID)
+	}
 	return nil
 }
 func (f *fakeService) SendPasswordResetEmail(ctx context.Context, email string) error {
@@ -424,6 +428,24 @@ func TestInteractor_DeleteEmployee(t *testing.T) {
 			t.Fatalf("expected %v, got %v", domain.ErrPersonNotFound, err)
 		}
 	})
+
+	t.Run("delete service fails => returns error", func(t *testing.T) {
+		deleteErr := errors.New("delete service error")
+		svc := &fakeService{
+			getEmployeeByIDFn: func(ctx context.Context, id string) (*domain.Employee, error) {
+				return &domain.Employee{ID: "em1", KeycloakUserID: "kc1"}, nil
+			},
+			deleteEmployeeFn: func(ctx context.Context, id, kcID string) error {
+				return deleteErr
+			},
+		}
+		i := NewInteractor(svc)
+
+		err := i.DeleteEmployee(ctx, "em1")
+		if !errors.Is(err, deleteErr) {
+			t.Fatalf("expected %v, got %v", deleteErr, err)
+		}
+	})
 }
 
 func TestInteractor_GetEmployeesByRole(t *testing.T) {
@@ -572,6 +594,34 @@ func TestInteractor_UpdatePassword(t *testing.T) {
 			t.Errorf("expected user@example.com, got %s", email)
 		}
 	})
+
+	t.Run("invalid token => returns ErrInvalidToken", func(t *testing.T) {
+		svc := &fakeService{
+			updatePasswordFn: func(ctx context.Context, token, newPass string) (string, error) {
+				return "", domain.ErrInvalidToken
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.UpdatePassword(ctx, "invalid-token", "newpass", "newpass")
+		if !errors.Is(err, domain.ErrInvalidToken) {
+			t.Fatalf("expected %v, got %v", domain.ErrInvalidToken, err)
+		}
+	})
+
+	t.Run("password update failed => returns ErrPasswordUpdateFailed", func(t *testing.T) {
+		svc := &fakeService{
+			updatePasswordFn: func(ctx context.Context, token, newPass string) (string, error) {
+				return "", domain.ErrPasswordUpdateFailed
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.UpdatePassword(ctx, "valid-token", "newpass", "newpass")
+		if !errors.Is(err, domain.ErrPasswordUpdateFailed) {
+			t.Fatalf("expected %v, got %v", domain.ErrPasswordUpdateFailed, err)
+		}
+	})
 }
 
 func TestInteractor_ChangePassword(t *testing.T) {
@@ -615,6 +665,34 @@ func TestInteractor_ChangePassword(t *testing.T) {
 		_, err := i.ChangePassword(ctx, "email@test.com", "wrong", "newpass", "newpass")
 		if !errors.Is(err, domain.ErrInvalidCurrentPassword) {
 			t.Fatalf("expected %v, got %v", domain.ErrInvalidCurrentPassword, err)
+		}
+	})
+
+	t.Run("user not found => returns error", func(t *testing.T) {
+		svc := &fakeService{
+			changePasswordFn: func(ctx context.Context, email, current, newPass string) (string, error) {
+				return "", domain.ErrUserNotFound
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.ChangePassword(ctx, "unknown@test.com", "current", "newpass", "newpass")
+		if !errors.Is(err, domain.ErrUserNotFound) {
+			t.Fatalf("expected %v, got %v", domain.ErrUserNotFound, err)
+		}
+	})
+
+	t.Run("password update failed => returns error", func(t *testing.T) {
+		svc := &fakeService{
+			changePasswordFn: func(ctx context.Context, email, current, newPass string) (string, error) {
+				return "", domain.ErrPasswordUpdateFailed
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.ChangePassword(ctx, "email@test.com", "current", "newpass", "newpass")
+		if !errors.Is(err, domain.ErrPasswordUpdateFailed) {
+			t.Fatalf("expected %v, got %v", domain.ErrPasswordUpdateFailed, err)
 		}
 	})
 }
@@ -684,6 +762,50 @@ func TestInteractor_ResendVerificationEmail(t *testing.T) {
 		err := i.ResendVerificationEmail(ctx, "verified@example.com")
 		if !errors.Is(err, domain.ErrEmailAlreadyVerified) {
 			t.Fatalf("expected %v, got %v", domain.ErrEmailAlreadyVerified, err)
+		}
+	})
+
+	t.Run("success => sends verification email", func(t *testing.T) {
+		notVerified := false
+		sendCalled := false
+		svc := &fakeService{
+			getUserByEmailFn: func(ctx context.Context, email string) (*gocloak.User, error) {
+				id := "user-123"
+				return &gocloak.User{ID: &id, EmailVerified: &notVerified}, nil
+			},
+			sendVerificationEmailFn: func(ctx context.Context, userID string) error {
+				sendCalled = true
+				return nil
+			},
+		}
+		i := NewInteractor(svc)
+
+		err := i.ResendVerificationEmail(ctx, "test@example.com")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !sendCalled {
+			t.Fatal("expected SendVerificationEmail to be called")
+		}
+	})
+
+	t.Run("send email fails => returns error", func(t *testing.T) {
+		notVerified := false
+		sendErr := errors.New("keycloak error")
+		svc := &fakeService{
+			getUserByEmailFn: func(ctx context.Context, email string) (*gocloak.User, error) {
+				id := "user-123"
+				return &gocloak.User{ID: &id, EmailVerified: &notVerified}, nil
+			},
+			sendVerificationEmailFn: func(ctx context.Context, userID string) error {
+				return sendErr
+			},
+		}
+		i := NewInteractor(svc)
+
+		err := i.ResendVerificationEmail(ctx, "test@example.com")
+		if !errors.Is(err, sendErr) {
+			t.Fatalf("expected %v, got %v", sendErr, err)
 		}
 	})
 }

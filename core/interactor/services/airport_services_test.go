@@ -68,6 +68,37 @@ func (f fakeAirportRepo) GetAirportsByType(ctx context.Context, airportType stri
 	return nil, errors.New("not implemented")
 }
 
+func TestAirportService_BeginTx(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("returns tx when repo succeeds", func(t *testing.T) {
+		expectedTx := &airportFakeTx{}
+		svc := NewAirportService(fakeAirportRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return expectedTx, nil },
+		})
+
+		tx, err := svc.BeginTx(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if tx != expectedTx {
+			t.Error("expected tx to match expected")
+		}
+	})
+
+	t.Run("returns error when repo fails", func(t *testing.T) {
+		repoErr := errors.New("db connection failed")
+		svc := NewAirportService(fakeAirportRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return nil, repoErr },
+		})
+
+		_, err := svc.BeginTx(ctx)
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected %v, got %v", repoErr, err)
+		}
+	})
+}
+
 func TestAirportService_GetAirportByID(t *testing.T) {
 	ctx := context.Background()
 
