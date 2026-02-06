@@ -4,7 +4,6 @@ import (
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-
 type RouteResponse struct {
 	ID                     string `json:"id"`
 	OriginAirportID        string `json:"origin_airport_id"`
@@ -13,14 +12,11 @@ type RouteResponse struct {
 	DestinationAirportID   string `json:"destination_airport_id"`
 	DestinationIataCode    string `json:"destination_iata_code"`
 	DestinationAirportName string `json:"destination_airport_name"`
-	OriginCountry          string `json:"origin_country,omitempty"`
-	DestinationCountry     string `json:"destination_country,omitempty"`
 	AirportType            string `json:"airport_type"`
 	EstimatedFlightTime    string `json:"estimated_flight_time,omitempty"`
 	RouteCode              string `json:"route_code"`
 	Links                  []Link `json:"_links,omitempty"`
 }
-
 
 func FromDomainRoute(route *domain.Route, encodedID, encodedOriginAirportID, encodedDestAirportID string) RouteResponse {
 	return RouteResponse{
@@ -31,22 +27,17 @@ func FromDomainRoute(route *domain.Route, encodedID, encodedOriginAirportID, enc
 		DestinationAirportID:   encodedDestAirportID,
 		DestinationIataCode:    route.DestinationIataCode,
 		DestinationAirportName: route.DestinationAirportName,
-		OriginCountry:          route.OriginCountry,
-		DestinationCountry:     route.DestinationCountry,
 		AirportType:            route.AirportType,
 		EstimatedFlightTime:    route.EstimatedFlightTime,
 		RouteCode:              route.RouteCode,
 	}
 }
 
-
 type RouteListResponse struct {
 	Routes []RouteResponse `json:"routes"`
 	Total  int             `json:"total"`
 	Links  []Link          `json:"_links,omitempty"`
 }
-
-
 
 func ToRouteListResponse(routes []domain.Route, encodeFunc func(string) (string, error), baseURL string) RouteListResponse {
 	response := RouteListResponse{
@@ -75,8 +66,6 @@ func ToRouteListResponse(routes []domain.Route, encodeFunc func(string) (string,
 			DestinationAirportID:   encodedDestAirportID,
 			DestinationIataCode:    route.DestinationIataCode,
 			DestinationAirportName: route.DestinationAirportName,
-			OriginCountry:          route.OriginCountry,
-			DestinationCountry:     route.DestinationCountry,
 			AirportType:            route.AirportType,
 			EstimatedFlightTime:    route.EstimatedFlightTime,
 			RouteCode:              route.RouteCode,
@@ -88,7 +77,6 @@ func ToRouteListResponse(routes []domain.Route, encodeFunc func(string) (string,
 		response.Routes = append(response.Routes, routeResp)
 	}
 
-	
 	if baseURL != "" {
 		response.Links = BuildRouteListLinks(baseURL)
 	}

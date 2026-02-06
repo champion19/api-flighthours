@@ -23,6 +23,7 @@ type fakeAirlineService struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.Airline, error)
 	updateStatusFn func(ctx context.Context, id string, status bool) error
 	activateFn     func(ctx context.Context, id string) error
+	deactivateFn   func(ctx context.Context, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirlinesFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 }
@@ -53,6 +54,13 @@ func (f *fakeAirlineService) UpdateAirlineStatus(ctx context.Context, id string,
 func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) error {
 	if f.activateFn != nil {
 		return f.activateFn(ctx, id)
+	}
+	return errors.New("not implemented")
+}
+
+func (f *fakeAirlineService) DeactivateAirline(ctx context.Context, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
 	}
 	return errors.New("not implemented")
 }
@@ -96,7 +104,7 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -257,7 +265,7 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -349,6 +357,125 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 	})
 }
 
+func TestHTTP_DeactivateAirline(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirlineMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirlineService) *gin.Engine {
+		airlineInteractor := interactor.NewAirlineInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.PATCH("/airlines/:id/deactivate", h.DeactivateAirline())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440010"
+		encodedID, _ := enc.Encode(airlineUUID)
+		deactivateCalled := false
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return &domain.Airline{ID: airlineUUID, Status: "active"}, nil
+			},
+			deactivateFn: func(ctx context.Context, id string) error {
+				deactivateCalled = true
+				return nil
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
+		}
+		if !deactivateCalled {
+			t.Fatal("expected deactivate to be called")
+		}
+
+		var out middleware.APIResponse
+		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+			t.Fatalf("invalid json response: %v; body=%s", err, w.Body.String())
+		}
+		if !out.Success {
+			t.Fatalf("expected success=true, got false")
+		}
+	})
+
+	t.Run("airline not found => 404", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440011"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return nil, domain.ErrAirlineNotFound
+			},
+			deactivateFn: func(context.Context, string) error {
+				return domain.ErrAirlineNotFound
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusNotFound, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("invalid ID format => 400", func(t *testing.T) {
+		svc := &fakeAirlineService{}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/invalid-id/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("interactor returns generic error => 500", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440012"
+		encodedID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeAirlineService{
+			getByIDFn: func(context.Context, string) (*domain.Airline, error) {
+				return &domain.Airline{ID: airlineUUID, AirlineName: "Test"}, nil
+			},
+			deactivateFn: func(context.Context, string) error {
+				return errors.New("database connection error")
+			},
+		}
+
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusInternalServerError {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
+		}
+	})
+}
+
 func TestHTTP_ListAirlines(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -363,7 +490,7 @@ func TestHTTP_ListAirlines(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

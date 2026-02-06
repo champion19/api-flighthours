@@ -1,6 +1,6 @@
 basePath: /flighthours/api/v1
 definitions:
-  domain.MessageType:
+  github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType:
     enum:
     - ERROR
     - EXITO
@@ -69,6 +69,36 @@ definitions:
       airline_name:
         type: string
       id:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers.AirportListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      airports:
+        items:
+          $ref: '#/definitions/handlers.AirportResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.AirportResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      airport_type:
+        type: string
+      iata_code:
+        type: string
+      id:
+        type: string
+      name:
         type: string
       status:
         type: string
@@ -212,6 +242,30 @@ definitions:
       token_type:
         type: string
     type: object
+  handlers.ManufacturerListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      manufacturers:
+        items:
+          $ref: '#/definitions/handlers.ManufacturerResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.ManufacturerResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   handlers.MessageCreatedResponse:
     properties:
       _links:
@@ -249,7 +303,7 @@ definitions:
       title:
         type: string
       type:
-        $ref: '#/definitions/domain.MessageType'
+        $ref: '#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType'
     type: object
   handlers.MessageResponse:
     properties:
@@ -272,7 +326,7 @@ definitions:
       title:
         type: string
       type:
-        $ref: '#/definitions/domain.MessageType'
+        $ref: '#/definitions/github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType'
     type: object
   handlers.MessageUpdatedResponse:
     properties:
@@ -332,8 +386,6 @@ definitions:
         type: string
       destination_airport_name:
         type: string
-      destination_country:
-        type: string
       destination_iata_code:
         type: string
       estimated_flight_time:
@@ -343,8 +395,6 @@ definitions:
       origin_airport_id:
         type: string
       origin_airport_name:
-        type: string
-      origin_country:
         type: string
       origin_iata_code:
         type: string
@@ -693,6 +743,177 @@ paths:
       summary: Activate airline
       tags:
       - Airlines
+  /airlines/{id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets airline status to inactive (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Airline ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deactivate airline
+      tags:
+      - Airlines
+  /airport-types/{airport_type}:
+    get:
+      consumes:
+      - application/json
+      description: Returns all airports of a specific type. No new tables needed -
+        queries airport.airport_type field.
+      parameters:
+      - description: Airport type (e.g., INTERNACIONAL, NACIONAL)
+        in: path
+        name: airport_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AirportListResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get airports by type
+      tags:
+      - Airport Types
+  /airports:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of all airports with optional status filter
+      parameters:
+      - description: Filter by status (true/false, active/inactive)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AirportListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all airports
+      tags:
+      - Airports
+  /airports/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns airport information by ID (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Airport ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get airport by ID
+      tags:
+      - Airports
+  /airports/{id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets airport status to inactive (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Airport ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deactivate airport
+      tags:
+      - Airports
   /auth/change-password:
     post:
       consumes:
@@ -992,7 +1213,7 @@ paths:
             $ref: '#/definitions/middleware.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get authenticated employee's airline information (HU24)
+      summary: Get authenticated employee's airline information
       tags:
       - AirlineEmployees
     put:
@@ -1034,7 +1255,7 @@ paths:
             $ref: '#/definitions/middleware.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Add airline information for authenticated employee (HU26)
+      summary: Add airline information for authenticated employee
       tags:
       - AirlineEmployees
   /employees/airline-info:
@@ -1081,7 +1302,7 @@ paths:
             $ref: '#/definitions/middleware.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Edit airline information for authenticated employee (HU25)
+      summary: Edit airline information for authenticated employee
       tags:
       - AirlineEmployees
   /employees/airline-routes:
@@ -1139,7 +1360,7 @@ paths:
             $ref: '#/definitions/middleware.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Activate airline information for authenticated employee (HU27)
+      summary: Activate airline information for authenticated employee
       tags:
       - AirlineEmployees
   /employees/airline/deactivate:
@@ -1167,7 +1388,7 @@ paths:
             $ref: '#/definitions/middleware.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Deactivate airline information for authenticated employee (HU28)
+      summary: Deactivate airline information for authenticated employee
       tags:
       - AirlineEmployees
   /engines:
@@ -1260,6 +1481,62 @@ paths:
       summary: User login
       tags:
       - Authentication
+  /manufacturers:
+    get:
+      description: Returns a list of all manufacturers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ManufacturerListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all manufacturers
+      tags:
+      - Manufacturers
+  /manufacturers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns manufacturer information by ID (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Manufacturer ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get manufacturer by ID
+      tags:
+      - Manufacturers
   /messages:
     get:
       description: Returns a list of all system messages with optional filters
@@ -1521,10 +1798,6 @@ paths:
       - description: Filter by airport type (e.g., Nacional, Internacional)
         in: query
         name: airport_type
-        type: string
-      - description: Filter by origin country (e.g., Colombia)
-        in: query
-        name: origin_country
         type: string
       produces:
       - application/json

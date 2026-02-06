@@ -12,15 +12,20 @@ import (
 
 // fakeAirlineService implements input.AirlineService for testing
 type fakeAirlineService struct {
+	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	getByIDFn      func(ctx context.Context, id string) (*domain.Airline, error)
 	listFn         func(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
 	updateStatusFn func(ctx context.Context, id string, status bool) error
 	activateFn     func(ctx context.Context, id string) error
+	deactivateFn   func(ctx context.Context, id string) error
 }
 
 var _ input.AirlineService = (*fakeAirlineService)(nil)
 
 func (f *fakeAirlineService) BeginTx(ctx context.Context) (output.Tx, error) {
+	if f.beginTxFn != nil {
+		return f.beginTxFn(ctx)
+	}
 	return &fakeTx{}, nil
 }
 
@@ -48,6 +53,13 @@ func (f *fakeAirlineService) UpdateAirlineStatus(ctx context.Context, id string,
 func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) error {
 	if f.activateFn != nil {
 		return f.activateFn(ctx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineService) DeactivateAirline(ctx context.Context, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
 	}
 	return nil
 }
@@ -218,6 +230,56 @@ func TestAirlineInteractor_ActivateAirline(t *testing.T) {
 		interactor := NewAirlineInteractor(svc)
 
 		err := interactor.ActivateAirline(context.Background(), "airline-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+}
+
+func TestAirlineInteractor_DeactivateAirline(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
+				return &domain.Airline{ID: id, AirlineName: "Test"}, nil
+			},
+			deactivateFn: func(ctx context.Context, id string) error {
+				return nil
+			},
+		}
+		interactor := NewAirlineInteractor(svc)
+
+		err := interactor.DeactivateAirline(context.Background(), "airline-123")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
+				return nil, domain.ErrAirlineNotFound
+			},
+		}
+		interactor := NewAirlineInteractor(svc)
+
+		err := interactor.DeactivateAirline(context.Background(), "nonexistent")
+		if err != domain.ErrAirlineNotFound {
+			t.Errorf("expected ErrAirlineNotFound, got %v", err)
+		}
+	})
+
+	t.Run("deactivation service error", func(t *testing.T) {
+		svc := &fakeAirlineService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
+				return &domain.Airline{ID: id}, nil
+			},
+			deactivateFn: func(ctx context.Context, id string) error {
+				return errors.New("deactivation failed")
+			},
+		}
+		interactor := NewAirlineInteractor(svc)
+
+		err := interactor.DeactivateAirline(context.Background(), "airline-123")
 		if err == nil {
 			t.Error("expected error, got nil")
 		}

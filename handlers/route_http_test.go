@@ -70,7 +70,7 @@ func TestHTTP_GetRouteByID(t *testing.T) {
 
 	newRouter := func(svc input.RouteService) *gin.Engine {
 		routeInteractor := interactor.NewRouteInteractor(svc, noopLogger{})
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -189,7 +189,7 @@ func TestHTTP_ListRoutes(t *testing.T) {
 
 	newRouter := func(svc input.RouteService) *gin.Engine {
 		routeInteractor := interactor.NewRouteInteractor(svc, noopLogger{})
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -242,26 +242,6 @@ func TestHTTP_ListRoutes(t *testing.T) {
 		}
 		if !filterCalled {
 			t.Fatal("expected filter function to be called")
-		}
-	})
-
-	t.Run("success - list with origin_country filter", func(t *testing.T) {
-		svc := &fakeRouteService{
-			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error) {
-				if filters["origin_country"] != "Colombia" {
-					t.Errorf("expected origin_country filter 'Colombia', got %v", filters["origin_country"])
-				}
-				return []domain.Route{}, nil
-			},
-		}
-
-		r := newRouter(svc)
-		req := httptest.NewRequest(http.MethodGet, "/routes?origin_country=Colombia", nil)
-		w := httptest.NewRecorder()
-
-		r.ServeHTTP(w, req)
-		if w.Code != http.StatusOK {
-			t.Fatalf("expected status %d, got %d. body=%s", http.StatusOK, w.Code, w.Body.String())
 		}
 	})
 
