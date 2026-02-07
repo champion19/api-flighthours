@@ -58,6 +58,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.ManufacturerInteractor,
 		dependencies.AirportInteractor,
 		dependencies.AirlineRouteInteractor,
+		dependencies.AircraftModelInteractor,
 	)
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -117,7 +118,9 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
 
-
+		public.GET("/aircraft-models", handler.ListAircraftModels())
+		
+		public.GET("/aircraft-families/:family", handler.GetAircraftModelsByFamily())
 
 	}
 	protected := app.Group("flighthours/api/v1")
@@ -165,6 +168,12 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PATCH("/airports/:id/deactivate", handler.DeactivateAirport())
 
+		protected.PATCH("/airports/:id/activate", handler.ActivateAirport())
+
+		protected.PATCH("/aircraft-models/:id/activate", handler.ActivateAircraftModel())
+
+		protected.PATCH("/aircraft-models/:id/deactivate", handler.DeactivateAircraftModel())
+
 	}
 	admin := app.Group("flighthours/api/v1/admin")
 	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
@@ -176,7 +185,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		admin.PATCH("/airlines/:id/activate", handler.ActivateAirline())
 		admin.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
 		admin.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
-    admin.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
+		admin.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
 	}
 	log.Success(logger.LogRouteConfigured)
 }

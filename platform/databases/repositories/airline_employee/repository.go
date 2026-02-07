@@ -11,6 +11,7 @@ import (
 
 const (
 	// Query to get airline-specific info for an employee
+	// Uses LEFT JOIN to handle employees without airline, and filters by airline status when assigned
 	QueryByID = `
 		SELECT
 			e.id,
@@ -20,7 +21,8 @@ const (
 			e.end_date,
 			e.active
 		FROM employee e
-		WHERE e.id = ?
+		LEFT JOIN airline a ON e.airline = a.id
+		WHERE e.id = ? AND (e.airline IS NULL OR a.status = TRUE)
 		LIMIT 1
 	`
 

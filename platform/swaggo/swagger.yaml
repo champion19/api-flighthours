@@ -914,6 +914,216 @@ paths:
       summary: Deactivate airport
       tags:
       - Airports
+  /airports/{id}/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets airport status to active (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Airport ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Activate airport
+      tags:
+      - Airports
+  /aircraft-families/{family}:
+    get:
+      description: Returns all aircraft models belonging to a specific family (HU32)
+      parameters:
+      - description: Aircraft Family (e.g., Airbus, Boeing)
+        in: path
+        name: family
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AircraftModelListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get aircraft models by family
+      tags:
+      - Aircraft Families
+  /aircraft-models:
+    get:
+      description: Returns a list of all aircraft models with optional engine type
+        filter
+      parameters:
+      - description: Filter by engine type (e.g., CFM, IAE)
+        in: query
+        name: engine_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AircraftModelListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all aircraft models
+      tags:
+      - Aircraft Models
+  /aircraft-models/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns aircraft model information by ID (accepts both UUID and
+        obfuscated ID)
+      parameters:
+      - description: Aircraft Model ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get aircraft model by ID
+      tags:
+      - Aircraft Models
+  /aircraft-models/{id}/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets aircraft model status to active (HU42 - accepts obfuscated
+        ID only)
+      parameters:
+      - description: Aircraft Model ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Activate aircraft model
+      tags:
+      - Aircraft Models
+  /aircraft-models/{id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets aircraft model status to inactive (HU41 - accepts obfuscated
+        ID only)
+      parameters:
+      - description: Aircraft Model ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deactivate aircraft model
+      tags:
+      - Aircraft Models
   /auth/change-password:
     post:
       consumes:
