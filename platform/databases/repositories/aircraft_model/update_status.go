@@ -1,9 +1,8 @@
 package aircraftmodel
 
-import(
+import (
 	"context"
 
-	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/databases/common"
 )
@@ -20,22 +19,11 @@ func (r *repository) BeginTx(ctx context.Context) (output.Tx, error) {
 // UpdateAircraftModelStatus updates the status of an aircraft model (active/inactive)
 // HU41: Inactivar la información del Tipo Aeronave
 // HU42: Activar la información del Tipo Aeronave
+// Idempotent: if the status is already the desired value, MySQL reports 0 rows affected
+// which is NOT an error. Existence is validated beforehand in the interactor.
 func (r *repository) UpdateAircraftModelStatus(ctx context.Context, tx output.Tx, id string, status bool) error {
 	sqlTx := tx.(*common.SQLTX)
 
-	result, err := sqlTx.ExecContext(ctx, QueryUpdateStatus, status, id)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return domain.ErrAircraftModelNotFound
-	}
-
-	return nil
+	_, err := sqlTx.ExecContext(ctx, QueryUpdateStatus, status, id)
+	return err
 }
