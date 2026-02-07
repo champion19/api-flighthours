@@ -13,7 +13,6 @@ type Tx interface {
 
 type Repository interface {
 	BeginTx(ctx context.Context) (Tx, error)
-
 	Save(ctx context.Context, tx Tx, employee domain.Employee) error
 	UpdateEmployee(ctx context.Context, tx Tx, employee domain.Employee) error
 	PatchEmployee(ctx context.Context, tx Tx, id string, keycloakUserID string) error
@@ -26,7 +25,6 @@ type Repository interface {
 
 type MessageRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
-
 	SaveMessage(ctx context.Context, tx Tx, message domain.Message) error
 	UpdateMessage(ctx context.Context, tx Tx, message domain.Message) error
 	DeleteMessage(ctx context.Context, tx Tx, id string) error
@@ -50,6 +48,14 @@ type AirportRepository interface {
 	ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
 	GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error)
 	UpdateAirportStatus(ctx context.Context, tx Tx, id string, status bool) error
+}
+
+type AircraftModelRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error)
+	ListAircraftModels(ctx context.Context, filters map[string]interface{}) ([]domain.AircraftModel, error)
+	GetAircraftModelsByFamily(ctx context.Context, family string) ([]domain.AircraftModel, error)
+	UpdateAircraftModelStatus(ctx context.Context, tx Tx, id string, status bool) error
 }
 
 type RouteRepository interface {

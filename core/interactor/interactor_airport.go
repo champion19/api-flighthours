@@ -35,6 +35,28 @@ func (i *AirportInteractor) GetAirportByID(ctx context.Context, id string) (*dom
 	return airport, nil
 }
 
+// ActivateAirport sets an airport's status to active
+func (i *AirportInteractor) ActivateAirport(ctx context.Context, id string) error {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogAirportActivate, "airport_id", id)
+
+	_, err := i.service.GetAirportByID(ctx, id)
+	if err != nil {
+		log.Error(logger.LogAirportNotFound, "airport_id", id)
+		return err
+	}
+
+	if err = i.service.ActivateAirport(ctx, id); err != nil {
+		log.Error(logger.LogAirportActivateError, "airport_id", id, "error", err)
+		return err
+	}
+
+	log.Success(logger.LogAirportActivateOK, "airport_id", id)
+	return nil
+}
+
 func (i *AirportInteractor) DeactivateAirport(ctx context.Context, id string) error {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)

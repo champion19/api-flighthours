@@ -11,7 +11,6 @@ import (
 
 type Service interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
-
 	RegisterEmployee(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error)
 	GetEmployeeByEmail(ctx context.Context, email string) (*domain.Employee, error)
 	GetEmployeeByID(ctx context.Context, id string) (*domain.Employee, error)
@@ -19,12 +18,10 @@ type Service interface {
 	LocateEmployee(ctx context.Context, id string) (*dto.RegisterEmployee, error)
 	CheckAndCleanInconsistentState(ctx context.Context, email string) error
 	GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error)
-
 	SaveEmployeeToDB(ctx context.Context, tx output.Tx, employee domain.Employee) error
 	UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error
 	UpdateEmployeeKeycloakID(ctx context.Context, tx output.Tx, employeeID string, keycloakUserID string) error
 	DeleteEmployee(ctx context.Context, employeeID string, keycloakUserID string) error
-
 	CreateUserInKeycloak(ctx context.Context, employee *domain.Employee) (string, error)
 	SetUserPassword(ctx context.Context, userID string, password string) error
 	AssignUserRole(ctx context.Context, userID string, role string) error
@@ -35,7 +32,6 @@ type Service interface {
 	VerifyEmailByToken(ctx context.Context, token string) (string, error)
 	UpdatePassword(ctx context.Context, token, newPassword string) (string, error)
 	ChangePassword(ctx context.Context, email, currentPassword, newPassword string) (string, error)
-
 	RollbackEmployee(ctx context.Context, employeeID string) error
 	RollbackKeycloakUser(ctx context.Context, KeycloakUserID string) error
 }
@@ -46,7 +42,6 @@ type MessageService interface {
 	GetMessageByCode(ctx context.Context, code string) (*domain.Message, error)
 	ListMessages(ctx context.Context, filters map[string]interface{}) ([]domain.Message, error)
 	ListActiveMessages(ctx context.Context) ([]domain.Message, error)
-
 	SaveMessageToDB(ctx context.Context, tx output.Tx, message domain.Message) error
 	UpdateMessageInDB(ctx context.Context, tx output.Tx, message domain.Message) error
 	DeleteMessageFromDB(ctx context.Context, tx output.Tx, id string) error
@@ -67,6 +62,7 @@ type AirportService interface {
 	ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
 	GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error)
 	UpdateAirportStatus(ctx context.Context, id string, status bool) error
+	ActivateAirport(ctx context.Context, id string) error
 	DeactivateAirport(ctx context.Context, id string) error
 }
 
@@ -78,6 +74,16 @@ type AirlineEmployeeService interface {
 	ActivateAirlineEmployee(ctx context.Context, id string) error
 	DeactivateAirlineEmployee(ctx context.Context, id string) error
 }
+
+type AircraftModelService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error)
+	ListAircraftModels(ctx context.Context, filters map[string]interface{}) ([]domain.AircraftModel, error)
+	GetAircraftModelsByFamily(ctx context.Context, family string) ([]domain.AircraftModel, error)
+	ActivateAircraftModel(ctx context.Context, id string) error
+	DeactivateAircraftModel(ctx context.Context, id string) error
+}
+
 
 type RouteService interface {
 	GetRouteByID(ctx context.Context, id string) (*domain.Route, error)

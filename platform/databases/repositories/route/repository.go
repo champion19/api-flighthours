@@ -23,7 +23,7 @@ const (
 		FROM route r
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
-		WHERE r.id = ?
+		WHERE r.id = ? AND ao.status = TRUE AND ad.status = TRUE
 		LIMIT 1
 	`
 
@@ -42,6 +42,7 @@ const (
 		FROM route r
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
+		WHERE ao.status = TRUE AND ad.status = TRUE
 		ORDER BY ao.iata_code, ad.iata_code
 	`
 
@@ -60,7 +61,7 @@ const (
 		FROM route r
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
-		WHERE r.airport_type = ?
+		WHERE r.airport_type = ? AND ao.status = TRUE AND ad.status = TRUE
 		ORDER BY ao.iata_code, ad.iata_code
 	`
 )
