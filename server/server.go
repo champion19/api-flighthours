@@ -118,6 +118,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
 
+		public.GET("/aircraft-models", handler.ListAircraftModels())
+		
 		public.GET("/aircraft-families/:family", handler.GetAircraftModelsByFamily())
 
 	}

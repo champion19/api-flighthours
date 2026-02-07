@@ -9,7 +9,7 @@ type AircraftModelResponse struct {
 	AircraftTypeName string `json:"aircraft_type_name"`
 	EngineTypeName   string `json:"engine_type_name,omitempty"`
 	Family           string `json:"family"`
-	Manufacturer     string `json:"manufacturer,omitempty"`
+	Manufacturer     string `json:"-"`
 	Status           bool   `json:"status"`
 	Links            []Link `json:"_links,omitempty"`
 }

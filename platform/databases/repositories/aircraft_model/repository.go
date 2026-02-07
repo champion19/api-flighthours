@@ -1,18 +1,16 @@
 package aircraftmodel
 
-import(
-	
+import (
 	"database/sql"
 
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-
 const (
-	QueryByID            = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.id LEFT JOIN manufacturer m ON am.manufacturer_id = m.id WHERE am.id = ? LIMIT 1"
-	QueryGetAll          = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.id LEFT JOIN manufacturer m ON am.manufacturer_id = m.id ORDER BY am.model_name"
-	QueryGetByEngineType = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.id LEFT JOIN manufacturer m ON am.manufacturer_id = m.id WHERE e.name = ? ORDER BY am.model_name"
-	QueryGetByFamily     = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.id LEFT JOIN manufacturer m ON am.manufacturer_id = m.id WHERE am.family = ? ORDER BY am.model_name"
+	QueryByID            = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.name LEFT JOIN manufacturer m ON am.manufacturer_id = m.name WHERE am.id = ? LIMIT 1"
+	QueryGetAll          = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.name LEFT JOIN manufacturer m ON am.manufacturer_id = m.name ORDER BY am.model_name"
+	QueryGetByEngineType = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.name LEFT JOIN manufacturer m ON am.manufacturer_id = m.name WHERE e.name = ? ORDER BY am.model_name"
+	QueryGetByFamily     = "SELECT am.id, am.model_name, am.aircraft_type_name, e.name AS engine_type_name, am.family, m.name AS manufacturer, am.status FROM aircraft_model am LEFT JOIN engine e ON am.engine_type_id = e.name LEFT JOIN manufacturer m ON am.manufacturer_id = m.name WHERE am.family = ? ORDER BY am.model_name"
 	QueryUpdateStatus    = "UPDATE aircraft_model SET status = ? WHERE id = ?"
 )
 
@@ -72,4 +70,3 @@ func NewAircraftModelRepository(db *sql.DB) (*repository, error) {
 		stmtUpdateStatus:    stmtUpdateStatus,
 	}, nil
 }
-

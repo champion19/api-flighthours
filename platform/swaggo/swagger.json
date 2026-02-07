@@ -582,6 +582,307 @@
                 }
             }
         },
+        "/airports/{id}/activate": {
+            "patch": {
+                "description": "Sets airport status to active (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airports"
+                ],
+                "summary": "Activate airport",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airport ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-families/{family}": {
+            "get": {
+                "description": "Returns all aircraft models belonging to a specific family (HU32)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Families"
+                ],
+                "summary": "Get aircraft models by family",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Family (e.g., Airbus, Boeing)",
+                        "name": "family",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AircraftModelListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models": {
+            "get": {
+                "description": "Returns a list of all aircraft models with optional engine type filter",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "List all aircraft models",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by engine type (e.g., CFM, IAE)",
+                        "name": "engine_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AircraftModelListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models/{id}": {
+            "get": {
+                "description": "Returns aircraft model information by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "Get aircraft model by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Model ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models/{id}/activate": {
+            "patch": {
+                "description": "Sets aircraft model status to active (HU42 - accepts obfuscated ID only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "Activate aircraft model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Model ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models/{id}/deactivate": {
+            "patch": {
+                "description": "Sets aircraft model status to inactive (HU41 - accepts obfuscated ID only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "Deactivate aircraft model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Model ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/change-password": {
             "post": {
                 "security": [
@@ -2003,6 +2304,55 @@
         }
     },
     "definitions": {
+        "handlers.AircraftModelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "model_name": {
+                    "type": "string"
+                },
+                "aircraft_type_name": {
+                    "type": "string"
+                },
+                "engine_type_name": {
+                    "type": "string"
+                },
+                "family": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                },
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                }
+            }
+        },
+        "handlers.AircraftModelListResponse": {
+            "type": "object",
+            "properties": {
+                "aircraft_models": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AircraftModelResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                }
+            }
+        },
         "github_com_champion19_api-flighthours_core_interactor_services_domain.MessageType": {
             "type": "string",
             "enum": [
