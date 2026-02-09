@@ -259,6 +259,63 @@ func TestHTTP_CreateLicensePlate(t *testing.T) {
 			t.Errorf("expected error status, got 201")
 		}
 	})
+
+	t.Run("invalid model ID - returns error", func(t *testing.T) {
+		svc := &fakeLicensePlateService{}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-5432","aircraft_model_id":"invalid-model","airline_id":"some-airline"}`
+		req := httptest.NewRequest(http.MethodPost, "/license-plates", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusCreated {
+			t.Errorf("expected error status for invalid model ID, got 201")
+		}
+	})
+
+	t.Run("invalid airline ID - returns error", func(t *testing.T) {
+		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
+		encodedModelID, _ := enc.Encode(modelUUID)
+
+		svc := &fakeLicensePlateService{}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-5432","aircraft_model_id":"` + encodedModelID + `","airline_id":"invalid-airline"}`
+		req := httptest.NewRequest(http.MethodPost, "/license-plates", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusCreated {
+			t.Errorf("expected error status for invalid airline ID, got 201")
+		}
+	})
+
+	t.Run("service error - returns error", func(t *testing.T) {
+		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedModelID, _ := enc.Encode(modelUUID)
+		encodedAirlineID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeLicensePlateService{
+			createFn: func(ctx context.Context, registration domain.LicensePlate) error {
+				return domain.ErrLicensePlateDuplicatePlate
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-5432","aircraft_model_id":"` + encodedModelID + `","airline_id":"` + encodedAirlineID + `"}`
+		req := httptest.NewRequest(http.MethodPost, "/license-plates", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusCreated {
+			t.Errorf("expected error status for duplicate plate, got 201")
+		}
+	})
 }
 
 func TestHTTP_UpdateLicensePlate(t *testing.T) {
@@ -324,6 +381,62 @@ func TestHTTP_UpdateLicensePlate(t *testing.T) {
 
 		if w.Code == http.StatusOK {
 			t.Errorf("expected error status, got 200")
+		}
+	})
+
+	t.Run("update error - duplicate plate", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedID, _ := enc.Encode(testUUID)
+		encodedModelID, _ := enc.Encode(modelUUID)
+		encodedAirlineID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeLicensePlateService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+				return &domain.LicensePlate{
+					ID:              testUUID,
+					LicensePlate:    "HK-OLD",
+					AircraftModelID: modelUUID,
+					AirlineID:       airlineUUID,
+				}, nil
+			},
+			updateFn: func(ctx context.Context, registration domain.LicensePlate) error {
+				return domain.ErrLicensePlateDuplicatePlate
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-DUP","aircraft_model_id":"` + encodedModelID + `","airline_id":"` + encodedAirlineID + `"}`
+		req := httptest.NewRequest(http.MethodPut, "/license-plates/"+encodedID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status for duplicate plate, got 200")
+		}
+	})
+
+	t.Run("invalid JSON - returns error", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(testUUID)
+
+		svc := &fakeLicensePlateService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+				return &domain.LicensePlate{ID: testUUID}, nil
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `not json`
+		req := httptest.NewRequest(http.MethodPut, "/license-plates/"+encodedID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status for invalid JSON, got 200")
 		}
 	})
 }
