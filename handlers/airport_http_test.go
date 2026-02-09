@@ -742,3 +742,97 @@ func TestHTTP_GetAirportByID_EdgeCases(t *testing.T) {
 		}
 	})
 }
+
+func TestHTTP_ActivateAirport(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirportMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(svc input.AirportService) *gin.Engine {
+		airportInteractor := interactor.NewAirportInteractor(svc)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.PATCH("/airports/:id/activate", h.ActivateAirport())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		airportUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(airportUUID)
+		activateCalled := false
+
+		svc := &fakeAirportService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.Airport, error) {
+				return &domain.Airport{ID: id, Status: false}, nil
+			},
+			activateFn: func(ctx context.Context, id string) error {
+				activateCalled = true
+				return nil
+			},
+		}
+
+		router := newRouter(svc)
+
+		req := httptest.NewRequest(http.MethodPatch, "/airports/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", w.Code)
+		}
+
+		if !activateCalled {
+			t.Error("expected activateFn to be called")
+		}
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != true {
+			t.Errorf("expected success=true, got %v", response["success"])
+		}
+	})
+
+	t.Run("airport not found", func(t *testing.T) {
+		airportUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(airportUUID)
+
+		svc := &fakeAirportService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.Airport, error) {
+				return &domain.Airport{ID: id}, nil
+			},
+			activateFn: func(ctx context.Context, id string) error {
+				return domain.ErrAirportNotFound
+			},
+		}
+
+		router := newRouter(svc)
+
+		req := httptest.NewRequest(http.MethodPatch, "/airports/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+}
