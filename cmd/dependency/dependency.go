@@ -19,6 +19,7 @@ import (
 	airportRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airport"
 	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
 	engineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/engine"
+	licensePlateRepo "github.com/champion19/api-flighthours/platform/databases/repositories/license_plate"
 	manufacturerRepo "github.com/champion19/api-flighthours/platform/databases/repositories/manufacturer"
 	messageRepo "github.com/champion19/api-flighthours/platform/databases/repositories/message"
 	routeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/route"
@@ -49,6 +50,7 @@ type Dependencies struct {
 	AirportInteractor         *interactor.AirportInteractor
 	ManufacturerInteractor    *interactor.ManufacturerInteractor
 	AircraftModelInteractor   *interactor.AircraftModelInteractor
+	LicensePlateInteractor    *interactor.LicensePlateInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -141,6 +143,16 @@ func Init() (*Dependencies, error) {
 	airportService := services.NewAirportService(airportRepository)
 	airportInteractor := interactor.NewAirportInteractor(airportService)
 
+	licensePlateRepository, err := licensePlateRepo.NewLicensePlateRepository(db)
+	if err != nil {
+		log.Error(logger.LogLicensePlateRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogLicensePlateRepoInitOK)
+
+	licensePlateService := services.NewLicensePlateService(licensePlateRepository)
+	licensePlateInteractor := interactor.NewLicensePlateInteractor(licensePlateService, log)
+
 	aircraftModelRepository, err := aircraftModelRepo.NewAircraftModelRepository(db)
 	if err != nil {
 		log.Error(logger.LogAircraftModelRepoInitError, "error", err)
@@ -148,7 +160,7 @@ func Init() (*Dependencies, error) {
 	}
 	log.Success(logger.LogAircraftModelRepoInitOK)
 
-	aircraftModelService := services.NewAircraftModelService(aircraftModelRepository,log)
+	aircraftModelService := services.NewAircraftModelService(aircraftModelRepository, log)
 	aircraftModelInteractor := interactor.NewAircraftModelInteractor(aircraftModelService)
 
 	routeRepository, err := routeRepo.NewRouteRepository(db)
@@ -234,5 +246,6 @@ func Init() (*Dependencies, error) {
 		AirportInteractor:         airportInteractor,
 		ManufacturerInteractor:    manufacturerInteractor,
 		AircraftModelInteractor:   aircraftModelInteractor,
+		LicensePlateInteractor:    licensePlateInteractor,
 	}, nil
 }

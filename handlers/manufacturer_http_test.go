@@ -69,7 +69,7 @@ func TestHTTP_GetManufacturerByID(t *testing.T) {
 
 	newRouter := func(svc input.ManufacturerService) *gin.Engine {
 		manufacturerInteractor := interactor.NewManufacturerInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, manufacturerInteractor, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, manufacturerInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -212,7 +212,7 @@ func TestHTTP_ListManufacturers(t *testing.T) {
 
 	newRouter := func(svc input.ManufacturerService) *gin.Engine {
 		manufacturerInteractor := interactor.NewManufacturerInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, manufacturerInteractor, nil, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, manufacturerInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

@@ -1,12 +1,11 @@
 package handlers
 
-import(
-    domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
-		"github.com/champion19/api-flighthours/middleware"
-		"github.com/champion19/api-flighthours/platform/logger"
-		"github.com/gin-gonic/gin"
+import (
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/gin-gonic/gin"
 )
-
 
 // GetAircraftModelByID godoc
 // @Summary      Get aircraft model by ID
@@ -111,12 +110,12 @@ func (h *handler) ListAircraftModels() gin.HandlerFunc {
 }
 
 // GetAircraftModelsByFamily godoc
-// @Summary      Get aircraft models by family
-// @Description  Returns all aircraft models belonging to a specific family (HU32)
+// @Summary      Get aircraft family by family name
+// @Description  Returns aircraft family information (family and manufacturer) for a specific family (HU32)
 // @Tags         Aircraft Families
 // @Produce      json
 // @Param        family   path      string  true  "Aircraft Family (e.g., A320, B737)"
-// @Success      200  {object}  AircraftModelListResponse
+// @Success      200  {object}  AircraftFamilyListResponse
 // @Failure      400  {object}  map[string]interface{}
 // @Failure      404  {object}  map[string]interface{}
 // @Failure      500  {object}  map[string]interface{}
@@ -150,11 +149,11 @@ func (h *handler) GetAircraftModelsByFamily() gin.HandlerFunc {
 			return
 		}
 
-		// Convert to response with encoded IDs and HATEOAS links
+		// Convert to family response (only family + manufacturer)
 		baseURL := GetBaseURL(c)
-		response := ToAircraftModelListResponse(models, h.EncodeID, baseURL)
+		response := ToAircraftFamilyListResponse(models, baseURL)
 
-		log.Success(logger.LogAircraftFamilyGetOK, "family", familyID, "count", len(models), "client_ip", c.ClientIP())
+		log.Success(logger.LogAircraftFamilyGetOK, "family", familyID, "count", response.Total, "client_ip", c.ClientIP())
 		h.Response.SuccessWithData(c, domain.MsgAircraftFamilyGetOK, response)
 	}
 }

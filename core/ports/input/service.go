@@ -75,6 +75,14 @@ type AirlineEmployeeService interface {
 	DeactivateAirlineEmployee(ctx context.Context, id string) error
 }
 
+type LicensePlateService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error)
+	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
+	CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
+	UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
+}
+
 type AircraftModelService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error)

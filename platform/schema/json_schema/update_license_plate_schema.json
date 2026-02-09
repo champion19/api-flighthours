@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Update Aircraft Registration Request",
+  "description": "Schema for updating an existing aircraft registration (matrícula)",
+  "type": "object",
+  "properties": {
+    "license_plate": {
+      "type": "string",
+      "description": "Aircraft license plate/registration number (e.g., HK-5432, CC-BFA)",
+      "pattern": "^[A-Z0-9-]+$",
+      "minLength": 1,
+      "maxLength": 20
+    },
+    "aircraft_model_id": {
+      "type": "string",
+      "description": "Aircraft model ID (obfuscated ID)",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "airline_id": {
+      "type": "string",
+      "description": "Airline ID (obfuscated ID)",
+      "minLength": 1,
+      "maxLength": 50
+    }
+  },
+  "required": [
+    "license_plate",
+    "aircraft_model_id",
+    "airline_id"
+  ],
+  "additionalProperties": false
+}

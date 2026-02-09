@@ -12,20 +12,21 @@ import (
 )
 
 type handler struct {
-	EmployeeService           input.Service
-	Interactor                input.EmployeeInteractor
-	IDEncoder                 *idencoder.HashidsEncoder
-	Response                  *middleware.ResponseHandler
-	MessageInteractor         *interactor.MessageInteractor
-	MessagingCache            *messaging.MessageCache
-	AirlineInteractor         *interactor.AirlineInteractor
-	AirportInteractor         *interactor.AirportInteractor
-	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
-	EngineInteractor          *interactor.EngineInteractor
-	RouteInteractor           *interactor.RouteInteractor
-	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
-	ManufacturerInteractor    *interactor.ManufacturerInteractor
-	AircraftModelInteractor   *interactor.AircraftModelInteractor
+	EmployeeService                input.Service
+	Interactor                     input.EmployeeInteractor
+	IDEncoder                      *idencoder.HashidsEncoder
+	Response                       *middleware.ResponseHandler
+	MessageInteractor              *interactor.MessageInteractor
+	MessagingCache                 *messaging.MessageCache
+	AirlineInteractor              *interactor.AirlineInteractor
+	AirportInteractor              *interactor.AirportInteractor
+	AirlineEmployeeInteractor      *interactor.AirlineEmployeeInteractor
+	EngineInteractor               *interactor.EngineInteractor
+	RouteInteractor                *interactor.RouteInteractor
+	AirlineRouteInteractor         *interactor.AirlineRouteInteractor
+	ManufacturerInteractor         *interactor.ManufacturerInteractor
+	AircraftModelInteractor        *interactor.AircraftModelInteractor
+	LicensePlateInteractor *interactor.LicensePlateInteractor
 }
 
 func New(
@@ -42,22 +43,24 @@ func New(
 	manufacturerInteractor *interactor.ManufacturerInteractor,
 	airportInteractor *interactor.AirportInteractor,
 	airlineRouteInteractor *interactor.AirlineRouteInteractor,
-	aircraftModelInteractor *interactor.AircraftModelInteractor) *handler {
+	aircraftModelInteractor *interactor.AircraftModelInteractor,
+	aircraftRegistrationInteractor *interactor.LicensePlateInteractor) *handler {
 	return &handler{
-		EmployeeService:           service,
-		Interactor:                employeeInteractor,
-		IDEncoder:                 idEncoder,
-		Response:                  response,
-		MessageInteractor:         messageInteractor,
-		MessagingCache:            messagingCache,
-		AirlineInteractor:         airlineInteractor,
-		AirlineEmployeeInteractor: airlineEmployeeInteractor,
-		EngineInteractor:          engineInteractor,
-		RouteInteractor:           routeInteractor,
-		AirlineRouteInteractor:    airlineRouteInteractor,
-		ManufacturerInteractor:    manufacturerInteractor,
-		AirportInteractor:         airportInteractor,
-		AircraftModelInteractor:   aircraftModelInteractor,
+		EmployeeService:                service,
+		Interactor:                     employeeInteractor,
+		IDEncoder:                      idEncoder,
+		Response:                       response,
+		MessageInteractor:              messageInteractor,
+		MessagingCache:                 messagingCache,
+		AirlineInteractor:              airlineInteractor,
+		AirlineEmployeeInteractor:      airlineEmployeeInteractor,
+		EngineInteractor:               engineInteractor,
+		RouteInteractor:                routeInteractor,
+		AirlineRouteInteractor:         airlineRouteInteractor,
+		ManufacturerInteractor:         manufacturerInteractor,
+		AirportInteractor:              airportInteractor,
+		AircraftModelInteractor:        aircraftModelInteractor,
+		LicensePlateInteractor: aircraftRegistrationInteractor,
 	}
 }
 
