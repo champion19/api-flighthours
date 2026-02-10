@@ -57,6 +57,13 @@ func (f *fakeLicensePlateService) UpdateLicensePlate(ctx context.Context, regist
 	return nil
 }
 
+func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+	if f.getByIDFn != nil {
+		return f.getByIDFn(ctx, plate)
+	}
+	return nil, errors.New("not implemented")
+}
+
 func newTestLicensePlateMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 
@@ -83,7 +90,7 @@ func newLicensePlateTestRouter(svc input.LicensePlateService, enc *idencoder.Has
 	r := gin.New()
 	r.Use(middleware.RequestID())
 	r.Use(errHandler.Handle())
-	r.GET("/license-plates/:id", h.GetLicensePlateByID())
+	r.GET("/license-plates/:plate", h.GetLicensePlateByPlate())
 	r.GET("/license-plates", h.ListLicensePlates())
 	r.POST("/license-plates", h.CreateLicensePlate())
 	r.PUT("/license-plates/:id", h.UpdateLicensePlate())

@@ -53,6 +53,13 @@ func (m *mockLicensePlateRepo) BeginTx(ctx context.Context) (output.Tx, error) {
 	return &mockTx{}, nil
 }
 
+func (m *mockLicensePlateRepo) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+	if m.getByIDFn != nil {
+		return m.getByIDFn(ctx, plate)
+	}
+	return nil, nil
+}
+
 func TestNewLicensePlateService(t *testing.T) {
 	t.Run("creates service", func(t *testing.T) {
 		repo := &mockLicensePlateRepo{}

@@ -78,6 +78,7 @@ type AirlineEmployeeService interface {
 type LicensePlateService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error)
+	GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error)
 	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
 	CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
 	UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
@@ -91,7 +92,6 @@ type AircraftModelService interface {
 	ActivateAircraftModel(ctx context.Context, id string) error
 	DeactivateAircraftModel(ctx context.Context, id string) error
 }
-
 
 type RouteService interface {
 	GetRouteByID(ctx context.Context, id string) (*domain.Route, error)

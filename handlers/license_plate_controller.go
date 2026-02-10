@@ -9,41 +9,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetLicensePlateByID godoc
-// @Summary      Get aircraft registration by ID
-// @Description  Returns aircraft registration information by ID (accepts both UUID and obfuscated ID)
+// GetLicensePlateByPlate godoc
+// @Summary      Get aircraft registration by license plate number
+// @Description  Returns aircraft registration information by its plate number (e.g. HK-5432)
 // @Tags         License Plates
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "License Plate ID (obfuscated ID)"
+// @Param        plate   path      string  true  "License Plate number (e.g. HK-5432)"
 // @Success      200  {object}  LicensePlateResponse
 // @Failure      400  {object}  map[string]interface{}
 // @Failure      404  {object}  map[string]interface{}
 // @Failure      500  {object}  map[string]interface{}
-// @Router       /license-plates/{id} [get]
-func (h *handler) GetLicensePlateByID() gin.HandlerFunc {
+// @Router       /license-plates/{plate} [get]
+func (h *handler) GetLicensePlateByPlate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		traceID := middleware.GetTraceIDFromContext(ctx)
 		log := Logger.WithTraceID(traceID)
 
-		inputID := c.Param("id")
-		if inputID == "" {
+		plate := c.Param("plate")
+		if plate == "" {
 			_ = c.Error(domain.ErrInvalidID)
 			return
 		}
 
-		registrationUUID, responseID := h.resolveID(inputID)
-		if registrationUUID == "" {
-			log.Warn(logger.LogLicensePlateNotFound, "id", inputID, "client_ip", c.ClientIP())
-			_ = c.Error(domain.ErrLicensePlateNotFound)
+		registration, err := h.LicensePlateInteractor.GetLicensePlateByPlate(ctx, plate)
+		if err != nil {
+			log.Error(logger.LogLicensePlateGetError, "license_plate", plate, "error", err, "client_ip", c.ClientIP())
+			_ = c.Error(err)
 			return
 		}
 
-		registration, err := h.LicensePlateInteractor.GetLicensePlateByID(ctx, registrationUUID)
+		encodedID, err := h.EncodeID(registration.ID)
 		if err != nil {
-			log.Error(logger.LogLicensePlateGetError, "id", inputID, "error", err, "client_ip", c.ClientIP())
-			_ = c.Error(err)
+			h.HandleIDEncodingError(c, registration.ID, err)
 			return
 		}
 
@@ -51,8 +50,8 @@ func (h *handler) GetLicensePlateByID() gin.HandlerFunc {
 		encodedAirlineID, _ := h.EncodeID(registration.AirlineID)
 
 		baseURL := GetBaseURL(c)
-		response := FromDomainLicensePlate(registration, responseID, encodedModelID, encodedAirlineID)
-		response.Links = BuildLicensePlateLinks(baseURL, responseID)
+		response := FromDomainLicensePlate(registration, encodedID, encodedModelID, encodedAirlineID)
+		response.Links = BuildLicensePlateLinks(baseURL, encodedID)
 
 		log.Success(logger.LogLicensePlateGetOK, registration.ToLogger())
 		c.JSON(http.StatusOK, response)

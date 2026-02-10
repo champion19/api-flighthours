@@ -37,6 +37,22 @@ func (i *LicensePlateInteractor) GetLicensePlateByID(ctx context.Context, id str
 	return registration, nil
 }
 
+func (i *LicensePlateInteractor) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogLicensePlateGet, "license_plate", plate)
+
+	registration, err := i.service.GetLicensePlateByPlate(ctx, plate)
+	if err != nil {
+		log.Error(logger.LogLicensePlateGetError, "license_plate", plate, "error", err)
+		return nil, err
+	}
+
+	log.Success(logger.LogLicensePlateGetOK, registration.ToLogger())
+	return registration, nil
+}
+
 func (i *LicensePlateInteractor) ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)

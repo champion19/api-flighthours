@@ -52,6 +52,13 @@ func (f *fakeLicensePlateService) UpdateLicensePlate(ctx context.Context, regist
 	return nil
 }
 
+func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+	if f.getByIDFn != nil {
+		return f.getByIDFn(ctx, plate)
+	}
+	return nil, errors.New("not implemented")
+}
+
 func TestNewLicensePlateInteractor(t *testing.T) {
 	svc := &fakeLicensePlateService{}
 	interactor := NewLicensePlateInteractor(svc, noopLogger{})

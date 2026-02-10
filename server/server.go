@@ -179,10 +179,10 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.GET("/license-plates", handler.ListLicensePlates())
 
-		protected.GET("/license-plates/:id", handler.GetLicensePlateByID())
+		protected.GET("/license-plates/:plate", handler.GetLicensePlateByPlate())
 
 		protected.POST("/license-plates", validator.WithValidateCreateLicensePlate(), handler.CreateLicensePlate())
-		
+
 		protected.PUT("/license-plates/:id", validator.WithValidateUpdateLicensePlate(), handler.UpdateLicensePlate())
 
 	}
