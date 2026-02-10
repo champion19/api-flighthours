@@ -10,16 +10,18 @@ import (
 )
 
 type Validators struct {
-	FileReader                       FileReaderInterface
-	RegisterValidator                *jsonschema.Schema
-	MessageValidator                 *jsonschema.Schema
-	ResendVerificationEmailValidator *jsonschema.Schema
-	PasswordResetRequestValidator    *jsonschema.Schema
-	UpdatePasswordValidator          *jsonschema.Schema
-	UpdateEmployeeValidator          *jsonschema.Schema
-	ChangePasswordValidator          *jsonschema.Schema
-	AddAirlineEmployeeValidator      *jsonschema.Schema
-	UpdateAirlineEmployeeValidator   *jsonschema.Schema
+	FileReader                          FileReaderInterface
+	RegisterValidator                   *jsonschema.Schema
+	MessageValidator                    *jsonschema.Schema
+	ResendVerificationEmailValidator    *jsonschema.Schema
+	PasswordResetRequestValidator       *jsonschema.Schema
+	UpdatePasswordValidator             *jsonschema.Schema
+	UpdateEmployeeValidator             *jsonschema.Schema
+	ChangePasswordValidator             *jsonschema.Schema
+	AddAirlineEmployeeValidator         *jsonschema.Schema
+	UpdateAirlineEmployeeValidator      *jsonschema.Schema
+	CreateLicensePlateValidator *jsonschema.Schema
+	UpdateLicensePlateValidator *jsonschema.Schema
 }
 
 type FileReaderInterface interface {
@@ -87,6 +89,14 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	if err != nil {
 		return nil, err
 	}
+	createLicensePlate, err := validator.createSchema("create_license_plate_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	updateLicensePlate, err := validator.createSchema("update_license_plate_schema.json")
+	if err != nil {
+		return nil, err
+	}
 
 	validator.RegisterValidator = register
 	validator.MessageValidator = message
@@ -97,6 +107,8 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	validator.ChangePasswordValidator = changePassword
 	validator.AddAirlineEmployeeValidator = addAirlineEmployee
 	validator.UpdateAirlineEmployeeValidator = updateAirlineEmployee
+	validator.CreateLicensePlateValidator = createLicensePlate
+	validator.UpdateLicensePlateValidator = updateLicensePlate
 
 	return validator, nil
 

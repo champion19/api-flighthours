@@ -1,7 +1,6 @@
 package domain
 
-// AircraftModel represents the aircraft model domain model
-// Contains the model name, aircraft type, engine type, family, manufacturer and status
+
 type AircraftModel struct {
 	ID               string `json:"id"`
 	ModelName        string `json:"model_name"`
@@ -12,7 +11,7 @@ type AircraftModel struct {
 	Status           bool   `json:"status"`
 }
 
-// ToLogger returns a slice of strings for logging aircraft model information
+
 func (am *AircraftModel) ToLogger() []string {
 	statusStr := "inactive"
 	if am.Status {

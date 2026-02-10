@@ -355,3 +355,43 @@ func TestAirportService_GetAirportsByType(t *testing.T) {
 		}
 	})
 }
+
+func TestAirportService_ActivateAirport(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		tx := &airportFakeTx{}
+		var receivedStatus bool
+		svc := NewAirportService(fakeAirportRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return tx, nil },
+			updateStatusFn: func(_ context.Context, _ output.Tx, _ string, status bool) error {
+				receivedStatus = status
+				return nil
+			},
+		})
+
+		err := svc.ActivateAirport(ctx, "airport-123")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !receivedStatus {
+			t.Fatalf("expected status true, got false")
+		}
+	})
+
+	t.Run("propagates error", func(t *testing.T) {
+		tx := &airportFakeTx{}
+		updateErr := errors.New("update failed")
+		svc := NewAirportService(fakeAirportRepo{
+			beginTxFn: func(context.Context) (output.Tx, error) { return tx, nil },
+			updateStatusFn: func(context.Context, output.Tx, string, bool) error {
+				return updateErr
+			},
+		})
+
+		err := svc.ActivateAirport(ctx, "airport-123")
+		if !errors.Is(err, updateErr) {
+			t.Fatalf("expected %v, got %v", updateErr, err)
+		}
+	})
+}

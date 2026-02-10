@@ -59,6 +59,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.AirportInteractor,
 		dependencies.AirlineRouteInteractor,
 		dependencies.AircraftModelInteractor,
+		dependencies.LicensePlateInteractor,
 	)
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -119,7 +120,9 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
 
 		public.GET("/aircraft-models", handler.ListAircraftModels())
-		
+
+		public.GET("/aircraft-models/:id", handler.GetAircraftModelByID())
+
 		public.GET("/aircraft-families/:family", handler.GetAircraftModelsByFamily())
 
 	}
@@ -173,6 +176,14 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.PATCH("/aircraft-models/:id/activate", handler.ActivateAircraftModel())
 
 		protected.PATCH("/aircraft-models/:id/deactivate", handler.DeactivateAircraftModel())
+
+		protected.GET("/license-plates", handler.ListLicensePlates())
+
+		protected.GET("/license-plates/:plate", handler.GetLicensePlateByPlate())
+
+		protected.POST("/license-plates", validator.WithValidateCreateLicensePlate(), handler.CreateLicensePlate())
+
+		protected.PUT("/license-plates/:id", validator.WithValidateUpdateLicensePlate(), handler.UpdateLicensePlate())
 
 	}
 	admin := app.Group("flighthours/api/v1/admin")

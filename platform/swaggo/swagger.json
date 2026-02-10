@@ -638,14 +638,14 @@
         },
         "/aircraft-families/{family}": {
             "get": {
-                "description": "Returns all aircraft models belonging to a specific family (HU32)",
+                "description": "Returns aircraft family information (family and manufacturer) for a specific family (HU32)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Aircraft Families"
                 ],
-                "summary": "Get aircraft models by family",
+                "summary": "Get aircraft family by family name",
                 "parameters": [
                     {
                         "type": "string",
@@ -659,7 +659,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.AircraftModelListResponse"
+                            "$ref": "#/definitions/handlers.AircraftFamilyListResponse"
                         }
                     },
                     "400": {
@@ -2301,6 +2301,233 @@
                     }
                 }
             }
+        },
+        "/license-plates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of all aircraft registrations with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "List all aircraft registrations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by airline ID",
+                        "name": "airline_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by license plate",
+                        "name": "license_plate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new aircraft registration (license plate must be unique)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "Create a new aircraft registration",
+                "parameters": [
+                    {
+                        "description": "License Plate data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateLicensePlateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/license-plates/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns aircraft registration information by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "Get aircraft registration by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "License Plate ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an aircraft registration by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "Update an existing aircraft registration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "License Plate ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "License Plate data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLicensePlateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2317,9 +2544,6 @@
                     "type": "string"
                 },
                 "engine_type_name": {
-                    "type": "string"
-                },
-                "family": {
                     "type": "string"
                 },
                 "status": {
@@ -3137,6 +3361,124 @@
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "handlers.LicensePlateResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "license_plate": {
+                    "type": "string"
+                },
+                "model_name": {
+                    "type": "string"
+                },
+                "airline_name": {
+                    "type": "string"
+                },
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                }
+            }
+        },
+        "handlers.LicensePlateListResponse": {
+            "type": "object",
+            "properties": {
+                "registrations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.LicensePlateResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                }
+            }
+        },
+        "handlers.CreateLicensePlateRequest": {
+            "type": "object",
+            "required": [
+                "license_plate",
+                "aircraft_model_id",
+                "airline_id"
+            ],
+            "properties": {
+                "license_plate": {
+                    "type": "string"
+                },
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateLicensePlateRequest": {
+            "type": "object",
+            "required": [
+                "license_plate",
+                "aircraft_model_id",
+                "airline_id"
+            ],
+            "properties": {
+                "license_plate": {
+                    "type": "string"
+                },
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AircraftFamilyResponse": {
+            "type": "object",
+            "properties": {
+                "family": {
+                    "type": "string"
+                },
+                "manufacturer": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AircraftFamilyListResponse": {
+            "type": "object",
+            "properties": {
+                "aircraft_families": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AircraftFamilyResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
                 }
             }
         }

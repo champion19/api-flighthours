@@ -1,6 +1,6 @@
 package aircraftmodel
 
-import(
+import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
@@ -38,5 +38,13 @@ func FromDomain(domainModel *domain.AircraftModel) *AircraftModel {
 		Family:           domainModel.Family,
 		Manufacturer:     domainModel.Manufacturer,
 		Status:           domainModel.Status,
+	}
+}
+
+// ToFamilyDomain converts the database entity to AircraftFamily domain model
+func (a *AircraftModel) ToFamilyDomain() *domain.AircraftFamily {
+	return &domain.AircraftFamily{
+		Family:       a.Family,
+		Manufacturer: a.Manufacturer,
 	}
 }

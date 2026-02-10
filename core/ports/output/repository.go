@@ -50,6 +50,15 @@ type AirportRepository interface {
 	UpdateAirportStatus(ctx context.Context, tx Tx, id string, status bool) error
 }
 
+type LicensePlateRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error)
+	GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error)
+	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
+	SaveLicensePlate(ctx context.Context, tx Tx, registration domain.LicensePlate) error
+	UpdateLicensePlate(ctx context.Context, tx Tx, registration domain.LicensePlate) error
+}
+
 type AircraftModelRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
 	GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error)
