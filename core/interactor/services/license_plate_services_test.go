@@ -11,11 +11,12 @@ import (
 
 // mockLicensePlateRepo implements output.LicensePlateRepository for testing
 type mockLicensePlateRepo struct {
-	getByIDFn func(ctx context.Context, id string) (*domain.LicensePlate, error)
-	listFn    func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
-	saveFn    func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
-	updateFn  func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
-	beginTxFn func(ctx context.Context) (output.Tx, error)
+	getByIDFn    func(ctx context.Context, id string) (*domain.LicensePlate, error)
+	getByPlateFn func(ctx context.Context, plate string) (*domain.LicensePlate, error)
+	listFn       func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
+	saveFn       func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
+	updateFn     func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
+	beginTxFn    func(ctx context.Context) (output.Tx, error)
 }
 
 func (m *mockLicensePlateRepo) GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error) {
@@ -54,8 +55,8 @@ func (m *mockLicensePlateRepo) BeginTx(ctx context.Context) (output.Tx, error) {
 }
 
 func (m *mockLicensePlateRepo) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
-	if m.getByIDFn != nil {
-		return m.getByIDFn(ctx, plate)
+	if m.getByPlateFn != nil {
+		return m.getByPlateFn(ctx, plate)
 	}
 	return nil, nil
 }
@@ -102,6 +103,45 @@ func TestLicensePlateService_GetByID(t *testing.T) {
 
 		service := NewLicensePlateService(repo)
 		_, err := service.GetLicensePlateByID(context.Background(), "non-existent")
+
+		if err == nil {
+			t.Error("expected error for non-existent registration")
+		}
+	})
+}
+
+func TestLicensePlateService_GetByPlate(t *testing.T) {
+	t.Run("returns registration when found", func(t *testing.T) {
+		expected := &domain.LicensePlate{
+			ID:           "ar-123",
+			LicensePlate: "HK-5432",
+		}
+		repo := &mockLicensePlateRepo{
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+				return expected, nil
+			},
+		}
+
+		service := NewLicensePlateService(repo)
+		result, err := service.GetLicensePlateByPlate(context.Background(), "HK-5432")
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result.LicensePlate != "HK-5432" {
+			t.Errorf("expected LicensePlate 'HK-5432', got %q", result.LicensePlate)
+		}
+	})
+
+	t.Run("returns error when not found", func(t *testing.T) {
+		repo := &mockLicensePlateRepo{
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+				return nil, domain.ErrLicensePlateNotFound
+			},
+		}
+
+		service := NewLicensePlateService(repo)
+		_, err := service.GetLicensePlateByPlate(context.Background(), "INVALID")
 
 		if err == nil {
 			t.Error("expected error for non-existent registration")

@@ -12,10 +12,11 @@ import (
 
 // fakeLicensePlateService implements input.LicensePlateService for testing
 type fakeLicensePlateService struct {
-	getByIDFn func(ctx context.Context, id string) (*domain.LicensePlate, error)
-	listFn    func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
-	createFn  func(ctx context.Context, registration domain.LicensePlate) error
-	updateFn  func(ctx context.Context, registration domain.LicensePlate) error
+	getByIDFn    func(ctx context.Context, id string) (*domain.LicensePlate, error)
+	getByPlateFn func(ctx context.Context, plate string) (*domain.LicensePlate, error)
+	listFn       func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
+	createFn     func(ctx context.Context, registration domain.LicensePlate) error
+	updateFn     func(ctx context.Context, registration domain.LicensePlate) error
 }
 
 var _ input.LicensePlateService = (*fakeLicensePlateService)(nil)
@@ -53,8 +54,8 @@ func (f *fakeLicensePlateService) UpdateLicensePlate(ctx context.Context, regist
 }
 
 func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
-	if f.getByIDFn != nil {
-		return f.getByIDFn(ctx, plate)
+	if f.getByPlateFn != nil {
+		return f.getByPlateFn(ctx, plate)
 	}
 	return nil, errors.New("not implemented")
 }
@@ -103,6 +104,45 @@ func TestLicensePlateInteractor_GetByID(t *testing.T) {
 		interactor := NewLicensePlateInteractor(svc, noopLogger{})
 
 		_, err := interactor.GetLicensePlateByID(context.Background(), "ar-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+}
+
+func TestLicensePlateInteractor_GetByPlate(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		expected := &domain.LicensePlate{
+			ID:           "ar-123",
+			LicensePlate: "HK-5432",
+			ModelName:    "Boeing 737",
+			AirlineName:  "Avianca",
+		}
+		svc := &fakeLicensePlateService{
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+				return expected, nil
+			},
+		}
+		interactor := NewLicensePlateInteractor(svc, noopLogger{})
+
+		result, err := interactor.GetLicensePlateByPlate(context.Background(), "HK-5432")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result.LicensePlate != expected.LicensePlate {
+			t.Errorf("expected LicensePlate %q, got %q", expected.LicensePlate, result.LicensePlate)
+		}
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		svc := &fakeLicensePlateService{
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+				return nil, errors.New("database error")
+			},
+		}
+		interactor := NewLicensePlateInteractor(svc, noopLogger{})
+
+		_, err := interactor.GetLicensePlateByPlate(context.Background(), "HK-5432")
 		if err == nil {
 			t.Error("expected error, got nil")
 		}

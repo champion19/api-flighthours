@@ -21,10 +21,11 @@ import (
 
 // fakeLicensePlateService implements input.LicensePlateService
 type fakeLicensePlateService struct {
-	getByIDFn func(ctx context.Context, id string) (*domain.LicensePlate, error)
-	listFn    func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
-	createFn  func(ctx context.Context, registration domain.LicensePlate) error
-	updateFn  func(ctx context.Context, registration domain.LicensePlate) error
+	getByIDFn    func(ctx context.Context, id string) (*domain.LicensePlate, error)
+	getByPlateFn func(ctx context.Context, plate string) (*domain.LicensePlate, error)
+	listFn       func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
+	createFn     func(ctx context.Context, registration domain.LicensePlate) error
+	updateFn     func(ctx context.Context, registration domain.LicensePlate) error
 }
 
 var _ input.LicensePlateService = (*fakeLicensePlateService)(nil)
@@ -58,8 +59,8 @@ func (f *fakeLicensePlateService) UpdateLicensePlate(ctx context.Context, regist
 }
 
 func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error) {
-	if f.getByIDFn != nil {
-		return f.getByIDFn(ctx, plate)
+	if f.getByPlateFn != nil {
+		return f.getByPlateFn(ctx, plate)
 	}
 	return nil, errors.New("not implemented")
 }
@@ -97,7 +98,7 @@ func newLicensePlateTestRouter(svc input.LicensePlateService, enc *idencoder.Has
 	return r
 }
 
-func TestHTTP_GetLicensePlateByID(t *testing.T) {
+func TestHTTP_GetLicensePlateByPlate(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	cache := newTestLicensePlateMessageCache(t)
@@ -108,14 +109,13 @@ func TestHTTP_GetLicensePlateByID(t *testing.T) {
 		t.Fatalf("failed to create encoder: %v", err)
 	}
 
-	t.Run("success - returns license plate", func(t *testing.T) {
+	t.Run("success - returns license plate by plate number", func(t *testing.T) {
 		testUUID := "550e8400-e29b-41d4-a716-446655440000"
 		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
 		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
-		encodedID, _ := enc.Encode(testUUID)
 
 		svc := &fakeLicensePlateService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
 				return &domain.LicensePlate{
 					ID:              testUUID,
 					LicensePlate:    "HK-5432",
@@ -128,7 +128,7 @@ func TestHTTP_GetLicensePlateByID(t *testing.T) {
 		}
 
 		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
-		req := httptest.NewRequest(http.MethodGet, "/license-plates/"+encodedID, nil)
+		req := httptest.NewRequest(http.MethodGet, "/license-plates/HK-5432", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -138,17 +138,14 @@ func TestHTTP_GetLicensePlateByID(t *testing.T) {
 	})
 
 	t.Run("not found - returns error", func(t *testing.T) {
-		testUUID := "550e8400-e29b-41d4-a716-446655440000"
-		encodedID, _ := enc.Encode(testUUID)
-
 		svc := &fakeLicensePlateService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
 				return nil, domain.ErrLicensePlateNotFound
 			},
 		}
 
 		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
-		req := httptest.NewRequest(http.MethodGet, "/license-plates/"+encodedID, nil)
+		req := httptest.NewRequest(http.MethodGet, "/license-plates/INVALID", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
