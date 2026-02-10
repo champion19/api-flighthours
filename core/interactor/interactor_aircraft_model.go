@@ -55,7 +55,7 @@ func (i *AircraftModelInteractor) ListAircraftModels(ctx context.Context, filter
 	return models, nil
 }
 
-// GetAircraftModelsByFamily retrieves all aircraft models for a specific family (HU32)
+// GetAircraftModelsByFamily retrieves all aircraft models for a specific family (HU30)
 func (i *AircraftModelInteractor) GetAircraftModelsByFamily(ctx context.Context, family string) ([]domain.AircraftModel, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)

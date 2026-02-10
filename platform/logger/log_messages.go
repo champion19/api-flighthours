@@ -691,22 +691,25 @@ const (
 // AIRCRAFT REGISTRATION INTERACTOR
 // ============================================
 const (
-	LogAircraftRegistrationGet           = "Obteniendo información de matrícula"
-	LogAircraftRegistrationGetOK         = "Matrícula obtenida exitosamente"
-	LogAircraftRegistrationGetError      = "Error obteniendo matrícula"
-	LogAircraftRegistrationNotFound      = "Matrícula no encontrada"
-	LogAircraftRegistrationCreate        = "Creando matrícula"
-	LogAircraftRegistrationCreateOK      = "Matrícula creada exitosamente"
-	LogAircraftRegistrationCreateError   = "Error creando matrícula"
-	LogAircraftRegistrationUpdate        = "Actualizando matrícula"
-	LogAircraftRegistrationUpdateOK      = "Matrícula actualizada exitosamente"
-	LogAircraftRegistrationUpdateError   = "Error actualizando matrícula"
-	LogAircraftRegistrationList          = "Listando matrículas"
-	LogAircraftRegistrationListOK        = "Matrículas listadas exitosamente"
-	LogAircraftRegistrationListError     = "Error listando matrículas"
-	LogAircraftRegistrationRepoInit      = "Inicializando repositorio de matrículas"
-	LogAircraftRegistrationRepoInitOK    = "Repositorio de matrículas inicializado"
-	LogAircraftRegistrationRepoInitError = "Error inicializando repositorio de matrículas"
+	LogLicensePlateGet                  = "Obteniendo información de matrícula"
+	LogLicensePlateGetOK                = "Matrícula obtenida exitosamente"
+	LogLicensePlateGetError             = "Error obteniendo matrícula"
+	LogLicensePlateNotFound             = "Matrícula no encontrada"
+	LogLicensePlateCreate               = "Creando matrícula"
+	LogLicensePlateCreateOK             = "Matrícula creada exitosamente"
+	LogLicensePlateCreateError          = "Error creando matrícula"
+	LogLicensePlateUpdate               = "Actualizando matrícula"
+	LogLicensePlateUpdateOK             = "Matrícula actualizada exitosamente"
+	LogLicensePlateUpdateError          = "Error actualizando matrícula"
+	LogLicensePlateList                 = "Listando matrículas"
+	LogLicensePlateListOK               = "Matrículas listadas exitosamente"
+	LogLicensePlateListError            = "Error listando matrículas"
+	LogLicensePlateRepoInit             = "Inicializando repositorio de matrículas"
+	LogLicensePlateRepoInitOK           = "Repositorio de matrículas inicializado"
+	LogLicensePlateRepoInitError        = "Error inicializando repositorio de matrículas"
+	LogLicensePlateInvalidModelID       = "Formato inválido de aircraft_model_id"
+	LogLicensePlateInvalidAirlineID     = "Formato inválido de airline_id"
+	LogLicensePlateFetchAfterWriteError = "No se pudo obtener matrícula después de guardar"
 )
 
 // ============================================
@@ -732,7 +735,7 @@ const (
 )
 
 // ============================================
-// AIRCRAFT FAMILY 
+// AIRCRAFT FAMILY
 // ============================================
 const (
 	LogAircraftFamilyGet      = "Obteniendo información de familia de aeronave"

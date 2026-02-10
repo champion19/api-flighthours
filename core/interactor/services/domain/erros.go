@@ -111,14 +111,14 @@ var (
 	ErrAirportNotFound = errors.New("ERR_AIRPORT_NOT_FOUND")
 )
 
-// Aircraft Registration Management Errors (MAT_*)
+// License Plate Management Errors (MAT_*)
 var (
-	ErrAircraftRegistrationNotFound       = errors.New("ERR_AIRCRAFT_REGISTRATION_NOT_FOUND")
-	ErrAircraftRegistrationCannotSave     = errors.New("ERR_AIRCRAFT_REGISTRATION_CANNOT_SAVE")
-	ErrAircraftRegistrationCannotUpdate   = errors.New("ERR_AIRCRAFT_REGISTRATION_CANNOT_UPDATE")
-	ErrAircraftRegistrationDuplicatePlate = errors.New("ERR_AIRCRAFT_REGISTRATION_DUPLICATE_PLATE")
-	ErrAircraftRegistrationInvalidModel   = errors.New("ERR_AIRCRAFT_REGISTRATION_INVALID_MODEL")
-	ErrAircraftRegistrationInvalidAirline = errors.New("ERR_AIRCRAFT_REGISTRATION_INVALID_AIRLINE")
+	ErrLicensePlateNotFound       = errors.New("ERR_LICENSE_PLATE_NOT_FOUND")
+	ErrLicensePlateCannotSave     = errors.New("ERR_LICENSE_PLATE_CANNOT_SAVE")
+	ErrLicensePlateCannotUpdate   = errors.New("ERR_LICENSE_PLATE_CANNOT_UPDATE")
+	ErrLicensePlateDuplicatePlate = errors.New("ERR_LICENSE_PLATE_DUPLICATE_PLATE")
+	ErrLicensePlateInvalidModel   = errors.New("ERR_LICENSE_PLATE_INVALID_MODEL")
+	ErrLicensePlateInvalidAirline = errors.New("ERR_LICENSE_PLATE_INVALID_AIRLINE")
 )
 
 // Aircraft Model Management Errors (MOD_AM_*)
@@ -375,39 +375,39 @@ const (
 	MsgCrewMemberTypeGetErr   = "TIN_CON_ERR_04703" // Error - Error técnico al consultar
 )
 
-// Aircraft Registration Module (MAT_*) - Matrícula
+// License Plate Module (MAT_*) - Matrícula
 const (
 	// ========================================
 	// Consultar - MAT_CON_*
 	// ========================================
-	MsgAircraftRegistrationGetOK    = "MAT_CON_EXI_03301" // Éxito - Matrícula consultada
-	MsgAircraftRegistrationNotFound = "MAT_CON_ERR_03302" // Error - Matrícula no encontrada
-	MsgAircraftRegistrationGetErr   = "MAT_CON_ERR_03303" // Error - Error técnico al consultar
+	MsgLicensePlateGetOK    = "MAT_CON_EXI_03301" // Éxito - Matrícula consultada
+	MsgLicensePlateNotFound = "MAT_CON_ERR_03302" // Error - Matrícula no encontrada
+	MsgLicensePlateGetErr   = "MAT_CON_ERR_03303" // Error - Error técnico al consultar
 
 	// ========================================
 	// Agregar  - MAT_AGR_*
 	// ========================================
-	MsgAircraftRegistrationCreated   = "MAT_AGR_EXI_03401" // Éxito - Matrícula creada
-	MsgAircraftRegistrationSaveError = "MAT_AGR_ERR_03402" // Error - Error técnico al crear
-	MsgAircraftRegistrationDuplicate = "MAT_AGR_ERR_03403" // Error - Matrícula duplicada
+	MsgLicensePlateCreated   = "MAT_AGR_EXI_03401" // Éxito - Matrícula creada
+	MsgLicensePlateSaveError = "MAT_AGR_ERR_03402" // Error - Error técnico al crear
+	MsgLicensePlateDuplicate = "MAT_AGR_ERR_03403" // Error - Matrícula duplicada
 
 	// ========================================
-	// Editar (HU35) - MAT_EDI_*
+	// Editar  - MAT_EDI_*
 	// ========================================
-	MsgAircraftRegistrationUpdated     = "MAT_EDI_EXI_03501" // Éxito - Matrícula actualizada
-	MsgAircraftRegistrationUpdateError = "MAT_EDI_ERR_03502" // Error - Error técnico al editar
+	MsgLicensePlateUpdated     = "MAT_EDI_EXI_03501" // Éxito - Matrícula actualizada
+	MsgLicensePlateUpdateError = "MAT_EDI_ERR_03502" // Error - Error técnico al editar
 
 	// ========================================
 	// Listar - MAT_LIST_*
 	// ========================================
-	MsgAircraftRegistrationListOK    = "MAT_LIST_EXI_03001" // Éxito - Lista de matrículas obtenida
-	MsgAircraftRegistrationListError = "MAT_LIST_ERR_03002" // Error - Error al listar matrículas
+	MsgLicensePlateListOK    = "MAT_LIST_EXI_03001" // Éxito - Lista de matrículas obtenida
+	MsgLicensePlateListError = "MAT_LIST_ERR_03002" // Error - Error al listar matrículas
 
 	// ========================================
 	// Validaciones - MAT_VAL_*
 	// ========================================
-	MsgAircraftRegistrationInvalidModel   = "MAT_VAL_ERR_03601" // Error - Modelo de aeronave inválido
-	MsgAircraftRegistrationInvalidAirline = "MAT_VAL_ERR_03602" // Error - Aerolínea inválida
+	MsgLicensePlateInvalidModel   = "MAT_VAL_ERR_03601" // Error - Modelo de aeronave inválido
+	MsgLicensePlateInvalidAirline = "MAT_VAL_ERR_03602" // Error - Aerolínea inválida
 )
 
 // Aircraft Model Module (MOD_AM_*) - Modelo de Aeronave

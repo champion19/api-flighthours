@@ -270,3 +270,37 @@ func TestAircraftModelService_ActivateDeactivate(t *testing.T) {
 		}
 	})
 }
+
+func TestAircraftModelService_BeginTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		expectedTx := &fakeTxAM{}
+		repo := &fakeAircraftModelRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return expectedTx, nil
+			},
+		}
+		svc := NewAircraftModelService(repo, newTestAircraftModelLogger())
+
+		tx, err := svc.BeginTx(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if tx != expectedTx {
+			t.Error("expected same tx instance")
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAircraftModelRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		svc := NewAircraftModelService(repo, newTestAircraftModelLogger())
+
+		_, err := svc.BeginTx(context.Background())
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+}

@@ -39,7 +39,7 @@ func (s *AircraftModelService) ListAircraftModels(ctx context.Context, filters m
 	return s.repo.ListAircraftModels(ctx, filters)
 }
 
-// GetAircraftModelsByFamily retrieves all aircraft models for a specific family (HU32)
+// GetAircraftModelsByFamily retrieves all aircraft models for a specific family (HU30)
 func (s *AircraftModelService) GetAircraftModelsByFamily(ctx context.Context, family string) ([]domain.AircraftModel, error) {
 	return s.repo.GetAircraftModelsByFamily(ctx, family)
 }

@@ -53,6 +53,12 @@ func (b *Builder) WithValidateAddAirlineEmployee() gin.HandlerFunc {
 func (b *Builder) WithValidateUpdateAirlineEmployee() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.UpdateAirlineEmployeeValidator)
 }
+func (b *Builder) WithValidateCreateLicensePlate() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.CreateLicensePlateValidator)
+}
+func (b *Builder) WithValidateUpdateLicensePlate() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.UpdateLicensePlateValidator)
+}
 
 func (b *Builder) jsonValidator(schema *jsonschema.Schema) gin.HandlerFunc {
 	return func(c *gin.Context) {

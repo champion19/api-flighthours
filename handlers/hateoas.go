@@ -295,7 +295,6 @@ func BuildAirportLinks(baseURL string, airportID string) []Link {
 	}
 }
 
-
 func BuildAirportListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "airports")
 
@@ -308,7 +307,6 @@ func BuildAirportListLinks(baseURL string) []Link {
 	}
 }
 
-
 func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airports", airportID)
 	collectionURL := BuildCollectionURL(baseURL, "airports")
@@ -320,7 +318,6 @@ func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []
 			Method: "GET",
 		},
 	}
-
 
 	if isActive {
 		links = append(links, Link{
@@ -343,6 +340,72 @@ func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []
 	})
 
 	return links
+}
+
+// BuildLicensePlateLinks construye links HATEOAS para una matrícula específica
+func BuildLicensePlateLinks(baseURL string, registrationID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "license-plates", registrationID)
+	collectionURL := BuildCollectionURL(baseURL, "license-plates")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL,
+			Rel:    "update",
+			Method: "PUT",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
+
+// BuildLicensePlateListLinks construye links para la lista de matrículas
+func BuildLicensePlateListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "license-plates")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "create",
+			Method: "POST",
+		},
+	}
+}
+
+// BuildLicensePlateCreatedLinks construye links para una matrícula recién creada
+func BuildLicensePlateCreatedLinks(baseURL string, registrationID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "license-plates", registrationID)
+	collectionURL := BuildCollectionURL(baseURL, "license-plates")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL,
+			Rel:    "update",
+			Method: "PUT",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "list",
+			Method: "GET",
+		},
+	}
 }
 
 // BuildAircraftModelLinks construye links HATEOAS para un modelo de aeronave específico
@@ -377,6 +440,19 @@ func BuildAircraftModelLinks(baseURL string, modelID string) []Link {
 // BuildAircraftModelListLinks construye links para la lista de modelos de aeronave
 func BuildAircraftModelListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "aircraft-models")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+	}
+}
+
+// BuildAircraftFamilyListLinks construye links para la lista de familias de aeronave
+func BuildAircraftFamilyListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "aircraft-families")
 
 	return []Link{
 		{
@@ -491,7 +567,6 @@ func BuildAirlineRouteLinks(baseURL string, airlineRouteID string, isActive bool
 	return links
 }
 
-
 func BuildAirlineRouteListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
 
@@ -504,7 +579,6 @@ func BuildAirlineRouteListLinks(baseURL string) []Link {
 	}
 }
 
-
 func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-routes", airlineRouteID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
@@ -516,7 +590,6 @@ func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActiv
 			Method: "GET",
 		},
 	}
-
 
 	if isActive {
 		links = append(links, Link{
@@ -571,7 +644,6 @@ func BuildEngineListLinks(baseURL string) []Link {
 	}
 }
 
-
 func BuildManufacturerLinks(baseURL string, manufacturerID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "manufacturers", manufacturerID)
 	collectionURL := BuildCollectionURL(baseURL, "manufacturers")
@@ -590,7 +662,6 @@ func BuildManufacturerLinks(baseURL string, manufacturerID string) []Link {
 	}
 }
 
-
 func BuildManufacturerListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "manufacturers")
 
@@ -602,7 +673,6 @@ func BuildManufacturerListLinks(baseURL string) []Link {
 		},
 	}
 }
-
 
 func BuildAirlineEmployeeLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)
