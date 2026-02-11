@@ -58,6 +58,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		dependencies.ManufacturerInteractor,
 		dependencies.AirportInteractor,
 		dependencies.AirlineRouteInteractor,
+		dependencies.DailyLogbookDetailInteractor,
+		dependencies.DailyLogbookInteractor,
 		dependencies.AircraftModelInteractor,
 		dependencies.LicensePlateInteractor,
 	)
@@ -184,6 +186,20 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.POST("/license-plates", validator.WithValidateCreateLicensePlate(), handler.CreateLicensePlate())
 
 		protected.PUT("/license-plates/:id", validator.WithValidateUpdateLicensePlate(), handler.UpdateLicensePlate())
+
+		protected.GET("/daily-logbook-details/:id", handler.GetDailyLogbookDetail())
+
+		protected.PUT("/daily-logbook-details/:id", handler.UpdateDailyLogbookDetail())
+
+		protected.GET("/daily-logbooks", handler.ListDailyLogbooks())
+
+		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
+
+		protected.POST("/daily-logbooks", handler.CreateDailyLogbook())
+
+		protected.POST("/daily-logbooks/:id/details", handler.CreateDailyLogbookDetail())
+
+		protected.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
 
 	}
 	admin := app.Group("flighthours/api/v1/admin")

@@ -105,7 +105,7 @@ func TestHTTP_ListAirlineRoutes(t *testing.T) {
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -294,7 +294,7 @@ func TestHTTP_ActivateAirlineRoute(t *testing.T) {
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -438,7 +438,7 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil)
+		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

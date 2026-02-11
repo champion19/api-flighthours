@@ -107,6 +107,22 @@ type AirlineRouteService interface {
 	DeactivateAirlineRoute(ctx context.Context, id string) error
 }
 
+type DailyLogbookDetailService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
+	UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
+	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error
+}
+
+type DailyLogbookService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
+	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
+	CreateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook) error
+}
+
 type EngineService interface {
 	GetEngineByID(ctx context.Context, id string) (*domain.Engine, error)
 	ListEngines(ctx context.Context) ([]domain.Engine, error)
