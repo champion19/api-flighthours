@@ -111,6 +111,7 @@ type DailyLogbookDetailService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
 	ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
 	CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
 	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error

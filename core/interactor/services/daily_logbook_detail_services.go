@@ -1,18 +1,17 @@
 package services
 
-import(
+import (
 	"context"
 	"time"
 
-	"github.com/champion19/api-flighthours/platform/logger"
-	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 type DailyLogbookDetailService struct {
 	repo output.DailyLogbookDetailRepository
 }
-
 
 func NewDailyLogbookDetailService(repo output.DailyLogbookDetailRepository) *DailyLogbookDetailService {
 	return &DailyLogbookDetailService{
@@ -20,23 +19,24 @@ func NewDailyLogbookDetailService(repo output.DailyLogbookDetailRepository) *Dai
 	}
 }
 
-
 func (s *DailyLogbookDetailService) BeginTx(ctx context.Context) (output.Tx, error) {
 	return s.repo.BeginTx(ctx)
 }
-
 
 func (s *DailyLogbookDetailService) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 	log.Info(logger.LogDailyLogbookDetailGet, "id", id)
 	return s.repo.GetDailyLogbookDetailByID(ctx, id)
 }
 
-
 func (s *DailyLogbookDetailService) ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error) {
 	log.Info(logger.LogDailyLogbookDetailList, "logbook_id", logbookID)
 	return s.repo.ListDailyLogbookDetailsByLogbook(ctx, logbookID)
 }
 
+func (s *DailyLogbookDetailService) ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error) {
+	log.Info(logger.LogDailyLogbookDetailList, "employee_id", employeeID)
+	return s.repo.ListDailyLogbookDetailsByEmployee(ctx, employeeID)
+}
 
 func (s *DailyLogbookDetailService) CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
 	log.Info(logger.LogDailyLogbookDetailCreate, "data", detail.ToLogger())
@@ -63,7 +63,6 @@ func (s *DailyLogbookDetailService) CreateDailyLogbookDetail(ctx context.Context
 	return nil
 }
 
-
 func (s *DailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
 	log.Info(logger.LogDailyLogbookDetailUpdate, "data", detail.ToLogger())
 
@@ -89,7 +88,6 @@ func (s *DailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Context
 	return nil
 }
 
-
 func (s *DailyLogbookDetailService) DeleteDailyLogbookDetail(ctx context.Context, id string) error {
 	log.Info(logger.LogDailyLogbookDetailDelete, "id", id)
 
@@ -99,7 +97,6 @@ func (s *DailyLogbookDetailService) DeleteDailyLogbookDetail(ctx context.Context
 		return err
 	}
 
-
 	if err := tx.Commit(); err != nil {
 		log.Error(logger.LogDBTransactionCommitErr, "error", err)
 		return err
@@ -108,7 +105,6 @@ func (s *DailyLogbookDetailService) DeleteDailyLogbookDetail(ctx context.Context
 	log.Info(logger.LogDailyLogbookDetailDeleteOK, "id", id)
 	return nil
 }
-
 
 func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
 	// Parse time with flexible format (HH:MM or HH:MM:SS)

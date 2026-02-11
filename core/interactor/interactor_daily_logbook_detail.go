@@ -1,14 +1,12 @@
 package interactor
 
-import(
+import (
 	"context"
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
-	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
-
-
 
 // DailyLogbookDetailInteractor orchestrates daily logbook detail operations
 // This is the CORE interactor for flight segment tracking
@@ -69,6 +67,20 @@ func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByLogbook(ctx cont
 	}
 
 	log.Info(logger.LogDailyLogbookDetailListOK, "trace_id", traceID, "count", len(details))
+	return details, nil
+}
+
+// ListDailyLogbookDetailsByEmployee lists all flight details for an employee
+func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByEmployee(ctx context.Context, traceID string, employeeID string) ([]domain.DailyLogbookDetail, error) {
+	log.Info(logger.LogDailyLogbookDetailList, "trace_id", traceID, "employee_id", employeeID)
+
+	details, err := i.service.ListDailyLogbookDetailsByEmployee(ctx, employeeID)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDetailListError, "trace_id", traceID, "error", err)
+		return nil, err
+	}
+
+	log.Info(logger.LogDailyLogbookDetailListOK, "trace_id", traceID, "employee_id", employeeID, "count", len(details))
 	return details, nil
 }
 

@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"net/http"
-
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
@@ -16,16 +14,22 @@ import (
 // @Produce      json
 // @Param        status query bool false "Filter by status (true for active, false for inactive)"
 // @Success      200  {object}  DailyLogbookListResponse
-// @Failure      401  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]interface{}
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
 // @Router       /daily-logbooks [get]
 // @Security     BearerAuth
 func (h *handler) ListDailyLogbooks() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogDailyLogbookList, "action", "list_my_logbooks")
+
 		// Get authenticated employee from context
 		employee, ok := middleware.GetAuthenticatedUser(c)
 		if !ok || employee == nil {
-			c.Error(domain.ErrUserNotFound)
+			log.Error(logger.LogDailyLogbookListError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
 			return
 		}
 
@@ -40,15 +44,16 @@ func (h *handler) ListDailyLogbooks() gin.HandlerFunc {
 
 		logbooks, err := h.DailyLogbookInteractor.ListDailyLogbooksByEmployee(c.Request.Context(), employee.ID, filters)
 		if err != nil {
-			Logger.Error(logger.LogDailyLogbookListError, "employee_id", employee.ID, "error", err)
-			c.Error(err)
+			log.Error(logger.LogDailyLogbookListError, "employee_id", employee.ID, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookListError)
 			return
 		}
 
 		baseURL := GetBaseURL(c)
 		response := ToDailyLogbookListResponse(logbooks, h.EncodeID, baseURL)
 
-		c.JSON(http.StatusOK, response)
+		log.Info(logger.LogDailyLogbookListOK, "employee_id", employee.ID, "count", len(logbooks))
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookListOK, response)
 	}
 }
 
@@ -60,45 +65,48 @@ func (h *handler) ListDailyLogbooks() gin.HandlerFunc {
 // @Produce      json
 // @Param        id   path      string  true  "Daily Logbook ID (obfuscated ID)"
 // @Success      200  {object}  DailyLogbookResponse
-// @Failure      400  {object}  map[string]interface{}
-// @Failure      401  {object}  map[string]interface{}
-// @Failure      403  {object}  map[string]interface{}
-// @Failure      404  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]interface{}
+// @Failure      400  {object}  middleware.APIResponse
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      403  {object}  middleware.APIResponse
+// @Failure      404  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
 // @Router       /daily-logbooks/{id} [get]
 // @Security     BearerAuth
 func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+		inputID := c.Param("id")
+
+		log.Info(logger.LogDailyLogbookGet, "input_id", inputID)
+
 		// Get authenticated employee from context
 		employee, ok := middleware.GetAuthenticatedUser(c)
 		if !ok || employee == nil {
-			c.Error(domain.ErrUserNotFound)
-			return
-		}
-
-		inputID := c.Param("id")
-		if inputID == "" {
-			c.Error(domain.ErrInvalidID)
+			log.Error(logger.LogDailyLogbookGetError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
 			return
 		}
 
 		// Resolve ID (accepts both UUID and obfuscated ID)
 		logbookUUID, responseID := h.resolveID(inputID)
 		if logbookUUID == "" {
-			h.HandleIDDecodingError(c, inputID, domain.ErrInvalidID)
+			log.Warn(logger.LogDailyLogbookGetError, "error", "invalid ID")
+			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
 
 		logbook, err := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID)
 		if err != nil {
-			Logger.Error(logger.LogDailyLogbookGetError, "logbook_id", logbookUUID, "error", err)
-			c.Error(err)
+			log.Error(logger.LogDailyLogbookGetError, "logbook_id", logbookUUID, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookGetErr)
 			return
 		}
 
 		// Verify ownership
 		if logbook.EmployeeID != employee.ID {
-			c.Error(domain.ErrDailyLogbookUnauthorized)
+			log.Warn(logger.LogDailyLogbookGetError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
 			return
 		}
 
@@ -109,7 +117,8 @@ func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 		response := FromDomainDailyLogbook(logbook, responseID, encodedEmployeeID)
 		response.Links = BuildDailyLogbookLinks(baseURL, responseID)
 
-		c.JSON(http.StatusOK, response)
+		log.Info(logger.LogDailyLogbookGetOK, "logbook_id", logbookUUID)
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookGetOK, response)
 	}
 }
 
@@ -121,24 +130,30 @@ func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 // @Produce      json
 // @Param        request body CreateDailyLogbookRequest true "Daily logbook data"
 // @Success      201  {object}  DailyLogbookResponse
-// @Failure      400  {object}  map[string]interface{}
-// @Failure      401  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]interface{}
+// @Failure      400  {object}  middleware.APIResponse
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
 // @Router       /daily-logbooks [post]
 // @Security     BearerAuth
 func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogDailyLogbookCreate, "action", "create_logbook")
+
 		// Get authenticated employee from context
 		employee, ok := middleware.GetAuthenticatedUser(c)
 		if !ok || employee == nil {
-			c.Error(domain.ErrUserNotFound)
+			log.Error(logger.LogDailyLogbookCreateError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
 			return
 		}
 
 		var req CreateDailyLogbookRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			Logger.Error(logger.LogDailyLogbookCreateError, "error", "invalid request body")
-			c.Error(domain.ErrInvalidRequest)
+			log.Error(logger.LogDailyLogbookCreateError, "error", err)
+			h.Response.Error(c, domain.MsgValJSONInvalid)
 			return
 		}
 
@@ -147,14 +162,14 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 
 		logbook, err := req.ToDomain(employee.ID)
 		if err != nil {
-			Logger.Error(logger.LogDailyLogbookCreateError, "error", err)
-			c.Error(err)
+			log.Error(logger.LogDailyLogbookCreateError, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookSaveError)
 			return
 		}
 
 		if err := h.DailyLogbookInteractor.CreateDailyLogbook(c.Request.Context(), *logbook); err != nil {
-			Logger.Error(logger.LogDailyLogbookCreateError, "error", err)
-			c.Error(err)
+			log.Error(logger.LogDailyLogbookCreateError, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookSaveError)
 			return
 		}
 
@@ -172,8 +187,7 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 		response.Links = BuildDailyLogbookCreatedLinks(baseURL, encodedID)
 
 		SetLocationHeader(c, baseURL, "daily-logbooks", encodedID)
-		c.JSON(http.StatusCreated, response)
+		log.Info(logger.LogDailyLogbookCreateOK, "id", logbook.ID)
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookCreated, response)
 	}
 }
-
-

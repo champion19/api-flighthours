@@ -191,15 +191,17 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PUT("/daily-logbook-details/:id", handler.UpdateDailyLogbookDetail())
 
-		protected.GET("/daily-logbooks", handler.ListDailyLogbooks())
-
-		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
-
-		protected.POST("/daily-logbooks", handler.CreateDailyLogbook())
+		protected.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
 
 		protected.POST("/daily-logbooks/:id/details", handler.CreateDailyLogbookDetail())
 
-		protected.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
+		protected.GET("/employees/flights", handler.ListMyFlights())
+
+		protected.GET("/daily-logbooks", handler.ListDailyLogbooks())
+
+		protected.POST("/daily-logbooks", handler.CreateDailyLogbook())
+
+		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
 
 	}
 	admin := app.Group("flighthours/api/v1/admin")

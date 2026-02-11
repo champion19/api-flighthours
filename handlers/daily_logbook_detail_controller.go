@@ -1,10 +1,10 @@
 package handlers
 
-import(
- "github.com/gin-gonic/gin"
- "github.com/champion19/api-flighthours/middleware"
- "github.com/champion19/api-flighthours/platform/logger"
- "github.com/champion19/api-flighthours/core/interactor/services/domain"
+import (
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/gin-gonic/gin"
 )
 
 // GetDailyLogbookDetail retrieves a daily logbook detail by ID
@@ -17,6 +17,7 @@ import(
 // @Success 200 {object} DailyLogbookDetailResponse
 // @Failure 404 {object} middleware.APIResponse
 // @Router /daily-logbook-details/{id} [get]
+// @Security BearerAuth
 func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -59,7 +60,6 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 	}
 }
 
-
 // CreateDailyLogbookDetail creates a new detail under a logbook
 // @Summary Create daily logbook detail
 // @Description Creates a new flight segment under a daily logbook
@@ -72,6 +72,7 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 // @Failure 400 {object} middleware.APIResponse
 // @Failure 403 {object} middleware.APIResponse
 // @Router /daily-logbooks/{id}/details [post]
+// @Security BearerAuth
 func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -201,7 +202,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 	}
 }
 
-
 // UpdateDailyLogbookDetail updates an existing detail
 // @Summary Update daily logbook detail
 // @Description Updates a flight segment
@@ -215,6 +215,7 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 // @Failure 403 {object} middleware.APIResponse
 // @Failure 404 {object} middleware.APIResponse
 // @Router /daily-logbook-details/{id} [put]
+// @Security BearerAuth
 func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -347,6 +348,7 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 // @Success 200 {array} DailyLogbookDetailResponse
 // @Failure 404 {object} middleware.APIResponse
 // @Router /daily-logbooks/{id}/details [get]
+// @Security BearerAuth
 func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
@@ -404,6 +406,57 @@ func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 		}
 
 		log.Info(logger.LogDailyLogbookDetailListOK, "count", len(responses))
+		h.Response.SuccessWithData(c, domain.MsgFlightListOK, responses)
+	}
+}
+
+// ListMyFlights lists all flights for the authenticated employee
+// @Summary List my flights
+// @Description Lists all flight segments across all daily logbooks for the authenticated employee
+// @Tags DailyLogbookDetails
+// @Accept json
+// @Produce json
+// @Success 200 {array} DailyLogbookDetailResponse
+// @Failure 401 {object} middleware.APIResponse
+// @Router /employees/flights [get]
+// @Security BearerAuth
+func (h *handler) ListMyFlights() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogDailyLogbookDetailList, "action", "list_my_flights")
+
+		// Get authenticated user
+		employee, ok := middleware.GetAuthenticatedUser(c)
+		if !ok {
+			log.Error(logger.LogDailyLogbookDetailListError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgFlightUnauthorized)
+			return
+		}
+
+		// Get all flight details for this employee
+		details, err := h.DailyLogbookDetailInteractor.ListDailyLogbookDetailsByEmployee(c.Request.Context(), traceID, employee.ID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookDetailListError, "error", err)
+			h.Response.Error(c, domain.MsgFlightListError)
+			return
+		}
+
+		// Build response
+		var responses []DailyLogbookDetailResponse
+		for _, d := range details {
+			encodedID, _ := h.EncodeID(d.ID)
+			encodedLogbookID, _ := h.EncodeID(d.DailyLogbookID)
+			encodedRouteID, _ := h.EncodeID(d.AirlineRouteID)
+			encodedAircraftID, _ := h.EncodeID(d.LicensePlateID)
+
+			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
+			responses = append(responses, response)
+		}
+
+		log.Info(logger.LogDailyLogbookDetailListOK, "employee_id", employee.ID, "count", len(responses))
 		h.Response.SuccessWithData(c, domain.MsgFlightListOK, responses)
 	}
 }

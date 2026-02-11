@@ -567,3 +567,98 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 		}
 	})
 }
+
+// ── TestHTTP_ListMyAirlineRoutes ───────────────────────────────────────
+
+func TestHTTP_ListMyAirlineRoutes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestAirlineRouteMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, _ := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+
+	empID := "550e8400-e29b-41d4-a716-446655440001"
+	airlineID := "550e8400-e29b-41d4-a716-446655440099"
+
+	newMyRoutesRouter := func(aeSvc *fakeAirlineEmployeeService, arSvc *fakeAirlineRouteService, authUser *domain.Employee) *gin.Engine {
+		aeInteractor := interactor.NewAirlineEmployeeInteractor(aeSvc)
+		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(arSvc)
+		h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, aeInteractor, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.Use(func(c *gin.Context) {
+			if authUser != nil {
+				c.Set("authenticated_user", authUser)
+			}
+			c.Next()
+		})
+		r.GET("/employees/airline-routes", h.ListMyAirlineRoutes())
+		return r
+	}
+
+	t.Run("success", func(t *testing.T) {
+		aeSvc := &fakeAirlineEmployeeService{
+			getByIDFn: func(_ context.Context, id string) (*domain.AirlineEmployee, error) {
+				return &domain.AirlineEmployee{ID: empID, AirlineID: airlineID, Active: true}, nil
+			},
+		}
+		arSvc := &fakeAirlineRouteService{
+			listByAirlineIDFn: func(_ context.Context, airID string) ([]domain.AirlineRoute, error) {
+				return []domain.AirlineRoute{
+					{ID: "ar-1", RouteID: "r-1", AirlineID: airlineID, Status: true, RouteCode: "BOG-MDE"},
+				}, nil
+			},
+		}
+		router := newMyRoutesRouter(aeSvc, arSvc, &domain.Employee{ID: empID})
+		req := httptest.NewRequest(http.MethodGet, "/employees/airline-routes", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("unauthorized", func(t *testing.T) {
+		aeSvc := &fakeAirlineEmployeeService{}
+		arSvc := &fakeAirlineRouteService{}
+		router := newMyRoutesRouter(aeSvc, arSvc, nil)
+		req := httptest.NewRequest(http.MethodGet, "/employees/airline-routes", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("no airline info", func(t *testing.T) {
+		aeSvc := &fakeAirlineEmployeeService{
+			getByIDFn: func(_ context.Context, id string) (*domain.AirlineEmployee, error) {
+				return nil, nil
+			},
+		}
+		arSvc := &fakeAirlineRouteService{}
+		router := newMyRoutesRouter(aeSvc, arSvc, &domain.Employee{ID: empID})
+		req := httptest.NewRequest(http.MethodGet, "/employees/airline-routes", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("route list error", func(t *testing.T) {
+		aeSvc := &fakeAirlineEmployeeService{
+			getByIDFn: func(_ context.Context, id string) (*domain.AirlineEmployee, error) {
+				return &domain.AirlineEmployee{ID: empID, AirlineID: airlineID, Active: true}, nil
+			},
+		}
+		arSvc := &fakeAirlineRouteService{
+			listByAirlineIDFn: func(_ context.Context, airID string) ([]domain.AirlineRoute, error) {
+				return nil, errors.New("db error")
+			},
+		}
+		router := newMyRoutesRouter(aeSvc, arSvc, &domain.Employee{ID: empID})
+		req := httptest.NewRequest(http.MethodGet, "/employees/airline-routes", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+		t.Logf("status: %d", w.Code)
+	})
+}

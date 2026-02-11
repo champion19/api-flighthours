@@ -101,6 +101,7 @@ type DailyLogbookDetailRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
 	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
 	ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
 	SaveDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 }

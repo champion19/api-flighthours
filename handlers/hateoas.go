@@ -720,15 +720,14 @@ func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActiv
 // ============================================================================
 
 // BuildDailyLogbookDetailLinks construye links HATEOAS para un detalle de bitácora
-// Retorna un mapa para usar directamente en el DTO response
-func BuildDailyLogbookDetailLinks(c *gin.Context, detailID string) map[string]string {
+// Retorna un array de Link para mantener consistencia con el resto del sistema
+func BuildDailyLogbookDetailLinks(c *gin.Context, detailID string) []Link {
 	baseURL := GetBaseURL(c)
 	resourceURL := BuildResourceURL(baseURL, "daily-logbook-details", detailID)
 
-	return map[string]string{
-		"self":   resourceURL,
-		"update": resourceURL,
-		"delete": resourceURL,
+	return []Link{
+		{Href: resourceURL, Rel: "self", Method: "GET"},
+		{Href: resourceURL, Rel: "update", Method: "PUT"},
 	}
 }
 
