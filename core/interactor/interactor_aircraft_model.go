@@ -1,12 +1,12 @@
 package interactor
 
-import(
+import (
 	"context"
 
-	 "github.com/champion19/api-flighthours/core/interactor/services/domain"
-	 "github.com/champion19/api-flighthours/core/ports/input"
-	 "github.com/champion19/api-flighthours/platform/logger"
-	 "github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // AircraftModelInteractor orchestrates aircraft model operations
@@ -73,21 +73,42 @@ func (i *AircraftModelInteractor) GetAircraftModelsByFamily(ctx context.Context,
 }
 
 // ActivateAircraftModel sets an aircraft model's status to active (HU42)
-func (i *AircraftModelInteractor) ActivateAircraftModel(ctx context.Context, id string) error {
+func (i *AircraftModelInteractor) ActivateAircraftModel(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAircraftModelActivate, "aircraft_model_id", id)
 
 	// Verify aircraft model exists
-	_, err := i.service.GetAircraftModelByID(ctx, id)
+	_, err = i.service.GetAircraftModelByID(ctx, id)
 	if err != nil {
 		log.Error(logger.LogAircraftModelNotFound, "aircraft_model_id", id)
 		return err
 	}
 
-	if err = i.service.ActivateAircraftModel(ctx, id); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.ActivateAircraftModelTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "commit_error", err)
 		return err
 	}
 
@@ -96,21 +117,42 @@ func (i *AircraftModelInteractor) ActivateAircraftModel(ctx context.Context, id 
 }
 
 // DeactivateAircraftModel sets an aircraft model's status to inactive (HU41)
-func (i *AircraftModelInteractor) DeactivateAircraftModel(ctx context.Context, id string) error {
+func (i *AircraftModelInteractor) DeactivateAircraftModel(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAircraftModelDeactivate, "aircraft_model_id", id)
 
 	// Verify aircraft model exists
-	_, err := i.service.GetAircraftModelByID(ctx, id)
+	_, err = i.service.GetAircraftModelByID(ctx, id)
 	if err != nil {
 		log.Error(logger.LogAircraftModelNotFound, "aircraft_model_id", id)
 		return err
 	}
 
-	if err = i.service.DeactivateAircraftModel(ctx, id); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeactivateAircraftModelTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "commit_error", err)
 		return err
 	}
 

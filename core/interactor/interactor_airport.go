@@ -36,20 +36,41 @@ func (i *AirportInteractor) GetAirportByID(ctx context.Context, id string) (*dom
 }
 
 // ActivateAirport sets an airport's status to active
-func (i *AirportInteractor) ActivateAirport(ctx context.Context, id string) error {
+func (i *AirportInteractor) ActivateAirport(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirportActivate, "airport_id", id)
 
-	_, err := i.service.GetAirportByID(ctx, id)
+	_, err = i.service.GetAirportByID(ctx, id)
 	if err != nil {
 		log.Error(logger.LogAirportNotFound, "airport_id", id)
 		return err
 	}
 
-	if err = i.service.ActivateAirport(ctx, id); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirportActivateError, "airport_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirportActivateError, "airport_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirportActivateError, "airport_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.ActivateAirportTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogAirportActivateError, "airport_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirportActivateError, "airport_id", id, "commit_error", err)
 		return err
 	}
 
@@ -57,20 +78,41 @@ func (i *AirportInteractor) ActivateAirport(ctx context.Context, id string) erro
 	return nil
 }
 
-func (i *AirportInteractor) DeactivateAirport(ctx context.Context, id string) error {
+func (i *AirportInteractor) DeactivateAirport(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogAirportDeactivate, "airport_id", id)
 
-	_, err := i.service.GetAirportByID(ctx, id)
+	_, err = i.service.GetAirportByID(ctx, id)
 	if err != nil {
 		log.Error(logger.LogAirportNotFound, "airport_id", id)
 		return err
 	}
 
-	if err = i.service.DeactivateAirport(ctx, id); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirportDeactivateError, "airport_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirportDeactivateError, "airport_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirportDeactivateError, "airport_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeactivateAirportTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogAirportDeactivateError, "airport_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirportDeactivateError, "airport_id", id, "commit_error", err)
 		return err
 	}
 

@@ -17,6 +17,8 @@ type fakeAirlineRouteService struct {
 	listByAirlineIDFn func(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
 	activateFn        func(ctx context.Context, id string) error
 	deactivateFn      func(ctx context.Context, id string) error
+	activateTxFn      func(ctx context.Context, tx output.Tx, id string) error
+	deactivateTxFn    func(ctx context.Context, tx output.Tx, id string) error
 }
 
 var _ input.AirlineRouteService = (*fakeAirlineRouteService)(nil)
@@ -56,6 +58,20 @@ func (f *fakeAirlineRouteService) ActivateAirlineRoute(ctx context.Context, id s
 func (f *fakeAirlineRouteService) DeactivateAirlineRoute(ctx context.Context, id string) error {
 	if f.deactivateFn != nil {
 		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineRouteService) ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateTxFn != nil {
+		return f.activateTxFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineRouteService) DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateTxFn != nil {
+		return f.deactivateTxFn(ctx, tx, id)
 	}
 	return nil
 }
@@ -200,7 +216,7 @@ func TestAirlineRouteInteractor_ListMyAirlineRoutes(t *testing.T) {
 func TestAirlineRouteInteractor_ActivateAirlineRoute(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -214,7 +230,7 @@ func TestAirlineRouteInteractor_ActivateAirlineRoute(t *testing.T) {
 
 	t.Run("not found", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return domain.ErrAirlineRouteNotFound
 			},
 		}
@@ -228,7 +244,7 @@ func TestAirlineRouteInteractor_ActivateAirlineRoute(t *testing.T) {
 
 	t.Run("already active - idempotent", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return domain.ErrAirlineRouteAlreadyActive
 			},
 		}
@@ -242,7 +258,7 @@ func TestAirlineRouteInteractor_ActivateAirlineRoute(t *testing.T) {
 
 	t.Run("service error", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("activation failed")
 			},
 		}
@@ -258,7 +274,7 @@ func TestAirlineRouteInteractor_ActivateAirlineRoute(t *testing.T) {
 func TestAirlineRouteInteractor_DeactivateAirlineRoute(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -272,7 +288,7 @@ func TestAirlineRouteInteractor_DeactivateAirlineRoute(t *testing.T) {
 
 	t.Run("not found", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return domain.ErrAirlineRouteNotFound
 			},
 		}
@@ -286,7 +302,7 @@ func TestAirlineRouteInteractor_DeactivateAirlineRoute(t *testing.T) {
 
 	t.Run("already inactive - idempotent", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return domain.ErrAirlineRouteAlreadyInactive
 			},
 		}
@@ -300,7 +316,7 @@ func TestAirlineRouteInteractor_DeactivateAirlineRoute(t *testing.T) {
 
 	t.Run("service error", func(t *testing.T) {
 		svc := &fakeAirlineRouteService{
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("deactivation failed")
 			},
 		}

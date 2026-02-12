@@ -139,3 +139,23 @@ func (s *airlineEmployeeService) DeactivateAirlineEmployee(ctx context.Context, 
 	log.Info(logger.LogDatabaseAvailable, "operation", "deactivate_airline_employee", "employee_id", id)
 	return nil
 }
+
+// AddAirlineEmployeeTx adds an airline employee using an external transaction
+func (s *airlineEmployeeService) AddAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+	return s.repository.AddAirlineEmployee(ctx, tx, employee)
+}
+
+// UpdateAirlineEmployeeTx updates an airline employee using an external transaction
+func (s *airlineEmployeeService) UpdateAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+	return s.repository.UpdateAirlineEmployee(ctx, tx, employee)
+}
+
+// ActivateAirlineEmployeeTx activates an airline employee using an external transaction
+func (s *airlineEmployeeService) ActivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repository.UpdateAirlineEmployeeStatus(ctx, tx, id, true)
+}
+
+// DeactivateAirlineEmployeeTx deactivates an airline employee using an external transaction
+func (s *airlineEmployeeService) DeactivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repository.UpdateAirlineEmployeeStatus(ctx, tx, id, false)
+}

@@ -425,3 +425,65 @@ func TestAirlineRouteService_BeginTx(t *testing.T) {
 		}
 	})
 }
+
+func TestAirlineRouteService_ActivateAirlineRouteTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				if !status {
+					t.Error("expected status=true")
+				}
+				return nil
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		err := svc.ActivateAirlineRouteTx(context.Background(), &mockTx{}, "route-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		err := svc.ActivateAirlineRouteTx(context.Background(), &mockTx{}, "route-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirlineRouteService_DeactivateAirlineRouteTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				if status {
+					t.Error("expected status=false")
+				}
+				return nil
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		err := svc.DeactivateAirlineRouteTx(context.Background(), &mockTx{}, "route-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		err := svc.DeactivateAirlineRouteTx(context.Background(), &mockTx{}, "route-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}

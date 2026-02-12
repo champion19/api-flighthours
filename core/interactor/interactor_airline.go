@@ -55,7 +55,7 @@ func (i *AirlineInteractor) ListAirlines(ctx context.Context, filters map[string
 	return airlines, nil
 }
 
-func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) error {
+func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
@@ -67,8 +67,29 @@ func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) erro
 		return domain.ErrAirlineNotFound
 	}
 
-	if err := i.service.ActivateAirline(ctx, id); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineActivateError, "airline_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineActivateError, "airline_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.ActivateAirlineTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "commit_error", err)
 		return err
 	}
 
@@ -76,7 +97,7 @@ func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) erro
 	return nil
 }
 
-func (i *AirlineInteractor) DeactivateAirline(ctx context.Context, id string) error {
+func (i *AirlineInteractor) DeactivateAirline(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
@@ -88,8 +109,29 @@ func (i *AirlineInteractor) DeactivateAirline(ctx context.Context, id string) er
 		return domain.ErrAirlineNotFound
 	}
 
-	if err := i.service.DeactivateAirline(ctx, id); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineDeactivateError, "airline_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineDeactivateError, "airline_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeactivateAirlineTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "commit_error", err)
 		return err
 	}
 

@@ -13,11 +13,15 @@ import (
 
 // fakeAirlineEmployeeService implements input.AirlineEmployeeService for testing
 type fakeAirlineEmployeeService struct {
-	getByIDFn    func(ctx context.Context, id string) (*domain.AirlineEmployee, error)
-	addFn        func(ctx context.Context, employee domain.AirlineEmployee) error
-	updateFn     func(ctx context.Context, employee domain.AirlineEmployee) error
-	activateFn   func(ctx context.Context, id string) error
-	deactivateFn func(ctx context.Context, id string) error
+	getByIDFn      func(ctx context.Context, id string) (*domain.AirlineEmployee, error)
+	addFn          func(ctx context.Context, employee domain.AirlineEmployee) error
+	updateFn       func(ctx context.Context, employee domain.AirlineEmployee) error
+	activateFn     func(ctx context.Context, id string) error
+	deactivateFn   func(ctx context.Context, id string) error
+	addTxFn        func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error
+	updateTxFn     func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error
+	activateTxFn   func(ctx context.Context, tx output.Tx, id string) error
+	deactivateTxFn func(ctx context.Context, tx output.Tx, id string) error
 }
 
 var _ input.AirlineEmployeeService = (*fakeAirlineEmployeeService)(nil)
@@ -57,6 +61,34 @@ func (f *fakeAirlineEmployeeService) ActivateAirlineEmployee(ctx context.Context
 func (f *fakeAirlineEmployeeService) DeactivateAirlineEmployee(ctx context.Context, id string) error {
 	if f.deactivateFn != nil {
 		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineEmployeeService) AddAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+	if f.addTxFn != nil {
+		return f.addTxFn(ctx, tx, employee)
+	}
+	return nil
+}
+
+func (f *fakeAirlineEmployeeService) UpdateAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+	if f.updateTxFn != nil {
+		return f.updateTxFn(ctx, tx, employee)
+	}
+	return nil
+}
+
+func (f *fakeAirlineEmployeeService) ActivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateTxFn != nil {
+		return f.activateTxFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineEmployeeService) DeactivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateTxFn != nil {
+		return f.deactivateTxFn(ctx, tx, id)
 	}
 	return nil
 }
@@ -111,7 +143,7 @@ func TestAirlineEmployeeInteractor_GetAirlineEmployeeByID(t *testing.T) {
 func TestAirlineEmployeeInteractor_AddAirlineEmployee(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeAirlineEmployeeService{
-			addFn: func(ctx context.Context, employee domain.AirlineEmployee) error {
+			addTxFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
 				if employee.ID != "emp-123" {
 					t.Errorf("expected ID emp-123, got %s", employee.ID)
 				}
@@ -133,7 +165,7 @@ func TestAirlineEmployeeInteractor_AddAirlineEmployee(t *testing.T) {
 
 	t.Run("service error", func(t *testing.T) {
 		svc := &fakeAirlineEmployeeService{
-			addFn: func(ctx context.Context, employee domain.AirlineEmployee) error {
+			addTxFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
 				return errors.New("add failed")
 			},
 		}
@@ -149,7 +181,7 @@ func TestAirlineEmployeeInteractor_AddAirlineEmployee(t *testing.T) {
 func TestAirlineEmployeeInteractor_UpdateAirlineEmployee(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeAirlineEmployeeService{
-			updateFn: func(ctx context.Context, employee domain.AirlineEmployee) error {
+			updateTxFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
 				return nil
 			},
 		}
@@ -164,7 +196,7 @@ func TestAirlineEmployeeInteractor_UpdateAirlineEmployee(t *testing.T) {
 
 	t.Run("service error", func(t *testing.T) {
 		svc := &fakeAirlineEmployeeService{
-			updateFn: func(ctx context.Context, employee domain.AirlineEmployee) error {
+			updateTxFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
 				return errors.New("update failed")
 			},
 		}
@@ -183,7 +215,7 @@ func TestAirlineEmployeeInteractor_ActivateAirlineEmployee(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
 			},
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -214,7 +246,7 @@ func TestAirlineEmployeeInteractor_ActivateAirlineEmployee(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
 			},
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("activation failed")
 			},
 		}
@@ -233,7 +265,7 @@ func TestAirlineEmployeeInteractor_DeactivateAirlineEmployee(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
 			},
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -264,7 +296,7 @@ func TestAirlineEmployeeInteractor_DeactivateAirlineEmployee(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
 			},
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("deactivation failed")
 			},
 		}

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
-	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // Mock route repository
@@ -36,8 +35,7 @@ func (m *mockRouteRepo) BeginTx(ctx context.Context) (interface{}, error) {
 func TestNewRouteService(t *testing.T) {
 	t.Run("creates route service", func(t *testing.T) {
 		repo := &mockRouteRepo{}
-		log := logger.NewSlogLogger()
-		service := NewRouteService(repo, log)
+		service := NewRouteService(repo)
 
 		if service == nil {
 			t.Error("expected non-nil service")
@@ -57,8 +55,7 @@ func TestRouteService_GetRouteByID(t *testing.T) {
 			},
 		}
 
-		log := logger.NewSlogLogger()
-		service := NewRouteService(repo, log)
+		service := NewRouteService(repo)
 		result, err := service.GetRouteByID(context.Background(), "route-123")
 
 		if err != nil {
@@ -76,8 +73,7 @@ func TestRouteService_GetRouteByID(t *testing.T) {
 			},
 		}
 
-		log := logger.NewSlogLogger()
-		service := NewRouteService(repo, log)
+		service := NewRouteService(repo)
 		_, err := service.GetRouteByID(context.Background(), "non-existent")
 
 		if err == nil {
@@ -99,8 +95,7 @@ func TestRouteService_ListRoutes(t *testing.T) {
 			},
 		}
 
-		log := logger.NewSlogLogger()
-		service := NewRouteService(repo, log)
+		service := NewRouteService(repo)
 		result, err := service.ListRoutes(context.Background(), nil)
 
 		if err != nil {
@@ -120,8 +115,7 @@ func TestRouteService_ListRoutes(t *testing.T) {
 			},
 		}
 
-		log := logger.NewSlogLogger()
-		service := NewRouteService(repo, log)
+		service := NewRouteService(repo)
 		filters := map[string]interface{}{"active": true}
 		_, _ = service.ListRoutes(context.Background(), filters)
 
@@ -137,8 +131,7 @@ func TestRouteService_ListRoutes(t *testing.T) {
 			},
 		}
 
-		log := logger.NewSlogLogger()
-		service := NewRouteService(repo, log)
+		service := NewRouteService(repo)
 		_, err := service.ListRoutes(context.Background(), nil)
 
 		if err == nil {

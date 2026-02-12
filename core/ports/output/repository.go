@@ -96,3 +96,20 @@ type ManufacturerRepository interface {
 	GetManufacturerByID(ctx context.Context, id string) (*domain.Manufacturer, error)
 	ListManufacturers(ctx context.Context) ([]domain.Manufacturer, error)
 }
+
+type DailyLogbookDetailRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
+	SaveDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
+	UpdateDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
+	ExistsByUniqueKey(ctx context.Context, employeeID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+}
+
+type DailyLogbookRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
+	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
+	SaveDailyLogbook(ctx context.Context, tx Tx, logbook domain.DailyLogbook) error
+}

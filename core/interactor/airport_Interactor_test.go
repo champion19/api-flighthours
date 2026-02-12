@@ -23,6 +23,8 @@ type fakeAirportServiceForInteractor struct {
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	listAirportsFn func(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
 	getByTypeFn    func(ctx context.Context, airportType string) ([]domain.Airport, error)
+	activateTxFn   func(ctx context.Context, tx output.Tx, id string) error
+	deactivateTxFn func(ctx context.Context, tx output.Tx, id string) error
 }
 
 var _ input.AirportService = (*fakeAirportServiceForInteractor)(nil)
@@ -74,6 +76,20 @@ func (f *fakeAirportServiceForInteractor) GetAirportsByType(ctx context.Context,
 		return f.getByTypeFn(ctx, airportType)
 	}
 	return nil, errors.New("not implemented")
+}
+
+func (f *fakeAirportServiceForInteractor) ActivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateTxFn != nil {
+		return f.activateTxFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirportServiceForInteractor) DeactivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateTxFn != nil {
+		return f.deactivateTxFn(ctx, tx, id)
+	}
+	return nil
 }
 
 func TestAirportInteractor_GetAirportByID(t *testing.T) {
@@ -147,7 +163,7 @@ func TestAirportInteractor_DeactivateAirport(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
 				return &domain.Airport{ID: "airport-123", Status: true}, nil
 			},
-			deactivateFn: func(context.Context, string) error {
+			deactivateTxFn: func(context.Context, output.Tx, string) error {
 				deactivateCalled = true
 				return nil
 			},
@@ -159,7 +175,7 @@ func TestAirportInteractor_DeactivateAirport(t *testing.T) {
 			t.Fatalf("expected no error, got %v", err)
 		}
 		if !deactivateCalled {
-			t.Fatal("expected DeactivateAirport to be called")
+			t.Fatal("expected DeactivateAirportTx to be called")
 		}
 	})
 
@@ -183,7 +199,7 @@ func TestAirportInteractor_DeactivateAirport(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
 				return &domain.Airport{ID: "airport-123"}, nil
 			},
-			deactivateFn: func(context.Context, string) error {
+			deactivateTxFn: func(context.Context, output.Tx, string) error {
 				return deactivateErr
 			},
 		}
@@ -340,7 +356,7 @@ func TestAirportInteractor_ActivateAirport(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
 				return &domain.Airport{ID: "airport-123", Status: false}, nil
 			},
-			activateFn: func(context.Context, string) error {
+			activateTxFn: func(context.Context, output.Tx, string) error {
 				activateCalled = true
 				return nil
 			},
@@ -352,7 +368,7 @@ func TestAirportInteractor_ActivateAirport(t *testing.T) {
 			t.Fatalf("expected no error, got %v", err)
 		}
 		if !activateCalled {
-			t.Fatal("expected ActivateAirport to be called")
+			t.Fatal("expected ActivateAirportTx to be called")
 		}
 	})
 
@@ -376,7 +392,7 @@ func TestAirportInteractor_ActivateAirport(t *testing.T) {
 			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
 				return &domain.Airport{ID: "airport-123"}, nil
 			},
-			activateFn: func(context.Context, string) error {
+			activateTxFn: func(context.Context, output.Tx, string) error {
 				return activateErr
 			},
 		}

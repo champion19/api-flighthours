@@ -17,6 +17,8 @@ import (
 	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
 	airlineRouteRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_route"
 	airportRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airport"
+	dailyLogbookRepo "github.com/champion19/api-flighthours/platform/databases/repositories/daily_logbook"
+	dailyLogbookDetailRepo "github.com/champion19/api-flighthours/platform/databases/repositories/daily_logbook_detail"
 	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
 	engineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/engine"
 	licensePlateRepo "github.com/champion19/api-flighthours/platform/databases/repositories/license_plate"
@@ -32,25 +34,27 @@ import (
 var log logger.Logger = logger.NewSlogLogger()
 
 type Dependencies struct {
-	EmployeeService           input.Service
-	EmployeeRepo              output.Repository
-	Interactor                *interactor.Interactor
-	KeycloakClient            output.AuthClient
-	Config                    *config.Config
-	IDEncoder                 *idencoder.HashidsEncoder
-	ResponseHandler           *middleware.ResponseHandler
-	MessagingCache            *messagingCache.MessageCache
-	MessageInteractor         *interactor.MessageInteractor
-	JWTValidator              *jwt.JWKSValidator
-	AirlineInteractor         *interactor.AirlineInteractor
-	AirlineEmployeeInteractor *interactor.AirlineEmployeeInteractor
-	EngineInteractor          *interactor.EngineInteractor
-	RouteInteractor           *interactor.RouteInteractor
-	AirlineRouteInteractor    *interactor.AirlineRouteInteractor
-	AirportInteractor         *interactor.AirportInteractor
-	ManufacturerInteractor    *interactor.ManufacturerInteractor
-	AircraftModelInteractor   *interactor.AircraftModelInteractor
-	LicensePlateInteractor    *interactor.LicensePlateInteractor
+	EmployeeService              input.Service
+	EmployeeRepo                 output.Repository
+	Interactor                   *interactor.Interactor
+	KeycloakClient               output.AuthClient
+	Config                       *config.Config
+	IDEncoder                    *idencoder.HashidsEncoder
+	ResponseHandler              *middleware.ResponseHandler
+	MessagingCache               *messagingCache.MessageCache
+	MessageInteractor            *interactor.MessageInteractor
+	JWTValidator                 output.TokenValidator
+	AirlineInteractor            *interactor.AirlineInteractor
+	AirlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
+	EngineInteractor             *interactor.EngineInteractor
+	RouteInteractor              *interactor.RouteInteractor
+	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
+	AirportInteractor            *interactor.AirportInteractor
+	ManufacturerInteractor       *interactor.ManufacturerInteractor
+	AircraftModelInteractor      *interactor.AircraftModelInteractor
+	LicensePlateInteractor       *interactor.LicensePlateInteractor
+	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
+	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -143,6 +147,17 @@ func Init() (*Dependencies, error) {
 	airportService := services.NewAirportService(airportRepository)
 	airportInteractor := interactor.NewAirportInteractor(airportService)
 
+	// Inicializar repositorio y servicio de bitácoras diarias
+	dailyLogbookRepository, err := dailyLogbookRepo.NewDailyLogbookRepository(db)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogDailyLogbookRepoInitOK)
+
+	dailyLogbookService := services.NewDailyLogbookService(dailyLogbookRepository)
+	dailyLogbookInteractor := interactor.NewDailyLogbookInteractor(dailyLogbookService)
+
 	licensePlateRepository, err := licensePlateRepo.NewLicensePlateRepository(db)
 	if err != nil {
 		log.Error(logger.LogLicensePlateRepoInitError, "error", err)
@@ -170,8 +185,8 @@ func Init() (*Dependencies, error) {
 	}
 	log.Success(logger.LogRouteRepoInitOK)
 
-	routeService := services.NewRouteService(routeRepository, log)
-	routeInteractor := interactor.NewRouteInteractor(routeService, log)
+	routeService := services.NewRouteService(routeRepository)
+	routeInteractor := interactor.NewRouteInteractor(routeService)
 
 	airlineRouteRepository, err := airlineRouteRepo.NewAirlineRouteRepository(db)
 	if err != nil {
@@ -182,6 +197,17 @@ func Init() (*Dependencies, error) {
 
 	airlineRouteService := services.NewAirlineRouteService(airlineRouteRepository)
 	airlineRouteInteractor := interactor.NewAirlineRouteInteractor(airlineRouteService)
+
+	// Inicializar repositorio y servicio de detalles de bitácora diaria
+	dailyLogbookDetailRepository, err := dailyLogbookDetailRepo.NewDailyLogbookDetailRepository(db)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogDailyLogbookDetailRepoInitOK)
+
+	dailyLogbookDetailService := services.NewDailyLogbookDetailService(dailyLogbookDetailRepository)
+	dailyLogbookDetailInteractor := interactor.NewDailyLogbookDetailInteractor(dailyLogbookDetailService, dailyLogbookService)
 
 	engineRepository, err := engineRepo.NewEngineRepository(db)
 	if err != nil {
@@ -213,39 +239,42 @@ func Init() (*Dependencies, error) {
 	airlineEmployeeService := services.NewAirlineEmployeeService(airlineEmployeeRepository)
 	airlineEmployeeInteractor := interactor.NewAirlineEmployeeInteractor(airlineEmployeeService)
 
-	var jwtValidator *jwt.JWKSValidator
+	var jwtValidator output.TokenValidator
 	jwtConfig := jwt.JWKSConfig{
 		JWKSURL:         cfg.GetKeycloakJWKSURL(),
 		Issuer:          cfg.GetKeycloakIssuerURL(),
 		RefreshInterval: 15 * time.Minute,
 	}
-	jwtValidator, err = jwt.NewJWKSValidator(context.Background(), jwtConfig)
+	concreteValidator, err := jwt.NewJWKSValidator(context.Background(), jwtConfig)
 	if err != nil {
 		log.Warn(logger.LogJWKSValidatorInitFailed, "error", err)
 		jwtValidator = nil
 	} else {
 		log.Success(logger.LogJWKSValidatorInitOK, "jwks_url", jwtConfig.JWKSURL)
+		jwtValidator = concreteValidator
 	}
 
 	return &Dependencies{
-		EmployeeService:           employeeService,
-		EmployeeRepo:              employeeRepo,
-		Interactor:                interactorFacade,
-		KeycloakClient:            keycloakClient,
-		Config:                    cfg,
-		IDEncoder:                 encoder,
-		ResponseHandler:           responseHandler,
-		MessagingCache:            messagingCache,
-		MessageInteractor:         messageInteractor,
-		JWTValidator:              jwtValidator,
-		AirlineInteractor:         airlineInteractor,
-		AirlineEmployeeInteractor: airlineEmployeeInteractor,
-		EngineInteractor:          engineInteractor,
-		RouteInteractor:           routeInteractor,
-		AirlineRouteInteractor:    airlineRouteInteractor,
-		AirportInteractor:         airportInteractor,
-		ManufacturerInteractor:    manufacturerInteractor,
-		AircraftModelInteractor:   aircraftModelInteractor,
-		LicensePlateInteractor:    licensePlateInteractor,
+		EmployeeService:              employeeService,
+		EmployeeRepo:                 employeeRepo,
+		Interactor:                   interactorFacade,
+		KeycloakClient:               keycloakClient,
+		Config:                       cfg,
+		IDEncoder:                    encoder,
+		ResponseHandler:              responseHandler,
+		MessagingCache:               messagingCache,
+		MessageInteractor:            messageInteractor,
+		JWTValidator:                 jwtValidator,
+		AirlineInteractor:            airlineInteractor,
+		AirlineEmployeeInteractor:    airlineEmployeeInteractor,
+		EngineInteractor:             engineInteractor,
+		RouteInteractor:              routeInteractor,
+		AirlineRouteInteractor:       airlineRouteInteractor,
+		AirportInteractor:            airportInteractor,
+		ManufacturerInteractor:       manufacturerInteractor,
+		AircraftModelInteractor:      aircraftModelInteractor,
+		LicensePlateInteractor:       licensePlateInteractor,
+		DailyLogbookDetailInteractor: dailyLogbookDetailInteractor,
+		DailyLogbookInteractor:       dailyLogbookInteractor,
 	}, nil
 }

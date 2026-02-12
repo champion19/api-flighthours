@@ -395,3 +395,65 @@ func TestAirportService_ActivateAirport(t *testing.T) {
 		}
 	})
 }
+
+func TestAirportService_ActivateAirportTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &fakeAirportRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				if !status {
+					t.Error("expected status=true")
+				}
+				return nil
+			},
+		}
+		svc := NewAirportService(repo)
+		err := svc.ActivateAirportTx(context.Background(), &airportFakeTx{}, "airport-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAirportRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAirportService(repo)
+		err := svc.ActivateAirportTx(context.Background(), &airportFakeTx{}, "airport-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirportService_DeactivateAirportTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &fakeAirportRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				if status {
+					t.Error("expected status=false")
+				}
+				return nil
+			},
+		}
+		svc := NewAirportService(repo)
+		err := svc.DeactivateAirportTx(context.Background(), &airportFakeTx{}, "airport-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAirportRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAirportService(repo)
+		err := svc.DeactivateAirportTx(context.Background(), &airportFakeTx{}, "airport-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}

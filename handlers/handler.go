@@ -12,21 +12,23 @@ import (
 )
 
 type handler struct {
-	EmployeeService                input.Service
-	Interactor                     input.EmployeeInteractor
-	IDEncoder                      *idencoder.HashidsEncoder
-	Response                       *middleware.ResponseHandler
-	MessageInteractor              *interactor.MessageInteractor
-	MessagingCache                 *messaging.MessageCache
-	AirlineInteractor              *interactor.AirlineInteractor
-	AirportInteractor              *interactor.AirportInteractor
-	AirlineEmployeeInteractor      *interactor.AirlineEmployeeInteractor
-	EngineInteractor               *interactor.EngineInteractor
-	RouteInteractor                *interactor.RouteInteractor
-	AirlineRouteInteractor         *interactor.AirlineRouteInteractor
-	ManufacturerInteractor         *interactor.ManufacturerInteractor
-	AircraftModelInteractor        *interactor.AircraftModelInteractor
-	LicensePlateInteractor *interactor.LicensePlateInteractor
+	EmployeeService              input.Service
+	Interactor                   input.EmployeeInteractor
+	IDEncoder                    *idencoder.HashidsEncoder
+	Response                     *middleware.ResponseHandler
+	MessageInteractor            *interactor.MessageInteractor
+	MessagingCache               *messaging.MessageCache
+	AirlineInteractor            *interactor.AirlineInteractor
+	AirportInteractor            *interactor.AirportInteractor
+	AirlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
+	EngineInteractor             *interactor.EngineInteractor
+	RouteInteractor              *interactor.RouteInteractor
+	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
+	ManufacturerInteractor       *interactor.ManufacturerInteractor
+	AircraftModelInteractor      *interactor.AircraftModelInteractor
+	LicensePlateInteractor       *interactor.LicensePlateInteractor
+	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
+	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
 }
 
 func New(
@@ -43,24 +45,28 @@ func New(
 	manufacturerInteractor *interactor.ManufacturerInteractor,
 	airportInteractor *interactor.AirportInteractor,
 	airlineRouteInteractor *interactor.AirlineRouteInteractor,
+	dailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor,
+	dailyLogbookInteractor *interactor.DailyLogbookInteractor,
 	aircraftModelInteractor *interactor.AircraftModelInteractor,
 	aircraftRegistrationInteractor *interactor.LicensePlateInteractor) *handler {
 	return &handler{
-		EmployeeService:                service,
-		Interactor:                     employeeInteractor,
-		IDEncoder:                      idEncoder,
-		Response:                       response,
-		MessageInteractor:              messageInteractor,
-		MessagingCache:                 messagingCache,
-		AirlineInteractor:              airlineInteractor,
-		AirlineEmployeeInteractor:      airlineEmployeeInteractor,
-		EngineInteractor:               engineInteractor,
-		RouteInteractor:                routeInteractor,
-		AirlineRouteInteractor:         airlineRouteInteractor,
-		ManufacturerInteractor:         manufacturerInteractor,
-		AirportInteractor:              airportInteractor,
-		AircraftModelInteractor:        aircraftModelInteractor,
-		LicensePlateInteractor: aircraftRegistrationInteractor,
+		EmployeeService:           service,
+		Interactor:                employeeInteractor,
+		IDEncoder:                 idEncoder,
+		Response:                  response,
+		MessageInteractor:         messageInteractor,
+		MessagingCache:            messagingCache,
+		AirlineInteractor:         airlineInteractor,
+		AirlineEmployeeInteractor: airlineEmployeeInteractor,
+		EngineInteractor:          engineInteractor,
+		RouteInteractor:           routeInteractor,
+		AirlineRouteInteractor:    airlineRouteInteractor,
+		DailyLogbookDetailInteractor:    dailyLogbookDetailInteractor,
+		DailyLogbookInteractor:    dailyLogbookInteractor,
+		ManufacturerInteractor:    manufacturerInteractor,
+		AirportInteractor:         airportInteractor,
+		AircraftModelInteractor:   aircraftModelInteractor,
+		LicensePlateInteractor:    aircraftRegistrationInteractor,
 	}
 }
 

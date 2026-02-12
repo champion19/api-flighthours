@@ -376,3 +376,65 @@ func TestAirlineService_DeactivateAirline(t *testing.T) {
 		}
 	})
 }
+
+func TestAirlineService_ActivateAirlineTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &fakeAirlineRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				if !active {
+					t.Error("expected active=true")
+				}
+				return nil
+			},
+		}
+		svc := NewAirlineService(repo)
+		err := svc.ActivateAirlineTx(context.Background(), &airlineFakeTx{}, "airline-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAirlineRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAirlineService(repo)
+		err := svc.ActivateAirlineTx(context.Background(), &airlineFakeTx{}, "airline-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirlineService_DeactivateAirlineTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &fakeAirlineRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				if active {
+					t.Error("expected active=false")
+				}
+				return nil
+			},
+		}
+		svc := NewAirlineService(repo)
+		err := svc.DeactivateAirlineTx(context.Background(), &airlineFakeTx{}, "airline-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAirlineRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAirlineService(repo)
+		err := svc.DeactivateAirlineTx(context.Background(), &airlineFakeTx{}, "airline-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}

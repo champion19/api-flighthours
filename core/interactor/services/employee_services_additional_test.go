@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Nerzal/gocloak/v13"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/mocks"
 	"github.com/stretchr/testify/mock"
@@ -468,5 +469,482 @@ func TestEmployeeService_GetEmployeesByRole(t *testing.T) {
 			t.Fatalf("expected %v, got %v", repoErr, err)
 		}
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_RollbackEmployee(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockRepo.On("DeleteEmployee", mock.Anything, nil, "emp-123").Return(nil)
+
+		svc := NewService(mockRepo, nil)
+		err := svc.RollbackEmployee(context.Background(), "emp-123")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("repo error", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		deleteErr := errors.New("delete error")
+		mockRepo.On("DeleteEmployee", mock.Anything, nil, "emp-fail").Return(deleteErr)
+
+		svc := NewService(mockRepo, nil)
+		err := svc.RollbackEmployee(context.Background(), "emp-fail")
+
+		if !errors.Is(err, deleteErr) {
+			t.Fatalf("expected %v, got %v", deleteErr, err)
+		}
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestContains(t *testing.T) {
+	tests := []struct {
+		name   string
+		s      string
+		substr string
+		want   bool
+	}{
+		{"exact match", "connection refused", "connection refused", true},
+		{"case insensitive", "Connection Refused", "connection refused", true},
+		{"substring", "error: connection refused by host", "connection refused", true},
+		{"no match", "timeout error", "connection refused", false},
+		{"empty substr", "anything", "", true},
+		{"empty both", "", "", true},
+		{"empty s", "", "something", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := contains(tc.s, tc.substr); got != tc.want {
+				t.Errorf("contains(%q, %q) = %v, want %v", tc.s, tc.substr, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestIsConnectionError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"connection refused", errors.New("connection refused"), true},
+		{"no such host", errors.New("no such host"), true},
+		{"connection reset", errors.New("connection reset"), true},
+		{"network is unreachable", errors.New("network is unreachable"), true},
+		{"unrelated error", errors.New("invalid input"), false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isConnectionError(tc.err); got != tc.want {
+				t.Errorf("isConnectionError(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestIsTimeoutError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"timeout", errors.New("timeout"), true},
+		{"deadline exceeded", errors.New("deadline exceeded"), true},
+		{"context deadline exceeded", errors.New("context deadline exceeded"), true},
+		{"unrelated error", errors.New("invalid input"), false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isTimeoutError(tc.err); got != tc.want {
+				t.Errorf("isTimeoutError(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
+
+func strPtr(s string) *string { return &s }
+
+func TestEmployeeService_CheckAndCleanInconsistentState(t *testing.T) {
+	t.Run("both exist - no cleanup", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockAuth := new(mocks.MockAuthClient)
+
+		employee := &domain.Employee{ID: "emp-123", Email: "test@example.com"}
+		kcUser := &gocloak.User{ID: strPtr("kc-123"), Email: strPtr("test@example.com")}
+
+		mockRepo.On("GetEmployeeByEmail", mock.Anything, "test@example.com").Return(employee, nil)
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+
+		svc := NewService(mockRepo, mockAuth)
+		err := svc.CheckAndCleanInconsistentState(context.Background(), "test@example.com")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("neither exist - no cleanup", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockAuth := new(mocks.MockAuthClient)
+
+		mockRepo.On("GetEmployeeByEmail", mock.Anything, "new@example.com").Return(nil, domain.ErrPersonNotFound)
+		mockAuth.On("GetUserByEmail", mock.Anything, "new@example.com").Return(nil, errors.New("not found"))
+
+		svc := NewService(mockRepo, mockAuth)
+		err := svc.CheckAndCleanInconsistentState(context.Background(), "new@example.com")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("only in keycloak - cleanup", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockAuth := new(mocks.MockAuthClient)
+
+		kcUser := &gocloak.User{ID: strPtr("kc-orphan"), Email: strPtr("orphan@example.com")}
+		mockRepo.On("GetEmployeeByEmail", mock.Anything, "orphan@example.com").Return(nil, domain.ErrPersonNotFound)
+		mockAuth.On("GetUserByEmail", mock.Anything, "orphan@example.com").Return(kcUser, nil)
+		mockAuth.On("DeleteUser", mock.Anything, "kc-orphan").Return(nil)
+
+		svc := NewService(mockRepo, mockAuth)
+		err := svc.CheckAndCleanInconsistentState(context.Background(), "orphan@example.com")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("only in db - cleanup", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockAuth := new(mocks.MockAuthClient)
+
+		employee := &domain.Employee{ID: "emp-orphan", Email: "dborphan@example.com"}
+		mockRepo.On("GetEmployeeByEmail", mock.Anything, "dborphan@example.com").Return(employee, nil)
+		mockAuth.On("GetUserByEmail", mock.Anything, "dborphan@example.com").Return(nil, errors.New("not found"))
+		mockRepo.On("DeleteEmployee", mock.Anything, nil, "emp-orphan").Return(nil)
+
+		svc := NewService(mockRepo, mockAuth)
+		err := svc.CheckAndCleanInconsistentState(context.Background(), "dborphan@example.com")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("keycloak cleanup error", func(t *testing.T) {
+		mockRepo := new(mocks.MockRepository)
+		mockAuth := new(mocks.MockAuthClient)
+
+		kcUser := &gocloak.User{ID: strPtr("kc-fail"), Email: strPtr("fail@example.com")}
+		mockRepo.On("GetEmployeeByEmail", mock.Anything, "fail@example.com").Return(nil, domain.ErrPersonNotFound)
+		mockAuth.On("GetUserByEmail", mock.Anything, "fail@example.com").Return(kcUser, nil)
+		mockAuth.On("DeleteUser", mock.Anything, "kc-fail").Return(errors.New("keycloak error"))
+
+		svc := NewService(mockRepo, mockAuth)
+		err := svc.CheckAndCleanInconsistentState(context.Background(), "fail@example.com")
+
+		if err != domain.ErrKeycloakCleanupFailed {
+			t.Fatalf("expected ErrKeycloakCleanupFailed, got %v", err)
+		}
+		mockRepo.AssertExpectations(t)
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_GetUserByEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{ID: strPtr("kc-123"), Email: strPtr("test@example.com")}
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+
+		svc := NewService(nil, mockAuth)
+		result, err := svc.GetUserByEmail(context.Background(), "test@example.com")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if *result.ID != "kc-123" {
+			t.Fatalf("expected ID kc-123, got %s", *result.ID)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("GetUserByEmail", mock.Anything, "unknown@example.com").Return(nil, errors.New("not found"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.GetUserByEmail(context.Background(), "unknown@example.com")
+
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func boolPtr(b bool) *bool { return &b }
+
+func TestEmployeeService_Login(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{
+			ID:            strPtr("kc-123"),
+			Email:         strPtr("test@example.com"),
+			EmailVerified: boolPtr(true),
+		}
+		token := &gocloak.JWT{AccessToken: "access-token"}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+		mockAuth.On("LoginUser", mock.Anything, "test@example.com", "password123").Return(token, nil)
+
+		svc := NewService(nil, mockAuth)
+		result, err := svc.Login(context.Background(), "test@example.com", "password123")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if result.AccessToken != "access-token" {
+			t.Fatalf("expected access-token, got %s", result.AccessToken)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("GetUserByEmail", mock.Anything, "unknown@example.com").Return(nil, errors.New("not found"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.Login(context.Background(), "unknown@example.com", "password123")
+
+		if err != domain.ErrUserNotFound {
+			t.Fatalf("expected ErrUserNotFound, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("email not verified", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{
+			ID:            strPtr("kc-123"),
+			Email:         strPtr("unverified@example.com"),
+			EmailVerified: boolPtr(false),
+		}
+		mockAuth.On("GetUserByEmail", mock.Anything, "unverified@example.com").Return(kcUser, nil)
+		mockAuth.On("SendVerificationEmail", mock.Anything, "kc-123").Return(nil)
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.Login(context.Background(), "unverified@example.com", "password123")
+
+		if err != domain.ErrorEmailNotVerified {
+			t.Fatalf("expected ErrorEmailNotVerified, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("login error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{
+			ID:            strPtr("kc-123"),
+			Email:         strPtr("test@example.com"),
+			EmailVerified: boolPtr(true),
+		}
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+		mockAuth.On("LoginUser", mock.Anything, "test@example.com", "wrongpass").Return(nil, errors.New("invalid credentials"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.Login(context.Background(), "test@example.com", "wrongpass")
+
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_SendVerificationEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("SendVerificationEmail", mock.Anything, "kc-123").Return(nil)
+
+		svc := NewService(nil, mockAuth)
+		err := svc.SendVerificationEmail(context.Background(), "kc-123")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("SendVerificationEmail", mock.Anything, "kc-fail").Return(errors.New("email error"))
+
+		svc := NewService(nil, mockAuth)
+		err := svc.SendVerificationEmail(context.Background(), "kc-fail")
+
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_SendPasswordResetEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("SendPasswordResetEmail", mock.Anything, "test@example.com").Return(nil)
+
+		svc := NewService(nil, mockAuth)
+		err := svc.SendPasswordResetEmail(context.Background(), "test@example.com")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("SendPasswordResetEmail", mock.Anything, "fail@example.com").Return(errors.New("reset error"))
+
+		svc := NewService(nil, mockAuth)
+		err := svc.SendPasswordResetEmail(context.Background(), "fail@example.com")
+
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_UpdatePassword(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("ValidateActionToken", mock.Anything, "valid-token").Return("kc-123", "test@example.com", nil)
+		mockAuth.On("SetPassword", mock.Anything, "kc-123", "newpass", false).Return(nil)
+
+		svc := NewService(nil, mockAuth)
+		email, err := svc.UpdatePassword(context.Background(), "valid-token", "newpass")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if email != "test@example.com" {
+			t.Fatalf("expected test@example.com, got %s", email)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("invalid token", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("ValidateActionToken", mock.Anything, "bad-token").Return("", "", errors.New("invalid"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.UpdatePassword(context.Background(), "bad-token", "newpass")
+
+		if err != domain.ErrInvalidToken {
+			t.Fatalf("expected ErrInvalidToken, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("set password error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("ValidateActionToken", mock.Anything, "valid-token").Return("kc-123", "test@example.com", nil)
+		mockAuth.On("SetPassword", mock.Anything, "kc-123", "newpass", false).Return(errors.New("password error"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.UpdatePassword(context.Background(), "valid-token", "newpass")
+
+		if err != domain.ErrPasswordUpdateFailed {
+			t.Fatalf("expected ErrPasswordUpdateFailed, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_ChangePassword(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{ID: strPtr("kc-123"), Email: strPtr("test@example.com")}
+		token := &gocloak.JWT{AccessToken: "token"}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+		mockAuth.On("LoginUser", mock.Anything, "test@example.com", "oldpass").Return(token, nil)
+		mockAuth.On("SetPassword", mock.Anything, "kc-123", "newpass", false).Return(nil)
+
+		svc := NewService(nil, mockAuth)
+		email, err := svc.ChangePassword(context.Background(), "test@example.com", "oldpass", "newpass")
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if email != "test@example.com" {
+			t.Fatalf("expected test@example.com, got %s", email)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		mockAuth.On("GetUserByEmail", mock.Anything, "unknown@example.com").Return(nil, errors.New("not found"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.ChangePassword(context.Background(), "unknown@example.com", "oldpass", "newpass")
+
+		if err != domain.ErrUserNotFound {
+			t.Fatalf("expected ErrUserNotFound, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("invalid current password", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{ID: strPtr("kc-123"), Email: strPtr("test@example.com")}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+		mockAuth.On("LoginUser", mock.Anything, "test@example.com", "wrongpass").Return(nil, errors.New("invalid creds"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.ChangePassword(context.Background(), "test@example.com", "wrongpass", "newpass")
+
+		if err != domain.ErrInvalidCurrentPassword {
+			t.Fatalf("expected ErrInvalidCurrentPassword, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("set password error", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		kcUser := &gocloak.User{ID: strPtr("kc-123"), Email: strPtr("test@example.com")}
+		token := &gocloak.JWT{AccessToken: "token"}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, "test@example.com").Return(kcUser, nil)
+		mockAuth.On("LoginUser", mock.Anything, "test@example.com", "oldpass").Return(token, nil)
+		mockAuth.On("SetPassword", mock.Anything, "kc-123", "newpass", false).Return(errors.New("password error"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.ChangePassword(context.Background(), "test@example.com", "oldpass", "newpass")
+
+		if err != domain.ErrPasswordUpdateFailed {
+			t.Fatalf("expected ErrPasswordUpdateFailed, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
 	})
 }

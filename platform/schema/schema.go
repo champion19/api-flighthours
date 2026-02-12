@@ -10,18 +10,21 @@ import (
 )
 
 type Validators struct {
-	FileReader                          FileReaderInterface
-	RegisterValidator                   *jsonschema.Schema
-	MessageValidator                    *jsonschema.Schema
-	ResendVerificationEmailValidator    *jsonschema.Schema
-	PasswordResetRequestValidator       *jsonschema.Schema
-	UpdatePasswordValidator             *jsonschema.Schema
-	UpdateEmployeeValidator             *jsonschema.Schema
-	ChangePasswordValidator             *jsonschema.Schema
-	AddAirlineEmployeeValidator         *jsonschema.Schema
-	UpdateAirlineEmployeeValidator      *jsonschema.Schema
-	CreateLicensePlateValidator *jsonschema.Schema
-	UpdateLicensePlateValidator *jsonschema.Schema
+	FileReader                        FileReaderInterface
+	RegisterValidator                 *jsonschema.Schema
+	MessageValidator                  *jsonschema.Schema
+	ResendVerificationEmailValidator  *jsonschema.Schema
+	PasswordResetRequestValidator     *jsonschema.Schema
+	UpdatePasswordValidator           *jsonschema.Schema
+	UpdateEmployeeValidator           *jsonschema.Schema
+	ChangePasswordValidator           *jsonschema.Schema
+	AddAirlineEmployeeValidator       *jsonschema.Schema
+	UpdateAirlineEmployeeValidator    *jsonschema.Schema
+	CreateLicensePlateValidator       *jsonschema.Schema
+	UpdateLicensePlateValidator       *jsonschema.Schema
+	CreateDailyLogbookDetailValidator *jsonschema.Schema
+	UpdateDailyLogbookDetailValidator *jsonschema.Schema
+	CreateDailyLogbookValidator       *jsonschema.Schema
 }
 
 type FileReaderInterface interface {
@@ -97,6 +100,18 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	if err != nil {
 		return nil, err
 	}
+	createDailyLogbookDetail, err := validator.createSchema("create_daily_logbook_detail_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	updateDailyLogbookDetail, err := validator.createSchema("update_daily_logbook_detail_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	createDailyLogbook, err := validator.createSchema("create_daily_logbook_schema.json")
+	if err != nil {
+		return nil, err
+	}
 
 	validator.RegisterValidator = register
 	validator.MessageValidator = message
@@ -109,6 +124,9 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	validator.UpdateAirlineEmployeeValidator = updateAirlineEmployee
 	validator.CreateLicensePlateValidator = createLicensePlate
 	validator.UpdateLicensePlateValidator = updateLicensePlate
+	validator.CreateDailyLogbookDetailValidator = createDailyLogbookDetail
+	validator.UpdateDailyLogbookDetailValidator = updateDailyLogbookDetail
+	validator.CreateDailyLogbookValidator = createDailyLogbook
 
 	return validator, nil
 

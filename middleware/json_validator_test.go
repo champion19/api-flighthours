@@ -383,4 +383,25 @@ func TestWithValidateMethods(t *testing.T) {
 			t.Error("expected non-nil handler")
 		}
 	})
+
+	t.Run("WithValidateCreateDailyLogbookDetail returns handler", func(t *testing.T) {
+		handler := builder.WithValidateCreateDailyLogbookDetail()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateUpdateDailyLogbookDetail returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdateDailyLogbookDetail()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateCreateDailyLogbook returns handler", func(t *testing.T) {
+		handler := builder.WithValidateCreateDailyLogbook()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
 }

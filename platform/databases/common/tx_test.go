@@ -20,7 +20,7 @@ func TestNewSQLTx(t *testing.T) {
 
 func TestSQLTX_CommitPanicsWhenClosed(t *testing.T) {
 	t.Run("panics when committing closed transaction", func(t *testing.T) {
-		tx := &SQLTX{tx: nil, closed: true}
+		tx := &SQLTX{Tx: nil, closed: true}
 
 		defer func() {
 			if r := recover(); r == nil {
@@ -34,7 +34,7 @@ func TestSQLTX_CommitPanicsWhenClosed(t *testing.T) {
 
 func TestSQLTX_RollbackPanicsWhenClosed(t *testing.T) {
 	t.Run("panics when rolling back closed transaction", func(t *testing.T) {
-		tx := &SQLTX{tx: nil, closed: true}
+		tx := &SQLTX{Tx: nil, closed: true}
 
 		defer func() {
 			if r := recover(); r == nil {

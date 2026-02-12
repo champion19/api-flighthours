@@ -45,6 +45,56 @@ definitions:
       start_date:
         type: string
     type: object
+  handlers.AircraftFamilyListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      aircraft_families:
+        items:
+          $ref: '#/definitions/handlers.AircraftFamilyResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.AircraftFamilyResponse:
+    properties:
+      family:
+        type: string
+      manufacturer:
+        type: string
+    type: object
+  handlers.AircraftModelListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      aircraft_models:
+        items:
+          $ref: '#/definitions/handlers.AircraftModelResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.AircraftModelResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      aircraft_type_name:
+        type: string
+      engine_type_name:
+        type: string
+      id:
+        type: string
+      model_name:
+        type: string
+      status:
+        type: boolean
+    type: object
   handlers.AirlineListResponse:
     properties:
       _links:
@@ -139,6 +189,121 @@ definitions:
       email:
         type: string
     type: object
+  handlers.CreateDailyLogbookDetailRequest:
+    properties:
+      air_time:
+        description: TIME format HH:MM
+        type: string
+      airline_route_id:
+        type: string
+      approach_type:
+        type: string
+      block_time:
+        description: TIME format HH:MM
+        type: string
+      companion_name:
+        type: string
+      duty_time:
+        description: TIME format HH:MM (nullable)
+        type: string
+      flight_number:
+        type: string
+      flight_real_date:
+        type: string
+      flight_type:
+        type: string
+      in_time:
+        description: TIME format HH:MM
+        type: string
+      landing_time:
+        description: TIME format HH:MM
+        type: string
+      license_plate_id:
+        type: string
+      out_time:
+        description: TIME format HH:MM
+        type: string
+      passengers:
+        type: integer
+      pilot_role:
+        type: string
+      takeoff_time:
+        description: TIME format HH:MM
+        type: string
+    type: object
+  handlers.CreateDailyLogbookRequest:
+    properties:
+      book_page:
+        type: integer
+      log_date:
+        type: string
+    required:
+    - log_date
+    type: object
+  handlers.CreateLicensePlateRequest:
+    properties:
+      aircraft_model_id:
+        type: string
+      airline_id:
+        type: string
+      license_plate:
+        type: string
+    required:
+    - aircraft_model_id
+    - airline_id
+    - license_plate
+    type: object
+  handlers.DailyLogbookDetailResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      airline_code:
+        type: string
+      destination_iata_code:
+        type: string
+      flight_number:
+        type: string
+      flight_real_date:
+        type: string
+      id:
+        type: string
+      origin_iata_code:
+        type: string
+      route_code:
+        type: string
+    type: object
+  handlers.DailyLogbookListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      daily_logbooks:
+        items:
+          $ref: '#/definitions/handlers.DailyLogbookResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.DailyLogbookResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      book_page:
+        type: integer
+      employee_id:
+        type: string
+      id:
+        type: string
+      log_date:
+        type: string
+      status:
+        type: string
+    type: object
   handlers.EmployeeAirlineInfoResponse:
     properties:
       _links:
@@ -210,6 +375,41 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  handlers.LicensePlateListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      registrations:
+        items:
+          $ref: '#/definitions/handlers.LicensePlateResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.LicensePlateResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      aircraft_model_id:
+        type: string
+      airline_id:
+        type: string
+      airline_name:
+        description: Aerolínea (denormalized)
+        type: string
+      id:
+        type: string
+      license_plate:
+        description: Numero de Matrícula
+        type: string
+      model_name:
+        description: Modelo (denormalized)
         type: string
     type: object
   handlers.Link:
@@ -412,6 +612,48 @@ definitions:
       success:
         type: boolean
     type: object
+  handlers.UpdateDailyLogbookDetailRequest:
+    properties:
+      air_time:
+        description: TIME format HH:MM
+        type: string
+      airline_route_id:
+        type: string
+      approach_type:
+        type: string
+      block_time:
+        description: TIME format HH:MM
+        type: string
+      companion_name:
+        type: string
+      duty_time:
+        description: TIME format HH:MM (nullable)
+        type: string
+      flight_number:
+        type: string
+      flight_real_date:
+        type: string
+      flight_type:
+        type: string
+      in_time:
+        description: TIME format HH:MM
+        type: string
+      landing_time:
+        description: TIME format HH:MM
+        type: string
+      license_plate_id:
+        type: string
+      out_time:
+        description: TIME format HH:MM
+        type: string
+      passengers:
+        type: integer
+      pilot_role:
+        type: string
+      takeoff_time:
+        description: TIME format HH:MM
+        type: string
+    type: object
   handlers.UpdateEmployeeAirlineRequest:
     properties:
       airline_id:
@@ -462,6 +704,19 @@ definitions:
         type: string
       updated:
         type: boolean
+    type: object
+  handlers.UpdateLicensePlateRequest:
+    properties:
+      aircraft_model_id:
+        type: string
+      airline_id:
+        type: string
+      license_plate:
+        type: string
+    required:
+    - aircraft_model_id
+    - airline_id
+    - license_plate
     type: object
   handlers.UpdatePasswordRequest:
     properties:
@@ -531,6 +786,179 @@ info:
   title: Flighthours API
   version: "1.0"
 paths:
+  /aircraft-families/{family}:
+    get:
+      description: Returns aircraft family information (family and manufacturer) for
+        a specific family (HU32)
+      parameters:
+      - description: Aircraft Family (e.g., A320, B737)
+        in: path
+        name: family
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AircraftFamilyListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get aircraft family by family name
+      tags:
+      - Aircraft Families
+  /aircraft-models:
+    get:
+      description: Returns a list of all aircraft models with optional engine type
+        filter
+      parameters:
+      - description: Filter by engine type (e.g., JET, TUR)
+        in: query
+        name: engine_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AircraftModelListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all aircraft models
+      tags:
+      - Aircraft Models
+  /aircraft-models/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns aircraft model information by ID (accepts both UUID and
+        obfuscated ID)
+      parameters:
+      - description: Aircraft Model ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get aircraft model by ID
+      tags:
+      - Aircraft Models
+  /aircraft-models/{id}/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets aircraft model status to active (HU42 - accepts obfuscated
+        ID only)
+      parameters:
+      - description: Aircraft Model ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Activate aircraft model
+      tags:
+      - Aircraft Models
+  /aircraft-models/{id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets aircraft model status to inactive (HU41 - accepts obfuscated
+        ID only)
+      parameters:
+      - description: Aircraft Model ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Deactivate aircraft model
+      tags:
+      - Aircraft Models
   /airline-routes:
     get:
       consumes:
@@ -876,44 +1304,6 @@ paths:
       summary: Get airport by ID
       tags:
       - Airports
-  /airports/{id}/deactivate:
-    patch:
-      consumes:
-      - application/json
-      description: Sets airport status to inactive (accepts both UUID and obfuscated
-        ID)
-      parameters:
-      - description: Airport ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Deactivate airport
-      tags:
-      - Airports
   /airports/{id}/activate:
     patch:
       consumes:
@@ -952,110 +1342,14 @@ paths:
       summary: Activate airport
       tags:
       - Airports
-  /aircraft-families/{family}:
-    get:
-      description: Returns all aircraft models belonging to a specific family (HU32)
-      parameters:
-      - description: Aircraft Family (e.g., Airbus, Boeing)
-        in: path
-        name: family
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.AircraftModelListResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get aircraft models by family
-      tags:
-      - Aircraft Families
-  /aircraft-models:
-    get:
-      description: Returns a list of all aircraft models with optional engine type
-        filter
-      parameters:
-      - description: Filter by engine type (e.g., CFM, IAE)
-        in: query
-        name: engine_type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.AircraftModelListResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: List all aircraft models
-      tags:
-      - Aircraft Models
-  /aircraft-models/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Returns aircraft model information by ID (accepts both UUID and
-        obfuscated ID)
-      parameters:
-      - description: Aircraft Model ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get aircraft model by ID
-      tags:
-      - Aircraft Models
-  /aircraft-models/{id}/activate:
+  /airports/{id}/deactivate:
     patch:
       consumes:
       - application/json
-      description: Sets aircraft model status to active (HU42 - accepts obfuscated
-        ID only)
+      description: Sets airport status to inactive (accepts both UUID and obfuscated
+        ID)
       parameters:
-      - description: Aircraft Model ID (obfuscated ID)
+      - description: Airport ID (obfuscated ID)
         in: path
         name: id
         required: true
@@ -1083,47 +1377,9 @@ paths:
           schema:
             additionalProperties: true
             type: object
-      summary: Activate aircraft model
+      summary: Deactivate airport
       tags:
-      - Aircraft Models
-  /aircraft-models/{id}/deactivate:
-    patch:
-      consumes:
-      - application/json
-      description: Sets aircraft model status to inactive (HU41 - accepts obfuscated
-        ID only)
-      parameters:
-      - description: Aircraft Model ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Deactivate aircraft model
-      tags:
-      - Aircraft Models
+      - Airports
   /auth/change-password:
     post:
       consumes:
@@ -1308,6 +1564,246 @@ paths:
       summary: Verify user email
       tags:
       - Authentication
+  /daily-logbook-details/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific daily logbook detail (flight segment)
+      parameters:
+      - description: Detail ID (obfuscated or UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookDetailResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get daily logbook detail by ID
+      tags:
+      - DailyLogbookDetails
+    put:
+      consumes:
+      - application/json
+      description: Updates a flight segment
+      parameters:
+      - description: Detail ID (obfuscated or UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Detail data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateDailyLogbookDetailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update daily logbook detail
+      tags:
+      - DailyLogbookDetails
+  /daily-logbooks:
+    get:
+      description: Returns a list of daily logbooks for the currently authenticated
+        employee
+      parameters:
+      - description: Filter by status (true for active, false for inactive)
+        in: query
+        name: status
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List daily logbooks for authenticated employee
+      tags:
+      - DailyLogbooks
+    post:
+      consumes:
+      - application/json
+      description: Creates a new daily logbook for the authenticated employee
+      parameters:
+      - description: Daily logbook data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateDailyLogbookRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new daily logbook
+      tags:
+      - DailyLogbooks
+  /daily-logbooks/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Returns daily logbook information by ID for the authenticated employee
+        (accepts both UUID and obfuscated ID)
+      parameters:
+      - description: Daily Logbook ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get daily logbook by ID
+      tags:
+      - DailyLogbooks
+  /daily-logbooks/{id}/details:
+    get:
+      consumes:
+      - application/json
+      description: Lists all flight segments for a specific daily logbook
+      parameters:
+      - description: Logbook ID (obfuscated or UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.DailyLogbookDetailResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List daily logbook details
+      tags:
+      - DailyLogbookDetails
+    post:
+      consumes:
+      - application/json
+      description: Creates a new flight segment under a daily logbook
+      parameters:
+      - description: Logbook ID (obfuscated or UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Detail data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateDailyLogbookDetailRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create daily logbook detail
+      tags:
+      - DailyLogbookDetails
   /employees:
     delete:
       description: Permanently deletes the authenticated employee's account from the
@@ -1601,6 +2097,30 @@ paths:
       summary: Deactivate airline information for authenticated employee
       tags:
       - AirlineEmployees
+  /employees/flights:
+    get:
+      consumes:
+      - application/json
+      description: Lists all flight segments across all daily logbooks for the authenticated
+        employee
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.DailyLogbookDetailResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List my flights
+      tags:
+      - DailyLogbookDetails
   /engines:
     get:
       description: Returns a list of all engine types
@@ -1657,6 +2177,149 @@ paths:
       summary: Get engine by ID
       tags:
       - Engines
+  /license-plates:
+    get:
+      description: Returns a list of all aircraft registrations with optional filters
+      parameters:
+      - description: Filter by airline ID
+        in: query
+        name: airline_id
+        type: string
+      - description: Filter by license plate
+        in: query
+        name: license_plate
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LicensePlateListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all aircraft registrations
+      tags:
+      - License Plates
+    post:
+      consumes:
+      - application/json
+      description: Creates a new aircraft registration (license plate must be unique)
+      parameters:
+      - description: License Plate data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateLicensePlateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.LicensePlateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new aircraft registration
+      tags:
+      - License Plates
+  /license-plates/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Updates an aircraft registration by ID (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: License Plate ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: License Plate data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLicensePlateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LicensePlateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update an existing aircraft registration
+      tags:
+      - License Plates
+  /license-plates/{plate}:
+    get:
+      consumes:
+      - application/json
+      description: Returns aircraft registration information by its plate number (e.g.
+        HK-5432)
+      parameters:
+      - description: License Plate number (e.g. HK-5432)
+        in: path
+        name: plate
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LicensePlateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get aircraft registration by license plate number
+      tags:
+      - License Plates
   /login:
     post:
       consumes:

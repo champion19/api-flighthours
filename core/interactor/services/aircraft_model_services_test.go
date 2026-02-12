@@ -304,3 +304,65 @@ func TestAircraftModelService_BeginTx(t *testing.T) {
 		}
 	})
 }
+
+func TestAircraftModelService_ActivateAircraftModelTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &fakeAircraftModelRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				if !status {
+					t.Error("expected status=true")
+				}
+				return nil
+			},
+		}
+		svc := NewAircraftModelService(repo, newTestAircraftModelLogger())
+		err := svc.ActivateAircraftModelTx(context.Background(), &fakeTxAM{}, "model-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAircraftModelRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAircraftModelService(repo, newTestAircraftModelLogger())
+		err := svc.ActivateAircraftModelTx(context.Background(), &fakeTxAM{}, "model-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAircraftModelService_DeactivateAircraftModelTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &fakeAircraftModelRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				if status {
+					t.Error("expected status=false")
+				}
+				return nil
+			},
+		}
+		svc := NewAircraftModelService(repo, newTestAircraftModelLogger())
+		err := svc.DeactivateAircraftModelTx(context.Background(), &fakeTxAM{}, "model-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &fakeAircraftModelRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+				return errors.New("db error")
+			},
+		}
+		svc := NewAircraftModelService(repo, newTestAircraftModelLogger())
+		err := svc.DeactivateAircraftModelTx(context.Background(), &fakeTxAM{}, "model-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}

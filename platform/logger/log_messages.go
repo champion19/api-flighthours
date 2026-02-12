@@ -830,6 +830,7 @@ const (
 	LogDailyLogbookDetailRepoInit      = "Inicializando repositorio de detalles de bitácora"
 	LogDailyLogbookDetailRepoInitOK    = "Repositorio de detalles de bitácora inicializado"
 	LogDailyLogbookDetailRepoInitError = "Error inicializando repositorio de detalles de bitácora"
+	LogDailyLogbookDetailDuplicate     = "Detalle de bitácora duplicado"
 )
 
 // ============================================

@@ -23,6 +23,253 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/aircraft-families/{family}": {
+            "get": {
+                "description": "Returns aircraft family information (family and manufacturer) for a specific family (HU32)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Families"
+                ],
+                "summary": "Get aircraft family by family name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Family (e.g., A320, B737)",
+                        "name": "family",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AircraftFamilyListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models": {
+            "get": {
+                "description": "Returns a list of all aircraft models with optional engine type filter",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "List all aircraft models",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by engine type (e.g., JET, TUR)",
+                        "name": "engine_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AircraftModelListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models/{id}": {
+            "get": {
+                "description": "Returns aircraft model information by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "Get aircraft model by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Model ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models/{id}/activate": {
+            "patch": {
+                "description": "Sets aircraft model status to active (HU42 - accepts obfuscated ID only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "Activate aircraft model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Model ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/aircraft-models/{id}/deactivate": {
+            "patch": {
+                "description": "Sets aircraft model status to inactive (HU41 - accepts obfuscated ID only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aircraft Models"
+                ],
+                "summary": "Deactivate aircraft model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Aircraft Model ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/airline-routes": {
             "get": {
                 "security": [
@@ -534,6 +781,60 @@ const docTemplate = `{
                 }
             }
         },
+        "/airports/{id}/activate": {
+            "patch": {
+                "description": "Sets airport status to active (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Airports"
+                ],
+                "summary": "Activate airport",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Airport ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/airports/{id}/deactivate": {
             "patch": {
                 "description": "Sets airport status to inactive (accepts both UUID and obfuscated ID)",
@@ -860,6 +1161,380 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/daily-logbook-details/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves a specific daily logbook detail (flight segment)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbookDetails"
+                ],
+                "summary": "Get daily logbook detail by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Detail ID (obfuscated or UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookDetailResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates a flight segment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbookDetails"
+                ],
+                "summary": "Update daily logbook detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Detail ID (obfuscated or UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Detail data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateDailyLogbookDetailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/daily-logbooks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of daily logbooks for the currently authenticated employee",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "List daily logbooks for authenticated employee",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status (true for active, false for inactive)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new daily logbook for the authenticated employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Create a new daily logbook",
+                "parameters": [
+                    {
+                        "description": "Daily logbook data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateDailyLogbookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/daily-logbooks/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns daily logbook information by ID for the authenticated employee (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Get daily logbook by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Daily Logbook ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/daily-logbooks/{id}/details": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists all flight segments for a specific daily logbook",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbookDetails"
+                ],
+                "summary": "List daily logbook details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logbook ID (obfuscated or UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.DailyLogbookDetailResponse"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new flight segment under a daily logbook",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbookDetails"
+                ],
+                "summary": "Create daily logbook detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logbook ID (obfuscated or UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Detail data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateDailyLogbookDetailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
                         }
                     }
                 }
@@ -1309,6 +1984,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/flights": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Lists all flight segments across all daily logbooks for the authenticated employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbookDetails"
+                ],
+                "summary": "List my flights",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.DailyLogbookDetailResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/engines": {
             "get": {
                 "description": "Returns a list of all engine types",
@@ -1364,6 +2076,215 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/license-plates": {
+            "get": {
+                "description": "Returns a list of all aircraft registrations with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "List all aircraft registrations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by airline ID",
+                        "name": "airline_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by license plate",
+                        "name": "license_plate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new aircraft registration (license plate must be unique)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "Create a new aircraft registration",
+                "parameters": [
+                    {
+                        "description": "License Plate data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateLicensePlateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/license-plates/{id}": {
+            "put": {
+                "description": "Updates an aircraft registration by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "Update an existing aircraft registration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "License Plate ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "License Plate data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLicensePlateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/license-plates/{plate}": {
+            "get": {
+                "description": "Returns aircraft registration information by its plate number (e.g. HK-5432)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "License Plates"
+                ],
+                "summary": "Get aircraft registration by license plate number",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "License Plate number (e.g. HK-5432)",
+                        "name": "plate",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LicensePlateResponse"
                         }
                     },
                     "400": {
@@ -2073,6 +2994,83 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.AircraftFamilyListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "aircraft_families": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AircraftFamilyResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.AircraftFamilyResponse": {
+            "type": "object",
+            "properties": {
+                "family": {
+                    "type": "string"
+                },
+                "manufacturer": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.AircraftModelListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "aircraft_models": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.AircraftModelResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.AircraftModelResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "aircraft_type_name": {
+                    "type": "string"
+                },
+                "engine_type_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "model_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
         "handlers.AirlineListResponse": {
             "type": "object",
             "properties": {
@@ -2215,6 +3213,177 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateDailyLogbookDetailRequest": {
+            "type": "object",
+            "properties": {
+                "air_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "airline_route_id": {
+                    "type": "string"
+                },
+                "approach_type": {
+                    "type": "string"
+                },
+                "block_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "companion_name": {
+                    "type": "string"
+                },
+                "duty_time": {
+                    "description": "TIME format HH:MM (nullable)",
+                    "type": "string"
+                },
+                "flight_number": {
+                    "type": "string"
+                },
+                "flight_real_date": {
+                    "type": "string"
+                },
+                "flight_type": {
+                    "type": "string"
+                },
+                "in_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "landing_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "license_plate_id": {
+                    "type": "string"
+                },
+                "out_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "passengers": {
+                    "type": "integer"
+                },
+                "pilot_role": {
+                    "type": "string"
+                },
+                "takeoff_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreateDailyLogbookRequest": {
+            "type": "object",
+            "required": [
+                "log_date"
+            ],
+            "properties": {
+                "book_page": {
+                    "type": "integer"
+                },
+                "log_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreateLicensePlateRequest": {
+            "type": "object",
+            "required": [
+                "aircraft_model_id",
+                "airline_id",
+                "license_plate"
+            ],
+            "properties": {
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "license_plate": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.DailyLogbookDetailResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "airline_code": {
+                    "type": "string"
+                },
+                "destination_iata_code": {
+                    "type": "string"
+                },
+                "flight_number": {
+                    "type": "string"
+                },
+                "flight_real_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "origin_iata_code": {
+                    "type": "string"
+                },
+                "route_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.DailyLogbookListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "daily_logbooks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.DailyLogbookResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.DailyLogbookResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "book_page": {
+                    "type": "integer"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "log_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.EmployeeAirlineInfoResponse": {
             "type": "object",
             "properties": {
@@ -2323,6 +3492,58 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.LicensePlateListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "registrations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.LicensePlateResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.LicensePlateResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "airline_name": {
+                    "description": "Aerolínea (denormalized)",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "license_plate": {
+                    "description": "Numero de Matrícula",
+                    "type": "string"
+                },
+                "model_name": {
+                    "description": "Modelo (denormalized)",
                     "type": "string"
                 }
             }
@@ -2635,6 +3856,66 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpdateDailyLogbookDetailRequest": {
+            "type": "object",
+            "properties": {
+                "air_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "airline_route_id": {
+                    "type": "string"
+                },
+                "approach_type": {
+                    "type": "string"
+                },
+                "block_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "companion_name": {
+                    "type": "string"
+                },
+                "duty_time": {
+                    "description": "TIME format HH:MM (nullable)",
+                    "type": "string"
+                },
+                "flight_number": {
+                    "type": "string"
+                },
+                "flight_real_date": {
+                    "type": "string"
+                },
+                "flight_type": {
+                    "type": "string"
+                },
+                "in_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "landing_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "license_plate_id": {
+                    "type": "string"
+                },
+                "out_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                },
+                "passengers": {
+                    "type": "integer"
+                },
+                "pilot_role": {
+                    "type": "string"
+                },
+                "takeoff_time": {
+                    "description": "TIME format HH:MM",
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UpdateEmployeeAirlineRequest": {
             "type": "object",
             "required": [
@@ -2710,6 +3991,25 @@ const docTemplate = `{
                 },
                 "updated": {
                     "type": "boolean"
+                }
+            }
+        },
+        "handlers.UpdateLicensePlateRequest": {
+            "type": "object",
+            "required": [
+                "aircraft_model_id",
+                "airline_id",
+                "license_plate"
+            ],
+            "properties": {
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "license_plate": {
+                    "type": "string"
                 }
             }
         },

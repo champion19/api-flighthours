@@ -7,7 +7,6 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
-	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // fakeRouteService implements input.RouteService for testing
@@ -34,16 +33,13 @@ func (f *fakeRouteService) ListRoutes(ctx context.Context, filters map[string]in
 
 func TestNewRouteInteractor(t *testing.T) {
 	svc := &fakeRouteService{}
-	log := logger.NewSlogLogger()
-	interactor := NewRouteInteractor(svc, log)
+	interactor := NewRouteInteractor(svc)
 	if interactor == nil {
 		t.Error("expected non-nil RouteInteractor")
 	}
 }
 
 func TestRouteInteractor_GetRouteByID(t *testing.T) {
-	log := logger.NewSlogLogger()
-
 	t.Run("success", func(t *testing.T) {
 		expectedRoute := &domain.Route{
 			ID:                  "route-123",
@@ -56,7 +52,7 @@ func TestRouteInteractor_GetRouteByID(t *testing.T) {
 				return expectedRoute, nil
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		result, err := interactor.GetRouteByID(context.Background(), "route-123")
 		if err != nil {
@@ -76,7 +72,7 @@ func TestRouteInteractor_GetRouteByID(t *testing.T) {
 				return nil, domain.ErrRouteNotFound
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		_, err := interactor.GetRouteByID(context.Background(), "nonexistent")
 		if err != domain.ErrRouteNotFound {
@@ -90,7 +86,7 @@ func TestRouteInteractor_GetRouteByID(t *testing.T) {
 				return nil, errors.New("database error")
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		_, err := interactor.GetRouteByID(context.Background(), "route-123")
 		if err == nil {
@@ -100,8 +96,6 @@ func TestRouteInteractor_GetRouteByID(t *testing.T) {
 }
 
 func TestRouteInteractor_ListRoutes(t *testing.T) {
-	log := logger.NewSlogLogger()
-
 	t.Run("success without filters", func(t *testing.T) {
 		expectedRoutes := []domain.Route{
 			{ID: "route-1", RouteCode: "BOG-CLO"},
@@ -112,7 +106,7 @@ func TestRouteInteractor_ListRoutes(t *testing.T) {
 				return expectedRoutes, nil
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		result, err := interactor.ListRoutes(context.Background(), nil)
 		if err != nil {
@@ -132,7 +126,7 @@ func TestRouteInteractor_ListRoutes(t *testing.T) {
 				return []domain.Route{{ID: "route-1"}}, nil
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		filters := map[string]interface{}{"origin": "BOG"}
 		result, err := interactor.ListRoutes(context.Background(), filters)
@@ -150,7 +144,7 @@ func TestRouteInteractor_ListRoutes(t *testing.T) {
 				return []domain.Route{}, nil
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		result, err := interactor.ListRoutes(context.Background(), nil)
 		if err != nil {
@@ -167,7 +161,7 @@ func TestRouteInteractor_ListRoutes(t *testing.T) {
 				return nil, errors.New("database error")
 			},
 		}
-		interactor := NewRouteInteractor(svc, log)
+		interactor := NewRouteInteractor(svc)
 
 		_, err := interactor.ListRoutes(context.Background(), nil)
 		if err == nil {
