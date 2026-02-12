@@ -13,12 +13,13 @@ func pilotRolePtr(r domain.PilotRole) *domain.PilotRole { return &r }
 
 // mock daily logbook detail repository
 type mockDailyLogbookDetailRepo struct {
-	getByIDFn        func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
-	listByLogbookFn  func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
-	listByEmployeeFn func(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
-	saveFn           func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
-	updateFn         func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
-	beginTxFn        func(ctx context.Context) (output.Tx, error)
+	getByIDFn           func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
+	listByLogbookFn     func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	listByEmployeeFn    func(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
+	saveFn              func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	updateFn            func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	beginTxFn           func(ctx context.Context) (output.Tx, error)
+	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
 }
 
 func (m *mockDailyLogbookDetailRepo) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
@@ -61,6 +62,13 @@ func (m *mockDailyLogbookDetailRepo) BeginTx(ctx context.Context) (output.Tx, er
 		return m.beginTxFn(ctx)
 	}
 	return &mockTx{}, nil
+}
+
+func (m *mockDailyLogbookDetailRepo) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+	if m.existsByUniqueKeyFn != nil {
+		return m.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
+	}
+	return false, nil
 }
 
 func TestNewDailyLogbookDetailService(t *testing.T) {
@@ -278,6 +286,21 @@ func TestDailyLogbookDetailService_Delete(t *testing.T) {
 			t.Error("expected error")
 		}
 	})
+
+	t.Run("commit error", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{
+					commitFn: func() error { return errors.New("commit error") },
+				}, nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.DeleteDailyLogbookDetail(context.Background(), "d-1")
+		if err == nil {
+			t.Error("expected commit error")
+		}
+	})
 }
 
 func TestDailyLogbookDetailService_ValidateTimeSequence(t *testing.T) {
@@ -393,6 +416,53 @@ func TestDailyLogbookDetailService_UpdateTx(t *testing.T) {
 		}
 		svc := NewDailyLogbookDetailService(repo)
 		err := svc.UpdateDailyLogbookDetailTx(context.Background(), &mockTx{}, domain.DailyLogbookDetail{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestDailyLogbookDetailService_ExistsByUniqueKey(t *testing.T) {
+	t.Run("exists returns true", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+				return true, nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		exists, err := svc.ExistsByUniqueKey(context.Background(), "emp-lb-1", "2026-01-15", "AV123", "lp-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !exists {
+			t.Error("expected exists to be true")
+		}
+	})
+
+	t.Run("not exists returns false", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+				return false, nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		exists, err := svc.ExistsByUniqueKey(context.Background(), "emp-lb-1", "2026-01-15", "AV123", "lp-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if exists {
+			t.Error("expected exists to be false")
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+				return false, errors.New("db error")
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		_, err := svc.ExistsByUniqueKey(context.Background(), "emp-lb-1", "2026-01-15", "AV123", "lp-1")
 		if err == nil {
 			t.Fatal("expected error")
 		}

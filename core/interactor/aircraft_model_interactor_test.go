@@ -308,6 +308,43 @@ func TestAircraftModelInteractor_ActivateAircraftModel(t *testing.T) {
 			t.Error("expected error, got nil")
 		}
 	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeAircraftModelService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
+				return &domain.AircraftModel{ID: id}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		i := NewAircraftModelInteractor(svc)
+
+		err := i.ActivateAircraftModel(context.Background(), "model-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeAircraftModelService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
+				return &domain.AircraftModel{ID: id}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit error") }}, nil
+			},
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		i := NewAircraftModelInteractor(svc)
+
+		err := i.ActivateAircraftModel(context.Background(), "model-123")
+		if err == nil {
+			t.Error("expected commit error, got nil")
+		}
+	})
 }
 
 func TestAircraftModelInteractor_DeactivateAircraftModel(t *testing.T) {
@@ -356,6 +393,43 @@ func TestAircraftModelInteractor_DeactivateAircraftModel(t *testing.T) {
 		err := i.DeactivateAircraftModel(context.Background(), "model-123")
 		if err == nil {
 			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeAircraftModelService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
+				return &domain.AircraftModel{ID: id}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		i := NewAircraftModelInteractor(svc)
+
+		err := i.DeactivateAircraftModel(context.Background(), "model-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeAircraftModelService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
+				return &domain.AircraftModel{ID: id}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit error") }}, nil
+			},
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		i := NewAircraftModelInteractor(svc)
+
+		err := i.DeactivateAircraftModel(context.Background(), "model-123")
+		if err == nil {
+			t.Error("expected commit error, got nil")
 		}
 	})
 }
