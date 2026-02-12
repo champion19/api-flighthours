@@ -94,6 +94,7 @@ var errorToMessageCode = map[error]string{
 	domain.ErrFlightInvalidLogbook:       domain.MsgFlightInvalidLogbook,
 	domain.ErrFlightInvalidAircraft:      domain.MsgFlightInvalidAircraft,
 	domain.ErrFlightInvalidTimeSequence:  domain.MsgFlightInvalidTimeSequence,
+	domain.ErrFlightDuplicate:            domain.MsgFlightDuplicate,
 	domain.ErrEngineNotFound:             domain.MsgEngineNotFound,
 	domain.ErrManufacturerNotFound:       domain.MsgManufacturerNotFound,
 	domain.ErrAircraftModelNotFound:      domain.MsgAircraftModelNotFound,

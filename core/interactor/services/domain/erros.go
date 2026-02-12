@@ -583,6 +583,7 @@ var (
 	ErrFlightInvalidLogbook      = errors.New("ERR_FLIGHT_INVALID_LOGBOOK")
 	ErrFlightInvalidAircraft     = errors.New("ERR_FLIGHT_INVALID_AIRCRAFT")
 	ErrFlightInvalidTimeSequence = errors.New("ERR_FLIGHT_INVALID_TIME_SEQUENCE")
+	ErrFlightDuplicate           = errors.New("ERR_FLIGHT_DUPLICATE")
 )
 
 // AirlineRoute Module (RUT_AIR_*) - Ruta Aerolinea
@@ -641,6 +642,7 @@ const (
 	// ========================================
 	MsgFlightCreated   = "VUE_REG_EXI_05001" // Éxito - Vuelo registrado
 	MsgFlightSaveError = "VUE_REG_ERR_05004" // Error - Error técnico al registrar
+	MsgFlightDuplicate = "VUE_REG_ERR_05005" // Error - Vuelo duplicado
 
 	// ========================================
 	// Listar - VUE_LIST_*

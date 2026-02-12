@@ -154,6 +154,10 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 				h.Response.Error(c, domain.MsgFlightInvalidTimeSequence)
 				return
 			}
+			if err == domain.ErrFlightDuplicate {
+				h.Response.Error(c, domain.MsgFlightDuplicate)
+				return
+			}
 			h.Response.Error(c, domain.MsgFlightSaveError)
 			return
 		}

@@ -104,6 +104,7 @@ type DailyLogbookDetailRepository interface {
 	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
 	SaveDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
+	ExistsByUniqueKey(ctx context.Context, employeeID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
 }
 
 type DailyLogbookRepository interface {

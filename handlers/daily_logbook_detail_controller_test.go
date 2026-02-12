@@ -89,6 +89,10 @@ func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.C
 	return nil
 }
 
+func (f *fakeDailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+	return false, nil
+}
+
 func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 

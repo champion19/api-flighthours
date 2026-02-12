@@ -520,6 +520,7 @@ var messageCodeToHTTPStatus = map[string]int{
 	"VUE_REG_ERR_05002": http.StatusBadRequest,          // 400 - Campos requeridos incompletos
 	"VUE_REG_ERR_05003": http.StatusBadRequest,          // 400 - Formato inválido
 	"VUE_REG_ERR_05004": http.StatusInternalServerError, // 500 - Error técnico al registrar
+	"VUE_REG_ERR_05005": http.StatusConflict,            // 409 - Vuelo duplicado
 
 	// Listar
 	"VUE_LIST_EXI_04800": http.StatusOK,                  // 200 - Lista de vuelos obtenida

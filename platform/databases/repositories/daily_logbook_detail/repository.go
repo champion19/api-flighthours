@@ -172,17 +172,27 @@ const (
 
 	// Delete query
 	QueryDelete = `DELETE FROM daily_logbook_detail WHERE id = ?`
+
+	// Check duplicate by unique key
+	QueryExistsByUniqueKey = `
+		SELECT COUNT(*) FROM daily_logbook_detail
+		WHERE employee_logbook_id = ?
+		  AND flight_real_date = ?
+		  AND flight_number = ?
+		  AND actual_license_plate_id = ?
+	`
 )
 
 var log logger.Logger = logger.NewSlogLogger()
 
 type repository struct {
-	stmtGetByID       *sql.Stmt
-	stmtGetByLogbook  *sql.Stmt
-	stmtGetByEmployee *sql.Stmt
-	stmtInsert        *sql.Stmt
-	stmtUpdate        *sql.Stmt
-	db                *sql.DB
+	stmtGetByID           *sql.Stmt
+	stmtGetByLogbook      *sql.Stmt
+	stmtGetByEmployee     *sql.Stmt
+	stmtInsert            *sql.Stmt
+	stmtUpdate            *sql.Stmt
+	stmtExistsByUniqueKey *sql.Stmt
+	db                    *sql.DB
 }
 
 func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
@@ -220,15 +230,22 @@ func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
 		return nil, err
 	}
 
+	stmtExistsByUniqueKey, err := db.Prepare(QueryExistsByUniqueKey)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
+		return nil, err
+	}
+
 	log.Info(logger.LogDailyLogbookDetailRepoInitOK)
 
 	return &repository{
-		db:                db,
-		stmtGetByID:       stmtGetByID,
-		stmtGetByLogbook:  stmtGetByLogbook,
-		stmtGetByEmployee: stmtGetByEmployee,
-		stmtInsert:        stmtInsert,
-		stmtUpdate:        stmtUpdate,
+		db:                    db,
+		stmtGetByID:           stmtGetByID,
+		stmtGetByLogbook:      stmtGetByLogbook,
+		stmtGetByEmployee:     stmtGetByEmployee,
+		stmtInsert:            stmtInsert,
+		stmtUpdate:            stmtUpdate,
+		stmtExistsByUniqueKey: stmtExistsByUniqueKey,
 	}, nil
 }
 
