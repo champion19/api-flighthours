@@ -28,7 +28,7 @@ type fakeDailyLogbookService struct {
 }
 
 func (f *fakeDailyLogbookService) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return fakeTx{}, nil
 }
 
 func (f *fakeDailyLogbookService) GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error) {
@@ -46,6 +46,12 @@ func (f *fakeDailyLogbookService) ListDailyLogbooksByEmployee(ctx context.Contex
 }
 
 func (f *fakeDailyLogbookService) CreateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook) error {
+	if f.createFn != nil {
+		return f.createFn(ctx, logbook)
+	}
+	return nil
+}
+func (f *fakeDailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
 	if f.createFn != nil {
 		return f.createFn(ctx, logbook)
 	}
@@ -82,7 +88,7 @@ func newDailyLogbookTestRouter(
 	errHandler *middleware.ErrorHandler,
 	authUser *domain.Employee,
 ) *gin.Engine {
-	logbookInteractor := interactor.NewDailyLogbookInteractor(svc, Logger)
+	logbookInteractor := interactor.NewDailyLogbookInteractor(svc)
 	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, logbookInteractor, nil, nil)
 
 	r := gin.New()

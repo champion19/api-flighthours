@@ -6,7 +6,6 @@ import (
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-
 type DailyLogbookDetail struct {
 	ID                  string
 	DailyLogbookID      string
@@ -15,14 +14,14 @@ type DailyLogbookDetail struct {
 	AirlineRouteID      string
 	LicensePlateID      string
 	Passengers          sql.NullInt64
-	OutTime             string // TIME stored as string HH:MM:SS
-	TakeoffTime         string
-	LandingTime         string
-	InTime              string
-	PilotRole           string
+	OutTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
+	TakeoffTime         sql.NullString // nullable
+	LandingTime         sql.NullString // nullable
+	InTime              sql.NullString // nullable
+	PilotRole           sql.NullString // nullable
 	CompanionName       sql.NullString
-	AirTime             string         // TIME stored as string HH:MM:SS
-	BlockTime           string         // TIME stored as string HH:MM:SS
+	AirTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
+	BlockTime           sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	DutyTime            sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	ApproachType        sql.NullString
 	FlightType          sql.NullString
@@ -36,7 +35,6 @@ type DailyLogbookDetail struct {
 	AirlineCode         sql.NullString
 }
 
-
 func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	detail := &domain.DailyLogbookDetail{
 		ID:             d.ID,
@@ -45,15 +43,30 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
 		LicensePlateID: d.LicensePlateID,
-		OutTime:        d.OutTime,
-		TakeoffTime:    d.TakeoffTime,
-		LandingTime:    d.LandingTime,
-		InTime:         d.InTime,
-		PilotRole:      domain.PilotRole(d.PilotRole),
-		AirTime:        d.AirTime,
-		BlockTime:      d.BlockTime,
 	}
 
+	if d.OutTime.Valid {
+		detail.OutTime = &d.OutTime.String
+	}
+	if d.TakeoffTime.Valid {
+		detail.TakeoffTime = &d.TakeoffTime.String
+	}
+	if d.LandingTime.Valid {
+		detail.LandingTime = &d.LandingTime.String
+	}
+	if d.InTime.Valid {
+		detail.InTime = &d.InTime.String
+	}
+	if d.PilotRole.Valid {
+		pilotRole := domain.PilotRole(d.PilotRole.String)
+		detail.PilotRole = &pilotRole
+	}
+	if d.AirTime.Valid {
+		detail.AirTime = &d.AirTime.String
+	}
+	if d.BlockTime.Valid {
+		detail.BlockTime = &d.BlockTime.String
+	}
 
 	if d.Passengers.Valid {
 		passengers := int(d.Passengers.Int64)
@@ -81,7 +94,6 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		detail.EmployeeLogbookID = &d.EmployeeLogbookID.String
 	}
 
-
 	if d.LogDate.Valid {
 		detail.LogDate = d.LogDate.String
 	}
@@ -107,7 +119,6 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	return detail
 }
 
-
 func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 	entity := &DailyLogbookDetail{
 		ID:             d.ID,
@@ -116,16 +127,30 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
 		LicensePlateID: d.LicensePlateID,
-		OutTime:        d.OutTime,
-		TakeoffTime:    d.TakeoffTime,
-		LandingTime:    d.LandingTime,
-		InTime:         d.InTime,
-		PilotRole:      string(d.PilotRole),
-		AirTime:        d.AirTime,
-		BlockTime:      d.BlockTime,
 	}
 
-	
+	if d.OutTime != nil {
+		entity.OutTime = sql.NullString{String: *d.OutTime, Valid: true}
+	}
+	if d.TakeoffTime != nil {
+		entity.TakeoffTime = sql.NullString{String: *d.TakeoffTime, Valid: true}
+	}
+	if d.LandingTime != nil {
+		entity.LandingTime = sql.NullString{String: *d.LandingTime, Valid: true}
+	}
+	if d.InTime != nil {
+		entity.InTime = sql.NullString{String: *d.InTime, Valid: true}
+	}
+	if d.PilotRole != nil {
+		entity.PilotRole = sql.NullString{String: string(*d.PilotRole), Valid: true}
+	}
+	if d.AirTime != nil {
+		entity.AirTime = sql.NullString{String: *d.AirTime, Valid: true}
+	}
+	if d.BlockTime != nil {
+		entity.BlockTime = sql.NullString{String: *d.BlockTime, Valid: true}
+	}
+
 	if d.Passengers != nil {
 		entity.Passengers = sql.NullInt64{Int64: int64(*d.Passengers), Valid: true}
 	}

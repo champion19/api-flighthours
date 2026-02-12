@@ -96,17 +96,14 @@ func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 			return
 		}
 
-		logbook, err := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID)
+		logbook, err := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookGetError, "logbook_id", logbookUUID, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+				return
+			}
 			h.Response.Error(c, domain.MsgDailyLogbookGetErr)
-			return
-		}
-
-		// Verify ownership
-		if logbook.EmployeeID != employee.ID {
-			log.Warn(logger.LogDailyLogbookGetError, "error", "unauthorized")
-			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
 			return
 		}
 

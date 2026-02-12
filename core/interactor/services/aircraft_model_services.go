@@ -1,13 +1,11 @@
 package services
 
-import(
-
+import (
 	"context"
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/logger"
-
 )
 
 // AircraftModelService implements the business logic for aircraft model operations
@@ -72,4 +70,14 @@ func (s *AircraftModelService) ActivateAircraftModel(ctx context.Context, id str
 // DeactivateAircraftModel sets the aircraft model status to false (inactive) - HU41
 func (s *AircraftModelService) DeactivateAircraftModel(ctx context.Context, id string) error {
 	return s.UpdateAircraftModelStatus(ctx, id, false)
+}
+
+// ActivateAircraftModelTx sets the aircraft model status to true using an external transaction
+func (s *AircraftModelService) ActivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAircraftModelStatus(ctx, tx, id, true)
+}
+
+// DeactivateAircraftModelTx sets the aircraft model status to false using an external transaction
+func (s *AircraftModelService) DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAircraftModelStatus(ctx, tx, id, false)
 }

@@ -155,8 +155,8 @@ func Init() (*Dependencies, error) {
 	}
 	log.Success(logger.LogDailyLogbookRepoInitOK)
 
-	dailyLogbookService := services.NewDailyLogbookService(dailyLogbookRepository, log)
-	dailyLogbookInteractor := interactor.NewDailyLogbookInteractor(dailyLogbookService, log)
+	dailyLogbookService := services.NewDailyLogbookService(dailyLogbookRepository)
+	dailyLogbookInteractor := interactor.NewDailyLogbookInteractor(dailyLogbookService)
 
 	licensePlateRepository, err := licensePlateRepo.NewLicensePlateRepository(db)
 	if err != nil {
@@ -185,8 +185,8 @@ func Init() (*Dependencies, error) {
 	}
 	log.Success(logger.LogRouteRepoInitOK)
 
-	routeService := services.NewRouteService(routeRepository, log)
-	routeInteractor := interactor.NewRouteInteractor(routeService, log)
+	routeService := services.NewRouteService(routeRepository)
+	routeInteractor := interactor.NewRouteInteractor(routeService)
 
 	airlineRouteRepository, err := airlineRouteRepo.NewAirlineRouteRepository(db)
 	if err != nil {

@@ -59,6 +59,15 @@ func (b *Builder) WithValidateCreateLicensePlate() gin.HandlerFunc {
 func (b *Builder) WithValidateUpdateLicensePlate() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.UpdateLicensePlateValidator)
 }
+func (b *Builder) WithValidateCreateDailyLogbookDetail() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.CreateDailyLogbookDetailValidator)
+}
+func (b *Builder) WithValidateUpdateDailyLogbookDetail() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.UpdateDailyLogbookDetailValidator)
+}
+func (b *Builder) WithValidateCreateDailyLogbook() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.CreateDailyLogbookValidator)
+}
 
 func (b *Builder) jsonValidator(schema *jsonschema.Schema) gin.HandlerFunc {
 	return func(c *gin.Context) {

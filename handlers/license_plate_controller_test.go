@@ -64,6 +64,18 @@ func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, pl
 	}
 	return nil, errors.New("not implemented")
 }
+func (f *fakeLicensePlateService) CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	if f.createFn != nil {
+		return f.createFn(ctx, registration)
+	}
+	return nil
+}
+func (f *fakeLicensePlateService) UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	if f.updateFn != nil {
+		return f.updateFn(ctx, registration)
+	}
+	return nil
+}
 
 func newTestLicensePlateMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()

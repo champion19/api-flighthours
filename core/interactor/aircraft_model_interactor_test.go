@@ -12,12 +12,14 @@ import (
 
 // fakeAircraftModelService implements input.AircraftModelService for testing
 type fakeAircraftModelService struct {
-	beginTxFn     func(ctx context.Context) (output.Tx, error)
-	getByIDFn     func(ctx context.Context, id string) (*domain.AircraftModel, error)
-	listFn        func(ctx context.Context, filters map[string]interface{}) ([]domain.AircraftModel, error)
-	getByFamilyFn func(ctx context.Context, family string) ([]domain.AircraftModel, error)
-	activateFn    func(ctx context.Context, id string) error
-	deactivateFn  func(ctx context.Context, id string) error
+	beginTxFn      func(ctx context.Context) (output.Tx, error)
+	getByIDFn      func(ctx context.Context, id string) (*domain.AircraftModel, error)
+	listFn         func(ctx context.Context, filters map[string]interface{}) ([]domain.AircraftModel, error)
+	getByFamilyFn  func(ctx context.Context, family string) ([]domain.AircraftModel, error)
+	activateFn     func(ctx context.Context, id string) error
+	deactivateFn   func(ctx context.Context, id string) error
+	activateTxFn   func(ctx context.Context, tx output.Tx, id string) error
+	deactivateTxFn func(ctx context.Context, tx output.Tx, id string) error
 }
 
 var _ input.AircraftModelService = (*fakeAircraftModelService)(nil)
@@ -60,6 +62,20 @@ func (f *fakeAircraftModelService) ActivateAircraftModel(ctx context.Context, id
 func (f *fakeAircraftModelService) DeactivateAircraftModel(ctx context.Context, id string) error {
 	if f.deactivateFn != nil {
 		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
+
+func (f *fakeAircraftModelService) ActivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateTxFn != nil {
+		return f.activateTxFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (f *fakeAircraftModelService) DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateTxFn != nil {
+		return f.deactivateTxFn(ctx, tx, id)
 	}
 	return nil
 }
@@ -250,7 +266,7 @@ func TestAircraftModelInteractor_ActivateAircraftModel(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
 				return &domain.AircraftModel{ID: id, ModelName: "737-800"}, nil
 			},
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -281,7 +297,7 @@ func TestAircraftModelInteractor_ActivateAircraftModel(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
 				return &domain.AircraftModel{ID: id}, nil
 			},
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("activation failed")
 			},
 		}
@@ -300,7 +316,7 @@ func TestAircraftModelInteractor_DeactivateAircraftModel(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
 				return &domain.AircraftModel{ID: id, ModelName: "737-800"}, nil
 			},
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -331,7 +347,7 @@ func TestAircraftModelInteractor_DeactivateAircraftModel(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
 				return &domain.AircraftModel{ID: id}, nil
 			},
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("deactivation failed")
 			},
 		}

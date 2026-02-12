@@ -9,6 +9,8 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
+func strPtr(s string) *string { return &s }
+
 // fakeDailyLogbookDetailService implements input.DailyLogbookDetailService
 type fakeDailyLogbookDetailService struct {
 	getByIDFn        func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
@@ -17,10 +19,12 @@ type fakeDailyLogbookDetailService struct {
 	createFn         func(ctx context.Context, detail domain.DailyLogbookDetail) error
 	updateFn         func(ctx context.Context, detail domain.DailyLogbookDetail) error
 	validateTimeFn   func(outTime, takeoffTime, landingTime, inTime string) error
+	createTxFn       func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	updateTxFn       func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 }
 
 func (f *fakeDailyLogbookDetailService) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return &fakeTx{}, nil
 }
 
 func (f *fakeDailyLogbookDetailService) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
@@ -61,6 +65,20 @@ func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Con
 func (f *fakeDailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
 	if f.validateTimeFn != nil {
 		return f.validateTimeFn(outTime, takeoffTime, landingTime, inTime)
+	}
+	return nil
+}
+
+func (f *fakeDailyLogbookDetailService) CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+	if f.createTxFn != nil {
+		return f.createTxFn(ctx, tx, detail)
+	}
+	return nil
+}
+
+func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+	if f.updateTxFn != nil {
+		return f.updateTxFn(ctx, tx, detail)
 	}
 	return nil
 }
@@ -132,7 +150,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 			},
 		}
 		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
-		result, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1")
+		result, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -149,7 +167,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 		}
 		svc := &fakeDailyLogbookDetailService{}
 		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
-		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1")
+		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error for missing logbook")
 		}
@@ -163,7 +181,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 		}
 		svc := &fakeDailyLogbookDetailService{}
 		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
-		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1")
+		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -204,14 +222,19 @@ func TestDailyLogbookDetailInteractor_ListByEmployee(t *testing.T) {
 func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeDailyLogbookDetailService{
-			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+			createTxFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
 				return nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
-			ID: "d-1", OutTime: "08:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-		})
+			ID: "d-1", DailyLogbookID: "lb-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+		}, "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -223,10 +246,15 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return domain.ErrFlightInvalidTimeSequence
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
-			OutTime: "10:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-		})
+			DailyLogbookID: "lb-1", OutTime: strPtr("10:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+		}, "emp-1")
 		if err == nil {
 			t.Error("expected validation error")
 		}
@@ -234,14 +262,19 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 
 	t.Run("create error", func(t *testing.T) {
 		svc := &fakeDailyLogbookDetailService{
-			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+			createTxFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
 				return errors.New("create error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
-			ID: "d-1", OutTime: "08:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-		})
+			ID: "d-1", DailyLogbookID: "lb-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+		}, "emp-1")
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -254,14 +287,19 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{ID: "d-1", DailyLogbookID: "lb-1"}, nil
 			},
-			updateFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+			updateTxFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
 				return nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
-			ID: "d-1", OutTime: "08:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-		})
+			ID: "d-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+		}, "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -275,8 +313,8 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 		}
 		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
-			ID: "d-1", OutTime: "08:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-		})
+			ID: "d-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+		}, "emp-1")
 		if err == nil {
 			t.Error("expected error for not found")
 		}
@@ -291,10 +329,15 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return domain.ErrFlightInvalidTimeSequence
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
-			ID: "d-1", OutTime: "10:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-		})
+			ID: "d-1", OutTime: strPtr("10:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+		}, "emp-1")
 		if err == nil {
 			t.Error("expected validation error")
 		}

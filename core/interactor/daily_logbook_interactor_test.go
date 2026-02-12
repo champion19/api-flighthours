@@ -11,13 +11,14 @@ import (
 
 // fakeDailyLogbookService implements input.DailyLogbookService
 type fakeDailyLogbookService struct {
-	getByIDFn func(ctx context.Context, id string) (*domain.DailyLogbook, error)
-	listFn    func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
-	createFn  func(ctx context.Context, logbook domain.DailyLogbook) error
+	getByIDFn  func(ctx context.Context, id string) (*domain.DailyLogbook, error)
+	listFn     func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
+	createFn   func(ctx context.Context, logbook domain.DailyLogbook) error
+	createTxFn func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 }
 
 func (f *fakeDailyLogbookService) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return &fakeTx{}, nil
 }
 
 func (f *fakeDailyLogbookService) GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error) {
@@ -41,9 +42,16 @@ func (f *fakeDailyLogbookService) CreateDailyLogbook(ctx context.Context, logboo
 	return nil
 }
 
+func (f *fakeDailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+	if f.createTxFn != nil {
+		return f.createTxFn(ctx, tx, logbook)
+	}
+	return nil
+}
+
 func TestNewDailyLogbookInteractor(t *testing.T) {
 	svc := &fakeDailyLogbookService{}
-	inter := NewDailyLogbookInteractor(svc, noopLogger{})
+	inter := NewDailyLogbookInteractor(svc)
 	if inter == nil {
 		t.Error("expected non-nil interactor")
 	}
@@ -57,8 +65,8 @@ func TestDailyLogbookInteractor_GetByID(t *testing.T) {
 				return expected, nil
 			},
 		}
-		inter := NewDailyLogbookInteractor(svc, noopLogger{})
-		result, err := inter.GetDailyLogbookByID(context.Background(), "lb-1")
+		inter := NewDailyLogbookInteractor(svc)
+		result, err := inter.GetDailyLogbookByID(context.Background(), "lb-1", "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -73,8 +81,8 @@ func TestDailyLogbookInteractor_GetByID(t *testing.T) {
 				return nil, errors.New("not found")
 			},
 		}
-		inter := NewDailyLogbookInteractor(svc, noopLogger{})
-		_, err := inter.GetDailyLogbookByID(context.Background(), "lb-1")
+		inter := NewDailyLogbookInteractor(svc)
+		_, err := inter.GetDailyLogbookByID(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -89,7 +97,7 @@ func TestDailyLogbookInteractor_ListByEmployee(t *testing.T) {
 				return expected, nil
 			},
 		}
-		inter := NewDailyLogbookInteractor(svc, noopLogger{})
+		inter := NewDailyLogbookInteractor(svc)
 		result, err := inter.ListDailyLogbooksByEmployee(context.Background(), "emp-1", nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -105,7 +113,7 @@ func TestDailyLogbookInteractor_ListByEmployee(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookInteractor(svc, noopLogger{})
+		inter := NewDailyLogbookInteractor(svc)
 		_, err := inter.ListDailyLogbooksByEmployee(context.Background(), "emp-1", nil)
 		if err == nil {
 			t.Error("expected error")
@@ -116,11 +124,11 @@ func TestDailyLogbookInteractor_ListByEmployee(t *testing.T) {
 func TestDailyLogbookInteractor_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeDailyLogbookService{
-			createFn: func(ctx context.Context, logbook domain.DailyLogbook) error {
+			createTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
 				return nil
 			},
 		}
-		inter := NewDailyLogbookInteractor(svc, noopLogger{})
+		inter := NewDailyLogbookInteractor(svc)
 		err := inter.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -129,11 +137,11 @@ func TestDailyLogbookInteractor_Create(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		svc := &fakeDailyLogbookService{
-			createFn: func(ctx context.Context, logbook domain.DailyLogbook) error {
+			createTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
 				return errors.New("create error")
 			},
 		}
-		inter := NewDailyLogbookInteractor(svc, noopLogger{})
+		inter := NewDailyLogbookInteractor(svc)
 		err := inter.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
 		if err == nil {
 			t.Error("expected error")

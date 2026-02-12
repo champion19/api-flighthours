@@ -69,14 +69,35 @@ func (i *LicensePlateInteractor) ListLicensePlates(ctx context.Context, filters 
 	return registrations, nil
 }
 
-func (i *LicensePlateInteractor) CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) error {
+func (i *LicensePlateInteractor) CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogLicensePlateCreate, registration.ToLogger())
 
-	if err := i.service.CreateLicensePlate(ctx, registration); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogLicensePlateCreateError, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogLicensePlateCreateError, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogLicensePlateCreateError, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.CreateLicensePlateTx(ctx, tx, registration); err != nil {
+		log.Error(logger.LogLicensePlateCreateError, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogLicensePlateCreateError, "commit_error", err)
 		return err
 	}
 
@@ -84,14 +105,35 @@ func (i *LicensePlateInteractor) CreateLicensePlate(ctx context.Context, registr
 	return nil
 }
 
-func (i *LicensePlateInteractor) UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) error {
+func (i *LicensePlateInteractor) UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogLicensePlateUpdate, registration.ToLogger())
 
-	if err := i.service.UpdateLicensePlate(ctx, registration); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogLicensePlateUpdateError, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogLicensePlateUpdateError, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogLicensePlateUpdateError, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.UpdateLicensePlateTx(ctx, tx, registration); err != nil {
+		log.Error(logger.LogLicensePlateUpdateError, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogLicensePlateUpdateError, "commit_error", err)
 		return err
 	}
 

@@ -17,6 +17,8 @@ type fakeLicensePlateService struct {
 	listFn       func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
 	createFn     func(ctx context.Context, registration domain.LicensePlate) error
 	updateFn     func(ctx context.Context, registration domain.LicensePlate) error
+	createTxFn   func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
+	updateTxFn   func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
 }
 
 var _ input.LicensePlateService = (*fakeLicensePlateService)(nil)
@@ -58,6 +60,20 @@ func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, pl
 		return f.getByPlateFn(ctx, plate)
 	}
 	return nil, errors.New("not implemented")
+}
+
+func (f *fakeLicensePlateService) CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	if f.createTxFn != nil {
+		return f.createTxFn(ctx, tx, registration)
+	}
+	return nil
+}
+
+func (f *fakeLicensePlateService) UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	if f.updateTxFn != nil {
+		return f.updateTxFn(ctx, tx, registration)
+	}
+	return nil
 }
 
 func TestNewLicensePlateInteractor(t *testing.T) {
@@ -189,7 +205,7 @@ func TestLicensePlateInteractor_List(t *testing.T) {
 func TestLicensePlateInteractor_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeLicensePlateService{
-			createFn: func(ctx context.Context, registration domain.LicensePlate) error {
+			createTxFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 				if registration.LicensePlate != "HK-5432" {
 					t.Errorf("expected LicensePlate HK-5432, got %s", registration.LicensePlate)
 				}
@@ -212,7 +228,7 @@ func TestLicensePlateInteractor_Create(t *testing.T) {
 
 	t.Run("service error", func(t *testing.T) {
 		svc := &fakeLicensePlateService{
-			createFn: func(ctx context.Context, registration domain.LicensePlate) error {
+			createTxFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 				return errors.New("create failed")
 			},
 		}
@@ -228,7 +244,7 @@ func TestLicensePlateInteractor_Create(t *testing.T) {
 func TestLicensePlateInteractor_Update(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		svc := &fakeLicensePlateService{
-			updateFn: func(ctx context.Context, registration domain.LicensePlate) error {
+			updateTxFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 				return nil
 			},
 		}
@@ -247,7 +263,7 @@ func TestLicensePlateInteractor_Update(t *testing.T) {
 
 	t.Run("not found", func(t *testing.T) {
 		svc := &fakeLicensePlateService{
-			updateFn: func(ctx context.Context, registration domain.LicensePlate) error {
+			updateTxFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 				return domain.ErrLicensePlateNotFound
 			},
 		}
@@ -261,7 +277,7 @@ func TestLicensePlateInteractor_Update(t *testing.T) {
 
 	t.Run("update service error", func(t *testing.T) {
 		svc := &fakeLicensePlateService{
-			updateFn: func(ctx context.Context, registration domain.LicensePlate) error {
+			updateTxFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 				return errors.New("update failed")
 			},
 		}

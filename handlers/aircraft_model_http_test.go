@@ -28,7 +28,7 @@ type fakeAircraftModelServiceForHandler struct {
 var _ input.AircraftModelService = (*fakeAircraftModelServiceForHandler)(nil)
 
 func (f *fakeAircraftModelServiceForHandler) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return fakeTx{}, nil
 }
 func (f *fakeAircraftModelServiceForHandler) GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error) {
 	if f.getByIDFn != nil {
@@ -55,6 +55,18 @@ func (f *fakeAircraftModelServiceForHandler) ActivateAircraftModel(ctx context.C
 	return nil
 }
 func (f *fakeAircraftModelServiceForHandler) DeactivateAircraftModel(ctx context.Context, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAircraftModelServiceForHandler) ActivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateFn != nil {
+		return f.activateFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAircraftModelServiceForHandler) DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
 	if f.deactivateFn != nil {
 		return f.deactivateFn(ctx, id)
 	}

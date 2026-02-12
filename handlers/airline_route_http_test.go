@@ -72,6 +72,18 @@ func (f *fakeAirlineRouteService) DeactivateAirlineRoute(ctx context.Context, id
 	}
 	return errors.New("not implemented")
 }
+func (f *fakeAirlineRouteService) ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateFn != nil {
+		return f.activateFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAirlineRouteService) DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
 
 func newTestAirlineRouteMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()

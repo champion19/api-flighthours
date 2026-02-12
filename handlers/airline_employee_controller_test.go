@@ -29,7 +29,7 @@ type fakeAirlineEmployeeService struct {
 }
 
 func (f *fakeAirlineEmployeeService) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return fakeTx{}, nil
 }
 func (f *fakeAirlineEmployeeService) GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 	if f.getByIDFn != nil {
@@ -56,6 +56,30 @@ func (f *fakeAirlineEmployeeService) ActivateAirlineEmployee(ctx context.Context
 	return nil
 }
 func (f *fakeAirlineEmployeeService) DeactivateAirlineEmployee(ctx context.Context, id string) error {
+	if f.deactivateAEFn != nil {
+		return f.deactivateAEFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAirlineEmployeeService) AddAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+	if f.addFn != nil {
+		return f.addFn(ctx, employee)
+	}
+	return nil
+}
+func (f *fakeAirlineEmployeeService) UpdateAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+	if f.updateFn != nil {
+		return f.updateFn(ctx, employee)
+	}
+	return nil
+}
+func (f *fakeAirlineEmployeeService) ActivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateAEFn != nil {
+		return f.activateAEFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAirlineEmployeeService) DeactivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error {
 	if f.deactivateAEFn != nil {
 		return f.deactivateAEFn(ctx, id)
 	}

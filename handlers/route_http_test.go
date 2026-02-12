@@ -69,7 +69,7 @@ func TestHTTP_GetRouteByID(t *testing.T) {
 	}
 
 	newRouter := func(svc input.RouteService) *gin.Engine {
-		routeInteractor := interactor.NewRouteInteractor(svc, noopLogger{})
+		routeInteractor := interactor.NewRouteInteractor(svc)
 		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()
@@ -188,7 +188,7 @@ func TestHTTP_ListRoutes(t *testing.T) {
 	}
 
 	newRouter := func(svc input.RouteService) *gin.Engine {
-		routeInteractor := interactor.NewRouteInteractor(svc, noopLogger{})
+		routeInteractor := interactor.NewRouteInteractor(svc)
 		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil, nil, nil, nil, nil, nil, nil)
 
 		r := gin.New()

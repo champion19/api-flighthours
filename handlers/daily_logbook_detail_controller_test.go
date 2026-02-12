@@ -20,6 +20,8 @@ import (
 )
 
 // fakeDailyLogbookDetailService implements input.DailyLogbookDetailService
+func domainPilotRolePtr(r domain.PilotRole) *domain.PilotRole { return &r }
+
 type fakeDailyLogbookDetailService struct {
 	getByIDFn        func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
 	listByLogbookFn  func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
@@ -30,7 +32,7 @@ type fakeDailyLogbookDetailService struct {
 }
 
 func (f *fakeDailyLogbookDetailService) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return fakeTx{}, nil
 }
 
 func (f *fakeDailyLogbookDetailService) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
@@ -71,6 +73,18 @@ func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Con
 func (f *fakeDailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
 	if f.validateTimeFn != nil {
 		return f.validateTimeFn(outTime, takeoffTime, landingTime, inTime)
+	}
+	return nil
+}
+func (f *fakeDailyLogbookDetailService) CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+	if f.createFn != nil {
+		return f.createFn(ctx, detail)
+	}
+	return nil
+}
+func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+	if f.updateFn != nil {
+		return f.updateFn(ctx, detail)
 	}
 	return nil
 }
@@ -116,7 +130,7 @@ func newDailyLogbookDetailTestRouter(
 	authUser *domain.Employee,
 ) *gin.Engine {
 	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc)
-	logbookInteractor := interactor.NewDailyLogbookInteractor(logbookSvc, Logger)
+	logbookInteractor := interactor.NewDailyLogbookInteractor(logbookSvc)
 	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, detailInteractor, logbookInteractor, nil, nil)
 
 	r := gin.New()
@@ -166,7 +180,7 @@ func TestHTTP_GetDailyLogbookDetail(t *testing.T) {
 					ID:             testUUID,
 					DailyLogbookID: testLogbookID,
 					FlightNumber:   "AV123",
-					PilotRole:      domain.PilotRolePF,
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 				}, nil
 			},
 		}
@@ -265,7 +279,7 @@ func TestHTTP_ListDailyLogbookDetails(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			listByLogbookFn: func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error) {
 				return []domain.DailyLogbookDetail{
-					{ID: "550e8400-e29b-41d4-a716-446655440010", DailyLogbookID: testLogbookID, FlightNumber: "AV123", PilotRole: domain.PilotRolePF},
+					{ID: "550e8400-e29b-41d4-a716-446655440010", DailyLogbookID: testLogbookID, FlightNumber: "AV123", PilotRole: domainPilotRolePtr(domain.PilotRolePF)},
 				}, nil
 			},
 		}
@@ -397,7 +411,7 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 					ID:             id,
 					DailyLogbookID: testLogbookID,
 					FlightNumber:   "AV123",
-					PilotRole:      domain.PilotRolePF,
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
 					LicensePlateID: testAircraftID,
 				}, nil
@@ -616,7 +630,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					ID:             testDetailID,
 					DailyLogbookID: testLogbookID,
 					FlightNumber:   "AV123",
-					PilotRole:      domain.PilotRolePF,
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
 					LicensePlateID: testAircraftID,
 				}, nil
@@ -772,7 +786,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					ID:             testDetailID,
 					DailyLogbookID: testLogbookID,
 					FlightNumber:   "AV123",
-					PilotRole:      domain.PilotRolePF,
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
 					LicensePlateID: testAircraftID,
 				}, nil
@@ -804,7 +818,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					ID:             testDetailID,
 					DailyLogbookID: testLogbookID,
 					FlightNumber:   "AV123",
-					PilotRole:      domain.PilotRolePF,
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
 					LicensePlateID: testAircraftID,
 				}, nil
@@ -867,7 +881,7 @@ func TestHTTP_ListMyFlights(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			listByEmployeeFn: func(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error) {
 				return []domain.DailyLogbookDetail{
-					{ID: "550e8400-e29b-41d4-a716-446655440010", FlightNumber: "AV123", PilotRole: domain.PilotRolePF},
+					{ID: "550e8400-e29b-41d4-a716-446655440010", FlightNumber: "AV123", PilotRole: domainPilotRolePtr(domain.PilotRolePF)},
 				}, nil
 			},
 		}

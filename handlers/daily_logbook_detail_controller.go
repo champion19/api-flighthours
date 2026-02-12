@@ -97,17 +97,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Verify ownership
-		if err := h.DailyLogbookDetailInteractor.VerifyLogbookOwnership(c.Request.Context(), logbookUUID, employee.ID); err != nil {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "unauthorized")
-			if err == domain.ErrFlightUnauthorized {
-				h.Response.Error(c, domain.MsgFlightUnauthorized)
-				return
-			}
-			h.Response.Error(c, domain.MsgFlightInvalidLogbook)
-			return
-		}
-
 		// Parse and sanitize request
 		var req CreateDailyLogbookDetailRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -135,20 +124,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.LicensePlateID = aircraftUUID
 
-		// Validate pilot role
-		if !domain.IsValidPilotRole(req.PilotRole) {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid pilot role")
-			h.Response.Error(c, domain.MsgValFieldFormat)
-			return
-		}
-
-		// Validate approach type if provided
-		if req.ApproachType != nil && !domain.IsValidApproachType(*req.ApproachType) {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid approach type")
-			h.Response.Error(c, domain.MsgValFieldFormat)
-			return
-		}
-
 		// Convert to domain
 		detail := ToDomainDailyLogbookDetail(logbookUUID, req)
 		detail.SetID()
@@ -156,9 +131,13 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		// Set employee logbook ID
 		detail.EmployeeLogbookID = &employee.ID
 
-		// Create detail
-		if err := h.DailyLogbookDetailInteractor.CreateDailyLogbookDetail(c.Request.Context(), traceID, detail); err != nil {
+		// Create detail (ownership is verified by the interactor)
+		if err := h.DailyLogbookDetailInteractor.CreateDailyLogbookDetail(c.Request.Context(), traceID, detail, employee.ID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgFlightUnauthorized)
+				return
+			}
 			if err == domain.ErrFlightInvalidLogbook {
 				h.Response.Error(c, domain.MsgFlightInvalidLogbook)
 				return
@@ -240,23 +219,6 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Verify ownership via detail's logbook
-		ownerID, err := h.DailyLogbookDetailInteractor.GetDetailLogbookOwner(c.Request.Context(), detailUUID)
-		if err != nil {
-			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)
-			if err == domain.ErrFlightNotFound {
-				h.Response.Error(c, domain.MsgFlightNotFound)
-				return
-			}
-			h.Response.Error(c, domain.MsgFlightUpdateError)
-			return
-		}
-		if ownerID != employee.ID {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "unauthorized")
-			h.Response.Error(c, domain.MsgFlightUnauthorized)
-			return
-		}
-
 		// Parse and sanitize request
 		var req UpdateDailyLogbookDetailRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -284,26 +246,16 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.LicensePlateID = aircraftUUID
 
-		// Validate pilot role
-		if !domain.IsValidPilotRole(req.PilotRole) {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid pilot role")
-			h.Response.Error(c, domain.MsgValFieldFormat)
-			return
-		}
-
-		// Validate approach type if provided
-		if req.ApproachType != nil && !domain.IsValidApproachType(*req.ApproachType) {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid approach type")
-			h.Response.Error(c, domain.MsgValFieldFormat)
-			return
-		}
-
 		// Convert to domain
 		detail := ToDomainDailyLogbookDetailUpdate(detailUUID, req)
 
-		// Update detail
-		if err := h.DailyLogbookDetailInteractor.UpdateDailyLogbookDetail(c.Request.Context(), traceID, detail); err != nil {
+		// Update detail (ownership is verified by the interactor)
+		if err := h.DailyLogbookDetailInteractor.UpdateDailyLogbookDetail(c.Request.Context(), traceID, detail, employee.ID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgFlightUnauthorized)
+				return
+			}
 			if err == domain.ErrFlightNotFound {
 				h.Response.Error(c, domain.MsgFlightNotFound)
 				return
@@ -373,21 +325,18 @@ func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 			return
 		}
 
-		// Verify ownership
-		if err := h.DailyLogbookDetailInteractor.VerifyLogbookOwnership(c.Request.Context(), logbookUUID, employee.ID); err != nil {
-			log.Warn(logger.LogDailyLogbookDetailListError, "error", "unauthorized")
+		// Get details (ownership is verified by the interactor)
+		details, err := h.DailyLogbookDetailInteractor.ListDailyLogbookDetailsByLogbook(c.Request.Context(), traceID, logbookUUID, employee.ID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookDetailListError, "error", err)
 			if err == domain.ErrFlightUnauthorized {
 				h.Response.Error(c, domain.MsgFlightUnauthorized)
 				return
 			}
-			h.Response.Error(c, domain.MsgFlightInvalidLogbook)
-			return
-		}
-
-		// Get details
-		details, err := h.DailyLogbookDetailInteractor.ListDailyLogbookDetailsByLogbook(c.Request.Context(), traceID, logbookUUID)
-		if err != nil {
-			log.Error(logger.LogDailyLogbookDetailListError, "error", err)
+			if err == domain.ErrFlightInvalidLogbook {
+				h.Response.Error(c, domain.MsgFlightInvalidLogbook)
+				return
+			}
 			h.Response.Error(c, domain.MsgFlightListError)
 			return
 		}

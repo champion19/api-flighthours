@@ -88,6 +88,16 @@ func (s *DailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Context
 	return nil
 }
 
+// CreateDailyLogbookDetailTx creates a daily logbook detail using an external transaction
+func (s *DailyLogbookDetailService) CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+	return s.repo.SaveDailyLogbookDetail(ctx, tx, detail)
+}
+
+// UpdateDailyLogbookDetailTx updates a daily logbook detail using an external transaction
+func (s *DailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+	return s.repo.UpdateDailyLogbookDetail(ctx, tx, detail)
+}
+
 func (s *DailyLogbookDetailService) DeleteDailyLogbookDetail(ctx context.Context, id string) error {
 	log.Info(logger.LogDailyLogbookDetailDelete, "id", id)
 

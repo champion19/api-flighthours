@@ -62,37 +62,24 @@ type DailyLogbookDetail struct {
 	LicensePlateID               string `json:"license_plate_id"`
 	Passengers                   *int   `json:"passengers,omitempty"`
 
-	// Flight times (stored as TIME format HH:MM)
-	OutTime     string `json:"out_time"`     // Hora salida de bloque (OUT)
-	TakeoffTime string `json:"takeoff_time"` // Hora despegue (OFF)
-	LandingTime string `json:"landing_time"` // Hora aterrizaje (ON)
-	InTime      string `json:"in_time"`      // Hora llegada a bloque (IN)
 
-	// Pilot role and companion
-	PilotRole     PilotRole `json:"pilot_role"`
-	CompanionName *string   `json:"companion_name,omitempty"`
-
-	// Calculated times (stored as TIME format HH:MM)
-	AirTime   string  `json:"air_time"`            // Tiempo de vuelo (ON - OFF)
-	BlockTime string  `json:"block_time"`          // Tiempo de bloque (IN - OUT)
+	OutTime     *string `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
+	TakeoffTime *string `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
+	LandingTime *string `json:"landing_time,omitempty"` // Hora aterrizaje (ON)
+	InTime      *string `json:"in_time,omitempty"`      // Hora llegada a bloque (IN)
+	PilotRole     *PilotRole `json:"pilot_role,omitempty"`
+	CompanionName *string    `json:"companion_name,omitempty"`
+	AirTime   *string `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
+	BlockTime *string `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
 	DutyTime  *string `json:"duty_time,omitempty"` // Tiempo de servicio (DUTY)
-
-	// Approach and flight type
 	ApproachType      *ApproachType `json:"approach_type,omitempty"`
 	FlightType        *string       `json:"flight_type,omitempty"` // 'COMMERCIAL', 'TRAINING', 'FERRY', 'CHECK', 'POSITIONING'
 	EmployeeLogbookID *string       `json:"employee_logbook_id,omitempty"`
-
-	// Denormalized fields for display (populated via JOINs)
-	// From daily_logbook
 	LogDate string `json:"log_date,omitempty"`
-
-	// From airline_route -> route -> airports
 	RouteCode           string `json:"route_code,omitempty"`            // e.g., "BOG-CLO"
 	OriginIataCode      string `json:"origin_iata_code,omitempty"`      // Origin airport IATA
 	DestinationIataCode string `json:"destination_iata_code,omitempty"` // Destination airport IATA
 	AirlineCode         string `json:"airline_code,omitempty"`          // Airline IATA code
-
-	// From aircraft_registration -> aircraft_model
 	LicensePlate string `json:"license_plate,omitempty"` // Aircraft registration
 	ModelName    string `json:"model_name,omitempty"`    // Aircraft model name
 }
@@ -104,7 +91,10 @@ func (d *DailyLogbookDetail) SetID() {
 
 // ToLogger returns a slice of strings for logging purposes
 func (d *DailyLogbookDetail) ToLogger() []string {
-	pilotRole := string(d.PilotRole)
+	pilotRole := ""
+	if d.PilotRole != nil {
+		pilotRole = string(*d.PilotRole)
+	}
 	return []string{
 		"id:" + d.ID,
 		"daily_logbook_id:" + d.DailyLogbookID,

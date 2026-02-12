@@ -10,6 +10,8 @@ func TestDailyLogbookDetail_SetID(t *testing.T) {
 	}
 }
 
+func pilotRolePtr(r PilotRole) *PilotRole { return &r }
+
 func TestDailyLogbookDetail_ToLogger(t *testing.T) {
 	d := &DailyLogbookDetail{
 		ID:             "detail-1",
@@ -18,7 +20,7 @@ func TestDailyLogbookDetail_ToLogger(t *testing.T) {
 		FlightRealDate: "2025-01-15",
 		RouteCode:      "BOG-CLO",
 		LicensePlate:   "HK-5432",
-		PilotRole:      PilotRolePF,
+		PilotRole:      pilotRolePtr(PilotRolePF),
 	}
 	result := d.ToLogger()
 	if len(result) != 7 {

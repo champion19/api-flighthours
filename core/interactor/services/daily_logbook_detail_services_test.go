@@ -9,6 +9,8 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
+func pilotRolePtr(r domain.PilotRole) *domain.PilotRole { return &r }
+
 // mock daily logbook detail repository
 type mockDailyLogbookDetailRepo struct {
 	getByIDFn        func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
@@ -153,8 +155,8 @@ func TestDailyLogbookDetailService_Create(t *testing.T) {
 		svc := NewDailyLogbookDetailService(repo)
 		err := svc.CreateDailyLogbookDetail(context.Background(), domain.DailyLogbookDetail{
 			ID: "d-1", DailyLogbookID: "lb-1", FlightNumber: "AV123",
-			OutTime: "08:00", TakeoffTime: "08:15", LandingTime: "09:30", InTime: "09:45",
-			PilotRole: domain.PilotRolePF,
+			OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
+			PilotRole: pilotRolePtr(domain.PilotRolePF),
 		})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

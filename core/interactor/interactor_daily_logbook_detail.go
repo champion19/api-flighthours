@@ -45,11 +45,11 @@ func (i *DailyLogbookDetailInteractor) GetDailyLogbookDetailByID(ctx context.Con
 	return detail, nil
 }
 
-// ListDailyLogbookDetailsByLogbook lists all details for a logbook
-func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByLogbook(ctx context.Context, traceID string, logbookID string) ([]domain.DailyLogbookDetail, error) {
+// ListDailyLogbookDetailsByLogbook lists all details for a logbook, verifying ownership
+func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByLogbook(ctx context.Context, traceID string, logbookID string, employeeID string) ([]domain.DailyLogbookDetail, error) {
 	log.Info(logger.LogDailyLogbookDetailList, "trace_id", traceID, "logbook_id", logbookID)
 
-	// Verify logbook exists
+	// Verify logbook exists and ownership
 	logbook, err := i.logbookService.GetDailyLogbookByID(ctx, logbookID)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailListError, "trace_id", traceID, "error", err)
@@ -58,6 +58,10 @@ func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByLogbook(ctx cont
 	if logbook == nil {
 		log.Warn(logger.LogDailyLogbookNotFound, "trace_id", traceID, "logbook_id", logbookID)
 		return nil, domain.ErrFlightInvalidLogbook
+	}
+	if logbook.EmployeeID != employeeID {
+		log.Warn(logger.LogDailyLogbookDetailListError, "trace_id", traceID, "error", "unauthorized")
+		return nil, domain.ErrFlightUnauthorized
 	}
 
 	details, err := i.service.ListDailyLogbookDetailsByLogbook(ctx, logbookID)
@@ -84,14 +88,22 @@ func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByEmployee(ctx con
 	return details, nil
 }
 
-// CreateDailyLogbookDetail creates a new detail
-func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Context, traceID string, detail domain.DailyLogbookDetail) error {
+// CreateDailyLogbookDetail creates a new detail, verifying logbook ownership
+func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Context, traceID string, detail domain.DailyLogbookDetail, employeeID string) (err error) {
 	log.Info(logger.LogDailyLogbookDetailCreate, "trace_id", traceID, "data", detail.ToLogger())
 
-	// Validate time sequence
-	if err := i.service.ValidateTimeSequence(detail.OutTime, detail.TakeoffTime, detail.LandingTime, detail.InTime); err != nil {
-		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", "invalid time sequence")
+	// Verify logbook ownership
+	if err = i.VerifyLogbookOwnership(ctx, detail.DailyLogbookID, employeeID); err != nil {
+		log.Warn(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
 		return err
+	}
+
+	// Validate time sequence only if all 4 time fields are provided
+	if detail.OutTime != nil && detail.TakeoffTime != nil && detail.LandingTime != nil && detail.InTime != nil {
+		if err = i.service.ValidateTimeSequence(*detail.OutTime, *detail.TakeoffTime, *detail.LandingTime, *detail.InTime); err != nil {
+			log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", "invalid time sequence")
+			return err
+		}
 	}
 
 	// Generate ID if not set
@@ -99,9 +111,29 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 		detail.SetID()
 	}
 
-	err := i.service.CreateDailyLogbookDetail(ctx, detail)
+	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "rollback_error", rbErr)
+			} else {
+				log.Warn(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.CreateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
+		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "commit_error", err)
 		return err
 	}
 
@@ -109,8 +141,8 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 	return nil
 }
 
-// UpdateDailyLogbookDetail updates an existing detail
-func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Context, traceID string, detail domain.DailyLogbookDetail) error {
+// UpdateDailyLogbookDetail updates an existing detail, verifying ownership
+func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Context, traceID string, detail domain.DailyLogbookDetail, employeeID string) (err error) {
 	log.Info(logger.LogDailyLogbookDetailUpdate, "trace_id", traceID, "data", detail.ToLogger())
 
 	// Verify detail exists
@@ -124,18 +156,46 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 		return domain.ErrFlightNotFound
 	}
 
-	// Validate time sequence
-	if err := i.service.ValidateTimeSequence(detail.OutTime, detail.TakeoffTime, detail.LandingTime, detail.InTime); err != nil {
-		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", "invalid time sequence")
+	// Verify ownership via detail's logbook
+	if err = i.VerifyLogbookOwnership(ctx, existing.DailyLogbookID, employeeID); err != nil {
+		log.Warn(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
 		return err
+	}
+
+	// Validate time sequence only if all 4 time fields are provided
+	if detail.OutTime != nil && detail.TakeoffTime != nil && detail.LandingTime != nil && detail.InTime != nil {
+		if err = i.service.ValidateTimeSequence(*detail.OutTime, *detail.TakeoffTime, *detail.LandingTime, *detail.InTime); err != nil {
+			log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", "invalid time sequence")
+			return err
+		}
 	}
 
 	// Preserve the daily_logbook_id from existing record (cannot change parent)
 	detail.DailyLogbookID = existing.DailyLogbookID
 
-	err = i.service.UpdateDailyLogbookDetail(ctx, detail)
+	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "rollback_error", rbErr)
+			} else {
+				log.Warn(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
+		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "commit_error", err)
 		return err
 	}
 

@@ -7,18 +7,14 @@ type AirlineRoute struct {
 	RouteID   string `json:"route_id"`
 	AirlineID string `json:"airline_id"`
 	Status    bool   `json:"status"`
-
-	// Denormalized fields obtained via JOIN from route table
 	OriginIataCode         string `json:"origin_iata_code,omitempty"`
 	DestinationIataCode    string `json:"destination_iata_code,omitempty"`
-	RouteCode              string `json:"route_code,omitempty"` // e.g., "BOG-CLO"
+	RouteCode              string `json:"route_code,omitempty"`
 	OriginAirportName      string `json:"origin_airport_name,omitempty"`
 	DestinationAirportName string `json:"destination_airport_name,omitempty"`
 	AirportType            string `json:"airport_type,omitempty"`
 	EstimatedFlightTime    string `json:"estimated_flight_time,omitempty"`
-
-	// Denormalized fields obtained via JOIN from airline table
-	AirlineCode string `json:"airline_code,omitempty"` // IATA code (e.g., "AV", "LA")
+	AirlineCode string `json:"airline_code,omitempty"`
 	AirlineName string `json:"airline_name,omitempty"`
 }
 

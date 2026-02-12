@@ -189,17 +189,17 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.GET("/daily-logbook-details/:id", handler.GetDailyLogbookDetail())
 
-		protected.PUT("/daily-logbook-details/:id", handler.UpdateDailyLogbookDetail())
+		protected.PUT("/daily-logbook-details/:id", validator.WithValidateUpdateDailyLogbookDetail(), handler.UpdateDailyLogbookDetail())
 
 		protected.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
 
-		protected.POST("/daily-logbooks/:id/details", handler.CreateDailyLogbookDetail())
+		protected.POST("/daily-logbooks/:id/details", validator.WithValidateCreateDailyLogbookDetail(), handler.CreateDailyLogbookDetail())
 
 		protected.GET("/employees/flights", handler.ListMyFlights())
 
 		protected.GET("/daily-logbooks", handler.ListDailyLogbooks())
 
-		protected.POST("/daily-logbooks", handler.CreateDailyLogbook())
+		protected.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
 
 		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
 

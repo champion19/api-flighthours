@@ -65,6 +65,18 @@ func (f *fakeAirportService) DeactivateAirport(ctx context.Context, id string) e
 	}
 	return errors.New("not implemented")
 }
+func (f *fakeAirportService) ActivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateFn != nil {
+		return f.activateFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAirportService) DeactivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
 
 func (f *fakeAirportService) ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error) {
 	if f.listAirportsFn != nil {

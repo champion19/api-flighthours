@@ -10,15 +10,15 @@ type CreateDailyLogbookDetailRequest struct {
 	AirlineRouteID string  `json:"airline_route_id"`
 	LicensePlateID string  `json:"license_plate_id"`
 	Passengers     *int    `json:"passengers,omitempty"`
-	OutTime        string  `json:"out_time"`     // TIME format HH:MM
-	TakeoffTime    string  `json:"takeoff_time"` // TIME format HH:MM
-	LandingTime    string  `json:"landing_time"` // TIME format HH:MM
-	InTime         string  `json:"in_time"`      // TIME format HH:MM
-	PilotRole      string  `json:"pilot_role"`
+	OutTime        *string `json:"out_time,omitempty"`     // TIME format HH:MM (nullable)
+	TakeoffTime    *string `json:"takeoff_time,omitempty"` // TIME format HH:MM (nullable)
+	LandingTime    *string `json:"landing_time,omitempty"` // TIME format HH:MM (nullable)
+	InTime         *string `json:"in_time,omitempty"`      // TIME format HH:MM (nullable)
+	PilotRole      *string `json:"pilot_role,omitempty"`   // nullable
 	CompanionName  *string `json:"companion_name,omitempty"`
-	AirTime        string  `json:"air_time"`            // TIME format HH:MM
-	BlockTime      string  `json:"block_time"`          // TIME format HH:MM
-	DutyTime       *string `json:"duty_time,omitempty"` // TIME format HH:MM (nullable)
+	AirTime        *string `json:"air_time,omitempty"`   // TIME format HH:MM (nullable)
+	BlockTime      *string `json:"block_time,omitempty"` // TIME format HH:MM (nullable)
+	DutyTime       *string `json:"duty_time,omitempty"`  // TIME format HH:MM (nullable)
 	ApproachType   *string `json:"approach_type,omitempty"`
 	FlightType     *string `json:"flight_type,omitempty"`
 }
@@ -28,14 +28,14 @@ func (r *CreateDailyLogbookDetailRequest) Sanitize() {
 	r.FlightNumber = TrimString(r.FlightNumber)
 	r.AirlineRouteID = TrimString(r.AirlineRouteID)
 	r.LicensePlateID = TrimString(r.LicensePlateID)
-	r.OutTime = TrimString(r.OutTime)
-	r.TakeoffTime = TrimString(r.TakeoffTime)
-	r.LandingTime = TrimString(r.LandingTime)
-	r.InTime = TrimString(r.InTime)
-	r.PilotRole = TrimString(r.PilotRole)
+	r.OutTime = TrimStringPtr(r.OutTime)
+	r.TakeoffTime = TrimStringPtr(r.TakeoffTime)
+	r.LandingTime = TrimStringPtr(r.LandingTime)
+	r.InTime = TrimStringPtr(r.InTime)
+	r.PilotRole = TrimStringPtr(r.PilotRole)
 	r.CompanionName = TrimStringPtr(r.CompanionName)
-	r.AirTime = TrimString(r.AirTime)
-	r.BlockTime = TrimString(r.BlockTime)
+	r.AirTime = TrimStringPtr(r.AirTime)
+	r.BlockTime = TrimStringPtr(r.BlockTime)
 	r.DutyTime = TrimStringPtr(r.DutyTime)
 	r.ApproachType = TrimStringPtr(r.ApproachType)
 	r.FlightType = TrimStringPtr(r.FlightType)
@@ -47,15 +47,15 @@ type UpdateDailyLogbookDetailRequest struct {
 	AirlineRouteID string  `json:"airline_route_id"`
 	LicensePlateID string  `json:"license_plate_id"`
 	Passengers     *int    `json:"passengers,omitempty"`
-	OutTime        string  `json:"out_time"`     // TIME format HH:MM
-	TakeoffTime    string  `json:"takeoff_time"` // TIME format HH:MM
-	LandingTime    string  `json:"landing_time"` // TIME format HH:MM
-	InTime         string  `json:"in_time"`      // TIME format HH:MM
-	PilotRole      string  `json:"pilot_role"`
+	OutTime        *string `json:"out_time,omitempty"`     // TIME format HH:MM (nullable)
+	TakeoffTime    *string `json:"takeoff_time,omitempty"` // TIME format HH:MM (nullable)
+	LandingTime    *string `json:"landing_time,omitempty"` // TIME format HH:MM (nullable)
+	InTime         *string `json:"in_time,omitempty"`      // TIME format HH:MM (nullable)
+	PilotRole      *string `json:"pilot_role,omitempty"`   // nullable
 	CompanionName  *string `json:"companion_name,omitempty"`
-	AirTime        string  `json:"air_time"`            // TIME format HH:MM
-	BlockTime      string  `json:"block_time"`          // TIME format HH:MM
-	DutyTime       *string `json:"duty_time,omitempty"` // TIME format HH:MM (nullable)
+	AirTime        *string `json:"air_time,omitempty"`   // TIME format HH:MM (nullable)
+	BlockTime      *string `json:"block_time,omitempty"` // TIME format HH:MM (nullable)
+	DutyTime       *string `json:"duty_time,omitempty"`  // TIME format HH:MM (nullable)
 	ApproachType   *string `json:"approach_type,omitempty"`
 	FlightType     *string `json:"flight_type,omitempty"`
 }
@@ -65,14 +65,14 @@ func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
 	r.FlightNumber = TrimString(r.FlightNumber)
 	r.AirlineRouteID = TrimString(r.AirlineRouteID)
 	r.LicensePlateID = TrimString(r.LicensePlateID)
-	r.OutTime = TrimString(r.OutTime)
-	r.TakeoffTime = TrimString(r.TakeoffTime)
-	r.LandingTime = TrimString(r.LandingTime)
-	r.InTime = TrimString(r.InTime)
-	r.PilotRole = TrimString(r.PilotRole)
+	r.OutTime = TrimStringPtr(r.OutTime)
+	r.TakeoffTime = TrimStringPtr(r.TakeoffTime)
+	r.LandingTime = TrimStringPtr(r.LandingTime)
+	r.InTime = TrimStringPtr(r.InTime)
+	r.PilotRole = TrimStringPtr(r.PilotRole)
 	r.CompanionName = TrimStringPtr(r.CompanionName)
-	r.AirTime = TrimString(r.AirTime)
-	r.BlockTime = TrimString(r.BlockTime)
+	r.AirTime = TrimStringPtr(r.AirTime)
+	r.BlockTime = TrimStringPtr(r.BlockTime)
 	r.DutyTime = TrimStringPtr(r.DutyTime)
 	r.ApproachType = TrimStringPtr(r.ApproachType)
 	r.FlightType = TrimStringPtr(r.FlightType)
@@ -87,14 +87,14 @@ type DailyLogbookDetailResponse struct {
 	AirlineRouteID      string  `json:"-"`
 	LicensePlateID      string  `json:"-"`
 	Passengers          *int    `json:"-"`
-	OutTime             string  `json:"-"`
-	TakeoffTime         string  `json:"-"`
-	LandingTime         string  `json:"-"`
-	InTime              string  `json:"-"`
-	PilotRole           string  `json:"-"`
+	OutTime             *string `json:"-"`
+	TakeoffTime         *string `json:"-"`
+	LandingTime         *string `json:"-"`
+	InTime              *string `json:"-"`
+	PilotRole           *string `json:"-"`
 	CompanionName       *string `json:"-"`
-	AirTime             string  `json:"-"`
-	BlockTime           string  `json:"-"`
+	AirTime             *string `json:"-"`
+	BlockTime           *string `json:"-"`
 	DutyTime            *string `json:"-"`
 	ApproachType        *string `json:"-"`
 	FlightType          *string `json:"-"`
@@ -121,12 +121,16 @@ func ToDomainDailyLogbookDetail(logbookID string, req CreateDailyLogbookDetailRe
 		TakeoffTime:    req.TakeoffTime,
 		LandingTime:    req.LandingTime,
 		InTime:         req.InTime,
-		PilotRole:      domain.PilotRole(req.PilotRole),
 		CompanionName:  req.CompanionName,
 		AirTime:        req.AirTime,
 		BlockTime:      req.BlockTime,
 		DutyTime:       req.DutyTime,
 		FlightType:     req.FlightType,
+	}
+
+	if req.PilotRole != nil {
+		pilotRole := domain.PilotRole(*req.PilotRole)
+		detail.PilotRole = &pilotRole
 	}
 
 	if req.ApproachType != nil {
@@ -150,12 +154,16 @@ func ToDomainDailyLogbookDetailUpdate(id string, req UpdateDailyLogbookDetailReq
 		TakeoffTime:    req.TakeoffTime,
 		LandingTime:    req.LandingTime,
 		InTime:         req.InTime,
-		PilotRole:      domain.PilotRole(req.PilotRole),
 		CompanionName:  req.CompanionName,
 		AirTime:        req.AirTime,
 		BlockTime:      req.BlockTime,
 		DutyTime:       req.DutyTime,
 		FlightType:     req.FlightType,
+	}
+
+	if req.PilotRole != nil {
+		pilotRole := domain.PilotRole(*req.PilotRole)
+		detail.PilotRole = &pilotRole
 	}
 
 	if req.ApproachType != nil {
@@ -180,7 +188,6 @@ func FromDomainDailyLogbookDetail(d *domain.DailyLogbookDetail, encodedID, encod
 		TakeoffTime:         d.TakeoffTime,
 		LandingTime:         d.LandingTime,
 		InTime:              d.InTime,
-		PilotRole:           string(d.PilotRole),
 		CompanionName:       d.CompanionName,
 		AirTime:             d.AirTime,
 		BlockTime:           d.BlockTime,
@@ -192,6 +199,11 @@ func FromDomainDailyLogbookDetail(d *domain.DailyLogbookDetail, encodedID, encod
 		AirlineCode:         d.AirlineCode,
 		LicensePlate:        d.LicensePlate,
 		ModelName:           d.ModelName,
+	}
+
+	if d.PilotRole != nil {
+		pilotRoleStr := string(*d.PilotRole)
+		response.PilotRole = &pilotRoleStr
 	}
 
 	if d.ApproachType != nil {

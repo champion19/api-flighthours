@@ -7,7 +7,6 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // mock daily logbook repository
@@ -46,21 +45,9 @@ func (m *mockDailyLogbookRepo) BeginTx(ctx context.Context) (output.Tx, error) {
 	return &mockTx{}, nil
 }
 
-// noopDailyLogbookLogger satisfies logger.Logger for tests
-type noopDailyLogbookLogger struct{}
-
-func (n noopDailyLogbookLogger) Info(msg string, args ...interface{})     {}
-func (n noopDailyLogbookLogger) Debug(msg string, args ...interface{})    {}
-func (n noopDailyLogbookLogger) Error(msg string, args ...interface{})    {}
-func (n noopDailyLogbookLogger) Warn(msg string, args ...interface{})     {}
-func (n noopDailyLogbookLogger) Success(msg string, args ...interface{})  {}
-func (n noopDailyLogbookLogger) Fatal(msg string, args ...interface{})    {}
-func (n noopDailyLogbookLogger) Panic(msg string, args ...interface{})    {}
-func (n noopDailyLogbookLogger) WithTraceID(traceID string) logger.Logger { return n }
-
 func TestNewDailyLogbookService(t *testing.T) {
 	repo := &mockDailyLogbookRepo{}
-	svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+	svc := NewDailyLogbookService(repo)
 	if svc == nil {
 		t.Error("expected non-nil service")
 	}
@@ -74,7 +61,7 @@ func TestDailyLogbookService_GetByID(t *testing.T) {
 				return expected, nil
 			},
 		}
-		svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+		svc := NewDailyLogbookService(repo)
 		result, err := svc.GetDailyLogbookByID(context.Background(), "lb-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -90,7 +77,7 @@ func TestDailyLogbookService_GetByID(t *testing.T) {
 				return nil, errors.New("not found")
 			},
 		}
-		svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+		svc := NewDailyLogbookService(repo)
 		_, err := svc.GetDailyLogbookByID(context.Background(), "lb-1")
 		if err == nil {
 			t.Error("expected error")
@@ -109,7 +96,7 @@ func TestDailyLogbookService_ListByEmployee(t *testing.T) {
 				return expected, nil
 			},
 		}
-		svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+		svc := NewDailyLogbookService(repo)
 		result, err := svc.ListDailyLogbooksByEmployee(context.Background(), "emp-1", nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -130,7 +117,7 @@ func TestDailyLogbookService_Create(t *testing.T) {
 				return nil
 			},
 		}
-		svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+		svc := NewDailyLogbookService(repo)
 		err := svc.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -143,7 +130,7 @@ func TestDailyLogbookService_Create(t *testing.T) {
 				return nil, errors.New("tx error")
 			},
 		}
-		svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+		svc := NewDailyLogbookService(repo)
 		err := svc.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
 		if err == nil {
 			t.Error("expected error")
@@ -162,7 +149,7 @@ func TestDailyLogbookService_Create(t *testing.T) {
 				return errors.New("save error")
 			},
 		}
-		svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+		svc := NewDailyLogbookService(repo)
 		err := svc.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
 		if err == nil {
 			t.Error("expected error")
@@ -179,7 +166,7 @@ func TestDailyLogbookService_BeginTx(t *testing.T) {
 			return &mockTx{}, nil
 		},
 	}
-	svc := NewDailyLogbookService(repo, noopDailyLogbookLogger{})
+	svc := NewDailyLogbookService(repo)
 	tx, err := svc.BeginTx(context.Background())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

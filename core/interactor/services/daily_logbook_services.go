@@ -5,20 +5,17 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // DailyLogbookService implements the business logic for daily logbook operations
 type DailyLogbookService struct {
-	repo   output.DailyLogbookRepository
-	logger logger.Logger
+	repo output.DailyLogbookRepository
 }
 
 // NewDailyLogbookService creates a new daily logbook service
-func NewDailyLogbookService(repo output.DailyLogbookRepository, log logger.Logger) *DailyLogbookService {
+func NewDailyLogbookService(repo output.DailyLogbookRepository) *DailyLogbookService {
 	return &DailyLogbookService{
-		repo:   repo,
-		logger: log,
+		repo: repo,
 	}
 }
 
@@ -62,4 +59,12 @@ func (s *DailyLogbookService) CreateDailyLogbook(ctx context.Context, logbook do
 	return tx.Commit()
 }
 
+// CreateDailyLogbookTx creates a new daily logbook using an external transaction
+func (s *DailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+	// Generate ID if not set
+	if logbook.ID == "" {
+		logbook.SetID()
+	}
 
+	return s.repo.SaveDailyLogbook(ctx, tx, logbook)
+}

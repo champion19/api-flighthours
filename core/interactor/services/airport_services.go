@@ -68,3 +68,13 @@ func (s *AirportService) ActivateAirport(ctx context.Context, id string) error {
 func (s *AirportService) DeactivateAirport(ctx context.Context, id string) error {
 	return s.UpdateAirportStatus(ctx, id, false)
 }
+
+// ActivateAirportTx sets the airport status to true using an external transaction
+func (s *AirportService) ActivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAirportStatus(ctx, tx, id, true)
+}
+
+// DeactivateAirportTx sets the airport status to false using an external transaction
+func (s *AirportService) DeactivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAirportStatus(ctx, tx, id, false)
+}
