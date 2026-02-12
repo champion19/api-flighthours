@@ -175,3 +175,49 @@ func TestDailyLogbookService_BeginTx(t *testing.T) {
 		t.Error("expected non-nil tx")
 	}
 }
+
+func TestDailyLogbookService_CreateDailyLogbookTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return nil
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.CreateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{EmployeeID: "emp-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return errors.New("save failed")
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.CreateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("generates ID when empty", func(t *testing.T) {
+		var savedLogbook domain.DailyLogbook
+		repo := &mockDailyLogbookRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				savedLogbook = logbook
+				return nil
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.CreateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{EmployeeID: "emp-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if savedLogbook.ID == "" {
+			t.Error("expected ID to be generated")
+		}
+	})
+}

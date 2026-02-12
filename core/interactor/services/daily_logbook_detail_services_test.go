@@ -311,3 +311,90 @@ func TestDailyLogbookDetailService_ValidateTimeSequence(t *testing.T) {
 		})
 	}
 }
+
+func TestDailyLogbookDetailService_BeginTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &mockTx{}, nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		tx, err := svc.BeginTx(context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if tx == nil {
+			t.Error("expected non-nil tx")
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		_, err := svc.BeginTx(context.Background())
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+}
+
+func TestDailyLogbookDetailService_CreateTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+				return nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.CreateDailyLogbookDetailTx(context.Background(), &mockTx{}, domain.DailyLogbookDetail{ID: "d-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+				return errors.New("save failed")
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.CreateDailyLogbookDetailTx(context.Background(), &mockTx{}, domain.DailyLogbookDetail{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestDailyLogbookDetailService_UpdateTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+				return nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.UpdateDailyLogbookDetailTx(context.Background(), &mockTx{}, domain.DailyLogbookDetail{ID: "d-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
+				return errors.New("update failed")
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.UpdateDailyLogbookDetailTx(context.Background(), &mockTx{}, domain.DailyLogbookDetail{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}

@@ -87,6 +87,19 @@ func TestDailyLogbookInteractor_GetByID(t *testing.T) {
 			t.Error("expected error")
 		}
 	})
+
+	t.Run("unauthorized", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-other"}, nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		_, err := inter.GetDailyLogbookByID(context.Background(), "lb-1", "emp-1")
+		if err == nil {
+			t.Error("expected unauthorized error")
+		}
+	})
 }
 
 func TestDailyLogbookInteractor_ListByEmployee(t *testing.T) {

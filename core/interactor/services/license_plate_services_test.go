@@ -357,3 +357,59 @@ func TestLicensePlateService_BeginTx(t *testing.T) {
 		}
 	})
 }
+
+func TestLicensePlateService_CreateLicensePlateTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockLicensePlateRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+				return nil
+			},
+		}
+		service := NewLicensePlateService(repo)
+		err := service.CreateLicensePlateTx(context.Background(), &mockTx{}, domain.LicensePlate{ID: "lp-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockLicensePlateRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+				return errors.New("save failed")
+			},
+		}
+		service := NewLicensePlateService(repo)
+		err := service.CreateLicensePlateTx(context.Background(), &mockTx{}, domain.LicensePlate{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestLicensePlateService_UpdateLicensePlateTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockLicensePlateRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+				return nil
+			},
+		}
+		service := NewLicensePlateService(repo)
+		err := service.UpdateLicensePlateTx(context.Background(), &mockTx{}, domain.LicensePlate{ID: "lp-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockLicensePlateRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+				return errors.New("update failed")
+			},
+		}
+		service := NewLicensePlateService(repo)
+		err := service.UpdateLicensePlateTx(context.Background(), &mockTx{}, domain.LicensePlate{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
