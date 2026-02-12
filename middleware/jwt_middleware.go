@@ -6,15 +6,15 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/cache/messaging"
 	"github.com/champion19/api-flighthours/platform/jwt"
 	"github.com/gin-gonic/gin"
 )
 
-
-func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache,jwtValidator *jwt.JWKSValidator) gin.HandlerFunc {
+func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache, jwtValidator output.TokenValidator) gin.HandlerFunc {
 	tokenParser := jwt.NewTokenParser()
-	_=tokenParser
+	_ = tokenParser
 
 	return func(c *gin.Context) {
 
@@ -24,7 +24,6 @@ func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache
 			c.Abort()
 			return
 		}
-
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
@@ -65,7 +64,6 @@ func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache
 			}
 		}
 
-
 		keycloakUserID, ok := claims["sub"].(string)
 		if !ok || keycloakUserID == "" {
 			c.Error(domain.ErrInvalidToken)
@@ -85,7 +83,6 @@ func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache
 		c.Next()
 	}
 }
-
 
 func GetAuthenticatedUser(c *gin.Context) (*domain.Employee, bool) {
 	user, exists := c.Get("authenticated_user")
@@ -112,7 +109,6 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 				return
 			}
 		}
-
 
 		c.Error(domain.ErrRoleRequired)
 		c.Abort()
