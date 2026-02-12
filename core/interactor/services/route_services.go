@@ -5,20 +5,17 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // RouteService implements the business logic for route operations
 type RouteService struct {
-	repo   output.RouteRepository
-	logger logger.Logger
+	repo output.RouteRepository
 }
 
 // NewRouteService creates a new route service
-func NewRouteService(repo output.RouteRepository, log logger.Logger) *RouteService {
+func NewRouteService(repo output.RouteRepository) *RouteService {
 	return &RouteService{
-		repo:   repo,
-		logger: log,
+		repo: repo,
 	}
 }
 

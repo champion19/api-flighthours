@@ -85,3 +85,13 @@ func (s *AirlineRouteService) DeactivateAirlineRoute(ctx context.Context, id str
 
 	return tx.Commit()
 }
+
+// ActivateAirlineRouteTx activates an airline route using an external transaction
+func (s *AirlineRouteService) ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, true)
+}
+
+// DeactivateAirlineRouteTx deactivates an airline route using an external transaction
+func (s *AirlineRouteService) DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, false)
+}

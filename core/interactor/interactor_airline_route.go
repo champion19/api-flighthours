@@ -74,13 +74,28 @@ func (i *AirlineRouteInteractor) ListMyAirlineRoutes(ctx context.Context, traceI
 }
 
 // ActivateAirlineRoute activates an airline route (HU42)
-func (i *AirlineRouteInteractor) ActivateAirlineRoute(ctx context.Context, traceID, id string) error {
+func (i *AirlineRouteInteractor) ActivateAirlineRoute(ctx context.Context, traceID, id string) (err error) {
 	log := airlineRouteLog.WithTraceID(traceID)
 
 	log.Info(logger.LogAirlineRouteActivate, "airline_route_id", id)
 
-	err := i.service.ActivateAirlineRoute(ctx, id)
+	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
+		log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineRouteActivateError, "airline_route_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.ActivateAirlineRouteTx(ctx, tx, id); err != nil {
 		if err == domain.ErrAirlineRouteNotFound {
 			log.Warn(logger.LogAirlineRouteNotFound, "airline_route_id", id)
 			return err
@@ -93,18 +108,38 @@ func (i *AirlineRouteInteractor) ActivateAirlineRoute(ctx context.Context, trace
 		return err
 	}
 
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "commit_error", err)
+		return err
+	}
+
 	log.Info(logger.LogAirlineRouteActivateOK, "airline_route_id", id)
 	return nil
 }
 
 // DeactivateAirlineRoute deactivates an airline route (HU41)
-func (i *AirlineRouteInteractor) DeactivateAirlineRoute(ctx context.Context, traceID, id string) error {
+func (i *AirlineRouteInteractor) DeactivateAirlineRoute(ctx context.Context, traceID, id string) (err error) {
 	log := airlineRouteLog.WithTraceID(traceID)
 
 	log.Info(logger.LogAirlineRouteDeactivate, "airline_route_id", id)
 
-	err := i.service.DeactivateAirlineRoute(ctx, id)
+	tx, err := i.service.BeginTx(ctx)
 	if err != nil {
+		log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeactivateAirlineRouteTx(ctx, tx, id); err != nil {
 		if err == domain.ErrAirlineRouteNotFound {
 			log.Warn(logger.LogAirlineRouteNotFound, "airline_route_id", id)
 			return err
@@ -114,6 +149,11 @@ func (i *AirlineRouteInteractor) DeactivateAirlineRoute(ctx context.Context, tra
 			return err
 		}
 		log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "commit_error", err)
 		return err
 	}
 

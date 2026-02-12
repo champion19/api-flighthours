@@ -422,3 +422,121 @@ func TestAirlineEmployeeService_BeginTx(t *testing.T) {
 		}
 	})
 }
+
+func TestAirlineEmployeeService_AddAirlineEmployeeTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			addFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return nil
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.AddAirlineEmployeeTx(context.Background(), &mockTx{}, domain.AirlineEmployee{ID: "ae-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			addFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return errors.New("add failed")
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.AddAirlineEmployeeTx(context.Background(), &mockTx{}, domain.AirlineEmployee{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirlineEmployeeService_UpdateAirlineEmployeeTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return nil
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.UpdateAirlineEmployeeTx(context.Background(), &mockTx{}, domain.AirlineEmployee{ID: "ae-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
+				return errors.New("update failed")
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.UpdateAirlineEmployeeTx(context.Background(), &mockTx{}, domain.AirlineEmployee{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirlineEmployeeService_ActivateAirlineEmployeeTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				if !active {
+					t.Error("expected active=true")
+				}
+				return nil
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.ActivateAirlineEmployeeTx(context.Background(), &mockTx{}, "ae-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return errors.New("status error")
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.ActivateAirlineEmployeeTx(context.Background(), &mockTx{}, "ae-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirlineEmployeeService_DeactivateAirlineEmployeeTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				if active {
+					t.Error("expected active=false")
+				}
+				return nil
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.DeactivateAirlineEmployeeTx(context.Background(), &mockTx{}, "ae-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineEmployeeRepo{
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, active bool) error {
+				return errors.New("status error")
+			},
+		}
+		svc := NewAirlineEmployeeService(repo)
+		err := svc.DeactivateAirlineEmployeeTx(context.Background(), &mockTx{}, "ae-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}

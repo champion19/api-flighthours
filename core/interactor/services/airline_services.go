@@ -54,3 +54,13 @@ func (s *AirlineService) ActivateAirline(ctx context.Context, id string) error {
 func (s *AirlineService) DeactivateAirline(ctx context.Context, id string) error {
 	return s.UpdateAirlineStatus(ctx, id, false)
 }
+
+// ActivateAirlineTx sets the airline status to true using an external transaction
+func (s *AirlineService) ActivateAirlineTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAirlineStatus(ctx, tx, id, true)
+}
+
+// DeactivateAirlineTx sets the airline status to false using an external transaction
+func (s *AirlineService) DeactivateAirlineTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateAirlineStatus(ctx, tx, id, false)
+}

@@ -70,3 +70,13 @@ func (s *LicensePlateService) UpdateLicensePlate(ctx context.Context, registrati
 
 	return tx.Commit()
 }
+
+// CreateLicensePlateTx creates a license plate using an external transaction
+func (s *LicensePlateService) CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	return s.repo.SaveLicensePlate(ctx, tx, registration)
+}
+
+// UpdateLicensePlateTx updates a license plate using an external transaction
+func (s *LicensePlateService) UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	return s.repo.UpdateLicensePlate(ctx, tx, registration)
+}

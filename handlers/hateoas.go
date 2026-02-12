@@ -141,6 +141,11 @@ func BuildMessageListLinks(baseURL string) []Link {
 	}
 }
 
+// ============================================================================
+// EMPLOYEE HATEOAS LINKS
+// ============================================================================
+
+// BuildEmployeeLinks construye links HATEOAS para un empleado específico
 func BuildEmployeeLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "employees", employeeID)
 	collectionURL := BuildCollectionURL(baseURL, "employees")
@@ -191,6 +196,11 @@ func BuildEmployeeMeLinks(baseURL string) []Link {
 	}
 }
 
+// ============================================================================
+// AIRLINE HATEOAS LINKS
+// ============================================================================
+
+// BuildAirlineLinks construye links HATEOAS para una aerolínea específica
 func BuildAirlineLinks(baseURL string, airlineID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airlines", airlineID)
 	collectionURL := BuildCollectionURL(baseURL, "airlines")
@@ -219,6 +229,7 @@ func BuildAirlineLinks(baseURL string, airlineID string) []Link {
 	}
 }
 
+// BuildAirlineListLinks construye links para la lista de aerolíneas
 func BuildAirlineListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "airlines")
 
@@ -231,6 +242,7 @@ func BuildAirlineListLinks(baseURL string) []Link {
 	}
 }
 
+// BuildAirlineStatusLinks construye links para respuesta de cambio de status
 func BuildAirlineStatusLinks(baseURL string, airlineID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airlines", airlineID)
 	collectionURL := BuildCollectionURL(baseURL, "airlines")
@@ -267,6 +279,11 @@ func BuildAirlineStatusLinks(baseURL string, airlineID string, isActive bool) []
 	return links
 }
 
+// ============================================================================
+// AIRPORT HATEOAS LINKS
+// ============================================================================
+
+// BuildAirportLinks construye links HATEOAS para un aeropuerto específico
 func BuildAirportLinks(baseURL string, airportID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airports", airportID)
 	collectionURL := BuildCollectionURL(baseURL, "airports")
@@ -295,6 +312,7 @@ func BuildAirportLinks(baseURL string, airportID string) []Link {
 	}
 }
 
+// BuildAirportListLinks construye links para la lista de aeropuertos
 func BuildAirportListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "airports")
 
@@ -307,6 +325,7 @@ func BuildAirportListLinks(baseURL string) []Link {
 	}
 }
 
+// BuildAirportStatusLinks construye links para respuesta de cambio de status
 func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airports", airportID)
 	collectionURL := BuildCollectionURL(baseURL, "airports")
@@ -319,6 +338,7 @@ func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []
 		},
 	}
 
+	// Si está activo, mostrar link para desactivar y viceversa
 	if isActive {
 		links = append(links, Link{
 			Href:   resourceURL + "/deactivate",
@@ -341,6 +361,70 @@ func BuildAirportStatusLinks(baseURL string, airportID string, isActive bool) []
 
 	return links
 }
+
+// ============================================================================
+// DAILY LOGBOOK HATEOAS LINKS
+// ============================================================================
+
+// BuildDailyLogbookLinks construye links HATEOAS para una bitácora diaria específica
+func BuildDailyLogbookLinks(baseURL string, logbookID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "daily-logbooks", logbookID)
+	collectionURL := BuildCollectionURL(baseURL, "daily-logbooks")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "collection",
+			Method: "GET",
+		},
+	}
+}
+
+// BuildDailyLogbookListLinks construye links para la lista de bitácoras diarias
+func BuildDailyLogbookListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "daily-logbooks")
+
+	return []Link{
+		{
+			Href:   collectionURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "create",
+			Method: "POST",
+		},
+	}
+}
+
+// BuildDailyLogbookCreatedLinks construye links para una bitácora recién creada
+func BuildDailyLogbookCreatedLinks(baseURL string, logbookID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "daily-logbooks", logbookID)
+	collectionURL := BuildCollectionURL(baseURL, "daily-logbooks")
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   collectionURL,
+			Rel:    "list",
+			Method: "GET",
+		},
+	}
+}
+
+// ============================================================================
+// LICENSE PLATE HATEOAS LINKS
+// ============================================================================
 
 // BuildLicensePlateLinks construye links HATEOAS para una matrícula específica
 func BuildLicensePlateLinks(baseURL string, registrationID string) []Link {
@@ -407,6 +491,10 @@ func BuildLicensePlateCreatedLinks(baseURL string, registrationID string) []Link
 		},
 	}
 }
+
+// ============================================================================
+// AIRCRAFT MODEL HATEOAS LINKS
+// ============================================================================
 
 // BuildAircraftModelLinks construye links HATEOAS para un modelo de aeronave específico
 func BuildAircraftModelLinks(baseURL string, modelID string) []Link {
@@ -500,6 +588,11 @@ func BuildAircraftModelStatusLinks(baseURL string, modelID string, isActive bool
 	return links
 }
 
+// ============================================================================
+// ROUTE HATEOAS LINKS
+// ============================================================================
+
+// BuildRouteLinks construye links HATEOAS para una ruta específica
 func BuildRouteLinks(baseURL string, routeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "routes", routeID)
 	collectionURL := BuildCollectionURL(baseURL, "routes")
@@ -531,6 +624,11 @@ func BuildRouteListLinks(baseURL string) []Link {
 	}
 }
 
+// ============================================================================
+// AIRLINE ROUTE HATEOAS LINKS
+// ============================================================================
+
+// BuildAirlineRouteLinks construye links HATEOAS para una ruta de aerolínea específica
 func BuildAirlineRouteLinks(baseURL string, airlineRouteID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-routes", airlineRouteID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
@@ -567,6 +665,7 @@ func BuildAirlineRouteLinks(baseURL string, airlineRouteID string, isActive bool
 	return links
 }
 
+// BuildAirlineRouteListLinks construye links para la lista de rutas aerolínea
 func BuildAirlineRouteListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
 
@@ -579,6 +678,7 @@ func BuildAirlineRouteListLinks(baseURL string) []Link {
 	}
 }
 
+// BuildAirlineRouteStatusLinks construye links para respuesta de cambio de status
 func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-routes", airlineRouteID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-routes")
@@ -591,6 +691,7 @@ func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActiv
 		},
 	}
 
+	// Si está activo, mostrar link para desactivar y viceversa
 	if isActive {
 		links = append(links, Link{
 			Href:   resourceURL + "/deactivate",
@@ -614,6 +715,74 @@ func BuildAirlineRouteStatusLinks(baseURL string, airlineRouteID string, isActiv
 	return links
 }
 
+// ============================================================================
+// DAILY LOGBOOK DETAIL HATEOAS LINKS
+// ============================================================================
+
+// BuildDailyLogbookDetailLinks construye links HATEOAS para un detalle de bitácora
+// Retorna un array de Link para mantener consistencia con el resto del sistema
+func BuildDailyLogbookDetailLinks(c *gin.Context, detailID string) []Link {
+	baseURL := GetBaseURL(c)
+	resourceURL := BuildResourceURL(baseURL, "daily-logbook-details", detailID)
+
+	return []Link{
+		{Href: resourceURL, Rel: "self", Method: "GET"},
+		{Href: resourceURL, Rel: "update", Method: "PUT"},
+	}
+}
+
+// BuildDailyLogbookDetailLinksArray construye links HATEOAS como array
+func BuildDailyLogbookDetailLinksArray(baseURL string, detailID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, "daily-logbook-details", detailID)
+
+	return []Link{
+		{
+			Href:   resourceURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   resourceURL,
+			Rel:    "update",
+			Method: "PUT",
+		},
+		{
+			Href:   resourceURL,
+			Rel:    "delete",
+			Method: "DELETE",
+		},
+	}
+}
+
+// BuildDailyLogbookDetailListLinks construye links para la lista de detalles de una bitácora
+func BuildDailyLogbookDetailListLinks(baseURL string, logbookID string) []Link {
+	logbookURL := BuildResourceURL(baseURL, "daily-logbooks", logbookID)
+	detailsURL := logbookURL + "/details"
+
+	return []Link{
+		{
+			Href:   detailsURL,
+			Rel:    "self",
+			Method: "GET",
+		},
+		{
+			Href:   detailsURL,
+			Rel:    "create",
+			Method: "POST",
+		},
+		{
+			Href:   logbookURL,
+			Rel:    "logbook",
+			Method: "GET",
+		},
+	}
+}
+
+// ============================================================================
+// ENGINE HATEOAS LINKS
+// ============================================================================
+
+// BuildEngineLinks construye links HATEOAS para un motor específico
 func BuildEngineLinks(baseURL string, engineID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "engines", engineID)
 	collectionURL := BuildCollectionURL(baseURL, "engines")
@@ -632,6 +801,7 @@ func BuildEngineLinks(baseURL string, engineID string) []Link {
 	}
 }
 
+// BuildEngineListLinks construye links para la lista de motores
 func BuildEngineListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "engines")
 
@@ -644,6 +814,11 @@ func BuildEngineListLinks(baseURL string) []Link {
 	}
 }
 
+// ============================================================================
+// MANUFACTURER HATEOAS LINKS
+// ============================================================================
+
+// BuildManufacturerLinks construye links HATEOAS para un fabricante específico
 func BuildManufacturerLinks(baseURL string, manufacturerID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "manufacturers", manufacturerID)
 	collectionURL := BuildCollectionURL(baseURL, "manufacturers")
@@ -662,6 +837,7 @@ func BuildManufacturerLinks(baseURL string, manufacturerID string) []Link {
 	}
 }
 
+// BuildManufacturerListLinks construye links para la lista de fabricantes
 func BuildManufacturerListLinks(baseURL string) []Link {
 	collectionURL := BuildCollectionURL(baseURL, "manufacturers")
 
@@ -674,6 +850,11 @@ func BuildManufacturerListLinks(baseURL string) []Link {
 	}
 }
 
+// ============================================================================
+// AIRLINE EMPLOYEE HATEOAS LINKS
+// ============================================================================
+
+// BuildAirlineEmployeeLinks construye links HATEOAS para un empleado de aerolínea específico
 func BuildAirlineEmployeeLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-employees")
@@ -706,6 +887,8 @@ func BuildAirlineEmployeeLinks(baseURL string, employeeID string) []Link {
 		},
 	}
 }
+
+// BuildAirlineEmployeeStatusLinks construye links para respuesta de cambio de status
 func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive bool) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-employees")
@@ -718,6 +901,7 @@ func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive
 		},
 	}
 
+	// Si está activo, mostrar link para desactivar y viceversa
 	if isActive {
 		links = append(links, Link{
 			Href:   resourceURL + "/deactivate",
@@ -741,6 +925,7 @@ func BuildAirlineEmployeeStatusLinks(baseURL string, employeeID string, isActive
 	return links
 }
 
+// BuildAirlineEmployeeCreatedLinks construye links para respuesta de creación de empleado
 func BuildAirlineEmployeeCreatedLinks(baseURL string, employeeID string) []Link {
 	resourceURL := BuildResourceURL(baseURL, "airline-employees", employeeID)
 	collectionURL := BuildCollectionURL(baseURL, "airline-employees")

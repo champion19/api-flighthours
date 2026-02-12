@@ -64,6 +64,18 @@ func (f *fakeLicensePlateService) GetLicensePlateByPlate(ctx context.Context, pl
 	}
 	return nil, errors.New("not implemented")
 }
+func (f *fakeLicensePlateService) CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	if f.createFn != nil {
+		return f.createFn(ctx, registration)
+	}
+	return nil
+}
+func (f *fakeLicensePlateService) UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
+	if f.updateFn != nil {
+		return f.updateFn(ctx, registration)
+	}
+	return nil
+}
 
 func newTestLicensePlateMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
@@ -86,7 +98,7 @@ func newTestLicensePlateMessageCache(t *testing.T) *messaging.MessageCache {
 
 func newLicensePlateTestRouter(svc input.LicensePlateService, enc *idencoder.HashidsEncoder, resp *middleware.ResponseHandler, errHandler *middleware.ErrorHandler) *gin.Engine {
 	licensePlateInteractor := interactor.NewLicensePlateInteractor(svc, Logger)
-	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, licensePlateInteractor)
+	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, licensePlateInteractor)
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

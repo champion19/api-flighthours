@@ -12,6 +12,7 @@ import (
 type AirlineEmployeeInteractor struct {
 	service input.AirlineEmployeeService
 }
+
 func NewAirlineEmployeeInteractor(service input.AirlineEmployeeService) *AirlineEmployeeInteractor {
 	return &AirlineEmployeeInteractor{
 		service: service,
@@ -34,7 +35,7 @@ func (i *AirlineEmployeeInteractor) GetAirlineEmployeeByID(ctx context.Context, 
 	return employee, nil
 }
 
-func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) error {
+func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
@@ -42,8 +43,29 @@ func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, empl
 
 	airlineInfo.ID = employeeID
 
-	if err := i.service.AddAirlineEmployee(ctx, airlineInfo); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineEmployeeCreateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineEmployeeCreateError, "employee_id", employeeID, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.AddAirlineEmployeeTx(ctx, tx, airlineInfo); err != nil {
+		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 
@@ -51,7 +73,7 @@ func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, empl
 	return nil
 }
 
-func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) error {
+func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, employeeID string, airlineInfo domain.AirlineEmployee) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
@@ -59,8 +81,29 @@ func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, e
 
 	airlineInfo.ID = employeeID
 
-	if err := i.service.UpdateAirlineEmployee(ctx, airlineInfo); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineEmployeeUpdateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineEmployeeUpdateError, "employee_id", employeeID, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.UpdateAirlineEmployeeTx(ctx, tx, airlineInfo); err != nil {
+		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 
@@ -68,7 +111,7 @@ func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, e
 	return nil
 }
 
-func (i *AirlineEmployeeInteractor) ActivateAirlineEmployee(ctx context.Context, employeeID string) error {
+func (i *AirlineEmployeeInteractor) ActivateAirlineEmployee(ctx context.Context, employeeID string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
@@ -80,8 +123,29 @@ func (i *AirlineEmployeeInteractor) ActivateAirlineEmployee(ctx context.Context,
 		return domain.ErrAirlineEmployeeNotFound
 	}
 
-	if err := i.service.ActivateAirlineEmployee(ctx, employeeID); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineEmployeeActivateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineEmployeeActivateError, "employee_id", employeeID, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.ActivateAirlineEmployeeTx(ctx, tx, employeeID); err != nil {
+		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 
@@ -89,7 +153,7 @@ func (i *AirlineEmployeeInteractor) ActivateAirlineEmployee(ctx context.Context,
 	return nil
 }
 
-func (i *AirlineEmployeeInteractor) DeactivateAirlineEmployee(ctx context.Context, employeeID string) error {
+func (i *AirlineEmployeeInteractor) DeactivateAirlineEmployee(ctx context.Context, employeeID string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)
 
@@ -101,8 +165,29 @@ func (i *AirlineEmployeeInteractor) DeactivateAirlineEmployee(ctx context.Contex
 		return domain.ErrAirlineEmployeeNotFound
 	}
 
-	if err := i.service.DeactivateAirlineEmployee(ctx, employeeID); err != nil {
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
 		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogAirlineEmployeeDeactivateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogAirlineEmployeeDeactivateError, "employee_id", employeeID, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeactivateAirlineEmployeeTx(ctx, tx, employeeID); err != nil {
+		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 

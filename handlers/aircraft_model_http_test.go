@@ -28,7 +28,7 @@ type fakeAircraftModelServiceForHandler struct {
 var _ input.AircraftModelService = (*fakeAircraftModelServiceForHandler)(nil)
 
 func (f *fakeAircraftModelServiceForHandler) BeginTx(ctx context.Context) (output.Tx, error) {
-	return nil, nil
+	return fakeTx{}, nil
 }
 func (f *fakeAircraftModelServiceForHandler) GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error) {
 	if f.getByIDFn != nil {
@@ -60,10 +60,22 @@ func (f *fakeAircraftModelServiceForHandler) DeactivateAircraftModel(ctx context
 	}
 	return nil
 }
+func (f *fakeAircraftModelServiceForHandler) ActivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateFn != nil {
+		return f.activateFn(ctx, id)
+	}
+	return nil
+}
+func (f *fakeAircraftModelServiceForHandler) DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
 
 func newAircraftModelTestRouter(svc input.AircraftModelService, enc *idencoder.HashidsEncoder, resp *middleware.ResponseHandler, errHandler *middleware.ErrorHandler) *gin.Engine {
 	aircraftModelInteractor := interactor.NewAircraftModelInteractor(svc)
-	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, aircraftModelInteractor, nil)
+	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, aircraftModelInteractor, nil)
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

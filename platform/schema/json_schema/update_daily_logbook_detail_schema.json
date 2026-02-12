@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Update Daily Logbook Detail Request",
+  "description": "Schema for updating an existing flight segment in a daily logbook",
+  "type": "object",
+  "properties": {
+    "flight_real_date": {
+      "type": "string",
+      "description": "Actual flight date in ISO 8601 format (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "minLength": 1
+    },
+    "flight_number": {
+      "type": "string",
+      "description": "Flight number (e.g., AV123)",
+      "minLength": 1,
+      "maxLength": 20
+    },
+    "airline_route_id": {
+      "type": "string",
+      "description": "Airline route ID (obfuscated ID)",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "license_plate_id": {
+      "type": "string",
+      "description": "Aircraft registration ID (obfuscated ID)",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "passengers": {
+      "type": "integer",
+      "description": "Number of passengers",
+      "minimum": 0
+    },
+    "out_time": {
+      "type": "string",
+      "description": "Block out time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "takeoff_time": {
+      "type": "string",
+      "description": "Takeoff time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "landing_time": {
+      "type": "string",
+      "description": "Landing time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "in_time": {
+      "type": "string",
+      "description": "Block in time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "pilot_role": {
+      "type": "string",
+      "description": "Pilot role: PF, PM, PFTO, or PFL",
+      "enum": [
+        "PF",
+        "PM",
+        "PFTO",
+        "PFL"
+      ]
+    },
+    "companion_name": {
+      "type": "string",
+      "description": "Name of the companion pilot",
+      "maxLength": 100
+    },
+    "air_time": {
+      "type": "string",
+      "description": "Air time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "block_time": {
+      "type": "string",
+      "description": "Block time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "duty_time": {
+      "type": "string",
+      "description": "Duty time (HH:MM)",
+      "pattern": "^\\d{2}:\\d{2}$"
+    },
+    "approach_type": {
+      "type": "string",
+      "description": "Approach type: NPA, PA, APV, or VISUAL",
+      "enum": [
+        "NPA",
+        "PA",
+        "APV",
+        "VISUAL"
+      ]
+    },
+    "flight_type": {
+      "type": "string",
+      "description": "Flight type",
+      "enum": [
+        "COMMERCIAL",
+        "TRAINING",
+        "FERRY",
+        "CHECK",
+        "POSITIONING"
+      ]
+    }
+  },
+  "required": [
+    "flight_real_date",
+    "flight_number",
+    "airline_route_id",
+    "license_plate_id"
+  ],
+  "additionalProperties": false
+}

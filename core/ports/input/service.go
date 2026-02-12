@@ -54,6 +54,8 @@ type AirlineService interface {
 	UpdateAirlineStatus(ctx context.Context, id string, status bool) error
 	ActivateAirline(ctx context.Context, id string) error
 	DeactivateAirline(ctx context.Context, id string) error
+	ActivateAirlineTx(ctx context.Context, tx output.Tx, id string) error
+	DeactivateAirlineTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type AirportService interface {
@@ -64,6 +66,8 @@ type AirportService interface {
 	UpdateAirportStatus(ctx context.Context, id string, status bool) error
 	ActivateAirport(ctx context.Context, id string) error
 	DeactivateAirport(ctx context.Context, id string) error
+	ActivateAirportTx(ctx context.Context, tx output.Tx, id string) error
+	DeactivateAirportTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type AirlineEmployeeService interface {
@@ -73,6 +77,10 @@ type AirlineEmployeeService interface {
 	UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
 	ActivateAirlineEmployee(ctx context.Context, id string) error
 	DeactivateAirlineEmployee(ctx context.Context, id string) error
+	AddAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error
+	UpdateAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error
+	ActivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error
+	DeactivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type LicensePlateService interface {
@@ -82,6 +90,8 @@ type LicensePlateService interface {
 	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
 	CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
 	UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
+	CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
+	UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
 }
 
 type AircraftModelService interface {
@@ -91,6 +101,8 @@ type AircraftModelService interface {
 	GetAircraftModelsByFamily(ctx context.Context, family string) ([]domain.AircraftModel, error)
 	ActivateAircraftModel(ctx context.Context, id string) error
 	DeactivateAircraftModel(ctx context.Context, id string) error
+	ActivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error
+	DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type RouteService interface {
@@ -105,6 +117,29 @@ type AirlineRouteService interface {
 	ListAirlineRoutesByAirlineID(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
 	ActivateAirlineRoute(ctx context.Context, id string) error
 	DeactivateAirlineRoute(ctx context.Context, id string) error
+	ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error
+	DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error
+}
+
+type DailyLogbookDetailService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
+	CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
+	UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
+	CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error
+	ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+}
+
+type DailyLogbookService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
+	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
+	CreateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook) error
+	CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 }
 
 type EngineService interface {

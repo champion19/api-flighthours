@@ -18,6 +18,8 @@ type fakeAirlineService struct {
 	updateStatusFn func(ctx context.Context, id string, status bool) error
 	activateFn     func(ctx context.Context, id string) error
 	deactivateFn   func(ctx context.Context, id string) error
+	activateTxFn   func(ctx context.Context, tx output.Tx, id string) error
+	deactivateTxFn func(ctx context.Context, tx output.Tx, id string) error
 }
 
 var _ input.AirlineService = (*fakeAirlineService)(nil)
@@ -60,6 +62,20 @@ func (f *fakeAirlineService) ActivateAirline(ctx context.Context, id string) err
 func (f *fakeAirlineService) DeactivateAirline(ctx context.Context, id string) error {
 	if f.deactivateFn != nil {
 		return f.deactivateFn(ctx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineService) ActivateAirlineTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateTxFn != nil {
+		return f.activateTxFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (f *fakeAirlineService) DeactivateAirlineTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateTxFn != nil {
+		return f.deactivateTxFn(ctx, tx, id)
 	}
 	return nil
 }
@@ -192,7 +208,7 @@ func TestAirlineInteractor_ActivateAirline(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
 				return &domain.Airline{ID: id, AirlineName: "Test"}, nil
 			},
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -223,7 +239,7 @@ func TestAirlineInteractor_ActivateAirline(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
 				return &domain.Airline{ID: id}, nil
 			},
-			activateFn: func(ctx context.Context, id string) error {
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("activation failed")
 			},
 		}
@@ -242,7 +258,7 @@ func TestAirlineInteractor_DeactivateAirline(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
 				return &domain.Airline{ID: id, AirlineName: "Test"}, nil
 			},
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return nil
 			},
 		}
@@ -273,7 +289,7 @@ func TestAirlineInteractor_DeactivateAirline(t *testing.T) {
 			getByIDFn: func(ctx context.Context, id string) (*domain.Airline, error) {
 				return &domain.Airline{ID: id}, nil
 			},
-			deactivateFn: func(ctx context.Context, id string) error {
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("deactivation failed")
 			},
 		}

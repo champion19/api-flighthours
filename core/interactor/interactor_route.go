@@ -12,21 +12,19 @@ import (
 // RouteInteractor orchestrates route operations
 type RouteInteractor struct {
 	service input.RouteService
-	logger  logger.Logger
 }
 
 // NewRouteInteractor creates a new route interactor
-func NewRouteInteractor(service input.RouteService, log logger.Logger) *RouteInteractor {
+func NewRouteInteractor(service input.RouteService) *RouteInteractor {
 	return &RouteInteractor{
 		service: service,
-		logger:  log,
 	}
 }
 
 // GetRouteByID retrieves a route by its ID
 func (i *RouteInteractor) GetRouteByID(ctx context.Context, id string) (*domain.Route, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogRouteGet, "route_id", id)
 
@@ -43,7 +41,7 @@ func (i *RouteInteractor) GetRouteByID(ctx context.Context, id string) (*domain.
 // ListRoutes retrieves all routes with optional filters
 func (i *RouteInteractor) ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := i.logger.WithTraceID(traceID)
+	log := log.WithTraceID(traceID)
 
 	log.Info(logger.LogRouteList, "filters", filters)
 
