@@ -203,6 +203,12 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
 
+		protected.PUT("/daily-logbooks/:id", handler.UpdateDailyLogbook())
+
+		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
+
+		protected.PATCH("/daily-logbooks/:id/deactivate", handler.DeactivateDailyLogbook())
+
 	}
 	admin := app.Group("flighthours/api/v1/admin")
 	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
