@@ -377,11 +377,7 @@ func BuildDailyLogbookLinks(baseURL string, logbookID string) []Link {
 			Rel:    "self",
 			Method: "GET",
 		},
-		{
-			Href:   resourceURL,
-			Rel:    "update",
-			Method: "PUT",
-		},
+
 		{
 			Href:   resourceURL + "/activate",
 			Rel:    "activate",

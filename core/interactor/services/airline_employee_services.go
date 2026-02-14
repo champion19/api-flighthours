@@ -26,7 +26,7 @@ func (s *airlineEmployeeService) BeginTx(ctx context.Context) (output.Tx, error)
 func (s *airlineEmployeeService) GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
 	employee, err := s.repository.GetAirlineEmployeeByID(ctx, id)
 	if err != nil {
-		log.Debug("GetAirlineEmployeeByID: error", "id", id, "error", err)
+		log.Debug(logger.LogAirlineEmployeeGetError, "id", id, "error", err)
 		return nil, err
 	}
 	return employee, nil

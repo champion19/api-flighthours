@@ -12,7 +12,7 @@ func domainPilotRolePtrH(r domain.PilotRole) *domain.PilotRole { return &r }
 
 func TestFromDomainDailyLogbook(t *testing.T) {
 	t.Run("active logbook", func(t *testing.T) {
-		page := 42
+		page := int64(42)
 		logbook := &domain.DailyLogbook{
 			ID:         "uuid-1",
 			LogDate:    time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC),
@@ -59,7 +59,7 @@ func TestCreateDailyLogbookRequest_Sanitize(t *testing.T) {
 
 func TestCreateDailyLogbookRequest_ToDomain(t *testing.T) {
 	t.Run("valid date", func(t *testing.T) {
-		page := 42
+		page := int64(42)
 		req := &CreateDailyLogbookRequest{
 			LogDate:  "2025-01-15",
 			BookPage: &page,

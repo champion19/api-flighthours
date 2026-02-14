@@ -11,7 +11,6 @@ import (
 
 type MessageInteractor struct {
 	service input.MessageService
-
 }
 
 func NewMessageInteractor(service input.MessageService) *MessageInteractor {
@@ -171,7 +170,7 @@ func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err e
 	}
 	log.Success(logger.LogMessageInteractorDeleteCommitOK)
 
-	log.Success("Mensaje eliminado exitosamente", "id", id)
+	log.Success(logger.LogMessageInteractorDeleteComplete, "id", id)
 
 	log.Info(logger.LogMessageCacheRefresh)
 

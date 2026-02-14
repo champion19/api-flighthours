@@ -12,8 +12,9 @@
     },
     "book_page": {
       "type": "integer",
-      "description": "Physical book page number",
-      "minimum": 1
+      "description": "Physical book page number (10-15 digits)",
+      "minimum": 1000000000,
+      "maximum": 999999999999999
     }
   },
   "required": [

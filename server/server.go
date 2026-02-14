@@ -84,7 +84,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 	public := app.Group("flighthours/api/v1")
 	{
-
 		public.POST("/register", validator.WithValidateRegister(), handler.RegisterEmployee())
 
 		public.POST("/login", handler.Login())
@@ -202,8 +201,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
 
 		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
-
-		protected.PUT("/daily-logbooks/:id", handler.UpdateDailyLogbook())
 
 		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
 

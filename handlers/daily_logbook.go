@@ -11,7 +11,7 @@ type DailyLogbookResponse struct {
 	ID         string `json:"id"`
 	LogDate    string `json:"log_date"`
 	EmployeeID string `json:"employee_id"`
-	BookPage   *int   `json:"book_page,omitempty"`
+	BookPage   *int64 `json:"book_page,omitempty"`
 	Status     string `json:"status"`
 	Links      []Link `json:"_links,omitempty"`
 }
@@ -34,7 +34,7 @@ func FromDomainDailyLogbook(logbook *domain.DailyLogbook, encodedID, encodedEmpl
 // CreateDailyLogbookRequest - Request DTO for creating a daily logbook
 type CreateDailyLogbookRequest struct {
 	LogDate  string `json:"log_date" binding:"required"`
-	BookPage *int   `json:"book_page,omitempty"`
+	BookPage *int64 `json:"book_page,omitempty"`
 }
 
 // Sanitize trims whitespace from CreateDailyLogbookRequest fields
@@ -97,34 +97,6 @@ func ToDailyLogbookListResponse(logbooks []domain.DailyLogbook, encodeFunc func(
 	}
 
 	return response
-}
-
-// UpdateDailyLogbookRequest - Request DTO for updating a daily logbook
-type UpdateDailyLogbookRequest struct {
-	LogDate  string `json:"log_date" binding:"required"`
-	BookPage *int   `json:"book_page,omitempty"`
-}
-
-// Sanitize trims whitespace from UpdateDailyLogbookRequest fields
-func (r *UpdateDailyLogbookRequest) Sanitize() {
-	r.LogDate = TrimString(r.LogDate)
-}
-
-// ToDomain converts the update request to a domain model
-func (r *UpdateDailyLogbookRequest) ToDomain(id string, employeeID string) (*domain.DailyLogbook, error) {
-	logDate, err := time.ParseInLocation("2006-01-02", r.LogDate, time.Local)
-	if err != nil {
-		return nil, domain.ErrInvalidDateFormat
-	}
-
-	logbook := &domain.DailyLogbook{
-		ID:         id,
-		LogDate:    logDate,
-		EmployeeID: employeeID,
-		BookPage:   r.BookPage,
-		Status:     true,
-	}
-	return logbook, nil
 }
 
 // DailyLogbookStatusResponse - Response DTO for daily logbook status changes

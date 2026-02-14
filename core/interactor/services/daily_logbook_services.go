@@ -69,11 +69,6 @@ func (s *DailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx outpu
 	return s.repo.SaveDailyLogbook(ctx, tx, logbook)
 }
 
-// UpdateDailyLogbookTx updates an existing daily logbook using an external transaction
-func (s *DailyLogbookService) UpdateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-	return s.repo.UpdateDailyLogbook(ctx, tx, logbook)
-}
-
 // ActivateDailyLogbookTx sets the daily logbook status to true using an external transaction
 func (s *DailyLogbookService) ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
 	return s.repo.UpdateDailyLogbookStatus(ctx, tx, id, true)

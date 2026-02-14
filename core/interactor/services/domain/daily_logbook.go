@@ -6,20 +6,17 @@ import (
 	"github.com/google/uuid"
 )
 
-
 type DailyLogbook struct {
 	ID         string    `json:"id"`
 	LogDate    time.Time `json:"log_date"`
 	EmployeeID string    `json:"employee_id"`
-	BookPage   *int      `json:"book_page,omitempty"`
+	BookPage   *int64    `json:"book_page,omitempty"`
 	Status     bool      `json:"status"`
 }
-
 
 func (d *DailyLogbook) SetID() {
 	d.ID = uuid.New().String()
 }
-
 
 func (d *DailyLogbook) ToLogger() []string {
 	return []string{
@@ -29,11 +26,9 @@ func (d *DailyLogbook) ToLogger() []string {
 	}
 }
 
-
 func (d *DailyLogbook) IsActive() bool {
 	return d.Status
 }
-
 
 func (d *DailyLogbook) StatusString() string {
 	if d.Status {

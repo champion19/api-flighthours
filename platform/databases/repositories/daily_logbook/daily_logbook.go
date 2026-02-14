@@ -11,7 +11,7 @@ type DailyLogbook struct {
 	ID         string    `db:"id"`
 	LogDate    time.Time `db:"log_date"`
 	EmployeeID string    `db:"employee_id"`
-	BookPage   *int      `db:"book_page"`
+	BookPage   *int64    `db:"book_page"`
 	Status     bool      `db:"status"`
 }
 

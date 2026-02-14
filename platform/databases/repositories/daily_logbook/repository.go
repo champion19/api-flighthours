@@ -14,7 +14,6 @@ const (
 	QueryByEmployee          = "SELECT id, log_date, employee_id, book_page, status FROM daily_logbook WHERE employee_id = ? ORDER BY log_date DESC"
 	QueryByEmployeeAndStatus = "SELECT id, log_date, employee_id, book_page, status FROM daily_logbook WHERE employee_id = ? AND status = ? ORDER BY log_date DESC"
 	QueryInsert              = "INSERT INTO daily_logbook (id, log_date, employee_id, book_page, status) VALUES (?, ?, ?, ?, ?)"
-	QueryUpdate              = "UPDATE daily_logbook SET log_date = ?, book_page = ?, status = ? WHERE id = ?"
 	QueryUpdateStatus        = "UPDATE daily_logbook SET status = ? WHERE id = ?"
 )
 
@@ -25,7 +24,6 @@ type repository struct {
 	stmtGetByEmployee          *sql.Stmt
 	stmtGetByEmployeeAndStatus *sql.Stmt
 	stmtInsert                 *sql.Stmt
-	stmtUpdate                 *sql.Stmt
 	stmtUpdateStatus           *sql.Stmt
 	db                         *sql.DB
 }
@@ -59,11 +57,6 @@ func NewDailyLogbookRepository(db *sql.DB) (*repository, error) {
 		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-	stmtUpdate, err := db.Prepare(QueryUpdate)
-	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
-		return nil, err
-	}
 	stmtUpdateStatus, err := db.Prepare(QueryUpdateStatus)
 	if err != nil {
 		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
@@ -76,7 +69,6 @@ func NewDailyLogbookRepository(db *sql.DB) (*repository, error) {
 		stmtGetByEmployee:          stmtGetByEmployee,
 		stmtGetByEmployeeAndStatus: stmtGetByEmployeeAndStatus,
 		stmtInsert:                 stmtInsert,
-		stmtUpdate:                 stmtUpdate,
 		stmtUpdateStatus:           stmtUpdateStatus,
 	}, nil
 }
