@@ -71,7 +71,6 @@ var errorToMessageCode = map[error]string{
 	domain.ErrUserNotFound:               domain.MsgUserNotFound,
 	domain.ErrDailyLogbookNotFound:       domain.MsgDailyLogbookNotFound,
 	domain.ErrDailyLogbookCannotSave:     domain.MsgDailyLogbookSaveError,
-	domain.ErrDailyLogbookCannotUpdate:   domain.MsgDailyLogbookUpdateError,
 	domain.ErrDailyLogbookCannotDelete:   domain.MsgDailyLogbookDeleteError,
 	domain.ErrDailyLogbookUnauthorized:   domain.MsgDailyLogbookUnauthorized,
 	domain.ErrDailyLogbookInactive:       domain.MsgDailyLogbookInactive,

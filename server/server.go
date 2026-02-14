@@ -203,8 +203,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
 
-		protected.PUT("/daily-logbooks/:id", handler.UpdateDailyLogbook())
-
 		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
 
 		protected.PATCH("/daily-logbooks/:id/deactivate", handler.DeactivateDailyLogbook())

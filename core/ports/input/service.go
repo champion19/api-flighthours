@@ -139,7 +139,6 @@ type DailyLogbookService interface {
 	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
 	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
 	CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
-	UpdateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 }

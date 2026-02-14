@@ -15,7 +15,6 @@ type mockDailyLogbookRepo struct {
 	listFn         func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
 	saveFn         func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
-	updateFn       func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	updateStatusFn func(ctx context.Context, tx output.Tx, id string, status bool) error
 }
 
@@ -45,13 +44,6 @@ func (m *mockDailyLogbookRepo) BeginTx(ctx context.Context) (output.Tx, error) {
 		return m.beginTxFn(ctx)
 	}
 	return &mockTx{}, nil
-}
-
-func (m *mockDailyLogbookRepo) UpdateDailyLogbook(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-	if m.updateFn != nil {
-		return m.updateFn(ctx, tx, logbook)
-	}
-	return nil
 }
 
 func (m *mockDailyLogbookRepo) UpdateDailyLogbookStatus(ctx context.Context, tx output.Tx, id string, status bool) error {
@@ -234,34 +226,6 @@ func TestDailyLogbookService_CreateDailyLogbookTx(t *testing.T) {
 		}
 		if savedLogbook.ID == "" {
 			t.Error("expected ID to be generated")
-		}
-	})
-}
-
-func TestDailyLogbookService_UpdateDailyLogbookTx(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			updateFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-				return nil
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.UpdateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{ID: "lb-1"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-	})
-
-	t.Run("error", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			updateFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-				return errors.New("update failed")
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.UpdateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{ID: "lb-1"})
-		if err == nil {
-			t.Error("expected error")
 		}
 	})
 }

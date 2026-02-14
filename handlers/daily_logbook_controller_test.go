@@ -59,10 +59,6 @@ func (f *fakeDailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx o
 	return nil
 }
 
-func (f *fakeDailyLogbookService) UpdateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-	return nil
-}
-
 func (f *fakeDailyLogbookService) ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
 	return nil
 }
@@ -86,8 +82,6 @@ func newTestDailyLogbookMessageCache(t *testing.T) *messaging.MessageCache {
 		{Code: domain.MsgServerError, Type: cachetypes.TypeError, Content: "internal server error"},
 		{Code: domain.MsgValIDInvalid, Type: cachetypes.TypeError, Content: "invalid id"},
 		{Code: domain.MsgValJSONInvalid, Type: cachetypes.TypeError, Content: "invalid json"},
-		{Code: domain.MsgDailyLogbookUpdated, Type: cachetypes.TypeSuccess, Content: "logbook updated"},
-		{Code: domain.MsgDailyLogbookUpdateError, Type: cachetypes.TypeError, Content: "error updating logbook"},
 		{Code: domain.MsgDailyLogbookActivateOK, Type: cachetypes.TypeSuccess, Content: "logbook activated"},
 		{Code: domain.MsgDailyLogbookActivateErr, Type: cachetypes.TypeError, Content: "error activating logbook"},
 		{Code: domain.MsgDailyLogbookDeactivateOK, Type: cachetypes.TypeSuccess, Content: "logbook deactivated"},
@@ -123,7 +117,6 @@ func newDailyLogbookTestRouter(
 	r.GET("/daily-logbooks", h.ListDailyLogbooks())
 	r.GET("/daily-logbooks/:id", h.GetDailyLogbookByID())
 	r.POST("/daily-logbooks", h.CreateDailyLogbook())
-	r.PUT("/daily-logbooks/:id", h.UpdateDailyLogbook())
 	r.PATCH("/daily-logbooks/:id/activate", h.ActivateDailyLogbook())
 	r.PATCH("/daily-logbooks/:id/deactivate", h.DeactivateDailyLogbook())
 	return r
@@ -389,138 +382,6 @@ func TestHTTP_CreateDailyLogbook(t *testing.T) {
 	})
 }
 
-func TestHTTP_UpdateDailyLogbook(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	cache := newTestDailyLogbookMessageCache(t)
-	resp := middleware.NewResponseHandler(cache)
-	errHandler := middleware.NewErrorHandler(cache)
-	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
-	if err != nil {
-		t.Fatalf("failed to create encoder: %v", err)
-	}
-
-	testUUID := "550e8400-e29b-41d4-a716-446655440000"
-	testEmployeeID := "550e8400-e29b-41d4-a716-446655440001"
-	encodedID, _ := enc.Encode(testUUID)
-
-	t.Run("success", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
-				return &domain.DailyLogbook{ID: testUUID, EmployeeID: testEmployeeID, LogDate: time.Now(), Status: true}, nil
-			},
-		}
-		authUser := &domain.Employee{ID: testEmployeeID}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
-
-		body := `{"log_date":"2025-02-20","book_page":10}`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/"+encodedID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-
-	t.Run("unauthorized", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, nil)
-
-		body := `{"log_date":"2025-02-20"}`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/"+encodedID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-
-	t.Run("invalid ID", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{}
-		authUser := &domain.Employee{ID: testEmployeeID}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
-
-		body := `{"log_date":"2025-02-20"}`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/invalid!!!!", bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-
-	t.Run("logbook not found", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
-				return nil, errors.New("not found")
-			},
-		}
-		authUser := &domain.Employee{ID: testEmployeeID}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
-
-		body := `{"log_date":"2025-02-20"}`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/"+encodedID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-
-	t.Run("unauthorized - different employee", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
-				return &domain.DailyLogbook{ID: testUUID, EmployeeID: "other-employee", LogDate: time.Now(), Status: true}, nil
-			},
-		}
-		authUser := &domain.Employee{ID: testEmployeeID}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
-
-		body := `{"log_date":"2025-02-20"}`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/"+encodedID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-
-	t.Run("invalid JSON", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
-				return &domain.DailyLogbook{ID: testUUID, EmployeeID: testEmployeeID, LogDate: time.Now(), Status: true}, nil
-			},
-		}
-		authUser := &domain.Employee{ID: testEmployeeID}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
-
-		body := `{bad json`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/"+encodedID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-
-	t.Run("invalid date", func(t *testing.T) {
-		svc := &fakeDailyLogbookService{
-			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
-				return &domain.DailyLogbook{ID: testUUID, EmployeeID: testEmployeeID, LogDate: time.Now(), Status: true}, nil
-			},
-		}
-		authUser := &domain.Employee{ID: testEmployeeID}
-		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
-
-		body := `{"log_date":"not-a-date"}`
-		req := httptest.NewRequest(http.MethodPut, "/daily-logbooks/"+encodedID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-
-		t.Logf("status: %d", w.Code)
-	})
-}
-
 func TestHTTP_ActivateDailyLogbook(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	cache := newTestDailyLogbookMessageCache(t)
@@ -658,38 +519,5 @@ func TestHTTP_DeactivateDailyLogbook(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		t.Logf("status: %d", w.Code)
-	})
-}
-
-func TestUpdateDailyLogbookRequest_Sanitize(t *testing.T) {
-	req := &UpdateDailyLogbookRequest{LogDate: "  2025-01-15  "}
-	req.Sanitize()
-	if req.LogDate != "2025-01-15" {
-		t.Errorf("expected trimmed date, got %q", req.LogDate)
-	}
-}
-
-func TestUpdateDailyLogbookRequest_ToDomain(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		page := 42
-		req := &UpdateDailyLogbookRequest{LogDate: "2025-01-15", BookPage: &page}
-		logbook, err := req.ToDomain("lb-1", "emp-1")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if logbook.ID != "lb-1" {
-			t.Errorf("expected ID 'lb-1', got %q", logbook.ID)
-		}
-		if logbook.EmployeeID != "emp-1" {
-			t.Errorf("expected EmployeeID 'emp-1', got %q", logbook.EmployeeID)
-		}
-	})
-
-	t.Run("invalid date", func(t *testing.T) {
-		req := &UpdateDailyLogbookRequest{LogDate: "not-a-date"}
-		_, err := req.ToDomain("lb-1", "emp-1")
-		if err == nil {
-			t.Error("expected error for invalid date")
-		}
 	})
 }
