@@ -74,6 +74,7 @@ var errorToMessageCode = map[error]string{
 	domain.ErrDailyLogbookCannotUpdate:   domain.MsgDailyLogbookUpdateError,
 	domain.ErrDailyLogbookCannotDelete:   domain.MsgDailyLogbookDeleteError,
 	domain.ErrDailyLogbookUnauthorized:   domain.MsgDailyLogbookUnauthorized,
+	domain.ErrDailyLogbookInactive:       domain.MsgDailyLogbookInactive,
 	domain.ErrLicensePlateNotFound:       domain.MsgLicensePlateNotFound,
 	domain.ErrLicensePlateCannotSave:     domain.MsgLicensePlateSaveError,
 	domain.ErrLicensePlateCannotUpdate:   domain.MsgLicensePlateUpdateError,

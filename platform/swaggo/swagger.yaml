@@ -612,6 +612,19 @@ definitions:
       success:
         type: boolean
     type: object
+  handlers.DailyLogbookStatusResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      id:
+        type: string
+      status:
+        type: string
+      updated:
+        type: boolean
+    type: object
   handlers.UpdateDailyLogbookDetailRequest:
     properties:
       air_time:
@@ -653,6 +666,15 @@ definitions:
       takeoff_time:
         description: TIME format HH:MM
         type: string
+    type: object
+  handlers.UpdateDailyLogbookRequest:
+    properties:
+      book_page:
+        type: integer
+      log_date:
+        type: string
+    required:
+    - log_date
     type: object
   handlers.UpdateEmployeeAirlineRequest:
     properties:
@@ -1737,6 +1759,143 @@ paths:
       security:
       - BearerAuth: []
       summary: Get daily logbook by ID
+      tags:
+      - DailyLogbooks
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing daily logbook for the authenticated employee
+        (accepts both UUID and obfuscated ID)
+      parameters:
+      - description: Daily Logbook ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated daily logbook data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateDailyLogbookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a daily logbook
+      tags:
+      - DailyLogbooks
+  /daily-logbooks/{id}/activate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets daily logbook status to active (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Daily Logbook ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Activate a daily logbook
+      tags:
+      - DailyLogbooks
+  /daily-logbooks/{id}/deactivate:
+    patch:
+      consumes:
+      - application/json
+      description: Sets daily logbook status to inactive (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Daily Logbook ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Deactivate a daily logbook
       tags:
       - DailyLogbooks
   /daily-logbooks/{id}/details:

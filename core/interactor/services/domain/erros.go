@@ -508,6 +508,7 @@ var (
 	ErrDailyLogbookCannotUpdate = errors.New("ERR_DAILY_LOGBOOK_CANNOT_UPDATE")
 	ErrDailyLogbookCannotDelete = errors.New("ERR_DAILY_LOGBOOK_CANNOT_DELETE")
 	ErrDailyLogbookUnauthorized = errors.New("ERR_DAILY_LOGBOOK_UNAUTHORIZED")
+	ErrDailyLogbookInactive     = errors.New("ERR_DAILY_LOGBOOK_INACTIVE")
 )
 
 // DailyLogbook Module (BIT_*) - Bitácora Diaria
@@ -559,6 +560,7 @@ const (
 	// Autorización - BIT_AUTH_*
 	// ========================================
 	MsgDailyLogbookUnauthorized = "BIT_AUTH_ERR_00001" // Error - No autorizado para esta bitácora
+	MsgDailyLogbookInactive     = "BIT_VAL_ERR_01905"  // Error - Bitácora cerrada, no se pueden agregar ni editar vuelos
 )
 
 // AirlineRoute Management Errors (RUT_AIR_*)

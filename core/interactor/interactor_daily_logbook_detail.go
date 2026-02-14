@@ -92,8 +92,8 @@ func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByEmployee(ctx con
 func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Context, traceID string, detail domain.DailyLogbookDetail, employeeID string) (err error) {
 	log.Info(logger.LogDailyLogbookDetailCreate, "trace_id", traceID, "data", detail.ToLogger())
 
-	// Verify logbook ownership
-	if err = i.VerifyLogbookOwnership(ctx, detail.DailyLogbookID, employeeID); err != nil {
+	// Verify logbook ownership and active status
+	if err = i.VerifyLogbookActiveAndOwned(ctx, detail.DailyLogbookID, employeeID); err != nil {
 		log.Warn(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
 		return err
 	}
@@ -173,8 +173,8 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 		return domain.ErrFlightNotFound
 	}
 
-	// Verify ownership via detail's logbook
-	if err = i.VerifyLogbookOwnership(ctx, existing.DailyLogbookID, employeeID); err != nil {
+	// Verify ownership and active status via detail's logbook
+	if err = i.VerifyLogbookActiveAndOwned(ctx, existing.DailyLogbookID, employeeID); err != nil {
 		log.Warn(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
 		return err
 	}
@@ -231,6 +231,24 @@ func (i *DailyLogbookDetailInteractor) VerifyLogbookOwnership(ctx context.Contex
 	}
 	if logbook.EmployeeID != employeeID {
 		return domain.ErrFlightUnauthorized
+	}
+	return nil
+}
+
+// VerifyLogbookActiveAndOwned verifies ownership AND that the logbook is active (open for modifications)
+func (i *DailyLogbookDetailInteractor) VerifyLogbookActiveAndOwned(ctx context.Context, logbookID string, employeeID string) error {
+	logbook, err := i.logbookService.GetDailyLogbookByID(ctx, logbookID)
+	if err != nil {
+		return err
+	}
+	if logbook == nil {
+		return domain.ErrFlightInvalidLogbook
+	}
+	if logbook.EmployeeID != employeeID {
+		return domain.ErrFlightUnauthorized
+	}
+	if !logbook.Status {
+		return domain.ErrDailyLogbookInactive
 	}
 	return nil
 }
