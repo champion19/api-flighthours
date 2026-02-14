@@ -112,4 +112,5 @@ type DailyLogbookRepository interface {
 	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
 	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
 	SaveDailyLogbook(ctx context.Context, tx Tx, logbook domain.DailyLogbook) error
+	UpdateDailyLogbookStatus(ctx context.Context, tx Tx, id string, status bool) error
 }

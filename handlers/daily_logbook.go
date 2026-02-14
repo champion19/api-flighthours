@@ -44,7 +44,7 @@ func (r *CreateDailyLogbookRequest) Sanitize() {
 
 // ToDomain converts the request to a domain model
 func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLogbook, error) {
-	logDate, err := time.Parse("2006-01-02", r.LogDate)
+	logDate, err := time.ParseInLocation("2006-01-02", r.LogDate, time.Local)
 	if err != nil {
 		return nil, domain.ErrInvalidDateFormat
 	}
@@ -58,7 +58,6 @@ func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLo
 	logbook.SetID()
 	return logbook, nil
 }
-
 
 // DailyLogbookListResponse - Response DTO for listing daily logbooks
 type DailyLogbookListResponse struct {
@@ -98,4 +97,12 @@ func ToDailyLogbookListResponse(logbooks []domain.DailyLogbook, encodeFunc func(
 	}
 
 	return response
+}
+
+// DailyLogbookStatusResponse - Response DTO for daily logbook status changes
+type DailyLogbookStatusResponse struct {
+	ID      string `json:"id"`
+	Status  string `json:"status"`
+	Updated bool   `json:"updated"`
+	Links   []Link `json:"_links,omitempty"`
 }

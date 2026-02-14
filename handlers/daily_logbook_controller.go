@@ -188,3 +188,143 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 		h.Response.SuccessWithData(c, domain.MsgDailyLogbookCreated, response)
 	}
 }
+
+// ActivateDailyLogbook godoc
+// @Summary      Activate a daily logbook
+// @Description  Sets daily logbook status to active (accepts both UUID and obfuscated ID)
+// @Tags         DailyLogbooks
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Daily Logbook ID (obfuscated ID)"
+// @Success      200  {object}  DailyLogbookStatusResponse
+// @Failure      400  {object}  middleware.APIResponse
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      403  {object}  middleware.APIResponse
+// @Failure      404  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
+// @Router       /daily-logbooks/{id}/activate [patch]
+// @Security     BearerAuth
+func (h *handler) ActivateDailyLogbook() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		// Get authenticated employee from context
+		employee, ok := middleware.GetAuthenticatedUser(c)
+		if !ok || employee == nil {
+			log.Error(logger.LogDailyLogbookActivateError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+			return
+		}
+
+		inputID := c.Param("id")
+		log.Info(logger.LogDailyLogbookActivate, "input_id", inputID)
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		logbookUUID, responseID := h.resolveID(inputID)
+		if logbookUUID == "" {
+			log.Warn(logger.LogDailyLogbookActivateError, "error", "invalid ID")
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		// Verify logbook exists and belongs to employee
+		_, err := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookGetError, "logbook_id", logbookUUID, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+				return
+			}
+			h.Response.Error(c, domain.MsgDailyLogbookGetErr)
+			return
+		}
+
+		if err := h.DailyLogbookInteractor.ActivateDailyLogbook(c.Request.Context(), logbookUUID); err != nil {
+			log.Error(logger.LogDailyLogbookActivateError, "logbook_id", logbookUUID, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookActivateErr)
+			return
+		}
+
+		baseURL := GetBaseURL(c)
+		response := DailyLogbookStatusResponse{
+			ID:      responseID,
+			Status:  "active",
+			Updated: true,
+			Links:   BuildDailyLogbookStatusLinks(baseURL, responseID, true),
+		}
+
+		log.Info(logger.LogDailyLogbookActivateOK, "logbook_id", logbookUUID)
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookActivateOK, response)
+	}
+}
+
+// DeactivateDailyLogbook godoc
+// @Summary      Deactivate a daily logbook
+// @Description  Sets daily logbook status to inactive (accepts both UUID and obfuscated ID)
+// @Tags         DailyLogbooks
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Daily Logbook ID (obfuscated ID)"
+// @Success      200  {object}  DailyLogbookStatusResponse
+// @Failure      400  {object}  middleware.APIResponse
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      403  {object}  middleware.APIResponse
+// @Failure      404  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
+// @Router       /daily-logbooks/{id}/deactivate [patch]
+// @Security     BearerAuth
+func (h *handler) DeactivateDailyLogbook() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		// Get authenticated employee from context
+		employee, ok := middleware.GetAuthenticatedUser(c)
+		if !ok || employee == nil {
+			log.Error(logger.LogDailyLogbookDeactivateError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+			return
+		}
+
+		inputID := c.Param("id")
+		log.Info(logger.LogDailyLogbookDeactivate, "input_id", inputID)
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		logbookUUID, responseID := h.resolveID(inputID)
+		if logbookUUID == "" {
+			log.Warn(logger.LogDailyLogbookDeactivateError, "error", "invalid ID")
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		// Verify logbook exists and belongs to employee
+		_, err := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookGetError, "logbook_id", logbookUUID, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+				return
+			}
+			h.Response.Error(c, domain.MsgDailyLogbookGetErr)
+			return
+		}
+
+		if err := h.DailyLogbookInteractor.DeactivateDailyLogbook(c.Request.Context(), logbookUUID); err != nil {
+			log.Error(logger.LogDailyLogbookDeactivateError, "logbook_id", logbookUUID, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookDeactivateErr)
+			return
+		}
+
+		baseURL := GetBaseURL(c)
+		response := DailyLogbookStatusResponse{
+			ID:      responseID,
+			Status:  "inactive",
+			Updated: true,
+			Links:   BuildDailyLogbookStatusLinks(baseURL, responseID, false),
+		}
+
+		log.Info(logger.LogDailyLogbookDeactivateOK, "logbook_id", logbookUUID)
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookDeactivateOK, response)
+	}
+}

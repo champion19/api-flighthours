@@ -97,3 +97,91 @@ func (i *DailyLogbookInteractor) CreateDailyLogbook(ctx context.Context, logbook
 	log.Success(logger.LogDailyLogbookCreateOK, logbook.ToLogger())
 	return nil
 }
+
+// ActivateDailyLogbook sets a daily logbook's status to active
+func (i *DailyLogbookInteractor) ActivateDailyLogbook(ctx context.Context, id string) (err error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogDailyLogbookActivate, "logbook_id", id)
+
+	// Verify logbook exists
+	_, err = i.service.GetDailyLogbookByID(ctx, id)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookNotFound, "logbook_id", id)
+		return err
+	}
+
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookActivateError, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogDailyLogbookActivateError, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogDailyLogbookActivateError, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.ActivateDailyLogbookTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogDailyLogbookActivateError, "logbook_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDailyLogbookActivateError, "commit_error", err)
+		return err
+	}
+
+	log.Success(logger.LogDailyLogbookActivateOK, "logbook_id", id)
+	return nil
+}
+
+// DeactivateDailyLogbook sets a daily logbook's status to inactive
+func (i *DailyLogbookInteractor) DeactivateDailyLogbook(ctx context.Context, id string) (err error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogDailyLogbookDeactivate, "logbook_id", id)
+
+	// Verify logbook exists
+	_, err = i.service.GetDailyLogbookByID(ctx, id)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookNotFound, "logbook_id", id)
+		return err
+	}
+
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDeactivateError, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogDailyLogbookDeactivateError, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogDailyLogbookDeactivateError, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeactivateDailyLogbookTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogDailyLogbookDeactivateError, "logbook_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDailyLogbookDeactivateError, "commit_error", err)
+		return err
+	}
+
+	log.Success(logger.LogDailyLogbookDeactivateOK, "logbook_id", id)
+	return nil
+}

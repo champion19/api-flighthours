@@ -68,3 +68,13 @@ func (s *DailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx outpu
 
 	return s.repo.SaveDailyLogbook(ctx, tx, logbook)
 }
+
+// ActivateDailyLogbookTx sets the daily logbook status to true using an external transaction
+func (s *DailyLogbookService) ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateDailyLogbookStatus(ctx, tx, id, true)
+}
+
+// DeactivateDailyLogbookTx sets the daily logbook status to false using an external transaction
+func (s *DailyLogbookService) DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.UpdateDailyLogbookStatus(ctx, tx, id, false)
+}

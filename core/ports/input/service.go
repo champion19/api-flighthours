@@ -138,8 +138,9 @@ type DailyLogbookService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
 	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
-	CreateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook) error
 	CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
+	ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
+	DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type EngineService interface {
