@@ -524,3 +524,28 @@ func (h handler) UpdatePassword() gin.HandlerFunc {
 		h.Response.SuccessWithData(c, domain.MsgKCPwdUpdated, response)
 	}
 }
+
+// GetCrewMemberTypes godoc
+// @Summary      Get crew member types
+// @Description  Returns the available crew member types (captain, copilot). Static catalog endpoint - no database query needed.
+// @Tags         Crew Member Types
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /crew-member-types [get]
+func (h *handler) GetCrewMemberTypes() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		log.Info(logger.LogCrewMemberTypeGet, "client_ip", c.ClientIP())
+
+		// Return the crew role enum values directly from domain constants
+		roles := make([]string, len(domain.ValidCrewRoles))
+		for i, r := range domain.ValidCrewRoles {
+			roles[i] = string(r)
+		}
+
+		log.Success(logger.LogCrewMemberTypeGetOK, "count", len(roles), "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgCrewMemberTypeGetOK, roles)
+	}
+}

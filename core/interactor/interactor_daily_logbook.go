@@ -98,6 +98,43 @@ func (i *DailyLogbookInteractor) CreateDailyLogbook(ctx context.Context, logbook
 	return nil
 }
 
+// DeleteDailyLogbook removes a daily logbook
+func (i *DailyLogbookInteractor) DeleteDailyLogbook(ctx context.Context, id string) (err error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogDailyLogbookDelete, "logbook_id", id)
+
+	tx, err := i.service.BeginTx(ctx)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDeleteError, "error", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Error(logger.LogDailyLogbookDeleteError, "rollback_error", rbErr, "original_error", err)
+			} else {
+				log.Warn(logger.LogDailyLogbookDeleteError, "rollback", "ok")
+			}
+		}
+	}()
+
+	if err = i.service.DeleteDailyLogbookTx(ctx, tx, id); err != nil {
+		log.Error(logger.LogDailyLogbookDeleteError, "logbook_id", id, "error", err)
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		log.Error(logger.LogDailyLogbookDeleteError, "commit_error", err)
+		return err
+	}
+
+	log.Success(logger.LogDailyLogbookDeleteOK, "logbook_id", id)
+	return nil
+}
+
 // ActivateDailyLogbook sets a daily logbook's status to active
 func (i *DailyLogbookInteractor) ActivateDailyLogbook(ctx context.Context, id string) (err error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)

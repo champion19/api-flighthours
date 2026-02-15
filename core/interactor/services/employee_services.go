@@ -532,14 +532,3 @@ func (s service) DeleteEmployee(ctx context.Context, employeeID string, keycloak
 	log.Success(logger.LogEmployeeDeleteComplete, "employee_id", employeeID)
 	return nil
 }
-
-func (s service) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
-	log.Debug(logger.LogCrewMemberTypeGet, "role", role)
-	employees, err := s.repository.GetEmployeesByRole(ctx, role)
-	if err != nil {
-		log.Error(logger.LogCrewMemberTypeGetError, "role", role, "error", err)
-		return nil, err
-	}
-	log.Debug(logger.LogCrewMemberTypeGetOK, "role", role, "count", len(employees))
-	return employees, nil
-}

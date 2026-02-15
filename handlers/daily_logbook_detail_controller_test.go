@@ -495,6 +495,56 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		t.Logf("status: %d", w.Code)
 	})
 
+	t.Run("invalid route ID in body", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		body := `{
+			"flight_real_date":"2025-01-15","flight_number":"AV123",
+			"airline_route_id":"invalid!!!",
+			"license_plate_id":"` + encodedAircraftID + `",
+			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
+			"pilot_role":"PF","air_time":"01:15","block_time":"01:45"
+		}`
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("invalid aircraft ID in body", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		body := `{
+			"flight_real_date":"2025-01-15","flight_number":"AV123",
+			"airline_route_id":"` + encodedRouteID + `",
+			"license_plate_id":"invalid!!!",
+			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
+			"pilot_role":"PF","air_time":"01:15","block_time":"01:45"
+		}`
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
 	t.Run("invalid pilot role", func(t *testing.T) {
 		logbookSvc := &fakeDailyLogbookService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
@@ -742,6 +792,46 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 		t.Logf("status: %d", w.Code)
 	})
 
+	t.Run("invalid route ID in body", func(t *testing.T) {
+		detailSvc, logbookSvc := makeOwningServices()
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		body := `{
+			"flight_real_date":"2025-01-16","flight_number":"AV456",
+			"airline_route_id":"invalid!!!",
+			"license_plate_id":"` + encodedAircraftID + `",
+			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
+			"pilot_role":"PM","air_time":"01:15","block_time":"01:45"
+		}`
+		req := httptest.NewRequest(http.MethodPut, "/daily-logbook-details/"+encodedDetailID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("invalid aircraft ID in body", func(t *testing.T) {
+		detailSvc, logbookSvc := makeOwningServices()
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		body := `{
+			"flight_real_date":"2025-01-16","flight_number":"AV456",
+			"airline_route_id":"` + encodedRouteID + `",
+			"license_plate_id":"invalid!!!",
+			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
+			"pilot_role":"PM","air_time":"01:15","block_time":"01:45"
+		}`
+		req := httptest.NewRequest(http.MethodPut, "/daily-logbook-details/"+encodedDetailID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
 	t.Run("invalid pilot role", func(t *testing.T) {
 		detailSvc, logbookSvc := makeOwningServices()
 		authUser := &domain.Employee{ID: testEmployeeID}
@@ -944,4 +1034,110 @@ func TestHTTP_ListMyFlights(t *testing.T) {
 
 		t.Logf("status: %d", w.Code)
 	})
+}
+
+// ── DTO Conversion Unit Tests ─────────────────────────────────────────
+
+func TestToDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
+	crewRole := "captain"
+	approachType := "ILS_CAT_I"
+	pilotRole := "PF"
+
+	req := CreateDailyLogbookDetailRequest{
+		FlightRealDate: "2025-01-15",
+		FlightNumber:   "AV123",
+		AirlineRouteID: "route-uuid",
+		LicensePlateID: "plate-uuid",
+		PilotRole:      &pilotRole,
+		CrewRole:       &crewRole,
+		ApproachType:   &approachType,
+	}
+
+	detail := ToDomainDailyLogbookDetail("logbook-uuid", req)
+
+	if detail.CrewRole == nil {
+		t.Error("expected CrewRole to be set")
+	} else if string(*detail.CrewRole) != "captain" {
+		t.Errorf("expected CrewRole captain, got %s", string(*detail.CrewRole))
+	}
+
+	if detail.ApproachType == nil {
+		t.Error("expected ApproachType to be set")
+	} else if string(*detail.ApproachType) != "ILS_CAT_I" {
+		t.Errorf("expected ApproachType ILS_CAT_I, got %s", string(*detail.ApproachType))
+	}
+
+	if detail.PilotRole == nil {
+		t.Error("expected PilotRole to be set")
+	}
+}
+
+func TestFromDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
+	crewRole := domain.CrewRole("captain")
+	approachType := domain.ApproachType("ILS_CAT_I")
+	pilotRole := domain.PilotRolePF
+
+	d := &domain.DailyLogbookDetail{
+		ID:             "detail-uuid",
+		DailyLogbookID: "logbook-uuid",
+		FlightRealDate: "2025-01-15",
+		FlightNumber:   "AV123",
+		AirlineRouteID: "route-uuid",
+		LicensePlateID: "plate-uuid",
+		PilotRole:      &pilotRole,
+		CrewRole:       &crewRole,
+		ApproachType:   &approachType,
+	}
+
+	resp := FromDomainDailyLogbookDetail(d, "enc-id", "enc-logbook", "enc-route", "enc-plate")
+
+	if resp.CrewRole == nil {
+		t.Error("expected CrewRole to be set in response")
+	} else if *resp.CrewRole != "captain" {
+		t.Errorf("expected CrewRole captain, got %s", *resp.CrewRole)
+	}
+
+	if resp.ApproachType == nil {
+		t.Error("expected ApproachType to be set in response")
+	} else if *resp.ApproachType != "ILS_CAT_I" {
+		t.Errorf("expected ApproachType ILS_CAT_I, got %s", *resp.ApproachType)
+	}
+
+	if resp.PilotRole == nil {
+		t.Error("expected PilotRole to be set in response")
+	}
+}
+
+func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
+	crewRole := "copilot"
+	approachType := "VISUAL"
+	pilotRole := "PM"
+
+	req := UpdateDailyLogbookDetailRequest{
+		FlightRealDate: "2025-01-16",
+		FlightNumber:   "AV456",
+		AirlineRouteID: "route-uuid",
+		LicensePlateID: "plate-uuid",
+		PilotRole:      &pilotRole,
+		CrewRole:       &crewRole,
+		ApproachType:   &approachType,
+	}
+
+	detail := ToDomainDailyLogbookDetailUpdate("detail-uuid", req)
+
+	if detail.CrewRole == nil {
+		t.Error("expected CrewRole to be set")
+	} else if string(*detail.CrewRole) != "copilot" {
+		t.Errorf("expected CrewRole copilot, got %s", string(*detail.CrewRole))
+	}
+
+	if detail.ApproachType == nil {
+		t.Error("expected ApproachType to be set")
+	} else if string(*detail.ApproachType) != "VISUAL" {
+		t.Errorf("expected ApproachType VISUAL, got %s", string(*detail.ApproachType))
+	}
+
+	if detail.PilotRole == nil {
+		t.Error("expected PilotRole to be set")
+	}
 }

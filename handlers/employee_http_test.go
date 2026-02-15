@@ -31,7 +31,6 @@ type fakeEmployeeInteractor struct {
 	deleteEmployeeFn          func(ctx context.Context, employeeID string) error
 	updateEmployeeFn          func(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error)
 	locateFn                  func(ctx context.Context, id string) (*dto.RegisterEmployee, error)
-	getEmployeesByRoleFn      func(ctx context.Context, role string) ([]domain.Employee, error)
 }
 
 var _ input.EmployeeInteractor = (*fakeEmployeeInteractor)(nil)
@@ -102,13 +101,6 @@ func (f *fakeEmployeeInteractor) UpdateEmployee(ctx context.Context, employee do
 func (f *fakeEmployeeInteractor) Locate(ctx context.Context, id string) (*dto.RegisterEmployee, error) {
 	if f.locateFn != nil {
 		return f.locateFn(ctx, id)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (f *fakeEmployeeInteractor) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
-	if f.getEmployeesByRoleFn != nil {
-		return f.getEmployeesByRoleFn(ctx, role)
 	}
 	return nil, errors.New("not implemented")
 }
@@ -1149,6 +1141,73 @@ func TestHTTP_UpdateEmployee(t *testing.T) {
 
 		if w.Code == http.StatusOK {
 			t.Error("expected non-200 status for invalid JSON")
+		}
+	})
+}
+
+func TestHTTP_GetCrewMemberTypes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cache := newTestEmployeeMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	// Add crew member type messages to cache
+	crewRepo := fakeMessageCacheRepo{messages: []cachetypes.CachedMessage{
+		{Code: domain.MsgCrewMemberTypeGetOK, Type: cachetypes.TypeSuccess, Content: "crew types ok"},
+	}}
+	crewCache := messaging.NewMessageCache(crewRepo, 0)
+	if err := crewCache.LoadMessages(context.Background()); err != nil {
+		t.Fatalf("failed to load crew message cache: %v", err)
+	}
+	crewResp := middleware.NewResponseHandler(crewCache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	_ = resp
+	_ = errHandler
+
+	newRouter := func() *gin.Engine {
+		h := New(nil, &fakeEmployeeInteractor{}, enc, crewResp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.GET("/crew-member-types", h.GetCrewMemberTypes())
+		return r
+	}
+
+	t.Run("success - returns crew roles", func(t *testing.T) {
+		router := newRouter()
+
+		req := httptest.NewRequest(http.MethodGet, "/crew-member-types", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d, body: %s", w.Code, w.Body.String())
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		data, ok := response["data"]
+		if !ok {
+			t.Fatal("expected 'data' field in response")
+		}
+
+		roles, ok := data.([]interface{})
+		if !ok {
+			t.Fatal("expected data to be an array")
+		}
+
+		if len(roles) != 2 {
+			t.Errorf("expected 2 roles, got %d", len(roles))
 		}
 	})
 }

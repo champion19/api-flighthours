@@ -62,7 +62,6 @@ type fakeService struct {
 	loginFn                 func(ctx context.Context, email, password string) (*gocloak.JWT, error)
 	getEmployeeByIDFn       func(ctx context.Context, id string) (*domain.Employee, error)
 	deleteEmployeeFn        func(ctx context.Context, id, kcID string) error
-	getEmployeesByRoleFn    func(ctx context.Context, role string) ([]domain.Employee, error)
 	updateEmployeeFn        func(ctx context.Context, tx output.Tx, e domain.Employee) error
 	sendPasswordResetFn     func(ctx context.Context, email string) error
 	updatePasswordFn        func(ctx context.Context, token, newPass string) (string, error)
@@ -165,13 +164,6 @@ func (f *fakeService) DeleteEmployee(ctx context.Context, id, kcID string) error
 	return nil
 }
 func (f *fakeService) GetEmployeeByKeycloakID(context.Context, string) (*domain.Employee, error) {
-	return nil, errors.New("not implemented")
-}
-
-func (f *fakeService) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
-	if f.getEmployeesByRoleFn != nil {
-		return f.getEmployeesByRoleFn(ctx, role)
-	}
 	return nil, errors.New("not implemented")
 }
 
@@ -502,45 +494,6 @@ func TestInteractor_DeleteEmployee(t *testing.T) {
 		err := i.DeleteEmployee(ctx, "em1")
 		if !errors.Is(err, deleteErr) {
 			t.Fatalf("expected %v, got %v", deleteErr, err)
-		}
-	})
-}
-
-func TestInteractor_GetEmployeesByRole(t *testing.T) {
-	ctx := context.Background()
-
-	t.Run("success => returns employees", func(t *testing.T) {
-		expectedEmployees := []domain.Employee{
-			{ID: "e1", Name: "John", Role: "pilot"},
-			{ID: "e2", Name: "Jane", Role: "pilot"},
-		}
-		svc := &fakeService{
-			getEmployeesByRoleFn: func(ctx context.Context, role string) ([]domain.Employee, error) {
-				return expectedEmployees, nil
-			},
-		}
-		i := NewInteractor(svc)
-
-		result, err := i.GetEmployeesByRole(ctx, "pilot")
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-		if len(result) != 2 {
-			t.Errorf("expected 2 employees, got %d", len(result))
-		}
-	})
-
-	t.Run("service error => returns error", func(t *testing.T) {
-		svc := &fakeService{
-			getEmployeesByRoleFn: func(ctx context.Context, role string) ([]domain.Employee, error) {
-				return nil, errors.New("database error")
-			},
-		}
-		i := NewInteractor(svc)
-
-		_, err := i.GetEmployeesByRole(ctx, "pilot")
-		if err == nil {
-			t.Fatal("expected error")
 		}
 	})
 }

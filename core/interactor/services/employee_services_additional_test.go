@@ -420,58 +420,6 @@ func TestEmployeeService_DeleteEmployee(t *testing.T) {
 	})
 }
 
-func TestEmployeeService_GetEmployeesByRole(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		mockRepo := new(mocks.MockRepository)
-		employees := []domain.Employee{
-			{ID: "1", Email: "admin1@example.com"},
-			{ID: "2", Email: "admin2@example.com"},
-		}
-		mockRepo.On("GetEmployeesByRole", mock.Anything, "admin").Return(employees, nil)
-
-		svc := NewService(mockRepo, nil)
-		result, err := svc.GetEmployeesByRole(context.Background(), "admin")
-
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-		if len(result) != 2 {
-			t.Fatalf("expected 2 employees, got %d", len(result))
-		}
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("empty result", func(t *testing.T) {
-		mockRepo := new(mocks.MockRepository)
-		mockRepo.On("GetEmployeesByRole", mock.Anything, "unknown_role").Return([]domain.Employee{}, nil)
-
-		svc := NewService(mockRepo, nil)
-		result, err := svc.GetEmployeesByRole(context.Background(), "unknown_role")
-
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-		if len(result) != 0 {
-			t.Fatalf("expected 0 employees, got %d", len(result))
-		}
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("repo error", func(t *testing.T) {
-		mockRepo := new(mocks.MockRepository)
-		repoErr := errors.New("db error")
-		mockRepo.On("GetEmployeesByRole", mock.Anything, "admin").Return(nil, repoErr)
-
-		svc := NewService(mockRepo, nil)
-		_, err := svc.GetEmployeesByRole(context.Background(), "admin")
-
-		if !errors.Is(err, repoErr) {
-			t.Fatalf("expected %v, got %v", repoErr, err)
-		}
-		mockRepo.AssertExpectations(t)
-	})
-}
-
 func TestEmployeeService_RollbackEmployee(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(mocks.MockRepository)

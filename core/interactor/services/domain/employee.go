@@ -3,11 +3,11 @@ package domain
 import (
 	"github.com/google/uuid"
 )
+
 const (
 	RoleAdmin = "admin"
-	RoleUser = "pilot"
+	RoleUser  = "pilot"
 )
-
 
 type Employee struct {
 	ID                   string `json:"id"`

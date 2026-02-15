@@ -189,6 +189,75 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 	}
 }
 
+// DeleteDailyLogbook godoc
+// @Summary      Delete a daily logbook
+// @Description  Deletes an existing daily logbook for the authenticated employee (accepts both UUID and obfuscated ID)
+// @Tags         DailyLogbooks
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Daily Logbook ID (obfuscated ID)"
+// @Success      200  {object}  DailyLogbookDeleteResponse
+// @Failure      400  {object}  middleware.APIResponse
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      403  {object}  middleware.APIResponse
+// @Failure      404  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
+// @Router       /daily-logbooks/{id} [delete]
+// @Security     BearerAuth
+func (h *handler) DeleteDailyLogbook() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		// Get authenticated employee from context
+		employee, ok := middleware.GetAuthenticatedUser(c)
+		if !ok || employee == nil {
+			log.Error(logger.LogDailyLogbookDeleteError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+			return
+		}
+
+		inputID := c.Param("id")
+		log.Info(logger.LogDailyLogbookDelete, "input_id", inputID)
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		logbookUUID, responseID := h.resolveID(inputID)
+		if logbookUUID == "" {
+			log.Warn(logger.LogDailyLogbookDeleteError, "error", "invalid ID")
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		// Verify logbook exists and belongs to employee
+		_, err := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookGetError, "logbook_id", logbookUUID, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+				return
+			}
+			h.Response.Error(c, domain.MsgDailyLogbookGetErr)
+			return
+		}
+
+		if err := h.DailyLogbookInteractor.DeleteDailyLogbook(c.Request.Context(), logbookUUID); err != nil {
+			log.Error(logger.LogDailyLogbookDeleteError, "logbook_id", logbookUUID, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookDeleteError)
+			return
+		}
+
+		baseURL := GetBaseURL(c)
+		response := DailyLogbookDeleteResponse{
+			ID:      responseID,
+			Deleted: true,
+			Links:   BuildDailyLogbookDeletedLinks(baseURL),
+		}
+
+		log.Info(logger.LogDailyLogbookDeleteOK, "logbook_id", logbookUUID)
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookDeleted, response)
+	}
+}
+
 // ActivateDailyLogbook godoc
 // @Summary      Activate a daily logbook
 // @Description  Sets daily logbook status to active (accepts both UUID and obfuscated ID)

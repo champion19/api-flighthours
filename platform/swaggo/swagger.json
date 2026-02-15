@@ -1504,6 +1504,68 @@
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a daily logbook for the authenticated employee (accepts both UUID and obfuscated ID). Only the owner can delete their logbook.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Delete a daily logbook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Daily Logbook ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookDeleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
             }
         },
         "/daily-logbooks/{id}/activate": {
@@ -3435,6 +3497,14 @@
                 "companion_name": {
                     "type": "string"
                 },
+                "crew_role": {
+                    "description": "Crew position: captain or copilot",
+                    "type": "string",
+                    "enum": [
+                        "captain",
+                        "copilot"
+                    ]
+                },
                 "duty_time": {
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
@@ -4078,6 +4148,23 @@
                 }
             }
         },
+        "handlers.DailyLogbookDeleteResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UpdateDailyLogbookDetailRequest": {
             "type": "object",
             "properties": {
@@ -4097,6 +4184,14 @@
                 },
                 "companion_name": {
                     "type": "string"
+                },
+                "crew_role": {
+                    "description": "Crew position: captain or copilot",
+                    "type": "string",
+                    "enum": [
+                        "captain",
+                        "copilot"
+                    ]
                 },
                 "duty_time": {
                     "description": "TIME format HH:MM (nullable)",

@@ -67,6 +67,10 @@ func (f *fakeDailyLogbookService) DeactivateDailyLogbookTx(ctx context.Context, 
 	return nil
 }
 
+func (f *fakeDailyLogbookService) DeleteDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	return nil
+}
+
 func newTestDailyLogbookMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 
@@ -86,6 +90,9 @@ func newTestDailyLogbookMessageCache(t *testing.T) *messaging.MessageCache {
 		{Code: domain.MsgDailyLogbookActivateErr, Type: cachetypes.TypeError, Content: "error activating logbook"},
 		{Code: domain.MsgDailyLogbookDeactivateOK, Type: cachetypes.TypeSuccess, Content: "logbook deactivated"},
 		{Code: domain.MsgDailyLogbookDeactivateErr, Type: cachetypes.TypeError, Content: "error deactivating logbook"},
+		{Code: domain.MsgDailyLogbookDeleted, Type: cachetypes.TypeSuccess, Content: "logbook deleted"},
+		{Code: domain.MsgDailyLogbookDeleteError, Type: cachetypes.TypeError, Content: "error deleting logbook"},
+		{Code: domain.MsgDailyLogbookGetErr, Type: cachetypes.TypeError, Content: "error getting logbook"},
 	}}
 	cache := messaging.NewMessageCache(repo, 0)
 	if err := cache.LoadMessages(context.Background()); err != nil {
@@ -119,6 +126,7 @@ func newDailyLogbookTestRouter(
 	r.POST("/daily-logbooks", h.CreateDailyLogbook())
 	r.PATCH("/daily-logbooks/:id/activate", h.ActivateDailyLogbook())
 	r.PATCH("/daily-logbooks/:id/deactivate", h.DeactivateDailyLogbook())
+	r.DELETE("/daily-logbooks/:id", h.DeleteDailyLogbook())
 	return r
 }
 
@@ -515,6 +523,92 @@ func TestHTTP_DeactivateDailyLogbook(t *testing.T) {
 		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
 
 		req := httptest.NewRequest(http.MethodPatch, "/daily-logbooks/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+}
+
+func TestHTTP_DeleteDailyLogbook(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cache := newTestDailyLogbookMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	testUUID := "550e8400-e29b-41d4-a716-446655440000"
+	testEmployeeID := "550e8400-e29b-41d4-a716-446655440001"
+	encodedID, _ := enc.Encode(testUUID)
+
+	t.Run("success", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testUUID, EmployeeID: testEmployeeID, LogDate: time.Now(), Status: true}, nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbooks/"+encodedID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("unauthorized", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, nil)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbooks/"+encodedID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("invalid ID", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbooks/invalid!!!!", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("logbook not found", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return nil, errors.New("not found")
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbooks/"+encodedID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("unauthorized - different employee", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testUUID, EmployeeID: "other-employee", LogDate: time.Now(), Status: true}, nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbooks/"+encodedID, nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 

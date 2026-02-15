@@ -59,6 +59,31 @@ func (s *DailyLogbookService) CreateDailyLogbook(ctx context.Context, logbook do
 	return tx.Commit()
 }
 
+// DeleteDailyLogbook deletes a daily logbook with transaction handling
+func (s *DailyLogbookService) DeleteDailyLogbook(ctx context.Context, id string) error {
+	tx, err := s.repo.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err = s.repo.DeleteDailyLogbook(ctx, tx, id); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// DeleteDailyLogbookTx deletes a daily logbook using an external transaction
+func (s *DailyLogbookService) DeleteDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.DeleteDailyLogbook(ctx, tx, id)
+}
+
 // CreateDailyLogbookTx creates a new daily logbook using an external transaction
 func (s *DailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
 	// Generate ID if not set

@@ -3233,6 +3233,11 @@ const docTemplate = `{
                 "companion_name": {
                     "type": "string"
                 },
+                "crew_role": {
+                    "description": "Crew position: captain or copilot",
+                    "type": "string",
+                    "enum": ["captain", "copilot"]
+                },
                 "duty_time": {
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
@@ -3426,9 +3431,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                },
-                "role": {
                     "type": "string"
                 }
             }
@@ -3875,6 +3877,11 @@ const docTemplate = `{
                 },
                 "companion_name": {
                     "type": "string"
+                },
+                "crew_role": {
+                    "description": "Crew position: captain or copilot",
+                    "type": "string",
+                    "enum": ["captain", "copilot"]
                 },
                 "duty_time": {
                     "description": "TIME format HH:MM (nullable)",
