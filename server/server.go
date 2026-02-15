@@ -117,6 +117,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/airport-types/:airport_type", handler.GetAirportsByType())
 
+		public.GET("/crew-member-types", handler.GetCrewMemberTypes())
+
 		public.GET("/manufacturers", handler.ListManufacturers())
 
 		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
@@ -126,7 +128,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		public.GET("/aircraft-models/:id", handler.GetAircraftModelByID())
 
 		public.GET("/aircraft-families/:family", handler.GetAircraftModelsByFamily())
-
 
 	}
 	protected := app.Group("flighthours/api/v1")
