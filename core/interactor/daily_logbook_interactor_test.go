@@ -188,6 +188,35 @@ func TestDailyLogbookInteractor_Create(t *testing.T) {
 			t.Error("expected error")
 		}
 	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit error") }}, nil
+			},
+			createTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
+		if err == nil {
+			t.Error("expected commit error")
+		}
+	})
 }
 
 func TestDailyLogbookInteractor_Activate(t *testing.T) {

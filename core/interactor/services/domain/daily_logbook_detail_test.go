@@ -70,3 +70,24 @@ func TestIsValidApproachType(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidCrewRole(t *testing.T) {
+	tests := []struct {
+		name string
+		role string
+		want bool
+	}{
+		{"captain", "captain", true},
+		{"copilot", "copilot", true},
+		{"empty is valid", "", true},
+		{"invalid", "navigator", false},
+		{"case sensitive", "Captain", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsValidCrewRole(tt.role); got != tt.want {
+				t.Errorf("IsValidCrewRole(%q) = %v, want %v", tt.role, got, tt.want)
+			}
+		})
+	}
+}
