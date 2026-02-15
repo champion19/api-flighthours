@@ -31,7 +31,6 @@ type fakeEmployeeInteractor struct {
 	deleteEmployeeFn          func(ctx context.Context, employeeID string) error
 	updateEmployeeFn          func(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error)
 	locateFn                  func(ctx context.Context, id string) (*dto.RegisterEmployee, error)
-	getEmployeesByRoleFn      func(ctx context.Context, role string) ([]domain.Employee, error)
 }
 
 var _ input.EmployeeInteractor = (*fakeEmployeeInteractor)(nil)
@@ -102,13 +101,6 @@ func (f *fakeEmployeeInteractor) UpdateEmployee(ctx context.Context, employee do
 func (f *fakeEmployeeInteractor) Locate(ctx context.Context, id string) (*dto.RegisterEmployee, error) {
 	if f.locateFn != nil {
 		return f.locateFn(ctx, id)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (f *fakeEmployeeInteractor) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
-	if f.getEmployeesByRoleFn != nil {
-		return f.getEmployeesByRoleFn(ctx, role)
 	}
 	return nil, errors.New("not implemented")
 }

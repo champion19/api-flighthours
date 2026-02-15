@@ -17,6 +17,7 @@ type fakeDailyLogbookService struct {
 	createTxFn     func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	activateTxFn   func(ctx context.Context, tx output.Tx, id string) error
 	deactivateTxFn func(ctx context.Context, tx output.Tx, id string) error
+	deleteTxFn     func(ctx context.Context, tx output.Tx, id string) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 }
 
@@ -65,6 +66,13 @@ func (f *fakeDailyLogbookService) ActivateDailyLogbookTx(ctx context.Context, tx
 func (f *fakeDailyLogbookService) DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
 	if f.deactivateTxFn != nil {
 		return f.deactivateTxFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (f *fakeDailyLogbookService) DeleteDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deleteTxFn != nil {
+		return f.deleteTxFn(ctx, tx, id)
 	}
 	return nil
 }
@@ -340,6 +348,63 @@ func TestDailyLogbookInteractor_Deactivate(t *testing.T) {
 		}
 		inter := NewDailyLogbookInteractor(svc)
 		err := inter.DeactivateDailyLogbook(context.Background(), "lb-1")
+		if err == nil {
+			t.Error("expected commit error")
+		}
+	})
+}
+
+func TestDailyLogbookInteractor_Delete(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			deleteTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.DeleteDailyLogbook(context.Background(), "lb-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.DeleteDailyLogbook(context.Background(), "lb-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("delete tx error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			deleteTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return errors.New("delete failed")
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.DeleteDailyLogbook(context.Background(), "lb-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit error") }}, nil
+			},
+			deleteTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.DeleteDailyLogbook(context.Background(), "lb-1")
 		if err == nil {
 			t.Error("expected commit error")
 		}

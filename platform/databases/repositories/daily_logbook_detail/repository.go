@@ -26,6 +26,7 @@ const (
 			dld.in_time,
 			dld.pilot_role,
 			dld.companion_name,
+			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
 			dld.duty_time,
@@ -142,10 +143,10 @@ const (
 			id, daily_logbook_id, flight_real_date, flight_number,
 			airline_route_id, actual_license_plate_id, passengers,
 			out_time, takeoff_time, landing_time, in_time,
-			pilot_role, companion_name,
+			pilot_role, companion_name, crew_role,
 			air_time, block_time, duty_time,
 			approach_type, flight_type, employee_logbook_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	// Update query
@@ -162,6 +163,7 @@ const (
 			in_time = ?,
 			pilot_role = ?,
 			companion_name = ?,
+			crew_role = ?,
 			air_time = ?,
 			block_time = ?,
 			duty_time = ?,

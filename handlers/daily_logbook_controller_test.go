@@ -67,6 +67,10 @@ func (f *fakeDailyLogbookService) DeactivateDailyLogbookTx(ctx context.Context, 
 	return nil
 }
 
+func (f *fakeDailyLogbookService) DeleteDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	return nil
+}
+
 func newTestDailyLogbookMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 

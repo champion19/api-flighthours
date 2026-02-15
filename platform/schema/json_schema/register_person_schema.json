@@ -51,7 +51,7 @@
       "enum": [
         "pilot"
       ],
-      "errorMessage": "the proposed role is invalid.it must be pilot"
+      "errorMessage": "El cargo es inválido. Debe ser captain o copilot"
     }
   },
   "required": [

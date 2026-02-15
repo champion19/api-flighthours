@@ -60,7 +60,7 @@ func TestRepository_GetEmployeeByID_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	testContainer.CleanEmployeeTable(ctx)
-	testContainer.InsertEmployee(ctx, "emp-123", "Juan Piloto", "juan@test.com", "123456789", "pilot", true)
+	testContainer.InsertEmployee(ctx, "emp-123", "Juan Piloto", "juan@test.com", "123456789", "captain", true)
 
 	repo, _ := NewClientRepository(testContainer.DB)
 
@@ -106,37 +106,6 @@ func TestRepository_GetEmployeeByEmail_Integration(t *testing.T) {
 		}
 		if emp.Email != "maria@test.com" {
 			t.Errorf("expected 'maria@test.com', got %q", emp.Email)
-		}
-	})
-}
-
-func TestRepository_GetEmployeesByRole_Integration(t *testing.T) {
-	if testContainer == nil {
-		t.Skip("Integration tests require docker")
-	}
-	ctx := context.Background()
-
-	testContainer.CleanEmployeeTable(ctx)
-	testContainer.InsertEmployee(ctx, "p1", "Pilot1", "pilot1@test.com", "111111111", "pilot", true)
-	testContainer.InsertEmployee(ctx, "p2", "Pilot2", "pilot2@test.com", "222222222", "pilot", true)
-	testContainer.InsertEmployee(ctx, "a1", "Admin1", "admin1@test.com", "333333333", "admin", true)
-
-	repo, _ := NewClientRepository(testContainer.DB)
-
-	t.Run("filters employees by role", func(t *testing.T) {
-		pilots, err := repo.GetEmployeesByRole(ctx, "pilot")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if len(pilots) != 2 {
-			t.Errorf("expected 2 pilots, got %d", len(pilots))
-		}
-	})
-
-	t.Run("returns error for non-existent role", func(t *testing.T) {
-		_, err := repo.GetEmployeesByRole(ctx, "nonexistent")
-		if err == nil {
-			t.Error("expected error for non-existent role")
 		}
 	})
 }

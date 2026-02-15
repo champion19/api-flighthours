@@ -17,7 +17,6 @@ type Service interface {
 	GetEmployeeByKeycloakID(ctx context.Context, keycloakUserID string) (*domain.Employee, error)
 	LocateEmployee(ctx context.Context, id string) (*dto.RegisterEmployee, error)
 	CheckAndCleanInconsistentState(ctx context.Context, email string) error
-	GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error)
 	SaveEmployeeToDB(ctx context.Context, tx output.Tx, employee domain.Employee) error
 	UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error
 	UpdateEmployeeKeycloakID(ctx context.Context, tx output.Tx, employeeID string, keycloakUserID string) error
@@ -141,6 +140,7 @@ type DailyLogbookService interface {
 	CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
+	DeleteDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type EngineService interface {

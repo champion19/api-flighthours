@@ -68,6 +68,14 @@
       "description": "Name of the companion pilot",
       "maxLength": 100
     },
+    "crew_role": {
+      "type": "string",
+      "description": "Crew position: captain or copilot",
+      "enum": [
+        "captain",
+        "copilot"
+      ]
+    },
     "air_time": {
       "type": "string",
       "description": "Air time (HH:MM)",

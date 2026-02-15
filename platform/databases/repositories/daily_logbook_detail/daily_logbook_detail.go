@@ -19,6 +19,7 @@ type DailyLogbookDetail struct {
 	LandingTime         sql.NullString // nullable
 	InTime              sql.NullString // nullable
 	PilotRole           sql.NullString // nullable
+	CrewRole            sql.NullString // nullable
 	CompanionName       sql.NullString
 	AirTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	BlockTime           sql.NullString // TIME stored as string HH:MM:SS (nullable)
@@ -60,6 +61,10 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	if d.PilotRole.Valid {
 		pilotRole := domain.PilotRole(d.PilotRole.String)
 		detail.PilotRole = &pilotRole
+	}
+	if d.CrewRole.Valid {
+		crewRole := domain.CrewRole(d.CrewRole.String)
+		detail.CrewRole = &crewRole
 	}
 	if d.AirTime.Valid {
 		detail.AirTime = &d.AirTime.String
@@ -143,6 +148,9 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 	}
 	if d.PilotRole != nil {
 		entity.PilotRole = sql.NullString{String: string(*d.PilotRole), Valid: true}
+	}
+	if d.CrewRole != nil {
+		entity.CrewRole = sql.NullString{String: string(*d.CrewRole), Valid: true}
 	}
 	if d.AirTime != nil {
 		entity.AirTime = sql.NullString{String: *d.AirTime, Valid: true}

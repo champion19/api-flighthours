@@ -127,6 +127,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/aircraft-families/:family", handler.GetAircraftModelsByFamily())
 
+
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
@@ -202,6 +203,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
 
 		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
+
+		protected.DELETE("/daily-logbooks/:id", handler.DeleteDailyLogbook())
 
 		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
 

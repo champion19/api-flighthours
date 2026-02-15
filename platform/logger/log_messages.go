@@ -893,16 +893,6 @@ const (
 )
 
 // ============================================
-// CREW MEMBER TYPE INTERACTOR (HU47 - Virtual Entity pattern)
-// ============================================
-const (
-	LogCrewMemberTypeGet      = "Obteniendo empleados por tipo de rol"
-	LogCrewMemberTypeGetOK    = "Empleados por tipo de rol obtenidos exitosamente"
-	LogCrewMemberTypeGetError = "Error obteniendo empleados por tipo de rol"
-	LogCrewMemberTypeNotFound = "Tipo de integrante no encontrado (sin empleados)"
-)
-
-// ============================================
 // AIRLINE EMPLOYEE INTERACTOR (Release 15)
 // ============================================
 const (

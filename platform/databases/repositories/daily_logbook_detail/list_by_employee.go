@@ -34,6 +34,7 @@ func (r *repository) ListDailyLogbookDetailsByEmployee(ctx context.Context, empl
 			&entity.InTime,
 			&entity.PilotRole,
 			&entity.CompanionName,
+			&entity.CrewRole,
 			&entity.AirTime,
 			&entity.BlockTime,
 			&entity.DutyTime,

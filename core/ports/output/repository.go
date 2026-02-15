@@ -20,7 +20,6 @@ type Repository interface {
 	GetEmployeeByEmail(ctx context.Context, email string) (*domain.Employee, error)
 	GetEmployeeByID(ctx context.Context, id string) (*domain.Employee, error)
 	GetEmployeeByKeycloakID(ctx context.Context, keycloakUserID string) (*domain.Employee, error)
-	GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error)
 }
 
 type MessageRepository interface {
@@ -113,4 +112,5 @@ type DailyLogbookRepository interface {
 	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
 	SaveDailyLogbook(ctx context.Context, tx Tx, logbook domain.DailyLogbook) error
 	UpdateDailyLogbookStatus(ctx context.Context, tx Tx, id string, status bool) error
+	DeleteDailyLogbook(ctx context.Context, tx Tx, id string) error
 }

@@ -106,3 +106,10 @@ type DailyLogbookStatusResponse struct {
 	Updated bool   `json:"updated"`
 	Links   []Link `json:"_links,omitempty"`
 }
+
+// DailyLogbookDeleteResponse - Response DTO for daily logbook deletion
+type DailyLogbookDeleteResponse struct {
+	ID      string `json:"id"`
+	Deleted bool   `json:"deleted"`
+	Links   []Link `json:"_links,omitempty"`
+}

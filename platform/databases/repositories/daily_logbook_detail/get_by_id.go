@@ -8,7 +8,6 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-
 func (r *repository) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 	log.Info(logger.LogDailyLogbookDetailGet, "id", id)
 
@@ -27,6 +26,7 @@ func (r *repository) GetDailyLogbookDetailByID(ctx context.Context, id string) (
 		&entity.InTime,
 		&entity.PilotRole,
 		&entity.CompanionName,
+		&entity.CrewRole,
 		&entity.AirTime,
 		&entity.BlockTime,
 		&entity.DutyTime,

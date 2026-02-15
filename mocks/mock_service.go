@@ -135,14 +135,6 @@ func (m *MockService) GetEmployeeByKeycloakID(ctx context.Context, keycloakUserI
 	return args.Get(0).(*domain.Employee), args.Error(1)
 }
 
-func (m *MockService) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
-	args := m.Called(ctx, role)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]domain.Employee), args.Error(1)
-}
-
 func (m *MockService) UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error {
 	args := m.Called(ctx, tx, employee)
 	return args.Error(0)

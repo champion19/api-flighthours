@@ -141,10 +141,6 @@ var (
 	ErrAirportTypeNotFound = errors.New("ERR_AIRPORT_TYPE_NOT_FOUND")
 )
 
-// Crew Member Type Management Errors (TIN_*) - Virtual Entity pattern
-var (
-	ErrCrewMemberTypeNotFound = errors.New("ERR_CREW_MEMBER_TYPE_NOT_FOUND")
-)
 
 // Airline Employee Management Errors (EMP_AIR_*) - Release 15
 var (
@@ -365,15 +361,6 @@ const (
 	MsgAirportTypeGetErr   = "TAE_CON_ERR_04603" // Error - Error técnico al consultar
 )
 
-// Crew Member Type Module (TIN_*) - Tipo Integrante (- Virtual Entity pattern)
-const (
-	// ========================================
-	// Consultar  - TIN_CON_*
-	// ========================================
-	MsgCrewMemberTypeGetOK    = "TIN_CON_EXI_04701" // Éxito - Tipo de integrante consultado (empleados de ese rol)
-	MsgCrewMemberTypeNotFound = "TIN_CON_ERR_04702" // Error - Tipo de integrante no encontrado (sin empleados)
-	MsgCrewMemberTypeGetErr   = "TIN_CON_ERR_04703" // Error - Error técnico al consultar
-)
 
 // License Plate Module (MAT_*) - Matrícula
 const (

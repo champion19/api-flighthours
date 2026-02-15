@@ -16,6 +16,7 @@ type mockDailyLogbookRepo struct {
 	saveFn         func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	updateStatusFn func(ctx context.Context, tx output.Tx, id string, status bool) error
+	deleteFn       func(ctx context.Context, tx output.Tx, id string) error
 }
 
 func (m *mockDailyLogbookRepo) GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error) {
@@ -49,6 +50,13 @@ func (m *mockDailyLogbookRepo) BeginTx(ctx context.Context) (output.Tx, error) {
 func (m *mockDailyLogbookRepo) UpdateDailyLogbookStatus(ctx context.Context, tx output.Tx, id string, status bool) error {
 	if m.updateStatusFn != nil {
 		return m.updateStatusFn(ctx, tx, id, status)
+	}
+	return nil
+}
+
+func (m *mockDailyLogbookRepo) DeleteDailyLogbook(ctx context.Context, tx output.Tx, id string) error {
+	if m.deleteFn != nil {
+		return m.deleteFn(ctx, tx, id)
 	}
 	return nil
 }
@@ -286,6 +294,34 @@ func TestDailyLogbookService_DeactivateDailyLogbookTx(t *testing.T) {
 		}
 		svc := NewDailyLogbookService(repo)
 		err := svc.DeactivateDailyLogbookTx(context.Background(), &mockTx{}, "lb-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+}
+
+func TestDailyLogbookService_DeleteDailyLogbookTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookRepo{
+			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.DeleteDailyLogbookTx(context.Background(), &mockTx{}, "lb-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookRepo{
+			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return errors.New("delete failed")
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.DeleteDailyLogbookTx(context.Background(), &mockTx{}, "lb-1")
 		if err == nil {
 			t.Error("expected error")
 		}

@@ -84,10 +84,6 @@ func (f *fakeServiceForReadOnly) GetEmployeeByKeycloakID(context.Context, string
 	return nil, errors.New("not implemented")
 }
 
-func (f *fakeServiceForReadOnly) GetEmployeesByRole(context.Context, string) ([]domain.Employee, error) {
-	return nil, errors.New("not implemented")
-}
-
 func (f *fakeServiceForReadOnly) UpdateEmployee(context.Context, output.Tx, domain.Employee) error {
 	return nil
 }
