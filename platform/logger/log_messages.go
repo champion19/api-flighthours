@@ -883,7 +883,7 @@ const (
 )
 
 // ============================================
-// AIRPORT TYPE INTERACTOR (HU46 - Virtual Entity pattern)
+// AIRPORT TYPE INTERACTOR ( - Virtual Entity pattern)
 // ============================================
 const (
 	LogAirportTypeGet      = "Obteniendo aeropuertos por tipo"
@@ -893,17 +893,16 @@ const (
 )
 
 // ============================================
-// CREW MEMBER TYPE INTERACTOR (HU47 - Virtual Entity pattern)
+// CREW MEMBER TYPE (Catalog endpoint)
 // ============================================
 const (
-	LogCrewMemberTypeGet      = "Obteniendo empleados por tipo de rol"
-	LogCrewMemberTypeGetOK    = "Empleados por tipo de rol obtenidos exitosamente"
-	LogCrewMemberTypeGetError = "Error obteniendo empleados por tipo de rol"
+	LogCrewMemberTypeGet   = "Consultando tipos de integrante"
+	LogCrewMemberTypeGetOK = "Tipos de integrante obtenidos exitosamente"
 	LogCrewMemberTypeNotFound = "Tipo de integrante no encontrado (sin empleados)"
 )
 
 // ============================================
-// AIRLINE EMPLOYEE INTERACTOR (Release 15)
+// AIRLINE EMPLOYEE INTERACTOR
 // ============================================
 const (
 	LogAirlineEmployeeGet             = "Obteniendo información de empleado aerolínea"

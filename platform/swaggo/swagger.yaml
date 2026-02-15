@@ -203,6 +203,12 @@ definitions:
         type: string
       companion_name:
         type: string
+      crew_role:
+        description: 'Crew position: captain or copilot'
+        type: string
+        enum:
+          - captain
+          - copilot
       duty_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -625,6 +631,17 @@ definitions:
       updated:
         type: boolean
     type: object
+  handlers.DailyLogbookDeleteResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      deleted:
+        type: boolean
+      id:
+        type: string
+    type: object
   handlers.UpdateDailyLogbookDetailRequest:
     properties:
       air_time:
@@ -639,6 +656,12 @@ definitions:
         type: string
       companion_name:
         type: string
+      crew_role:
+        description: 'Crew position: captain or copilot'
+        type: string
+        enum:
+          - captain
+          - copilot
       duty_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -1808,6 +1831,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a daily logbook
+      tags:
+      - DailyLogbooks
+    delete:
+      description: Deletes a daily logbook for the authenticated employee (accepts
+        both UUID and obfuscated ID). Only the owner can delete their logbook.
+      parameters:
+      - description: Daily Logbook ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookDeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a daily logbook
       tags:
       - DailyLogbooks
   /daily-logbooks/{id}/activate:

@@ -38,7 +38,4 @@ type EmployeeInteractor interface {
 
 	// Locate finds an employee by ID
 	Locate(ctx context.Context, id string) (*dto.RegisterEmployee, error)
-
-	// GetEmployeesByRole retrieves employees by role
-	GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error)
 }

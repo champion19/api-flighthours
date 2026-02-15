@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -353,5 +354,32 @@ func TestBuildAirlineEmployeeCreatedLinks(t *testing.T) {
 	links := BuildAirlineEmployeeCreatedLinks("http://localhost:8080/api/v1", "ae-1")
 	if len(links) == 0 {
 		t.Error("expected airline employee created links")
+	}
+}
+
+func TestBuildDailyLogbookDeletedLinks(t *testing.T) {
+	links := BuildDailyLogbookDeletedLinks("http://localhost:8080/api/v1")
+	if len(links) != 2 {
+		t.Errorf("expected 2 links, got %d", len(links))
+	}
+	if links[0].Rel != "list" {
+		t.Errorf("expected first link rel to be 'list', got %q", links[0].Rel)
+	}
+	if links[1].Rel != "create" {
+		t.Errorf("expected second link rel to be 'create', got %q", links[1].Rel)
+	}
+}
+
+func TestGetBaseURL_TLS(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "https://example.com/test", nil)
+	c.Request.TLS = &tls.ConnectionState{}
+
+	baseURL := GetBaseURL(c)
+	expected := "https://example.com"
+	if baseURL != expected {
+		t.Errorf("expected %s, got %s", expected, baseURL)
 	}
 }

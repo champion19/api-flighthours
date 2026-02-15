@@ -19,7 +19,6 @@ type Interactor struct {
 func NewInteractor(service input.Service) *Interactor {
 	return &Interactor{
 		service: service,
-
 	}
 }
 func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Employee) (result *dto.RegisterEmployee, err error) {
@@ -111,7 +110,7 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 		log.Error(logger.LogEmployeeInteractorStep6_Error, "error", err)
 		return
 	}
-	log.Success(logger.LogEmployeeInteractorStep6_OK, "role", employee.Role)
+	log.Success(logger.LogEmployeeInteractorStep6_OK, "keycloak_role", employee.Role, "cargo", employee.Role)
 
 	if err = i.service.UpdateEmployeeKeycloakID(ctx, tx, employee.ID, keycloakUserID); err != nil {
 		log.Error(logger.LogEmployeeInteractorStep7_Error, "error", err)
@@ -318,21 +317,6 @@ func (i *Interactor) DeleteEmployee(ctx context.Context, employeeID string) erro
 
 	log.Success(logger.LogEmployeeDeleteComplete, "employee_id", employeeID, "email", employee.Email)
 	return nil
-}
-func (i *Interactor) GetEmployeesByRole(ctx context.Context, role string) ([]domain.Employee, error) {
-	traceID := middleware.GetTraceIDFromContext(ctx)
-	log := log.WithTraceID(traceID)
-
-	log.Info(logger.LogCrewMemberTypeGet, "role", role)
-
-	employees, err := i.service.GetEmployeesByRole(ctx, role)
-	if err != nil {
-		log.Error(logger.LogCrewMemberTypeGetError, "role", role, "error", err)
-		return nil, err
-	}
-
-	log.Success(logger.LogCrewMemberTypeGetOK, "role", role, "count", len(employees))
-	return employees, nil
 }
 
 func (i *Interactor) UpdateEmployee(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error) {

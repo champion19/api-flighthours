@@ -10,7 +10,6 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-
 func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
 	log.Info(logger.LogDailyLogbookDetailUpdate, "data", detail.ToLogger())
 
@@ -36,6 +35,7 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 		entity.InTime,
 		entity.PilotRole,
 		entity.CompanionName,
+		entity.CrewRole,
 		entity.AirTime,
 		entity.BlockTime,
 		entity.DutyTime,
@@ -46,7 +46,6 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err.Error())
-
 
 		errStr := err.Error()
 		if strings.Contains(errStr, "foreign key constraint") || strings.Contains(errStr, "1452") {

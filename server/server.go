@@ -117,6 +117,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/airport-types/:airport_type", handler.GetAirportsByType())
 
+		public.GET("/crew-member-types", handler.GetCrewMemberTypes())
+
 		public.GET("/manufacturers", handler.ListManufacturers())
 
 		public.GET("/manufacturers/:id", handler.GetManufacturerByID())
@@ -202,6 +204,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
 
 		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
+
+		protected.DELETE("/daily-logbooks/:id", handler.DeleteDailyLogbook())
 
 		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
 

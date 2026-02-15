@@ -14,7 +14,7 @@ func TestEmployee_ToDomain(t *testing.T) {
 			Name:                 "John Doe",
 			Email:                "john@example.com",
 			IdentificationNumber: "ID123456",
-			Role:                 "pilot",
+			Role:                 "captain",
 			KeycloakUserID:       nil,
 		}
 
@@ -32,8 +32,8 @@ func TestEmployee_ToDomain(t *testing.T) {
 		if result.IdentificationNumber != "ID123456" {
 			t.Errorf("expected IdentificationNumber 'ID123456', got %q", result.IdentificationNumber)
 		}
-		if result.Role != "pilot" {
-			t.Errorf("expected Role 'pilot', got %q", result.Role)
+		if result.Role != "captain" {
+			t.Errorf("expected Role 'captain', got %q", result.Role)
 		}
 		if result.KeycloakUserID != "" {
 			t.Errorf("expected empty KeycloakUserID, got %q", result.KeycloakUserID)
@@ -65,7 +65,7 @@ func TestFromDomain(t *testing.T) {
 			Name:                 "John Doe",
 			Email:                "john@example.com",
 			IdentificationNumber: "ID123456",
-			Role:                 "pilot",
+			Role:                 "captain",
 			KeycloakUserID:       "kc-123",
 		}
 
@@ -144,7 +144,7 @@ func TestEmployeeStruct(t *testing.T) {
 			StartDate:            &startDate,
 			EndDate:              &endDate,
 			Active:               true,
-			Role:                 "pilot",
+			Role:                 "captain",
 			KeycloakUserID:       &kcID,
 		}
 
