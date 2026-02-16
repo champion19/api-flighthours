@@ -2,8 +2,11 @@ package daily_logbook_detail
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 )
 
 type DailyLogbookDetail struct {
@@ -225,4 +228,29 @@ func scanDetail(rows interface {
 		return nil, err
 	}
 	return &entity, nil
+}
+
+// castDetailTx casts an output.Tx to the concrete *common.SQLTX type.
+// Shared by SaveDailyLogbookDetail and UpdateDailyLogbookDetail.
+func castDetailTx(tx output.Tx) (*common.SQLTX, error) {
+	sqlTx, ok := tx.(*common.SQLTX)
+	if !ok {
+		return nil, domain.ErrInvalidTransaction
+	}
+	return sqlTx, nil
+}
+
+// handleDetailFKError inspects a foreign-key error string and returns the appropriate domain error.
+// Shared by SaveDailyLogbookDetail and UpdateDailyLogbookDetail.
+func handleDetailFKError(errStr string) error {
+	if strings.Contains(errStr, "daily_logbook") {
+		return domain.ErrFlightInvalidLogbook
+	}
+	if strings.Contains(errStr, "airline_route") {
+		return domain.ErrFlightInvalidRoute
+	}
+	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "license_plate") {
+		return domain.ErrFlightInvalidAircraft
+	}
+	return nil
 }
