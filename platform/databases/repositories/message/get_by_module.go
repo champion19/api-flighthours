@@ -13,26 +13,5 @@ func (r *repository) GetByModule(ctx context.Context, module string) ([]domain.M
 	}
 	defer rows.Close()
 
-	var messages []domain.Message
-	for rows.Next() {
-		var m domain.Message
-		err := rows.Scan(
-			&m.ID,
-			&m.Code,
-			&m.Type,
-			&m.Category,
-			&m.Module,
-			&m.Title,
-			&m.Content,
-			&m.Active,
-			&m.CreatedAt,
-			&m.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-		messages = append(messages, m)
-	}
-
-	return messages, rows.Err()
+	return scanMessages(rows)
 }
