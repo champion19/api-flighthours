@@ -4,7 +4,45 @@ import (
 	"time"
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
+	"github.com/champion19/api-flighthours/platform/logger"
+	"github.com/go-sql-driver/mysql"
 )
+
+// castTx casts an output.Tx to the concrete *common.SQLTX type.
+// Returns the concrete tx or an error if the cast fails.
+func castTx(tx output.Tx) (*common.SQLTX, error) {
+	dbTx, ok := tx.(*common.SQLTX)
+	if !ok {
+		log.Error(logger.LogDatabaseUnavailable, "error", logger.LogErrInvalidTransaction)
+		return nil, domain.ErrInvalidTransaction
+	}
+	return dbTx, nil
+}
+
+// handleMySQLError inspects a MySQL error and returns the appropriate domain error.
+// It handles foreign key violations (1452) and duplicate entries (1062).
+func handleMySQLError(err error, employeeID string) error {
+	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+		switch mysqlErr.Number {
+		case 1452:
+			log.Error(logger.LogDatabaseUnavailable,
+				"employee_id", employeeID,
+				"error", "invalid foreign key reference",
+				"mysql_error", mysqlErr.Message)
+			return domain.ErrInvalidForeignKey
+		case 1062:
+			log.Error(logger.LogDatabaseUnavailable,
+				"employee_id", employeeID,
+				"error", "duplicate entry",
+				"mysql_error", mysqlErr.Message)
+			return domain.ErrDuplicateUser
+		}
+	}
+	log.Error(logger.LogDatabaseUnavailable, "employee_id", employeeID, "error", err)
+	return err
+}
 
 // AirlineEmployee repository struct - airline-specific fields only
 // This maps to the airline-related columns in the employee table
