@@ -108,7 +108,7 @@ type DailyLogbookDetailResponse struct {
 	OriginIataCode      string  `json:"origin_iata_code,omitempty"`
 	DestinationIataCode string  `json:"destination_iata_code,omitempty"`
 	AirlineCode         string  `json:"airline_code,omitempty"`
-	LicensePlate        string  `json:"-"`
+	LicensePlate        string  `json:"license_plate,omitempty"`
 	ModelName           string  `json:"-"`
 	Links               []Link  `json:"_links,omitempty"`
 }
