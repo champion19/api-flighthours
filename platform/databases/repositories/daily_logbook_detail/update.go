@@ -6,7 +6,6 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/databases/common"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -15,15 +14,15 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 
 	entity := FromDomain(&detail)
 
-	sqlTx, ok := tx.(*common.SQLTX)
-	if !ok {
+	sqlTx, err := castDetailTx(tx)
+	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailUpdateError, "error", "invalid transaction type")
-		return domain.ErrInvalidTransaction
+		return err
 	}
 
 	stmt := sqlTx.Tx.StmtContext(ctx, r.stmtUpdate)
 
-	_, err := stmt.ExecContext(ctx,
+	_, err = stmt.ExecContext(ctx,
 		entity.FlightRealDate,
 		entity.FlightNumber,
 		entity.AirlineRouteID,
@@ -49,11 +48,8 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 
 		errStr := err.Error()
 		if strings.Contains(errStr, "foreign key constraint") || strings.Contains(errStr, "1452") {
-			if strings.Contains(errStr, "airline_route") {
-				return domain.ErrFlightInvalidRoute
-			}
-			if strings.Contains(errStr, "license_plate") {
-				return domain.ErrFlightInvalidAircraft
+			if fkErr := handleDetailFKError(errStr); fkErr != nil {
+				return fkErr
 			}
 		}
 		return domain.ErrFlightCannotUpdate

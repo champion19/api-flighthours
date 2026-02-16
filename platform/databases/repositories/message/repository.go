@@ -11,44 +11,22 @@ import (
 )
 
 const (
-	queryGetAllActive = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE is_active = true`
+	// Shared SELECT columns for message queries
+	selectMessageColumns = `id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at`
 
-	queryGetByCode = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE message_code = ?
-		LIMIT 1`
+	queryGetAllActive = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE is_active = true`
 
-	queryGetByCodeForCache = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE message_code = ? AND is_active = true
-		LIMIT 1`
+	queryGetByCode = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE message_code = ? LIMIT 1`
 
-	queryGetByCodeWithStatus = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE message_code = ?
-		LIMIT 1`
+	queryGetByCodeForCache = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE message_code = ? AND is_active = true LIMIT 1`
 
-	queryGetByID = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE id = ?
-		LIMIT 1`
+	queryGetByCodeWithStatus = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE message_code = ? LIMIT 1`
 
-	queryGetByType = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE type = ? AND is_active = true`
+	queryGetByID = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE id = ? LIMIT 1`
 
-	queryGetByModule = `
-		SELECT id, message_code, type, category, module, message_title, message_content, is_active, created_at, updated_at
-		FROM system_messages
-		WHERE module = ? AND is_active = true`
+	queryGetByType = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE type = ? AND is_active = true`
+
+	queryGetByModule = `SELECT ` + selectMessageColumns + ` FROM system_messages WHERE module = ? AND is_active = true`
 
 	queryMessageSave = `INSERT INTO system_messages
 		(id, message_code, type, category, module, message_title, message_content, is_active)
@@ -56,8 +34,6 @@ const (
 
 	queryMessageDelete = `DELETE FROM system_messages WHERE id = ?`
 )
-
-
 
 var log logger.Logger = logger.NewSlogLogger()
 
@@ -84,57 +60,48 @@ func NewMessageRepository(db *sql.DB) (MessageRepository, error) {
 		return nil, sql.ErrConnDone
 	}
 
-	stmtGetAllActive, err := db.Prepare(queryGetAllActive)
-	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
-		return nil, err
+	prepare := func(query string) (*sql.Stmt, error) {
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		}
+		return stmt, err
 	}
 
-	stmtGetByCode, err := db.Prepare(queryGetByCode)
+	stmtGetAllActive, err := prepare(queryGetAllActive)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtGetByCodeForCache, err := db.Prepare(queryGetByCodeForCache)
+	stmtGetByCode, err := prepare(queryGetByCode)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtGetByCodeWithStatus, err := db.Prepare(queryGetByCodeWithStatus)
+	stmtGetByCodeForCache, err := prepare(queryGetByCodeForCache)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtGetByID, err := db.Prepare(queryGetByID)
+	stmtGetByCodeWithStatus, err := prepare(queryGetByCodeWithStatus)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtGetByType, err := db.Prepare(queryGetByType)
+	stmtGetByID, err := prepare(queryGetByID)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtGetByModule, err := db.Prepare(queryGetByModule)
+	stmtGetByType, err := prepare(queryGetByType)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtMessageSave, err := db.Prepare(queryMessageSave)
+	stmtGetByModule, err := prepare(queryGetByModule)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtMessageDelete, err := db.Prepare(queryMessageDelete)
+	stmtMessageSave, err := prepare(queryMessageSave)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		return nil, err
+	}
+	stmtMessageDelete, err := prepare(queryMessageDelete)
+	if err != nil {
 		return nil, err
 	}
 

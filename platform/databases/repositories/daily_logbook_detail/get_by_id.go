@@ -11,37 +11,8 @@ import (
 func (r *repository) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 	log.Info(logger.LogDailyLogbookDetailGet, "id", id)
 
-	var entity DailyLogbookDetail
-	err := r.stmtGetByID.QueryRowContext(ctx, id).Scan(
-		&entity.ID,
-		&entity.DailyLogbookID,
-		&entity.FlightRealDate,
-		&entity.FlightNumber,
-		&entity.AirlineRouteID,
-		&entity.LicensePlateID,
-		&entity.Passengers,
-		&entity.OutTime,
-		&entity.TakeoffTime,
-		&entity.LandingTime,
-		&entity.InTime,
-		&entity.PilotRole,
-		&entity.CompanionName,
-		&entity.CrewRole,
-		&entity.AirTime,
-		&entity.BlockTime,
-		&entity.DutyTime,
-		&entity.ApproachType,
-		&entity.FlightType,
-		&entity.EmployeeLogbookID,
-		&entity.LogDate,
-		&entity.LicensePlate,
-		&entity.ModelName,
-		&entity.RouteCode,
-		&entity.OriginIataCode,
-		&entity.DestinationIataCode,
-		&entity.AirlineCode,
-	)
-
+	row := r.stmtGetByID.QueryRowContext(ctx, id)
+	entity, err := scanDetail(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Warn(logger.LogDailyLogbookDetailNotFound, "id", id)

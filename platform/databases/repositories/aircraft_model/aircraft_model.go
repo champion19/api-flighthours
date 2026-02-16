@@ -1,8 +1,44 @@
 package aircraftmodel
 
 import (
+	"database/sql"
+
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
+
+// scanner is a minimal interface matching both *sql.Row and *sql.Rows.
+type scanner interface {
+	Scan(dest ...interface{}) error
+}
+
+// scanAircraftModel scans a single row into an AircraftModel, handling NullString fields.
+// This helper eliminates the duplicated scan+NullString logic across list.go, get_by_family.go, and get_by_id.go.
+func scanAircraftModel(s scanner) (*AircraftModel, error) {
+	var model AircraftModel
+	var engineTypeName sql.NullString
+	var manufacturer sql.NullString
+
+	if err := s.Scan(
+		&model.ID,
+		&model.ModelName,
+		&model.AircraftTypeName,
+		&engineTypeName,
+		&model.Family,
+		&manufacturer,
+		&model.Status,
+	); err != nil {
+		return nil, err
+	}
+
+	if engineTypeName.Valid {
+		model.EngineTypeName = engineTypeName.String
+	}
+	if manufacturer.Valid {
+		model.Manufacturer = manufacturer.String
+	}
+
+	return &model, nil
+}
 
 // AircraftModel is the database entity for aircraft_model table
 type AircraftModel struct {

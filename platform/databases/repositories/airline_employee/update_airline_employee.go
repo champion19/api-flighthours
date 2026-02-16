@@ -5,9 +5,6 @@ import (
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/databases/common"
-	"github.com/champion19/api-flighthours/platform/logger"
-	"github.com/go-sql-driver/mysql"
 )
 
 // UpdateAirlineEmployee updates airline-specific fields for an existing employee (HU25)
@@ -20,14 +17,11 @@ func (r *repository) UpdateAirlineEmployee(ctx context.Context, tx output.Tx, em
 		"airline_id", employeeToUpdate.AirlineID,
 		"active", employeeToUpdate.Active)
 
-	// Cast the transaction to the concrete type
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
-		log.Error(logger.LogDatabaseUnavailable, "error", logger.LogErrInvalidTransaction)
-		return domain.ErrInvalidTransaction
+	dbTx, err := castTx(tx)
+	if err != nil {
+		return err
 	}
 
-	// Update airline-specific fields
 	result, err := dbTx.ExecContext(ctx, QueryUpdateAirlineInfo,
 		employeeToUpdate.AirlineID,
 		employeeToUpdate.Bp,
@@ -38,20 +32,7 @@ func (r *repository) UpdateAirlineEmployee(ctx context.Context, tx output.Tx, em
 	)
 
 	if err != nil {
-		// Check for specific MySQL errors
-		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			switch mysqlErr.Number {
-			case 1452:
-				// Foreign key constraint fails (e.g., invalid airline)
-				log.Error(logger.LogDatabaseUnavailable,
-					"employee_id", employee.ID,
-					"error", "invalid foreign key reference",
-					"mysql_error", mysqlErr.Message)
-				return domain.ErrInvalidForeignKey
-			}
-		}
-		log.Error(logger.LogDatabaseUnavailable, "employee_id", employee.ID, "error", err)
-		return err
+		return handleMySQLError(err, employee.ID)
 	}
 
 	log.Debug("UpdateAirlineEmployee: Query executed successfully",

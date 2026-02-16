@@ -1,8 +1,7 @@
 package aircraftmodel
 
-import(
+import (
 	"context"
-	"database/sql"
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
@@ -17,29 +16,10 @@ func (r *repository) GetAircraftModelsByFamily(ctx context.Context, family strin
 
 	var models []domain.AircraftModel
 	for rows.Next() {
-		var model AircraftModel
-		var engineTypeName sql.NullString
-		var manufacturer sql.NullString
-
-		if err := rows.Scan(
-			&model.ID,
-			&model.ModelName,
-			&model.AircraftTypeName,
-			&engineTypeName,
-			&model.Family,
-			&manufacturer,
-			&model.Status,
-		); err != nil {
+		model, err := scanAircraftModel(rows)
+		if err != nil {
 			return nil, err
 		}
-
-		if engineTypeName.Valid {
-			model.EngineTypeName = engineTypeName.String
-		}
-		if manufacturer.Valid {
-			model.Manufacturer = manufacturer.String
-		}
-
 		models = append(models, *model.ToDomain())
 	}
 
@@ -49,4 +29,3 @@ func (r *repository) GetAircraftModelsByFamily(ctx context.Context, family strin
 
 	return models, nil
 }
-
