@@ -185,3 +185,44 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 
 	return entity
 }
+
+// scanDetail scans a single row from *sql.Rows into a DailyLogbookDetail entity.
+// This helper eliminates the duplicated 28-field scan block in list_by_employee.go and list_by_logbook.go.
+func scanDetail(rows interface {
+	Scan(dest ...interface{}) error
+}) (*DailyLogbookDetail, error) {
+	var entity DailyLogbookDetail
+	err := rows.Scan(
+		&entity.ID,
+		&entity.DailyLogbookID,
+		&entity.FlightRealDate,
+		&entity.FlightNumber,
+		&entity.AirlineRouteID,
+		&entity.LicensePlateID,
+		&entity.Passengers,
+		&entity.OutTime,
+		&entity.TakeoffTime,
+		&entity.LandingTime,
+		&entity.InTime,
+		&entity.PilotRole,
+		&entity.CompanionName,
+		&entity.CrewRole,
+		&entity.AirTime,
+		&entity.BlockTime,
+		&entity.DutyTime,
+		&entity.ApproachType,
+		&entity.FlightType,
+		&entity.EmployeeLogbookID,
+		&entity.LogDate,
+		&entity.LicensePlate,
+		&entity.ModelName,
+		&entity.RouteCode,
+		&entity.OriginIataCode,
+		&entity.DestinationIataCode,
+		&entity.AirlineCode,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &entity, nil
+}
