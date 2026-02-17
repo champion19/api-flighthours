@@ -7,7 +7,7 @@
     "name": {
       "type": "string",
       "description": "Name of the employee (cannot be only whitespace)",
-      "maxLength": 120,
+      "maxLength": 50,
       "minLength": 1,
       "pattern": ".*\\S.*"
     },

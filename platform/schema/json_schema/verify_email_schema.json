@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Verify Email Schema",
+  "description": "Schema for email verification by token",
+  "required": [
+    "token"
+  ],
+  "properties": {
+    "token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Verification token"
+    }
+  },
+  "additionalProperties": false
+}

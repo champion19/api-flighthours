@@ -4,7 +4,7 @@
     "name": {
       "type": "string",
       "description": "Name of the person",
-      "maxLength": 120,
+      "maxLength": 50,
       "minLength": 1,
       "pattern": ".*\\S.*"
     },
@@ -12,7 +12,7 @@
       "type": "string",
       "format": "email",
       "description": "Email address",
-      "maxLength": 250,
+      "maxLength": 150,
       "pattern": ".*\\S.*"
     },
     "password": {

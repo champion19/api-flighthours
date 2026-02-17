@@ -1,10 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "title": "Password Reset Request Schema",
-  "description": "Schema for requesting password reset",
+  "title": "Login Schema",
+  "description": "Schema for user login request",
   "required": [
-    "email"
+    "email",
+    "password"
   ],
   "properties": {
     "email": {
@@ -14,6 +15,12 @@
       "maxLength": 150,
       "description": "Email address of the user",
       "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "User password"
     }
   },
   "additionalProperties": false
