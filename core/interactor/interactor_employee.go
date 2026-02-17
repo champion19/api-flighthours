@@ -242,6 +242,26 @@ func (i *Interactor) Login(ctx context.Context, email string, password string) (
 	}, nil
 }
 
+func (i *Interactor) RefreshToken(ctx context.Context, refreshToken string) (*dto.TokenResponse, error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogKeycloakUserTokenRefresh)
+	token, err := i.service.RefreshToken(ctx, refreshToken)
+	if err != nil {
+		log.Error(logger.LogKeycloakUserTokenRefreshErr, "error", err)
+		return nil, err
+	}
+
+	log.Success(logger.LogKeycloakUserTokenRefreshOK)
+	return &dto.TokenResponse{
+		ExpiresIn:    token.ExpiresIn,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		TokenType:    token.TokenType,
+	}, nil
+}
+
 func (i *Interactor) UpdatePassword(ctx context.Context, token, newPassword, confirmPassword string) (string, error) {
 	traceID := middleware.GetTraceIDFromContext(ctx)
 	log := log.WithTraceID(traceID)

@@ -420,6 +420,24 @@ func (s service) Login(ctx context.Context, email, password string) (*gocloak.JW
 	return token, nil
 }
 
+func (s service) RefreshToken(ctx context.Context, refreshToken string) (*gocloak.JWT, error) {
+	log.Info(logger.LogKeycloakUserTokenRefresh)
+
+	if refreshToken == "" {
+		log.Warn(logger.LogKeycloakRefreshTokenEmpty)
+		return nil, domain.ErrRefreshTokenFailed
+	}
+
+	token, err := s.keycloak.RefreshToken(ctx, refreshToken)
+	if err != nil {
+		log.Error(logger.LogKeycloakUserTokenRefreshErr, "error", err)
+		return nil, domain.ErrRefreshTokenFailed
+	}
+
+	log.Success(logger.LogKeycloakUserTokenRefreshOK)
+	return token, nil
+}
+
 func (s service) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
 	log.Info(logger.LogKeycloakEmailVerify)
 

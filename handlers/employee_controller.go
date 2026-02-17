@@ -175,6 +175,51 @@ func (h handler) Login() gin.HandlerFunc {
 	}
 }
 
+// RefreshToken godoc
+// @Summary      Refresh access token
+// @Description  Refreshes the access token using a valid refresh token
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body RefreshTokenRequest true "Refresh token"
+// @Success      200  {object}  LoginResponse "New tokens"
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid request"
+// @Failure      401  {object}  middleware.ErrorResponse "Invalid or expired refresh token"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /auth/refresh [post]
+func (h handler) RefreshToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := Logger.WithTraceID(traceID)
+
+		var req RefreshTokenRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Error(logger.LogRegJSONParseError, "error", err)
+			h.Response.Error(c, domain.MsgValBadFormat)
+			return
+		}
+
+		log.Info(logger.LogKeycloakUserTokenRefresh, "client_ip", c.ClientIP())
+
+		token, err := h.Interactor.RefreshToken(c, req.RefreshToken)
+		if err != nil {
+			log.Error(logger.LogKeycloakUserTokenRefreshErr, "error", err, "client_ip", c.ClientIP())
+			h.Response.Error(c, domain.MsgKCRefreshTokenFailed)
+			return
+		}
+
+		response := LoginResponse{
+			AccessToken:  token.AccessToken,
+			RefreshToken: token.RefreshToken,
+			ExpiresIn:    token.ExpiresIn,
+			TokenType:    token.TokenType,
+		}
+
+		log.Success(logger.LogKeycloakUserTokenRefreshOK, "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgKCRefreshTokenSuccess, response)
+	}
+}
+
 // VerifyEmailByToken godoc
 // @Summary      Verify user email
 // @Description  Verifies the user's email using a JWT proxy token

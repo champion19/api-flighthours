@@ -127,6 +127,9 @@ func (f *fakeService) Login(ctx context.Context, email, password string) (*goclo
 	}
 	return &gocloak.JWT{}, nil
 }
+func (f *fakeService) RefreshToken(ctx context.Context, refreshToken string) (*gocloak.JWT, error) {
+	return &gocloak.JWT{}, nil
+}
 func (f *fakeService) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
 	if f.verifyEmailByTokenFn != nil {
 		return f.verifyEmailByTokenFn(ctx, token)

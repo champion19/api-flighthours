@@ -23,6 +23,7 @@ import (
 type fakeEmployeeInteractor struct {
 	registerEmployeeFn        func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error)
 	loginFn                   func(ctx context.Context, email, password string) (*dto.TokenResponse, error)
+	refreshTokenFn            func(ctx context.Context, refreshToken string) (*dto.TokenResponse, error)
 	verifyEmailByTokenFn      func(ctx context.Context, token string) (string, error)
 	requestPasswordResetFn    func(ctx context.Context, email string) error
 	updatePasswordFn          func(ctx context.Context, token, newPass, confirmPass string) (string, error)
@@ -45,6 +46,13 @@ func (f *fakeEmployeeInteractor) RegisterEmployee(ctx context.Context, employee 
 func (f *fakeEmployeeInteractor) Login(ctx context.Context, email, password string) (*dto.TokenResponse, error) {
 	if f.loginFn != nil {
 		return f.loginFn(ctx, email, password)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (f *fakeEmployeeInteractor) RefreshToken(ctx context.Context, refreshToken string) (*dto.TokenResponse, error) {
+	if f.refreshTokenFn != nil {
+		return f.refreshTokenFn(ctx, refreshToken)
 	}
 	return nil, errors.New("not implemented")
 }
