@@ -14,7 +14,7 @@
       "type": "string",
       "description": "Flight number (e.g., AV123)",
       "minLength": 1,
-      "maxLength": 20
+      "maxLength": 4
     },
     "airline_route_id": {
       "type": "string",

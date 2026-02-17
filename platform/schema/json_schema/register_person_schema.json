@@ -17,12 +17,17 @@
     },
     "password": {
       "type": "string",
-      "description": "Access password",
+      "description": "Access password (min 8 chars, at least 1 uppercase and 1 special character)",
       "minLength": 8,
       "maxLength": 64,
-      "SpecialCharacters": 1,
-      "UppercaseCharacters": 1,
-      "pattern": ".*\\S.*"
+      "allOf": [
+        {
+          "pattern": "[A-Z]"
+        },
+        {
+          "pattern": "[!@#$%^&*()_+\\-=\\[\\]{};':\\\"\\\\|,.<>/?`~]"
+        }
+      ]
     },
     "identificationnumber": {
       "type": "string",
