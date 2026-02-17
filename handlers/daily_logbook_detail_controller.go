@@ -118,8 +118,8 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		// Resolve aircraft_registration_id
 		aircraftUUID, _ := h.resolveID(req.LicensePlateID)
 		if aircraftUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid aircraft ID")
-			h.Response.Error(c, domain.MsgFlightInvalidAircraft)
+			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid license plate ID")
+			h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
 			return
 		}
 		req.LicensePlateID = aircraftUUID
@@ -146,8 +146,8 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 				h.Response.Error(c, domain.MsgFlightInvalidRoute)
 				return
 			}
-			if err == domain.ErrFlightInvalidAircraft {
-				h.Response.Error(c, domain.MsgFlightInvalidAircraft)
+			if err == domain.ErrFlightInvalidLicensePlate {
+				h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
 				return
 			}
 			if err == domain.ErrFlightInvalidTimeSequence {
@@ -241,11 +241,11 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		// Resolve aircraft_registration_id
+		// Resolve license_plate_id
 		aircraftUUID, _ := h.resolveID(req.LicensePlateID)
 		if aircraftUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid aircraft ID")
-			h.Response.Error(c, domain.MsgFlightInvalidAircraft)
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid license plate ID")
+			h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
 			return
 		}
 		req.LicensePlateID = aircraftUUID

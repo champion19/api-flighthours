@@ -110,7 +110,7 @@ func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache
 		{Code: domain.MsgFlightInvalidTimeSequence, Type: cachetypes.TypeError, Content: "invalid time sequence"},
 		{Code: domain.MsgFlightInvalidRoute, Type: cachetypes.TypeError, Content: "invalid route"},
 		{Code: domain.MsgFlightInvalidLogbook, Type: cachetypes.TypeError, Content: "invalid logbook"},
-		{Code: domain.MsgFlightInvalidAircraft, Type: cachetypes.TypeError, Content: "invalid aircraft"},
+		{Code: domain.MsgFlightInvalidLicensePlate, Type: cachetypes.TypeError, Content: "invalid aircraft"},
 		{Code: domain.MsgDailyLogbookNotFound, Type: cachetypes.TypeError, Content: "logbook not found"},
 		{Code: domain.MsgDailyLogbookUnauthorized, Type: cachetypes.TypeError, Content: "unauthorized logbook"},
 		{Code: domain.MsgServerError, Type: cachetypes.TypeError, Content: "internal server error"},
