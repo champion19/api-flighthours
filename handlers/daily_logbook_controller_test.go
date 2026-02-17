@@ -22,10 +22,12 @@ import (
 
 // fakeDailyLogbookService implements input.DailyLogbookService
 type fakeDailyLogbookService struct {
-	getByIDFn func(ctx context.Context, id string) (*domain.DailyLogbook, error)
-	listFn    func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
-	createFn  func(ctx context.Context, logbook domain.DailyLogbook) error
-	updateFn  func(ctx context.Context, logbook domain.DailyLogbook) error
+	getByIDFn    func(ctx context.Context, id string) (*domain.DailyLogbook, error)
+	listFn       func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
+	createFn     func(ctx context.Context, logbook domain.DailyLogbook) error
+	updateFn     func(ctx context.Context, logbook domain.DailyLogbook) error
+	activateFn   func(ctx context.Context, tx output.Tx, id string) error
+	deactivateFn func(ctx context.Context, tx output.Tx, id string) error
 }
 
 func (f *fakeDailyLogbookService) BeginTx(ctx context.Context) (output.Tx, error) {
@@ -60,10 +62,16 @@ func (f *fakeDailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx o
 }
 
 func (f *fakeDailyLogbookService) ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.activateFn != nil {
+		return f.activateFn(ctx, tx, id)
+	}
 	return nil
 }
 
 func (f *fakeDailyLogbookService) DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deactivateFn != nil {
+		return f.deactivateFn(ctx, tx, id)
+	}
 	return nil
 }
 
@@ -458,6 +466,41 @@ func TestHTTP_ActivateDailyLogbook(t *testing.T) {
 
 		t.Logf("status: %d", w.Code)
 	})
+
+	t.Run("unauthorized - different employee", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return nil, domain.ErrFlightUnauthorized
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPatch, "/daily-logbooks/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("activate service error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testUUID, EmployeeID: testEmployeeID, LogDate: time.Now(), Status: false}, nil
+			},
+			activateFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return errors.New("activate failed")
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPatch, "/daily-logbooks/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
 }
 
 func TestHTTP_DeactivateDailyLogbook(t *testing.T) {
@@ -517,6 +560,41 @@ func TestHTTP_DeactivateDailyLogbook(t *testing.T) {
 		svc := &fakeDailyLogbookService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
 				return nil, errors.New("not found")
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPatch, "/daily-logbooks/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("unauthorized - different employee", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return nil, domain.ErrFlightUnauthorized
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPatch, "/daily-logbooks/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("deactivate service error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testUUID, EmployeeID: testEmployeeID, LogDate: time.Now(), Status: true}, nil
+			},
+			deactivateFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return errors.New("deactivate failed")
 			},
 		}
 		authUser := &domain.Employee{ID: testEmployeeID}

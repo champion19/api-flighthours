@@ -998,6 +998,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/refresh": {
+            "post": {
+                "description": "Refreshes the access token using a valid refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Refresh access token",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New tokens",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/resend-verification": {
             "post": {
                 "description": "Resends the verification email to a registered user who hasn't verified their account",
@@ -1161,6 +1213,27 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/middleware.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/crew-member-types": {
+            "get": {
+                "description": "Returns the available crew member types (captain, copilot). Static catalog endpoint - no database query needed.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Crew Member Types"
+                ],
+                "summary": "Get crew member types",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -1403,6 +1476,205 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.DailyLogbookResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes an existing daily logbook for the authenticated employee (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Delete a daily logbook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Daily Logbook ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookDeleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/daily-logbooks/{id}/activate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets daily logbook status to active (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Activate a daily logbook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Daily Logbook ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/daily-logbooks/{id}/deactivate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets daily logbook status to inactive (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Deactivate a daily logbook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Daily Logbook ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookStatusResponse"
                         }
                     },
                     "400": {
@@ -3217,7 +3489,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "air_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "airline_route_id": {
@@ -3227,16 +3499,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "block_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "companion_name": {
                     "type": "string"
                 },
                 "crew_role": {
-                    "description": "Crew position: captain or copilot",
-                    "type": "string",
-                    "enum": ["captain", "copilot"]
+                    "description": "nullable",
+                    "type": "string"
                 },
                 "duty_time": {
                     "description": "TIME format HH:MM (nullable)",
@@ -3252,28 +3523,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "in_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "landing_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "license_plate_id": {
                     "type": "string"
                 },
                 "out_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "passengers": {
                     "type": "integer"
                 },
                 "pilot_role": {
+                    "description": "nullable",
                     "type": "string"
                 },
                 "takeoff_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 }
             }
@@ -3311,6 +3583,23 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.DailyLogbookDeleteResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.DailyLogbookDetailResponse": {
             "type": "object",
             "properties": {
@@ -3320,10 +3609,34 @@ const docTemplate = `{
                         "$ref": "#/definitions/handlers.Link"
                     }
                 },
+                "air_time": {
+                    "type": "string"
+                },
                 "airline_code": {
                     "type": "string"
                 },
+                "airline_route_id": {
+                    "type": "string"
+                },
+                "approach_type": {
+                    "type": "string"
+                },
+                "block_time": {
+                    "type": "string"
+                },
+                "companion_name": {
+                    "type": "string"
+                },
+                "crew_role": {
+                    "type": "string"
+                },
+                "daily_logbook_id": {
+                    "type": "string"
+                },
                 "destination_iata_code": {
+                    "type": "string"
+                },
+                "duty_time": {
                     "type": "string"
                 },
                 "flight_number": {
@@ -3332,13 +3645,46 @@ const docTemplate = `{
                 "flight_real_date": {
                     "type": "string"
                 },
+                "flight_type": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "in_time": {
+                    "type": "string"
+                },
+                "landing_time": {
+                    "type": "string"
+                },
+                "license_plate": {
+                    "type": "string"
+                },
+                "license_plate_id": {
+                    "type": "string"
+                },
+                "log_date": {
+                    "type": "string"
+                },
+                "model_name": {
                     "type": "string"
                 },
                 "origin_iata_code": {
                     "type": "string"
                 },
+                "out_time": {
+                    "type": "string"
+                },
+                "passengers": {
+                    "type": "integer"
+                },
+                "pilot_role": {
+                    "type": "string"
+                },
                 "route_code": {
+                    "type": "string"
+                },
+                "takeoff_time": {
                     "type": "string"
                 }
             }
@@ -3389,6 +3735,26 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.DailyLogbookStatusResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated": {
+                    "type": "boolean"
+                }
+            }
+        },
         "handlers.EmployeeAirlineInfoResponse": {
             "type": "object",
             "properties": {
@@ -3431,6 +3797,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }
@@ -3758,6 +4127,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.ResendVerificationEmailRequest": {
             "type": "object",
             "required": [
@@ -3862,7 +4242,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "air_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "airline_route_id": {
@@ -3872,16 +4252,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "block_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "companion_name": {
                     "type": "string"
                 },
                 "crew_role": {
-                    "description": "Crew position: captain or copilot",
-                    "type": "string",
-                    "enum": ["captain", "copilot"]
+                    "description": "nullable",
+                    "type": "string"
                 },
                 "duty_time": {
                     "description": "TIME format HH:MM (nullable)",
@@ -3897,28 +4276,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "in_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "landing_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "license_plate_id": {
                     "type": "string"
                 },
                 "out_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
                 "passengers": {
                     "type": "integer"
                 },
                 "pilot_role": {
+                    "description": "nullable",
                     "type": "string"
                 },
                 "takeoff_time": {
-                    "description": "TIME format HH:MM",
+                    "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 }
             }
@@ -4095,11 +4475,28 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/middleware.ValidationFieldError"
+                    }
+                },
                 "message": {
                     "type": "string"
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "middleware.ValidationFieldError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         }

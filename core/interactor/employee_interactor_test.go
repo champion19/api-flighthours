@@ -69,6 +69,7 @@ type fakeService struct {
 	verifyEmailByTokenFn    func(ctx context.Context, token string) (string, error)
 	getUserByEmailFn        func(ctx context.Context, email string) (*gocloak.User, error)
 	sendVerificationEmailFn func(ctx context.Context, userID string) error
+	refreshTokenFn          func(ctx context.Context, refreshToken string) (*gocloak.JWT, error)
 }
 
 var _ input.Service = (*fakeService)(nil)
@@ -128,6 +129,9 @@ func (f *fakeService) Login(ctx context.Context, email, password string) (*goclo
 	return &gocloak.JWT{}, nil
 }
 func (f *fakeService) RefreshToken(ctx context.Context, refreshToken string) (*gocloak.JWT, error) {
+	if f.refreshTokenFn != nil {
+		return f.refreshTokenFn(ctx, refreshToken)
+	}
 	return &gocloak.JWT{}, nil
 }
 func (f *fakeService) VerifyEmailByToken(ctx context.Context, token string) (string, error) {
@@ -867,6 +871,47 @@ func TestInteractor_ResendVerificationEmail(t *testing.T) {
 		err := i.ResendVerificationEmail(ctx, "test@example.com")
 		if !errors.Is(err, sendErr) {
 			t.Fatalf("expected %v, got %v", sendErr, err)
+		}
+	})
+}
+
+func TestInteractor_RefreshToken(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success - returns TokenResponse", func(t *testing.T) {
+		svc := &fakeService{
+			refreshTokenFn: func(ctx context.Context, rt string) (*gocloak.JWT, error) {
+				return &gocloak.JWT{
+					AccessToken:  "new-access",
+					RefreshToken: "new-refresh",
+					ExpiresIn:    3600,
+					TokenType:    "Bearer",
+				}, nil
+			},
+		}
+
+		i := NewInteractor(svc)
+		result, err := i.RefreshToken(ctx, "valid-token")
+		if err != nil {
+			t.Fatalf("expected nil error, got %v", err)
+		}
+		if result.AccessToken != "new-access" {
+			t.Errorf("expected new-access, got %s", result.AccessToken)
+		}
+	})
+
+	t.Run("service error - propagates", func(t *testing.T) {
+		errorMsg := errors.New("refresh failed")
+		svc := &fakeService{
+			refreshTokenFn: func(ctx context.Context, rt string) (*gocloak.JWT, error) {
+				return nil, errorMsg
+			},
+		}
+
+		i := NewInteractor(svc)
+		_, err := i.RefreshToken(ctx, "expired-token")
+		if !errors.Is(err, errorMsg) {
+			t.Fatalf("expected %v, got %v", errorMsg, err)
 		}
 	})
 }
