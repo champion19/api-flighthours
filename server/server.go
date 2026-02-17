@@ -83,19 +83,22 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	app.NoRoute(middleware.NotFoundHandler())
 
 	public := app.Group("flighthours/api/v1")
+	authLimiter := middleware.NewRateLimiter(0.2, 5) // 1 req/5s, burst 5
 	{
 
 		public.POST("/register", validator.WithValidateRegister(), handler.RegisterEmployee())
 
-		public.POST("/login", handler.Login())
+		public.POST("/login", authLimiter.Limit(), validator.WithValidateLogin(), handler.Login())
 
 		public.POST("/auth/resend-verification", validator.WithValidateResendVerificationEmail(), handler.ResendVerificationEmail())
 
-		public.POST("/auth/verify-email", handler.VerifyEmailByToken())
+		public.POST("/auth/verify-email", validator.WithValidateVerifyEmail(), handler.VerifyEmailByToken())
 
-		public.POST("/auth/password-reset", validator.WithValidatePasswordResetRequest(), handler.PasswordReset())
+		public.POST("/auth/password-reset", authLimiter.Limit(), validator.WithValidatePasswordResetRequest(), handler.PasswordReset())
 
-		public.POST("/auth/update-password", validator.WithValidateUpdatePassword(), handler.UpdatePassword())
+		public.POST("/auth/update-password", authLimiter.Limit(), validator.WithValidateUpdatePassword(), handler.UpdatePassword())
+
+		public.POST("/auth/refresh", authLimiter.Limit(), validator.WithValidateRefreshToken(), handler.RefreshToken())
 
 		public.GET("/airlines", handler.ListAirlines())
 
