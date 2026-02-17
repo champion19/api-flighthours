@@ -73,6 +73,9 @@ func (f *fakeService) SendPasswordResetEmail(context.Context, string) error  { r
 func (f *fakeService) Login(context.Context, string, string) (*gocloak.JWT, error) {
 	return &gocloak.JWT{}, nil
 }
+func (f *fakeService) RefreshToken(context.Context, string) (*gocloak.JWT, error) {
+	return &gocloak.JWT{}, nil
+}
 func (f *fakeService) VerifyEmailByToken(context.Context, string) (string, error) {
 	return "", nil
 }
@@ -131,7 +134,10 @@ func (f *fakeServiceErr) AssignUserRole(context.Context, string, string) error  
 func (f *fakeServiceErr) SendVerificationEmail(context.Context, string) error   { return nil }
 func (f *fakeServiceErr) SendPasswordResetEmail(context.Context, string) error  { return nil }
 func (f *fakeServiceErr) Login(context.Context, string, string) (*gocloak.JWT, error) {
-	return &gocloak.JWT{}, nil
+	return nil, errors.New("login error")
+}
+func (f *fakeServiceErr) RefreshToken(context.Context, string) (*gocloak.JWT, error) {
+	return nil, errors.New("refresh error")
 }
 func (f *fakeServiceErr) VerifyEmailByToken(context.Context, string) (string, error) {
 	return "", nil

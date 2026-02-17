@@ -23,8 +23,8 @@ func TestDailyLogbookDetail_ToLogger(t *testing.T) {
 		PilotRole:      pilotRolePtr(PilotRolePF),
 	}
 	result := d.ToLogger()
-	if len(result) != 7 {
-		t.Errorf("expected 7 items, got %d", len(result))
+	if len(result) != 8 {
+		t.Errorf("expected 8 items, got %d", len(result))
 	}
 }
 

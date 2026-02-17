@@ -78,14 +78,13 @@ func IsValidApproachType(approachType string) bool {
 // DailyLogbookDetail represents a flight segment within a daily logbook
 // This is the CORE entity of the flight hours tracking system
 type DailyLogbookDetail struct {
-	ID             string `json:"id"`
-	DailyLogbookID string `json:"daily_logbook_id"`
-	FlightRealDate string `json:"flight_real_date"` // DATE format: YYYY-MM-DD
-	FlightNumber   string `json:"flight_number"`
-	AirlineRouteID string `json:"airline_route_id"`
-	LicensePlateID string `json:"license_plate_id"`
-	Passengers     *int   `json:"passengers,omitempty"`
-
+	ID                  string        `json:"id"`
+	DailyLogbookID      string        `json:"daily_logbook_id"`
+	FlightRealDate      string        `json:"flight_real_date"` // DATE format: YYYY-MM-DD
+	FlightNumber        string        `json:"flight_number"`
+	AirlineRouteID      string        `json:"airline_route_id"`
+	LicensePlateID      string        `json:"license_plate_id"`
+	Passengers          *int          `json:"passengers,omitempty"`
 	OutTime             *string       `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
 	TakeoffTime         *string       `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
 	LandingTime         *string       `json:"landing_time,omitempty"` // Hora aterrizaje (ON)
@@ -119,6 +118,10 @@ func (d *DailyLogbookDetail) ToLogger() []string {
 	if d.PilotRole != nil {
 		pilotRole = string(*d.PilotRole)
 	}
+	crewRole := ""
+	if d.CrewRole != nil {
+		crewRole = string(*d.CrewRole)
+	}
 	return []string{
 		"id:" + d.ID,
 		"daily_logbook_id:" + d.DailyLogbookID,
@@ -127,5 +130,6 @@ func (d *DailyLogbookDetail) ToLogger() []string {
 		"route_code:" + d.RouteCode,
 		"license_plate:" + d.LicensePlate,
 		"pilot_role:" + pilotRole,
+		"crew_role:" + crewRole,
 	}
 }

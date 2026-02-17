@@ -92,7 +92,7 @@ var errorToMessageCode = map[error]string{
 	domain.ErrFlightUnauthorized:         domain.MsgFlightUnauthorized,
 	domain.ErrFlightInvalidRoute:         domain.MsgFlightInvalidRoute,
 	domain.ErrFlightInvalidLogbook:       domain.MsgFlightInvalidLogbook,
-	domain.ErrFlightInvalidAircraft:      domain.MsgFlightInvalidAircraft,
+	domain.ErrFlightInvalidLicensePlate:  domain.MsgFlightInvalidLicensePlate,
 	domain.ErrFlightInvalidTimeSequence:  domain.MsgFlightInvalidTimeSequence,
 	domain.ErrFlightDuplicate:            domain.MsgFlightDuplicate,
 	domain.ErrEngineNotFound:             domain.MsgEngineNotFound,
@@ -102,12 +102,20 @@ var errorToMessageCode = map[error]string{
 	domain.ErrAirlineNotFound:            domain.MsgAirlineNotFound,
 	domain.ErrAirportNotFound:            domain.MsgAirportNotFound,
 	domain.ErrInternalServer:             domain.MsgServerError,
+	domain.ErrRateLimitExceeded:          domain.MsgRateLimitExceeded,
+	domain.ErrRefreshTokenFailed:         domain.MsgKCRefreshTokenFailed,
+}
+
+type ValidationFieldError struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
 }
 
 type ErrorResponse struct {
-	Success bool   `json:"success"`
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Success bool                   `json:"success"`
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Fields  []ValidationFieldError `json:"fields,omitempty"`
 }
 
 type ErrorHandler struct {
@@ -133,8 +141,17 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 			log := log.WithTraceID(traceID)
 
 			var params []string
+			var fieldErrors []ValidationFieldError
 			if validationFields, exists := c.Get("validation_fields"); exists {
 				if fields, ok := validationFields.([]string); ok {
+					// Build field-level error details for the response
+					for _, field := range fields {
+						fieldErrors = append(fieldErrors, ValidationFieldError{
+							Field:   field,
+							Message: "This field is not valid",
+						})
+					}
+					// Build params for message template substitution
 					if len(fields) > 1 {
 						fieldsStr := fields[0]
 						for i := 1; i < len(fields); i++ {
@@ -165,6 +182,7 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 						Success: false,
 						Code:    msg.Code,
 						Message: msg.Content,
+						Fields:  fieldErrors,
 					})
 					return
 				}

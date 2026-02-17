@@ -47,6 +47,7 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
 		LicensePlateID: d.LicensePlateID,
+
 	}
 
 	if d.OutTime.Valid {
@@ -250,7 +251,7 @@ func handleDetailFKError(errStr string) error {
 		return domain.ErrFlightInvalidRoute
 	}
 	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "license_plate") {
-		return domain.ErrFlightInvalidAircraft
+		return domain.ErrFlightInvalidLicensePlate
 	}
 	return nil
 }

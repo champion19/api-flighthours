@@ -28,6 +28,7 @@ type Service interface {
 	SendVerificationEmail(ctx context.Context, userID string) error
 	SendPasswordResetEmail(ctx context.Context, email string) error
 	Login(ctx context.Context, email, password string) (*gocloak.JWT, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*gocloak.JWT, error)
 	VerifyEmailByToken(ctx context.Context, token string) (string, error)
 	UpdatePassword(ctx context.Context, token, newPassword string) (string, error)
 	ChangePassword(ctx context.Context, email, currentPassword, newPassword string) (string, error)

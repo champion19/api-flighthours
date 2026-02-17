@@ -12,7 +12,7 @@
     "bp": {
       "type": "string",
       "description": "Business partner code (optional)",
-      "maxLength": 50
+      "maxLength": 16
     },
     "start_date": {
       "type": "string",

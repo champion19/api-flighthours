@@ -57,7 +57,10 @@ func (f *fakeServiceForReadOnly) SendPasswordResetEmail(context.Context, string)
 	return nil
 }
 func (f *fakeServiceForReadOnly) Login(context.Context, string, string) (*gocloak.JWT, error) {
-	return &gocloak.JWT{}, nil
+	return nil, nil
+}
+func (f *fakeServiceForReadOnly) RefreshToken(context.Context, string) (*gocloak.JWT, error) {
+	return nil, nil
 }
 func (f *fakeServiceForReadOnly) VerifyEmailByToken(context.Context, string) (string, error) {
 	return "", nil

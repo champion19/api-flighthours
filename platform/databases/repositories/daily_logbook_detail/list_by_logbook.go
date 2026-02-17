@@ -19,7 +19,36 @@ func (r *repository) ListDailyLogbookDetailsByLogbook(ctx context.Context, logbo
 
 	var details []domain.DailyLogbookDetail
 	for rows.Next() {
-		entity, err := scanDetail(rows)
+		var entity DailyLogbookDetail
+		err := rows.Scan(
+			&entity.ID,
+			&entity.DailyLogbookID,
+			&entity.FlightRealDate,
+			&entity.FlightNumber,
+			&entity.AirlineRouteID,
+			&entity.LicensePlateID,
+			&entity.Passengers,
+			&entity.OutTime,
+			&entity.TakeoffTime,
+			&entity.LandingTime,
+			&entity.InTime,
+			&entity.PilotRole,
+			&entity.CompanionName,
+			&entity.CrewRole,
+			&entity.AirTime,
+			&entity.BlockTime,
+			&entity.DutyTime,
+			&entity.ApproachType,
+			&entity.FlightType,
+			&entity.EmployeeLogbookID,
+			&entity.LogDate,
+			&entity.LicensePlate,
+			&entity.ModelName,
+			&entity.RouteCode,
+			&entity.OriginIataCode,
+			&entity.DestinationIataCode,
+			&entity.AirlineCode,
+		)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookDetailListError, "logbook_id", logbookID, "error", err)
 			return nil, err
