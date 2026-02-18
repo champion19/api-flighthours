@@ -56,20 +56,6 @@ func (f *fakeDailyLogbookDetailService) ListDailyLogbookDetailsByEmployee(ctx co
 	return nil, nil
 }
 
-func (f *fakeDailyLogbookDetailService) CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
-	if f.createFn != nil {
-		return f.createFn(ctx, detail)
-	}
-	return nil
-}
-
-func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
-	if f.updateFn != nil {
-		return f.updateFn(ctx, detail)
-	}
-	return nil
-}
-
 func (f *fakeDailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
 	if f.validateTimeFn != nil {
 		return f.validateTimeFn(outTime, takeoffTime, landingTime, inTime)

@@ -97,7 +97,7 @@ func newTestLicensePlateMessageCache(t *testing.T) *messaging.MessageCache {
 }
 
 func newLicensePlateTestRouter(svc input.LicensePlateService, enc *idencoder.HashidsEncoder, resp *middleware.ResponseHandler, errHandler *middleware.ErrorHandler) *gin.Engine {
-	licensePlateInteractor := interactor.NewLicensePlateInteractor(svc, Logger)
+	licensePlateInteractor := interactor.NewLicensePlateInteractor(svc, log)
 	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, licensePlateInteractor)
 
 	r := gin.New()

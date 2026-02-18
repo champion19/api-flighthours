@@ -144,6 +144,9 @@ func (b *Builder) WithValidateUpdateDailyLogbookDetail() gin.HandlerFunc {
 func (b *Builder) WithValidateCreateDailyLogbook() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.CreateDailyLogbookValidator)
 }
+func (b *Builder) WithValidateUpdateDailyLogbook() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.UpdateDailyLogbookValidator)
+}
 func (b *Builder) WithValidateRefreshToken() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.RefreshTokenValidator)
 }

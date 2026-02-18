@@ -59,6 +59,39 @@ func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLo
 	return logbook, nil
 }
 
+// UpdateDailyLogbookRequest - Request DTO for updating a daily logbook
+type UpdateDailyLogbookRequest struct {
+	LogDate  string `json:"log_date" binding:"required"`
+	BookPage *int   `json:"book_page,omitempty"`
+	Status   *bool  `json:"status,omitempty"`
+}
+// Sanitize trims whitespace from UpdateDailyLogbookRequest fields
+func (r *UpdateDailyLogbookRequest) Sanitize() {
+	r.LogDate = TrimString(r.LogDate)
+}
+
+// ToDomain converts the request to a domain model for update
+func (r *UpdateDailyLogbookRequest) ToDomain(id, employeeID string) (*domain.DailyLogbook, error) {
+	logDate, err := time.Parse("2006-01-02", r.LogDate)
+	if err != nil {
+		return nil, domain.ErrInvalidDateFormat
+	}
+
+	status := true
+	if r.Status != nil {
+		status = *r.Status
+	}
+
+	return &domain.DailyLogbook{
+		ID:         id,
+		LogDate:    logDate,
+		EmployeeID: employeeID,
+		BookPage:   r.BookPage,
+		Status:     status,
+	}, nil
+}
+
+
 // DailyLogbookListResponse - Response DTO for listing daily logbooks
 type DailyLogbookListResponse struct {
 	Logbooks []DailyLogbookResponse `json:"daily_logbooks"`

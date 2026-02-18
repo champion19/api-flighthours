@@ -25,7 +25,7 @@ func (h *handler) GetLicensePlateByPlate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		traceID := middleware.GetTraceIDFromContext(ctx)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		plate := c.Param("plate")
 		if plate == "" {
@@ -72,7 +72,7 @@ func (h *handler) ListLicensePlates() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		traceID := middleware.GetTraceIDFromContext(ctx)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		filters := make(map[string]interface{})
 
@@ -116,7 +116,7 @@ func (h *handler) CreateLicensePlate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		traceID := middleware.GetTraceIDFromContext(ctx)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req CreateLicensePlateRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -194,7 +194,7 @@ func (h *handler) UpdateLicensePlate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		traceID := middleware.GetTraceIDFromContext(ctx)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {

@@ -34,49 +34,9 @@ func (s *DailyLogbookService) ListDailyLogbooksByEmployee(ctx context.Context, e
 	return s.repo.ListDailyLogbooksByEmployee(ctx, employeeID, filters)
 }
 
-// CreateDailyLogbook creates a new daily logbook entry with transaction handling
-func (s *DailyLogbookService) CreateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook) error {
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	// Generate ID if not set
-	if logbook.ID == "" {
-		logbook.SetID()
-	}
-
-	if err = s.repo.SaveDailyLogbook(ctx, tx, logbook); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-// DeleteDailyLogbook deletes a daily logbook with transaction handling
-func (s *DailyLogbookService) DeleteDailyLogbook(ctx context.Context, id string) error {
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err = s.repo.DeleteDailyLogbook(ctx, tx, id); err != nil {
-		return err
-	}
-
-	return tx.Commit()
+// UpdateDailyLogbookTx updates an existing daily logbook using an external transaction
+func (s *DailyLogbookService) UpdateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+	return s.repo.UpdateDailyLogbook(ctx, tx, logbook)
 }
 
 // DeleteDailyLogbookTx deletes a daily logbook using an external transaction

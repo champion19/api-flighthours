@@ -27,6 +27,7 @@ type Validators struct {
 	CreateDailyLogbookDetailValidator *jsonschema.Schema
 	UpdateDailyLogbookDetailValidator *jsonschema.Schema
 	CreateDailyLogbookValidator       *jsonschema.Schema
+	UpdateDailyLogbookValidator       *jsonschema.Schema
 	RefreshTokenValidator             *jsonschema.Schema
 }
 
@@ -140,6 +141,12 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	validator.CreateDailyLogbookDetailValidator = createDailyLogbookDetail
 	validator.UpdateDailyLogbookDetailValidator = updateDailyLogbookDetail
 	validator.CreateDailyLogbookValidator = createDailyLogbook
+
+	updateDailyLogbook, err := validator.createSchema("update_daily_logbook_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	validator.UpdateDailyLogbookValidator = updateDailyLogbook
 
 	refreshToken, err := validator.createSchema("refresh_token_schema.json")
 	if err != nil {

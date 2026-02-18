@@ -22,7 +22,7 @@ import (
 func (h *handler) GetAircraftModelByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -75,7 +75,7 @@ func (h *handler) GetAircraftModelByID() gin.HandlerFunc {
 func (h *handler) ListAircraftModels() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogAircraftModelList,
 			"method", c.Request.Method,
@@ -123,7 +123,7 @@ func (h *handler) ListAircraftModels() gin.HandlerFunc {
 func (h *handler) GetAircraftModelsByFamily() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		familyID := c.Param("family")
 		if familyID == "" {
@@ -173,7 +173,7 @@ func (h *handler) GetAircraftModelsByFamily() gin.HandlerFunc {
 func (h *handler) ActivateAircraftModel() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -232,7 +232,7 @@ func (h *handler) ActivateAircraftModel() gin.HandlerFunc {
 func (h *handler) DeactivateAircraftModel() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {

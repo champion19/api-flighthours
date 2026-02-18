@@ -38,56 +38,6 @@ func (s *DailyLogbookDetailService) ListDailyLogbookDetailsByEmployee(ctx contex
 	return s.repo.ListDailyLogbookDetailsByEmployee(ctx, employeeID)
 }
 
-func (s *DailyLogbookDetailService) CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
-	log.Info(logger.LogDailyLogbookDetailCreate, "data", detail.ToLogger())
-
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		log.Error(logger.LogDBTransactionBeginErr, "error", err)
-		return err
-	}
-
-	err = s.repo.SaveDailyLogbookDetail(ctx, tx, detail)
-	if err != nil {
-		tx.Rollback()
-		log.Error(logger.LogDailyLogbookDetailCreateError, "error", err)
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error(logger.LogDBTransactionCommitErr, "error", err)
-		return err
-	}
-
-	log.Info(logger.LogDailyLogbookDetailCreateOK, "id", detail.ID)
-	return nil
-}
-
-func (s *DailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
-	log.Info(logger.LogDailyLogbookDetailUpdate, "data", detail.ToLogger())
-
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		log.Error(logger.LogDBTransactionBeginErr, "error", err)
-		return err
-	}
-
-	err = s.repo.UpdateDailyLogbookDetail(ctx, tx, detail)
-	if err != nil {
-		tx.Rollback()
-		log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error(logger.LogDBTransactionCommitErr, "error", err)
-		return err
-	}
-
-	log.Info(logger.LogDailyLogbookDetailUpdateOK, "id", detail.ID)
-	return nil
-}
-
 // CreateDailyLogbookDetailTx creates a daily logbook detail using an external transaction
 func (s *DailyLogbookDetailService) CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
 	return s.repo.SaveDailyLogbookDetail(ctx, tx, detail)
@@ -96,24 +46,6 @@ func (s *DailyLogbookDetailService) CreateDailyLogbookDetailTx(ctx context.Conte
 // UpdateDailyLogbookDetailTx updates a daily logbook detail using an external transaction
 func (s *DailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
 	return s.repo.UpdateDailyLogbookDetail(ctx, tx, detail)
-}
-
-func (s *DailyLogbookDetailService) DeleteDailyLogbookDetail(ctx context.Context, id string) error {
-	log.Info(logger.LogDailyLogbookDetailDelete, "id", id)
-
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		log.Error(logger.LogDBTransactionBeginErr, "error", err)
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error(logger.LogDBTransactionCommitErr, "error", err)
-		return err
-	}
-
-	log.Info(logger.LogDailyLogbookDetailDeleteOK, "id", id)
-	return nil
 }
 
 func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {

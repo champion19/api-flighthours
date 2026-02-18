@@ -14,6 +14,7 @@ type mockDailyLogbookRepo struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.DailyLogbook, error)
 	listFn         func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
 	saveFn         func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
+	updateFn       func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	updateStatusFn func(ctx context.Context, tx output.Tx, id string, status bool) error
 	deleteFn       func(ctx context.Context, tx output.Tx, id string) error
@@ -36,6 +37,13 @@ func (m *mockDailyLogbookRepo) ListDailyLogbooksByEmployee(ctx context.Context, 
 func (m *mockDailyLogbookRepo) SaveDailyLogbook(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
 	if m.saveFn != nil {
 		return m.saveFn(ctx, tx, logbook)
+	}
+	return nil
+}
+
+func (m *mockDailyLogbookRepo) UpdateDailyLogbook(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+	if m.updateFn != nil {
+		return m.updateFn(ctx, tx, logbook)
 	}
 	return nil
 }
@@ -119,59 +127,6 @@ func TestDailyLogbookService_ListByEmployee(t *testing.T) {
 		}
 		if len(result) != 2 {
 			t.Errorf("expected 2 logbooks, got %d", len(result))
-		}
-	})
-}
-
-func TestDailyLogbookService_Create(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			beginTxFn: func(ctx context.Context) (output.Tx, error) {
-				return &mockTx{}, nil
-			},
-			saveFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-				return nil
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-	})
-
-	t.Run("begin tx error", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			beginTxFn: func(ctx context.Context) (output.Tx, error) {
-				return nil, errors.New("tx error")
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-
-	t.Run("save error rolls back", func(t *testing.T) {
-		rollbackCalled := false
-		repo := &mockDailyLogbookRepo{
-			beginTxFn: func(ctx context.Context) (output.Tx, error) {
-				return &mockTx{
-					rollbackFn: func() error { rollbackCalled = true; return nil },
-				}, nil
-			},
-			saveFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-				return errors.New("save error")
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.CreateDailyLogbook(context.Background(), domain.DailyLogbook{EmployeeID: "emp-1"})
-		if err == nil {
-			t.Error("expected error")
-		}
-		if !rollbackCalled {
-			t.Error("expected rollback to be called")
 		}
 	})
 }
@@ -322,63 +277,6 @@ func TestDailyLogbookService_DeleteDailyLogbookTx(t *testing.T) {
 		}
 		svc := NewDailyLogbookService(repo)
 		err := svc.DeleteDailyLogbookTx(context.Background(), &mockTx{}, "lb-1")
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-}
-
-func TestDailyLogbookService_DeleteDailyLogbook(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
-				return nil
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.DeleteDailyLogbook(context.Background(), "lb-1")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-	})
-
-	t.Run("begin tx error", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			beginTxFn: func(ctx context.Context) (output.Tx, error) {
-				return nil, errors.New("begin tx failed")
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.DeleteDailyLogbook(context.Background(), "lb-1")
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-
-	t.Run("delete error", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
-				return errors.New("delete failed")
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.DeleteDailyLogbook(context.Background(), "lb-1")
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-
-	t.Run("commit error", func(t *testing.T) {
-		repo := &mockDailyLogbookRepo{
-			beginTxFn: func(ctx context.Context) (output.Tx, error) {
-				return &mockTx{commitFn: func() error { return errors.New("commit failed") }}, nil
-			},
-			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
-				return nil
-			},
-		}
-		svc := NewDailyLogbookService(repo)
-		err := svc.DeleteDailyLogbook(context.Background(), "lb-1")
 		if err == nil {
 			t.Error("expected error")
 		}

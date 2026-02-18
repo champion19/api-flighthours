@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -128,29 +130,11 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 		}
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailCreateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.CreateDailyLogbookDetailTx(ctx, tx, detail)
+		})
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "rollback_error", rbErr)
-			} else {
-				log.Warn(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.CreateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
-		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "commit_error", err)
 		return err
 	}
 
@@ -190,29 +174,11 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 	// Preserve the daily_logbook_id from existing record (cannot change parent)
 	detail.DailyLogbookID = existing.DailyLogbookID
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailUpdateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail)
+		})
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "rollback_error", rbErr)
-			} else {
-				log.Warn(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
-		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "commit_error", err)
 		return err
 	}
 

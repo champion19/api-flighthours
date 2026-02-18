@@ -1510,6 +1510,80 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing daily logbook for the authenticated employee (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbooks"
+                ],
+                "summary": "Update a daily logbook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Daily Logbook ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated daily logbook data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateDailyLogbookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DailyLogbookResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -3561,6 +3635,23 @@ const docTemplate = `{
                 },
                 "log_date": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateDailyLogbookRequest": {
+            "type": "object",
+            "required": [
+                "log_date"
+            ],
+            "properties": {
+                "book_page": {
+                    "type": "integer"
+                },
+                "log_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
                 }
             }
         },

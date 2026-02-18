@@ -22,7 +22,7 @@ import (
 func (h *handler) GetEngineByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -74,7 +74,7 @@ func (h *handler) GetEngineByID() gin.HandlerFunc {
 func (h *handler) ListEngines() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogEngineList,
 			"method", c.Request.Method,

@@ -22,7 +22,7 @@ import (
 func (h *handler) GetAirportByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -75,7 +75,7 @@ func (h *handler) GetAirportByID() gin.HandlerFunc {
 func (h *handler) ActivateAirport() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -135,7 +135,7 @@ func (h *handler) ActivateAirport() gin.HandlerFunc {
 func (h *handler) DeactivateAirport() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -190,7 +190,7 @@ func (h *handler) DeactivateAirport() gin.HandlerFunc {
 func (h *handler) ListAirports() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogAirportList,
 			"method", c.Request.Method,
@@ -240,7 +240,7 @@ func (h *handler) ListAirports() gin.HandlerFunc {
 func (h *handler) GetAirportsByType() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		airportType := c.Param("airport_type")
 		if airportType == "" {

@@ -13,8 +13,8 @@ import (
 type fakeDailyLogbookService struct {
 	getByIDFn      func(ctx context.Context, id string) (*domain.DailyLogbook, error)
 	listFn         func(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
-	createFn       func(ctx context.Context, logbook domain.DailyLogbook) error
 	createTxFn     func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
+	updateTxFn     func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	activateTxFn   func(ctx context.Context, tx output.Tx, id string) error
 	deactivateTxFn func(ctx context.Context, tx output.Tx, id string) error
 	deleteTxFn     func(ctx context.Context, tx output.Tx, id string) error
@@ -42,16 +42,16 @@ func (f *fakeDailyLogbookService) ListDailyLogbooksByEmployee(ctx context.Contex
 	return nil, errors.New("not implemented")
 }
 
-func (f *fakeDailyLogbookService) CreateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook) error {
-	if f.createFn != nil {
-		return f.createFn(ctx, logbook)
+func (f *fakeDailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+	if f.createTxFn != nil {
+		return f.createTxFn(ctx, tx, logbook)
 	}
 	return nil
 }
 
-func (f *fakeDailyLogbookService) CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-	if f.createTxFn != nil {
-		return f.createTxFn(ctx, tx, logbook)
+func (f *fakeDailyLogbookService) UpdateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+	if f.updateTxFn != nil {
+		return f.updateTxFn(ctx, tx, logbook)
 	}
 	return nil
 }

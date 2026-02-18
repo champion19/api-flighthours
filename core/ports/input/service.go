@@ -51,9 +51,6 @@ type AirlineService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAirlineByID(ctx context.Context, id string) (*domain.Airline, error)
 	ListAirlines(ctx context.Context, filters map[string]interface{}) ([]domain.Airline, error)
-	UpdateAirlineStatus(ctx context.Context, id string, status bool) error
-	ActivateAirline(ctx context.Context, id string) error
-	DeactivateAirline(ctx context.Context, id string) error
 	ActivateAirlineTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateAirlineTx(ctx context.Context, tx output.Tx, id string) error
 }
@@ -63,9 +60,6 @@ type AirportService interface {
 	GetAirportByID(ctx context.Context, id string) (*domain.Airport, error)
 	ListAirports(ctx context.Context, filters map[string]interface{}) ([]domain.Airport, error)
 	GetAirportsByType(ctx context.Context, airportType string) ([]domain.Airport, error)
-	UpdateAirportStatus(ctx context.Context, id string, status bool) error
-	ActivateAirport(ctx context.Context, id string) error
-	DeactivateAirport(ctx context.Context, id string) error
 	ActivateAirportTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateAirportTx(ctx context.Context, tx output.Tx, id string) error
 }
@@ -73,10 +67,6 @@ type AirportService interface {
 type AirlineEmployeeService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetAirlineEmployeeByID(ctx context.Context, id string) (*domain.AirlineEmployee, error)
-	AddAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
-	UpdateAirlineEmployee(ctx context.Context, employee domain.AirlineEmployee) error
-	ActivateAirlineEmployee(ctx context.Context, id string) error
-	DeactivateAirlineEmployee(ctx context.Context, id string) error
 	AddAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error
 	UpdateAirlineEmployeeTx(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error
 	ActivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error
@@ -88,8 +78,6 @@ type LicensePlateService interface {
 	GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error)
 	GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error)
 	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
-	CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
-	UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) error
 	CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
 	UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
 }
@@ -99,8 +87,6 @@ type AircraftModelService interface {
 	GetAircraftModelByID(ctx context.Context, id string) (*domain.AircraftModel, error)
 	ListAircraftModels(ctx context.Context, filters map[string]interface{}) ([]domain.AircraftModel, error)
 	GetAircraftModelsByFamily(ctx context.Context, family string) ([]domain.AircraftModel, error)
-	ActivateAircraftModel(ctx context.Context, id string) error
-	DeactivateAircraftModel(ctx context.Context, id string) error
 	ActivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error
 }
@@ -115,8 +101,6 @@ type AirlineRouteService interface {
 	GetAirlineRouteByID(ctx context.Context, id string) (*domain.AirlineRoute, error)
 	ListAirlineRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error)
 	ListAirlineRoutesByAirlineID(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
-	ActivateAirlineRoute(ctx context.Context, id string) error
-	DeactivateAirlineRoute(ctx context.Context, id string) error
 	ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error
 }
@@ -126,8 +110,6 @@ type DailyLogbookDetailService interface {
 	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
 	ListDailyLogbookDetailsByLogbook(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
 	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
-	CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
-	UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error
 	CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error
@@ -139,6 +121,7 @@ type DailyLogbookService interface {
 	GetDailyLogbookByID(ctx context.Context, id string) (*domain.DailyLogbook, error)
 	ListDailyLogbooksByEmployee(ctx context.Context, employeeID string, filters map[string]interface{}) ([]domain.DailyLogbook, error)
 	CreateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
+	UpdateDailyLogbookTx(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error
 	ActivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 	DeactivateDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
 	DeleteDailyLogbookTx(ctx context.Context, tx output.Tx, id string) error
