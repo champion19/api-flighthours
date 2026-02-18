@@ -56,6 +56,7 @@ func (f fakeRepo) GetEmployeeByKeycloakID(context.Context, string) (*domain.Empl
 type fakeKeycloak struct {
 	getUserByEmailFn func(ctx context.Context, email string) (*gocloak.User, error)
 	createUserFn     func(ctx context.Context, employee *domain.Employee) (string, error)
+	refreshTokenFn   func(ctx context.Context, refreshToken string) (*gocloak.JWT, error)
 }
 
 func (f fakeKeycloak) LoginUser(context.Context, string, string) (*gocloak.JWT, error) {
@@ -94,7 +95,10 @@ func (fakeKeycloak) SendPasswordResetEmail(context.Context, string) error {
 }
 func (fakeKeycloak) VerifyEmail(context.Context, string) error { return errors.New("not implemented") }
 func (fakeKeycloak) Logout(context.Context, string) error      { return errors.New("not implemented") }
-func (fakeKeycloak) RefreshToken(context.Context, string) (*gocloak.JWT, error) {
+func (f fakeKeycloak) RefreshToken(ctx context.Context, refreshToken string) (*gocloak.JWT, error) {
+	if f.refreshTokenFn != nil {
+		return f.refreshTokenFn(ctx, refreshToken)
+	}
 	return nil, errors.New("not implemented")
 }
 func (fakeKeycloak) ValidateActionToken(context.Context, string) (string, string, error) {
@@ -265,6 +269,64 @@ func TestService_CreateUserInKeycloak(t *testing.T) {
 		}
 		if id != "kc1" {
 			t.Fatalf("expected kc1, got %s", id)
+		}
+	})
+}
+
+func TestService_RefreshToken(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("empty token => ErrRefreshTokenFailed", func(t *testing.T) {
+		svc := NewService(
+			fakeRepo{getByEmailFn: func(context.Context, string) (*domain.Employee, error) {
+				return nil, nil
+			}},
+			fakeKeycloak{},
+		)
+
+		_, err := svc.RefreshToken(ctx, "")
+		if !errors.Is(err, domain.ErrRefreshTokenFailed) {
+			t.Fatalf("expected %v, got %v", domain.ErrRefreshTokenFailed, err)
+		}
+	})
+
+	t.Run("keycloak error => ErrRefreshTokenFailed", func(t *testing.T) {
+		svc := NewService(
+			fakeRepo{getByEmailFn: func(context.Context, string) (*domain.Employee, error) {
+				return nil, nil
+			}},
+			fakeKeycloak{refreshTokenFn: func(ctx context.Context, rt string) (*gocloak.JWT, error) {
+				return nil, errors.New("token expired")
+			}},
+		)
+
+		_, err := svc.RefreshToken(ctx, "expired-token")
+		if !errors.Is(err, domain.ErrRefreshTokenFailed) {
+			t.Fatalf("expected %v, got %v", domain.ErrRefreshTokenFailed, err)
+		}
+	})
+
+	t.Run("success => returns JWT", func(t *testing.T) {
+		svc := NewService(
+			fakeRepo{getByEmailFn: func(context.Context, string) (*domain.Employee, error) {
+				return nil, nil
+			}},
+			fakeKeycloak{refreshTokenFn: func(ctx context.Context, rt string) (*gocloak.JWT, error) {
+				return &gocloak.JWT{
+					AccessToken:  "new-access",
+					RefreshToken: "new-refresh",
+					ExpiresIn:    3600,
+					TokenType:    "Bearer",
+				}, nil
+			}},
+		)
+
+		token, err := svc.RefreshToken(ctx, "valid-refresh-token")
+		if err != nil {
+			t.Fatalf("expected nil error, got %v", err)
+		}
+		if token.AccessToken != "new-access" {
+			t.Errorf("expected new-access, got %s", token.AccessToken)
 		}
 	})
 }

@@ -236,6 +236,108 @@ func TestHTTP_Login(t *testing.T) {
 	})
 }
 
+func TestHTTP_RefreshToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cache := newTestEmployeeMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
+		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+		r := gin.New()
+		r.Use(middleware.RequestID())
+		r.Use(errHandler.Handle())
+		r.POST("/auth/refresh", h.RefreshToken())
+		return r
+	}
+
+	t.Run("success - returns tokens", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			refreshTokenFn: func(ctx context.Context, refreshToken string) (*dto.TokenResponse, error) {
+				return &dto.TokenResponse{
+					AccessToken:  "new-access-123",
+					RefreshToken: "new-refresh-456",
+					ExpiresIn:    3600,
+					TokenType:    "Bearer",
+				}, nil
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"refresh_token":"old-refresh-token"}`
+		req := httptest.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d. body=%s", w.Code, w.Body.String())
+		}
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != true {
+			t.Errorf("expected success=true, got %v", response["success"])
+		}
+	})
+
+	t.Run("interactor error - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			refreshTokenFn: func(ctx context.Context, refreshToken string) (*dto.TokenResponse, error) {
+				return nil, errors.New("token expired")
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"refresh_token":"expired-token"}`
+		req := httptest.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+
+	t.Run("invalid JSON - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{}
+
+		router := newRouter(fake)
+		req := httptest.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewBufferString("{bad json"))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+}
+
 func TestHTTP_PasswordReset(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

@@ -210,6 +210,43 @@ func TestAirportInteractor_DeactivateAirport(t *testing.T) {
 			t.Fatalf("expected %v, got %v", deactivateErr, err)
 		}
 	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeAirportServiceForInteractor{
+			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
+				return &domain.Airport{ID: "airport-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx start failed")
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		err := interactor.DeactivateAirport(ctx, "airport-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeAirportServiceForInteractor{
+			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
+				return &domain.Airport{ID: "airport-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			deactivateTxFn: func(context.Context, output.Tx, string) error {
+				return nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		err := interactor.DeactivateAirport(ctx, "airport-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
 }
 
 func TestAirportInteractor_ListAirports(t *testing.T) {
@@ -401,6 +438,43 @@ func TestAirportInteractor_ActivateAirport(t *testing.T) {
 		err := interactor.ActivateAirport(ctx, "airport-123")
 		if !errors.Is(err, activateErr) {
 			t.Fatalf("expected %v, got %v", activateErr, err)
+		}
+	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeAirportServiceForInteractor{
+			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
+				return &domain.Airport{ID: "airport-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx start failed")
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		err := interactor.ActivateAirport(ctx, "airport-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeAirportServiceForInteractor{
+			getByIDFn: func(context.Context, string) (*domain.Airport, error) {
+				return &domain.Airport{ID: "airport-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			activateTxFn: func(context.Context, output.Tx, string) error {
+				return nil
+			},
+		}
+		interactor := NewAirportInteractor(svc)
+
+		err := interactor.ActivateAirport(ctx, "airport-123")
+		if err == nil {
+			t.Error("expected error, got nil")
 		}
 	})
 }

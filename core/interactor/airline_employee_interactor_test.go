@@ -13,6 +13,7 @@ import (
 
 // fakeAirlineEmployeeService implements input.AirlineEmployeeService for testing
 type fakeAirlineEmployeeService struct {
+	beginTxFn      func(ctx context.Context) (output.Tx, error)
 	getByIDFn      func(ctx context.Context, id string) (*domain.AirlineEmployee, error)
 	addFn          func(ctx context.Context, employee domain.AirlineEmployee) error
 	updateFn       func(ctx context.Context, employee domain.AirlineEmployee) error
@@ -27,6 +28,9 @@ type fakeAirlineEmployeeService struct {
 var _ input.AirlineEmployeeService = (*fakeAirlineEmployeeService)(nil)
 
 func (f *fakeAirlineEmployeeService) BeginTx(ctx context.Context) (output.Tx, error) {
+	if f.beginTxFn != nil {
+		return f.beginTxFn(ctx)
+	}
 	return &fakeTx{}, nil
 }
 
@@ -257,6 +261,43 @@ func TestAirlineEmployeeInteractor_ActivateAirlineEmployee(t *testing.T) {
 			t.Error("expected error, got nil")
 		}
 	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeAirlineEmployeeService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
+				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx start failed")
+			},
+		}
+		interactor := NewAirlineEmployeeInteractor(svc)
+
+		err := interactor.ActivateAirlineEmployee(context.Background(), "emp-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeAirlineEmployeeService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
+				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			activateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		interactor := NewAirlineEmployeeInteractor(svc)
+
+		err := interactor.ActivateAirlineEmployee(context.Background(), "emp-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
 }
 
 func TestAirlineEmployeeInteractor_DeactivateAirlineEmployee(t *testing.T) {
@@ -298,6 +339,43 @@ func TestAirlineEmployeeInteractor_DeactivateAirlineEmployee(t *testing.T) {
 			},
 			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
 				return errors.New("deactivation failed")
+			},
+		}
+		interactor := NewAirlineEmployeeInteractor(svc)
+
+		err := interactor.DeactivateAirlineEmployee(context.Background(), "emp-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeAirlineEmployeeService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
+				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx start failed")
+			},
+		}
+		interactor := NewAirlineEmployeeInteractor(svc)
+
+		err := interactor.DeactivateAirlineEmployee(context.Background(), "emp-123")
+		if err == nil {
+			t.Error("expected error, got nil")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeAirlineEmployeeService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AirlineEmployee, error) {
+				return &domain.AirlineEmployee{ID: id, AirlineID: "airline-123"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit failed") }}, nil
+			},
+			deactivateTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
 			},
 		}
 		interactor := NewAirlineEmployeeInteractor(svc)
