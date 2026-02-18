@@ -110,7 +110,7 @@ func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache
 		{Code: domain.MsgFlightInvalidTimeSequence, Type: cachetypes.TypeError, Content: "invalid time sequence"},
 		{Code: domain.MsgFlightInvalidRoute, Type: cachetypes.TypeError, Content: "invalid route"},
 		{Code: domain.MsgFlightInvalidLogbook, Type: cachetypes.TypeError, Content: "invalid logbook"},
-		{Code: domain.MsgFlightInvalidAircraft, Type: cachetypes.TypeError, Content: "invalid aircraft"},
+		{Code: domain.MsgFlightInvalidLicensePlate, Type: cachetypes.TypeError, Content: "invalid aircraft"},
 		{Code: domain.MsgDailyLogbookNotFound, Type: cachetypes.TypeError, Content: "logbook not found"},
 		{Code: domain.MsgDailyLogbookUnauthorized, Type: cachetypes.TypeError, Content: "unauthorized logbook"},
 		{Code: domain.MsgServerError, Type: cachetypes.TypeError, Content: "internal server error"},
@@ -639,6 +639,97 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 
 		t.Logf("status: %d", w.Code)
 	})
+
+	t.Run("duplicate flight error", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return domain.ErrFlightDuplicate
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("interactor invalid logbook error", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return domain.ErrFlightInvalidLogbook
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("interactor invalid license plate error", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return domain.ErrFlightInvalidLicensePlate
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("refetch error after create", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return nil
+			},
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return nil, errors.New("refetch failed")
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
 }
 
 // ── UpdateDailyLogbookDetail ───────────────────────────────────────────
@@ -944,6 +1035,74 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 			},
 		}
 		logbookSvc := &fakeDailyLogbookService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPut, "/daily-logbook-details/"+encodedDetailID, bytes.NewBufferString(validUpdateBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("flight not found", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return &domain.DailyLogbookDetail{
+					ID:             testDetailID,
+					DailyLogbookID: testLogbookID,
+					FlightNumber:   "AV123",
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
+					AirlineRouteID: testRouteID,
+					LicensePlateID: testAircraftID,
+				}, nil
+			},
+			updateFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return domain.ErrFlightNotFound
+			},
+		}
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPut, "/daily-logbook-details/"+encodedDetailID, bytes.NewBufferString(validUpdateBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("refetch error after update", func(t *testing.T) {
+		callCount := 0
+		detailSvc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				callCount++
+				if callCount == 1 {
+					// First call: ownership check succeeds
+					return &domain.DailyLogbookDetail{
+						ID:             testDetailID,
+						DailyLogbookID: testLogbookID,
+						FlightNumber:   "AV123",
+						PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
+						AirlineRouteID: testRouteID,
+						LicensePlateID: testAircraftID,
+					}, nil
+				}
+				// Second call: refetch fails
+				return nil, errors.New("refetch failed")
+			},
+		}
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
 		authUser := &domain.Employee{ID: testEmployeeID}
 		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
 

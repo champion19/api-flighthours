@@ -10,6 +10,48 @@ import (
 )
 
 const (
+	// Shared SELECT columns for daily_logbook_detail queries (used by QueryByID, QueryByLogbook, QueryByEmployee)
+	selectDetailColumns = `
+		dld.id,
+		dld.daily_logbook_id,
+		dld.flight_real_date,
+		dld.flight_number,
+		dld.airline_route_id,
+		dld.actual_license_plate_id,
+		dld.passengers,
+		dld.out_time,
+		dld.takeoff_time,
+		dld.landing_time,
+		dld.in_time,
+		dld.pilot_role,
+		dld.companion_name,
+		dld.crew_role,
+		dld.air_time,
+		dld.block_time,
+		dld.duty_time,
+		dld.approach_type,
+		dld.flight_type,
+		dld.employee_logbook_id,
+		dl.log_date,
+		lp.license_plate,
+		am.model_name,
+		CONCAT(orig.iata_code, '-', dest.iata_code) as route_code,
+		orig.iata_code as origin_iata_code,
+		dest.iata_code as destination_iata_code,
+		airl.airline_code`
+
+	// Shared JOIN clause for daily_logbook_detail queries
+	detailJoins = `
+		FROM daily_logbook_detail dld
+		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
+		INNER JOIN license_plate lp ON dld.actual_license_plate_id = lp.id
+		INNER JOIN aircraft_model am ON lp.aircraft_model_id = am.id
+		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
+		INNER JOIN route r ON alr.route_id = r.id
+		INNER JOIN airport orig ON r.origin_airport_id = orig.id
+		INNER JOIN airport dest ON r.destination_airport_id = dest.id
+		INNER JOIN airline airl ON alr.airline_id = airl.id`
+
 	// Query for getting a detail by ID with JOINs for denormalized data
 	QueryByID = `
 		SELECT
@@ -69,6 +111,7 @@ const (
 			dld.in_time,
 			dld.pilot_role,
 			dld.companion_name,
+			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
 			dld.duty_time,
@@ -96,46 +139,9 @@ const (
 	`
 
 	// Query for listing all flight details by employee ID (joins through daily_logbook)
-	QueryByEmployee = `
-		SELECT
-			dld.id,
-			dld.daily_logbook_id,
-			dld.flight_real_date,
-			dld.flight_number,
-			dld.airline_route_id,
-			dld.actual_license_plate_id,
-			dld.passengers,
-			dld.out_time,
-			dld.takeoff_time,
-			dld.landing_time,
-			dld.in_time,
-			dld.pilot_role,
-			dld.companion_name,
-			dld.air_time,
-			dld.block_time,
-			dld.duty_time,
-			dld.approach_type,
-			dld.flight_type,
-			dld.employee_logbook_id,
-			dl.log_date,
-			lp.license_plate,
-			am.model_name,
-			CONCAT(orig.iata_code, '-', dest.iata_code) as route_code,
-			orig.iata_code as origin_iata_code,
-			dest.iata_code as destination_iata_code,
-			airl.airline_code
-		FROM daily_logbook_detail dld
-		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
-		INNER JOIN license_plate lp ON dld.actual_license_plate_id = lp.id
-		INNER JOIN aircraft_model am ON lp.aircraft_model_id = am.id
-		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
-		INNER JOIN route r ON alr.route_id = r.id
-		INNER JOIN airport orig ON r.origin_airport_id = orig.id
-		INNER JOIN airport dest ON r.destination_airport_id = dest.id
-		INNER JOIN airline airl ON alr.airline_id = airl.id
+	QueryByEmployee = `SELECT` + selectDetailColumns + detailJoins + `
 		WHERE dl.employee_id = ?
-		ORDER BY dld.flight_real_date DESC, dld.out_time ASC
-	`
+		ORDER BY dld.flight_real_date DESC, dld.out_time ASC`
 
 	// Insert query
 	QueryInsert = `
@@ -146,8 +152,7 @@ const (
 			pilot_role, companion_name, crew_role,
 			air_time, block_time, duty_time,
 			approach_type, flight_type, employee_logbook_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Update query
 	QueryUpdate = `
@@ -169,8 +174,7 @@ const (
 			duty_time = ?,
 			approach_type = ?,
 			flight_type = ?
-		WHERE id = ?
-	`
+		WHERE id = ?`
 
 	// Delete query
 	QueryDelete = `DELETE FROM daily_logbook_detail WHERE id = ?`
@@ -181,8 +185,7 @@ const (
 		WHERE employee_logbook_id = ?
 		  AND flight_real_date = ?
 		  AND flight_number = ?
-		  AND actual_license_plate_id = ?
-	`
+		  AND actual_license_plate_id = ?`
 )
 
 var log logger.Logger = logger.NewSlogLogger()
@@ -202,39 +205,36 @@ func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
 		return nil, sql.ErrConnDone
 	}
 
-	stmtGetByID, err := db.Prepare(QueryByID)
-	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
-		return nil, err
+	prepare := func(query string) (*sql.Stmt, error) {
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
+		}
+		return stmt, err
 	}
 
-	stmtGetByLogbook, err := db.Prepare(QueryByLogbook)
+	stmtGetByID, err := prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtGetByEmployee, err := db.Prepare(QueryByEmployee)
+	stmtGetByLogbook, err := prepare(QueryByLogbook)
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtInsert, err := db.Prepare(QueryInsert)
+	stmtGetByEmployee, err := prepare(QueryByEmployee)
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtUpdate, err := db.Prepare(QueryUpdate)
+	stmtInsert, err := prepare(QueryInsert)
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
 		return nil, err
 	}
-
-	stmtExistsByUniqueKey, err := db.Prepare(QueryExistsByUniqueKey)
+	stmtUpdate, err := prepare(QueryUpdate)
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error preparing statement", err)
+		return nil, err
+	}
+	stmtExistsByUniqueKey, err := prepare(QueryExistsByUniqueKey)
+	if err != nil {
 		return nil, err
 	}
 

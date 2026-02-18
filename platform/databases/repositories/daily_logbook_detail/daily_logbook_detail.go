@@ -2,8 +2,11 @@ package daily_logbook_detail
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 )
 
 type DailyLogbookDetail struct {
@@ -44,6 +47,7 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
 		LicensePlateID: d.LicensePlateID,
+
 	}
 
 	if d.OutTime.Valid {
@@ -184,4 +188,70 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 	}
 
 	return entity
+}
+
+// scanDetail scans a single row from *sql.Rows into a DailyLogbookDetail entity.
+// This helper eliminates the duplicated 28-field scan block in list_by_employee.go and list_by_logbook.go.
+func scanDetail(rows interface {
+	Scan(dest ...interface{}) error
+}) (*DailyLogbookDetail, error) {
+	var entity DailyLogbookDetail
+	err := rows.Scan(
+		&entity.ID,
+		&entity.DailyLogbookID,
+		&entity.FlightRealDate,
+		&entity.FlightNumber,
+		&entity.AirlineRouteID,
+		&entity.LicensePlateID,
+		&entity.Passengers,
+		&entity.OutTime,
+		&entity.TakeoffTime,
+		&entity.LandingTime,
+		&entity.InTime,
+		&entity.PilotRole,
+		&entity.CompanionName,
+		&entity.CrewRole,
+		&entity.AirTime,
+		&entity.BlockTime,
+		&entity.DutyTime,
+		&entity.ApproachType,
+		&entity.FlightType,
+		&entity.EmployeeLogbookID,
+		&entity.LogDate,
+		&entity.LicensePlate,
+		&entity.ModelName,
+		&entity.RouteCode,
+		&entity.OriginIataCode,
+		&entity.DestinationIataCode,
+		&entity.AirlineCode,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &entity, nil
+}
+
+// castDetailTx casts an output.Tx to the concrete *common.SQLTX type.
+// Shared by SaveDailyLogbookDetail and UpdateDailyLogbookDetail.
+func castDetailTx(tx output.Tx) (*common.SQLTX, error) {
+	sqlTx, ok := tx.(*common.SQLTX)
+	if !ok {
+		return nil, domain.ErrInvalidTransaction
+	}
+	return sqlTx, nil
+}
+
+// handleDetailFKError inspects a foreign-key error string and returns the appropriate domain error.
+// Shared by SaveDailyLogbookDetail and UpdateDailyLogbookDetail.
+func handleDetailFKError(errStr string) error {
+	if strings.Contains(errStr, "daily_logbook") {
+		return domain.ErrFlightInvalidLogbook
+	}
+	if strings.Contains(errStr, "airline_route") {
+		return domain.ErrFlightInvalidRoute
+	}
+	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "license_plate") {
+		return domain.ErrFlightInvalidLicensePlate
+	}
+	return nil
 }

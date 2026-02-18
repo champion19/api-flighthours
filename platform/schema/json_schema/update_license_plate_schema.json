@@ -9,7 +9,7 @@
       "description": "Aircraft license plate/registration number (e.g., HK-5432, CC-BFA)",
       "pattern": "^[A-Z0-9-]+$",
       "minLength": 1,
-      "maxLength": 20
+      "maxLength": 7
     },
     "aircraft_model_id": {
       "type": "string",

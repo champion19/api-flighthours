@@ -194,16 +194,17 @@ var messageCodeToHTTPStatus = map[string]int{
 	// ========================================
 	// Users Module (MOD_U_*)
 	// ========================================
-	"MOD_U_REG_EXI_00001":        http.StatusCreated,      // 201 - Usuario registrado exitosamente
-	"MOD_U_UPD_EXI_00002":        http.StatusOK,           // 200 - Usuario actualizado exitosamente
-	"MOD_U_GET_EXI_00005":        http.StatusOK,           // 200 - Usuario encontrado
-	"MOD_U_DUP_ERR_00001":        http.StatusConflict,     // 409 - Usuario duplicado
-	"MOD_U_EMAIL_NF_ERR_00005":   http.StatusNotFound,     // 404 - Email no encontrado
-	"MOD_U_GET_ERR_00003":        http.StatusNotFound,     // 404 - Usuario no encontrado
-	"MOD_U_TOKEN_NF_ERR_00007":   http.StatusNotFound,     // 404 - Token no encontrado
-	"MOD_U_EMAIL_NV_ERR_00006":   http.StatusForbidden,    // 403 - Email no verificado
-	"MOD_U_TOKEN_EXP_ERR_00008":  http.StatusUnauthorized, // 401 - Token expirado
-	"MOD_U_TOKEN_USED_ERR_00009": http.StatusUnauthorized, // 401 - Token ya usado
+	"MOD_U_REG_EXI_00001":        http.StatusCreated,             // 201 - Usuario registrado exitosamente
+	"MOD_U_UPD_EXI_00002":        http.StatusOK,                  // 200 - Usuario actualizado exitosamente
+	"MOD_U_GET_EXI_00005":        http.StatusOK,                  // 200 - Usuario encontrado
+	"MOD_U_SAVE_ERR_00002":       http.StatusInternalServerError, // 500 - Error guardando usuario
+	"MOD_U_DUP_ERR_00001":        http.StatusConflict,            // 409 - Usuario duplicado
+	"MOD_U_EMAIL_NF_ERR_00005":   http.StatusNotFound,            // 404 - Email no encontrado
+	"MOD_U_GET_ERR_00003":        http.StatusNotFound,            // 404 - Usuario no encontrado
+	"MOD_U_TOKEN_NF_ERR_00007":   http.StatusNotFound,            // 404 - Token no encontrado
+	"MOD_U_EMAIL_NV_ERR_00006":   http.StatusForbidden,           // 403 - Email no verificado
+	"MOD_U_TOKEN_EXP_ERR_00008":  http.StatusUnauthorized,        // 401 - Token expirado
+	"MOD_U_TOKEN_USED_ERR_00009": http.StatusUnauthorized,        // 401 - Token ya usado
 	// Update errors
 	"MOD_U_UPD_ERR_00013":      http.StatusInternalServerError, // 500 - Error actualizando usuario
 	"MOD_U_KC_UPD_ERR_00014":   http.StatusServiceUnavailable,  // 503 - Error sincronizando con Keycloak

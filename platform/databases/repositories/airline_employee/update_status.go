@@ -5,8 +5,6 @@ import (
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/databases/common"
-	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // UpdateAirlineEmployeeStatus updates only the active status of an airline employee (HU27/HU28)
@@ -17,18 +15,16 @@ func (r *repository) UpdateAirlineEmployeeStatus(ctx context.Context, tx output.
 		"employee_id", id,
 		"active", active)
 
-	// Cast the transaction to the concrete type
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
-		log.Error(logger.LogDatabaseUnavailable, "error", logger.LogErrInvalidTransaction)
-		return domain.ErrInvalidTransaction
+	dbTx, err := castTx(tx)
+	if err != nil {
+		return err
 	}
 
 	// First, check if the employee has airline info assigned
 	var hasAirline bool
-	err := dbTx.QueryRowContext(ctx, "SELECT airline IS NOT NULL FROM employee WHERE id = ?", id).Scan(&hasAirline)
+	err = dbTx.QueryRowContext(ctx, "SELECT airline IS NOT NULL FROM employee WHERE id = ?", id).Scan(&hasAirline)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "employee_id", id, "error", err)
+		log.Error("UpdateAirlineEmployeeStatus: employee not found", "employee_id", id, "error", err)
 		return domain.ErrAirlineEmployeeNotFound
 	}
 
@@ -40,7 +36,7 @@ func (r *repository) UpdateAirlineEmployeeStatus(ctx context.Context, tx output.
 	// Update the active status (idempotent - OK if already in desired state)
 	_, err = dbTx.ExecContext(ctx, QueryUpdateStatus, active, id)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable,
+		log.Error("UpdateAirlineEmployeeStatus: update failed",
 			"employee_id", id,
 			"error", err)
 		return err

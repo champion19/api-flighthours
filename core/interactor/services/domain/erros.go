@@ -72,6 +72,7 @@ var (
 	ErrSchemaFieldRequired    = errors.New("ERR_SCHEMA_FIELD_REQUIRED")
 	ErrSchemaFieldType        = errors.New("ERR_SCHEMA_FIELD_TYPE")
 	ErrSchemaMultipleFields   = errors.New("ERR_SCHEMA_MULTIPLE_FIELDS")
+	ErrRateLimitExceeded      = errors.New("ERR_RATE_LIMIT_EXCEEDED")
 )
 
 // Authorization Errors
@@ -80,6 +81,7 @@ var (
 	ErrRoleRemovalFailed    = errors.New("Err_ROLE_REMOVAL_FAILED")
 	ErrRoleCheckFailed      = errors.New("Err_ROLE_CHECK_FAILED")
 	ErrGetUserRolesFailed   = errors.New("Err_GET_USER_ROLES_FAILED")
+	ErrRefreshTokenFailed   = errors.New("ERR_REFRESH_TOKEN_FAILED")
 )
 
 // Message Management Errors (MOD_M_*)
@@ -226,12 +228,13 @@ const (
 
 // General Module (GEN_*)
 const (
-	MsgServerError   = "GEN_SRV_ERR_00001"
-	MsgUnauthorized  = "GEN_AUTH_ERR_00002"
-	MsgForbidden     = "GEN_FORBIDDEN_ERR_00003"
-	MsgOpSuccess     = "GEN_OPE_EXI_00001"
-	MsgInfoProcess   = "GEN_INFO_00001"
-	MsgWarningAction = "GEN_WARN_00001"
+	MsgServerError       = "GEN_SRV_ERR_00001"
+	MsgUnauthorized      = "GEN_AUTH_ERR_00002"
+	MsgForbidden         = "GEN_FORBIDDEN_ERR_00003"
+	MsgRateLimitExceeded = "GEN_RATE_LIMIT_ERR_00001"
+	MsgOpSuccess         = "GEN_OPE_EXI_00001"
+	MsgInfoProcess       = "GEN_INFO_00001"
+	MsgWarningAction     = "GEN_WARN_00001"
 )
 
 // Message Module (MOD_M_*)
@@ -302,6 +305,9 @@ const (
 	// Login
 	MsgKCLoginEmailNotVerified = "MOD_KC_LOGIN_EMAIL_NOT_VERIFIED_ERR_00001"
 	MsgKCLoginSuccess          = "MOD_KC_LOGIN_SUCCESS_EXI_00001"
+	// Refresh Token
+	MsgKCRefreshTokenFailed  = "MOD_KC_REFRESH_TOKEN_ERR_00001"
+	MsgKCRefreshTokenSuccess = "MOD_KC_REFRESH_TOKEN_EXI_00001"
 )
 
 // Airline Module (MOD_AIR_*)
@@ -369,7 +375,6 @@ const (
 	MsgCrewMemberTypeNotFound = "TIN_CON_ERR_04702" // Error - Tipo de integrante no encontrado (sin empleados)
 	MsgCrewMemberTypeGetErr   = "TIN_CON_ERR_04703" // Error - Error técnico al consultar
 )
-
 
 // License Plate Module (MAT_*) - Matrícula
 const (
@@ -572,7 +577,7 @@ var (
 	ErrFlightUnauthorized        = errors.New("ERR_FLIGHT_UNAUTHORIZED")
 	ErrFlightInvalidRoute        = errors.New("ERR_FLIGHT_INVALID_ROUTE")
 	ErrFlightInvalidLogbook      = errors.New("ERR_FLIGHT_INVALID_LOGBOOK")
-	ErrFlightInvalidAircraft     = errors.New("ERR_FLIGHT_INVALID_AIRCRAFT")
+	ErrFlightInvalidLicensePlate = errors.New("ERR_FLIGHT_INVALID_LICENSE_PLATE")
 	ErrFlightInvalidTimeSequence = errors.New("ERR_FLIGHT_INVALID_TIME_SEQUENCE")
 	ErrFlightDuplicate           = errors.New("ERR_FLIGHT_DUPLICATE")
 )
@@ -646,7 +651,7 @@ const (
 	// ========================================
 	MsgFlightInvalidRoute        = "VUE_VAL_ERR_04805" // Error - Ruta de aerolínea inválida
 	MsgFlightInvalidLogbook      = "VUE_VAL_ERR_04806" // Error - Bitácora inválida
-	MsgFlightInvalidAircraft     = "VUE_VAL_ERR_04807" // Error - Matrícula de aeronave inválida
+	MsgFlightInvalidLicensePlate = "VUE_VAL_ERR_04807" // Error - Matrícula de aeronave inválida
 	MsgFlightInvalidTimeSequence = "VUE_VAL_ERR_04808" // Error - Secuencia de tiempos inválida (out < takeoff < landing < in)
 
 	// ========================================

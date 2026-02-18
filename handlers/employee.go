@@ -50,6 +50,10 @@ type LoginResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
 type ResendVerificationEmailRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/databases/common"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -15,15 +14,15 @@ func (r *repository) SaveDailyLogbookDetail(ctx context.Context, tx output.Tx, d
 
 	entity := FromDomain(&detail)
 
-	sqlTx, ok := tx.(*common.SQLTX)
-	if !ok {
+	sqlTx, err := castDetailTx(tx)
+	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid transaction type")
-		return domain.ErrInvalidTransaction
+		return err
 	}
 
 	stmt := sqlTx.Tx.StmtContext(ctx, r.stmtInsert)
 
-	_, err := stmt.ExecContext(ctx,
+	_, err = stmt.ExecContext(ctx,
 		entity.ID,
 		entity.DailyLogbookID,
 		entity.FlightRealDate,
@@ -51,14 +50,8 @@ func (r *repository) SaveDailyLogbookDetail(ctx context.Context, tx output.Tx, d
 
 		errStr := err.Error()
 		if strings.Contains(errStr, "foreign key constraint") || strings.Contains(errStr, "1452") {
-			if strings.Contains(errStr, "daily_logbook") {
-				return domain.ErrFlightInvalidLogbook
-			}
-			if strings.Contains(errStr, "airline_route") {
-				return domain.ErrFlightInvalidRoute
-			}
-			if strings.Contains(errStr, "aircraft_registration") {
-				return domain.ErrFlightInvalidAircraft
+			if fkErr := handleDetailFKError(errStr); fkErr != nil {
+				return fkErr
 			}
 		}
 		return domain.ErrFlightCannotSave

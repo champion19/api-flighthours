@@ -12,12 +12,14 @@ import (
 type Validators struct {
 	FileReader                        FileReaderInterface
 	RegisterValidator                 *jsonschema.Schema
+	LoginValidator                    *jsonschema.Schema
 	MessageValidator                  *jsonschema.Schema
 	ResendVerificationEmailValidator  *jsonschema.Schema
 	PasswordResetRequestValidator     *jsonschema.Schema
 	UpdatePasswordValidator           *jsonschema.Schema
 	UpdateEmployeeValidator           *jsonschema.Schema
 	ChangePasswordValidator           *jsonschema.Schema
+	VerifyEmailValidator              *jsonschema.Schema
 	AddAirlineEmployeeValidator       *jsonschema.Schema
 	UpdateAirlineEmployeeValidator    *jsonschema.Schema
 	CreateLicensePlateValidator       *jsonschema.Schema
@@ -25,6 +27,7 @@ type Validators struct {
 	CreateDailyLogbookDetailValidator *jsonschema.Schema
 	UpdateDailyLogbookDetailValidator *jsonschema.Schema
 	CreateDailyLogbookValidator       *jsonschema.Schema
+	RefreshTokenValidator             *jsonschema.Schema
 }
 
 type FileReaderInterface interface {
@@ -60,6 +63,10 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	if err != nil {
 		return nil, err
 	}
+	login, err := validator.createSchema("login_schema.json")
+	if err != nil {
+		return nil, err
+	}
 	message, err := validator.createSchema("message_schema.json")
 	if err != nil {
 		return nil, err
@@ -81,6 +88,10 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 		return nil, err
 	}
 	changePassword, err := validator.createSchema("change_password_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	verifyEmail, err := validator.createSchema("verify_email_schema.json")
 	if err != nil {
 		return nil, err
 	}
@@ -114,12 +125,14 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	}
 
 	validator.RegisterValidator = register
+	validator.LoginValidator = login
 	validator.MessageValidator = message
 	validator.ResendVerificationEmailValidator = resendVerificationEmail
 	validator.PasswordResetRequestValidator = passwordResetRequest
 	validator.UpdatePasswordValidator = updatePassword
 	validator.UpdateEmployeeValidator = updateEmployee
 	validator.ChangePasswordValidator = changePassword
+	validator.VerifyEmailValidator = verifyEmail
 	validator.AddAirlineEmployeeValidator = addAirlineEmployee
 	validator.UpdateAirlineEmployeeValidator = updateAirlineEmployee
 	validator.CreateLicensePlateValidator = createLicensePlate
@@ -127,6 +140,12 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	validator.CreateDailyLogbookDetailValidator = createDailyLogbookDetail
 	validator.UpdateDailyLogbookDetailValidator = updateDailyLogbookDetail
 	validator.CreateDailyLogbookValidator = createDailyLogbook
+
+	refreshToken, err := validator.createSchema("refresh_token_schema.json")
+	if err != nil {
+		return nil, err
+	}
+	validator.RefreshTokenValidator = refreshToken
 
 	return validator, nil
 

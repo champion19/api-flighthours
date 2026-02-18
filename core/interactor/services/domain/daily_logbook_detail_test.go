@@ -13,19 +13,51 @@ func TestDailyLogbookDetail_SetID(t *testing.T) {
 func pilotRolePtr(r PilotRole) *PilotRole { return &r }
 
 func TestDailyLogbookDetail_ToLogger(t *testing.T) {
-	d := &DailyLogbookDetail{
-		ID:             "detail-1",
-		DailyLogbookID: "lb-1",
-		FlightNumber:   "AV123",
-		FlightRealDate: "2025-01-15",
-		RouteCode:      "BOG-CLO",
-		LicensePlate:   "HK-5432",
-		PilotRole:      pilotRolePtr(PilotRolePF),
-	}
-	result := d.ToLogger()
-	if len(result) != 7 {
-		t.Errorf("expected 7 items, got %d", len(result))
-	}
+	t.Run("with pilot role only", func(t *testing.T) {
+		d := &DailyLogbookDetail{
+			ID:             "detail-1",
+			DailyLogbookID: "lb-1",
+			FlightNumber:   "AV123",
+			FlightRealDate: "2025-01-15",
+			RouteCode:      "BOG-CLO",
+			LicensePlate:   "HK-5432",
+			PilotRole:      pilotRolePtr(PilotRolePF),
+		}
+		result := d.ToLogger()
+		if len(result) != 8 {
+			t.Errorf("expected 8 items, got %d", len(result))
+		}
+	})
+
+	t.Run("with crew role set", func(t *testing.T) {
+		crewRole := CrewRole("captain")
+		d := &DailyLogbookDetail{
+			ID:             "detail-2",
+			DailyLogbookID: "lb-2",
+			FlightNumber:   "AV456",
+			FlightRealDate: "2025-01-16",
+			RouteCode:      "CLO-BOG",
+			LicensePlate:   "HK-1234",
+			PilotRole:      pilotRolePtr(PilotRolePM),
+			CrewRole:       &crewRole,
+		}
+		result := d.ToLogger()
+		if len(result) != 8 {
+			t.Errorf("expected 8 items, got %d", len(result))
+		}
+	})
+
+	t.Run("with nil optional fields", func(t *testing.T) {
+		d := &DailyLogbookDetail{
+			ID:             "detail-3",
+			DailyLogbookID: "lb-3",
+			FlightNumber:   "AV789",
+		}
+		result := d.ToLogger()
+		if len(result) != 8 {
+			t.Errorf("expected 8 items, got %d", len(result))
+		}
+	})
 }
 
 func TestIsValidPilotRole(t *testing.T) {

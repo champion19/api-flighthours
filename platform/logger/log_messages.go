@@ -381,6 +381,7 @@ const (
 	LogMiddlewareResponseSuccess    = "Respuesta enviada exitosamente"
 	LogMiddlewareErrorHandling      = "Manejando error de middleware"
 	LogMiddlewareNotFound           = "Endpoint no encontrado"
+	LogMiddlewareRateLimitHit       = "Rate limit excedido"
 )
 
 // ============================================
@@ -896,8 +897,8 @@ const (
 // CREW MEMBER TYPE (Catalog endpoint)
 // ============================================
 const (
-	LogCrewMemberTypeGet   = "Consultando tipos de integrante"
-	LogCrewMemberTypeGetOK = "Tipos de integrante obtenidos exitosamente"
+	LogCrewMemberTypeGet      = "Consultando tipos de integrante"
+	LogCrewMemberTypeGetOK    = "Tipos de integrante obtenidos exitosamente"
 	LogCrewMemberTypeNotFound = "Tipo de integrante no encontrado (sin empleados)"
 )
 

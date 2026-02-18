@@ -85,31 +85,31 @@ func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
 // DailyLogbookDetailResponse represents the response for a detail
 type DailyLogbookDetailResponse struct {
 	ID                  string  `json:"id"`
-	DailyLogbookID      string  `json:"-"`
+	DailyLogbookID      string  `json:"daily_logbook_id"`
 	FlightRealDate      string  `json:"flight_real_date"`
 	FlightNumber        string  `json:"flight_number"`
-	AirlineRouteID      string  `json:"-"`
-	LicensePlateID      string  `json:"-"`
-	Passengers          *int    `json:"-"`
-	OutTime             *string `json:"-"`
-	TakeoffTime         *string `json:"-"`
-	LandingTime         *string `json:"-"`
-	InTime              *string `json:"-"`
-	PilotRole           *string `json:"-"`
-	CrewRole            *string `json:"-"`
-	CompanionName       *string `json:"-"`
-	AirTime             *string `json:"-"`
-	BlockTime           *string `json:"-"`
-	DutyTime            *string `json:"-"`
-	ApproachType        *string `json:"-"`
-	FlightType          *string `json:"-"`
-	LogDate             string  `json:"-"`
+	AirlineRouteID      string  `json:"airline_route_id"`
+	LicensePlateID      string  `json:"license_plate_id"`
+	Passengers          *int    `json:"passengers,omitempty"`
+	OutTime             *string `json:"out_time,omitempty"`
+	TakeoffTime         *string `json:"takeoff_time,omitempty"`
+	LandingTime         *string `json:"landing_time,omitempty"`
+	InTime              *string `json:"in_time,omitempty"`
+	PilotRole           *string `json:"pilot_role,omitempty"`
+	CrewRole            *string `json:"crew_role,omitempty"`
+	CompanionName       *string `json:"companion_name,omitempty"`
+	AirTime             *string `json:"air_time,omitempty"`
+	BlockTime           *string `json:"block_time,omitempty"`
+	DutyTime            *string `json:"duty_time,omitempty"`
+	ApproachType        *string `json:"approach_type,omitempty"`
+	FlightType          *string `json:"flight_type,omitempty"`
+	LogDate             string  `json:"log_date,omitempty"`
 	RouteCode           string  `json:"route_code,omitempty"`
 	OriginIataCode      string  `json:"origin_iata_code,omitempty"`
 	DestinationIataCode string  `json:"destination_iata_code,omitempty"`
 	AirlineCode         string  `json:"airline_code,omitempty"`
-	LicensePlate        string  `json:"-"`
-	ModelName           string  `json:"-"`
+	LicensePlate        string  `json:"license_plate,omitempty"`
+	ModelName           string  `json:"model_name,omitempty"`
 	Links               []Link  `json:"_links,omitempty"`
 }
 

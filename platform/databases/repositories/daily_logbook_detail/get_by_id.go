@@ -31,7 +31,7 @@ func (r *repository) GetDailyLogbookDetailByID(ctx context.Context, id string) (
 		&entity.BlockTime,
 		&entity.DutyTime,
 		&entity.ApproachType,
-		&entity.FlightType,
+		&entity.FlightType,	
 		&entity.EmployeeLogbookID,
 		&entity.LogDate,
 		&entity.LicensePlate,

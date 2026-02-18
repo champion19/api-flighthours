@@ -192,23 +192,20 @@ definitions:
   handlers.CreateDailyLogbookDetailRequest:
     properties:
       air_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       airline_route_id:
         type: string
       approach_type:
         type: string
       block_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       companion_name:
         type: string
       crew_role:
-        description: 'Crew position: captain or copilot'
+        description: nullable
         type: string
-        enum:
-          - captain
-          - copilot
       duty_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -219,22 +216,23 @@ definitions:
       flight_type:
         type: string
       in_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       landing_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       license_plate_id:
         type: string
       out_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       passengers:
         type: integer
       pilot_role:
+        description: nullable
         type: string
       takeoff_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
     type: object
   handlers.CreateDailyLogbookRequest:
@@ -259,25 +257,74 @@ definitions:
     - airline_id
     - license_plate
     type: object
+  handlers.DailyLogbookDeleteResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      deleted:
+        type: boolean
+      id:
+        type: string
+    type: object
   handlers.DailyLogbookDetailResponse:
     properties:
       _links:
         items:
           $ref: '#/definitions/handlers.Link'
         type: array
+      air_time:
+        type: string
       airline_code:
         type: string
+      airline_route_id:
+        type: string
+      approach_type:
+        type: string
+      block_time:
+        type: string
+      companion_name:
+        type: string
+      crew_role:
+        type: string
+      daily_logbook_id:
+        type: string
       destination_iata_code:
+        type: string
+      duty_time:
         type: string
       flight_number:
         type: string
       flight_real_date:
         type: string
+      flight_type:
+        type: string
       id:
+        type: string
+      in_time:
+        type: string
+      landing_time:
+        type: string
+      license_plate:
+        type: string
+      license_plate_id:
+        type: string
+      log_date:
+        type: string
+      model_name:
         type: string
       origin_iata_code:
         type: string
+      out_time:
+        type: string
+      passengers:
+        type: integer
+      pilot_role:
+        type: string
       route_code:
+        type: string
+      takeoff_time:
         type: string
     type: object
   handlers.DailyLogbookListResponse:
@@ -309,6 +356,19 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  handlers.DailyLogbookStatusResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      id:
+        type: string
+      status:
+        type: string
+      updated:
+        type: boolean
     type: object
   handlers.EmployeeAirlineInfoResponse:
     properties:
@@ -553,6 +613,13 @@ definitions:
       sent:
         type: boolean
     type: object
+  handlers.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   handlers.ResendVerificationEmailRequest:
     properties:
       email:
@@ -618,50 +685,23 @@ definitions:
       success:
         type: boolean
     type: object
-  handlers.DailyLogbookStatusResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      id:
-        type: string
-      status:
-        type: string
-      updated:
-        type: boolean
-    type: object
-  handlers.DailyLogbookDeleteResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      deleted:
-        type: boolean
-      id:
-        type: string
-    type: object
   handlers.UpdateDailyLogbookDetailRequest:
     properties:
       air_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       airline_route_id:
         type: string
       approach_type:
         type: string
       block_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       companion_name:
         type: string
       crew_role:
-        description: 'Crew position: captain or copilot'
+        description: nullable
         type: string
-        enum:
-          - captain
-          - copilot
       duty_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -672,32 +712,24 @@ definitions:
       flight_type:
         type: string
       in_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       landing_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       license_plate_id:
         type: string
       out_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
       passengers:
         type: integer
       pilot_role:
+        description: nullable
         type: string
       takeoff_time:
-        description: TIME format HH:MM
+        description: TIME format HH:MM (nullable)
         type: string
-    type: object
-  handlers.UpdateDailyLogbookRequest:
-    properties:
-      book_page:
-        type: integer
-      log_date:
-        type: string
-    required:
-    - log_date
     type: object
   handlers.UpdateEmployeeAirlineRequest:
     properties:
@@ -813,10 +845,21 @@ definitions:
     properties:
       code:
         type: string
+      fields:
+        items:
+          $ref: '#/definitions/middleware.ValidationFieldError'
+        type: array
       message:
         type: string
       success:
         type: boolean
+    type: object
+  middleware.ValidationFieldError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
     type: object
 host: localhost:8081
 info:
@@ -1497,6 +1540,40 @@ paths:
       summary: Request password reset
       tags:
       - Authentication
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes the access token using a valid refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New tokens
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/middleware.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - Authentication
   /auth/resend-verification:
     post:
       consumes:
@@ -1609,6 +1686,21 @@ paths:
       summary: Verify user email
       tags:
       - Authentication
+  /crew-member-types:
+    get:
+      description: Returns the available crew member types (captain, copilot). Static
+        catalog endpoint - no database query needed.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get crew member types
+      tags:
+      - Crew Member Types
   /daily-logbook-details/{id}:
     get:
       consumes:
@@ -1741,6 +1833,49 @@ paths:
       tags:
       - DailyLogbooks
   /daily-logbooks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an existing daily logbook for the authenticated employee
+        (accepts both UUID and obfuscated ID)
+      parameters:
+      - description: Daily Logbook ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DailyLogbookDeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a daily logbook
+      tags:
+      - DailyLogbooks
     get:
       consumes:
       - application/json
@@ -1782,96 +1917,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get daily logbook by ID
-      tags:
-      - DailyLogbooks
-    put:
-      consumes:
-      - application/json
-      description: Updates an existing daily logbook for the authenticated employee
-        (accepts both UUID and obfuscated ID)
-      parameters:
-      - description: Daily Logbook ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Updated daily logbook data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateDailyLogbookRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.DailyLogbookResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Update a daily logbook
-      tags:
-      - DailyLogbooks
-    delete:
-      description: Deletes a daily logbook for the authenticated employee (accepts
-        both UUID and obfuscated ID). Only the owner can delete their logbook.
-      parameters:
-      - description: Daily Logbook ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.DailyLogbookDeleteResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a daily logbook
       tags:
       - DailyLogbooks
   /daily-logbooks/{id}/activate:

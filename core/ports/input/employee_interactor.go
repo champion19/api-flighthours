@@ -15,6 +15,9 @@ type EmployeeInteractor interface {
 	// Login authenticates an employee and returns tokens
 	Login(ctx context.Context, email, password string) (*dto.TokenResponse, error)
 
+	// RefreshToken refreshes an expired access token using a refresh token
+	RefreshToken(ctx context.Context, refreshToken string) (*dto.TokenResponse, error)
+
 	// VerifyEmailByToken verifies an email using a token
 	VerifyEmailByToken(ctx context.Context, token string) (string, error)
 
