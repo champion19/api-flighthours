@@ -48,6 +48,11 @@ func (s *DailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.Conte
 	return s.repo.UpdateDailyLogbookDetail(ctx, tx, detail)
 }
 
+// DeleteDailyLogbookDetailTx deletes a daily logbook detail using an external transaction
+func (s *DailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.Context, tx output.Tx, id string) error {
+	return s.repo.DeleteDailyLogbookDetail(ctx, tx, id)
+}
+
 func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
 	// Parse time with flexible format (HH:MM or HH:MM:SS)
 	parseTime := func(timeStr string) (time.Time, error) {

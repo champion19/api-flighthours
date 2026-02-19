@@ -5,6 +5,7 @@ import (
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 )
 
 // UpdateAirlineEmployee updates airline-specific fields for an existing employee (HU25)
@@ -17,7 +18,7 @@ func (r *repository) UpdateAirlineEmployee(ctx context.Context, tx output.Tx, em
 		"airline_id", employeeToUpdate.AirlineID,
 		"active", employeeToUpdate.Active)
 
-	dbTx, err := castTx(tx)
+	dbTx, err := common.CastTx(tx)
 	if err != nil {
 		return err
 	}

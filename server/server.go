@@ -196,6 +196,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PUT("/daily-logbook-details/:id", validator.WithValidateUpdateDailyLogbookDetail(), handler.UpdateDailyLogbookDetail())
 
+		protected.DELETE("/daily-logbook-details/:id", handler.DeleteDailyLogbookDetail())
+
 		protected.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
 
 		protected.POST("/daily-logbooks/:id/details", validator.WithValidateCreateDailyLogbookDetail(), handler.CreateDailyLogbookDetail())

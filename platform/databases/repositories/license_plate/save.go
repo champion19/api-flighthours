@@ -7,13 +7,15 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/databases/common"
-
 )
 
 func (r *repository) SaveLicensePlate(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
-	sqlTx := tx.(*common.SQLTX)
+	sqlTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
+	}
 
-	_, err := sqlTx.ExecContext(ctx, QueryInsert,
+	_, err = sqlTx.ExecContext(ctx, QueryInsert,
 		registration.ID,
 		registration.LicensePlate,
 		registration.AircraftModelID,

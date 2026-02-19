@@ -114,6 +114,7 @@ type DailyLogbookDetailService interface {
 	UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error
 	ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	DeleteDailyLogbookDetailTx(ctx context.Context, tx output.Tx, id string) error
 }
 
 type DailyLogbookService interface {

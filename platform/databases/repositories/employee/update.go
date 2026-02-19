@@ -19,10 +19,10 @@ func (r *repository) UpdateEmployee(ctx context.Context, tx output.Tx, employee 
 		"email", employeeToUpdate.Email,
 		"active", employeeToUpdate.Active)
 
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
+	dbTx, err := common.CastTx(tx)
+	if err != nil {
 		log.Error(logger.LogRepoEmployeeUpdateTxErr, "error", logger.LogErrInvalidTransaction)
-		return domain.ErrInvalidTransaction
+		return err
 	}
 
 	log.Debug(logger.LogRepoEmployeeUpdateTxOK)

@@ -115,14 +115,14 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		// Resolve aircraft_registration_id
-		aircraftUUID, _ := h.resolveID(req.LicensePlateID)
-		if aircraftUUID == "" {
+		// Resolve license_plate_id
+		licensePlateUUID, _ := h.resolveID(req.LicensePlateID)
+		if licensePlateUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid license plate ID")
 			h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
 			return
 		}
-		req.LicensePlateID = aircraftUUID
+		req.LicensePlateID = licensePlateUUID
 
 		// Convert to domain
 		detail := ToDomainDailyLogbookDetail(logbookUUID, req)
@@ -291,6 +291,75 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 
 		log.Info(logger.LogDailyLogbookDetailUpdateOK, "id", detailUUID)
 		h.Response.SuccessWithData(c, domain.MsgFlightUpdated, response)
+	}
+}
+
+// DeleteDailyLogbookDetail deletes a detail
+// @Summary Delete daily logbook detail
+// @Description Deletes a flight segment
+// @Tags DailyLogbookDetails
+// @Accept json
+// @Produce json
+// @Param id path string true "Detail ID (obfuscated or UUID)"
+// @Success 200 {object} middleware.APIResponse
+// @Failure 403 {object} middleware.APIResponse
+// @Failure 404 {object} middleware.APIResponse
+// @Router /daily-logbook-details/{id} [delete]
+// @Security BearerAuth
+func (h *handler) DeleteDailyLogbookDetail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := log.WithTraceID(traceID)
+		inputID := c.Param("id")
+
+		log.Info(logger.LogDailyLogbookDetailDelete, "input_id", inputID)
+
+		// Get authenticated user
+		employee, ok := middleware.GetAuthenticatedUser(c)
+		if !ok {
+			log.Error(logger.LogDailyLogbookDetailDeleteError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgFlightUnauthorized)
+			return
+		}
+
+		// Resolve detail ID
+		detailUUID, _ := h.resolveID(inputID)
+		if detailUUID == "" {
+			log.Warn(logger.LogDailyLogbookDetailDeleteError, "error", "invalid ID")
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		// Verify ownership via detail's logbook
+		ownerID, err := h.DailyLogbookDetailInteractor.GetDetailLogbookOwner(c.Request.Context(), detailUUID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookDetailDeleteError, "error", err)
+			if err == domain.ErrFlightNotFound {
+				h.Response.Error(c, domain.MsgFlightNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgFlightDeleteError)
+			return
+		}
+		if ownerID != employee.ID {
+			log.Warn(logger.LogDailyLogbookDetailDeleteError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgFlightUnauthorized)
+			return
+		}
+
+		// Delete detail
+		if err := h.DailyLogbookDetailInteractor.DeleteDailyLogbookDetail(c.Request.Context(), traceID, detailUUID); err != nil {
+			log.Error(logger.LogDailyLogbookDetailDeleteError, "error", err)
+			if err == domain.ErrFlightNotFound {
+				h.Response.Error(c, domain.MsgFlightNotFound)
+				return
+			}
+			h.Response.Error(c, domain.MsgFlightDeleteError)
+			return
+		}
+
+		log.Info(logger.LogDailyLogbookDetailDeleteOK, "id", detailUUID)
+		h.Response.Success(c, domain.MsgFlightDeleted)
 	}
 }
 

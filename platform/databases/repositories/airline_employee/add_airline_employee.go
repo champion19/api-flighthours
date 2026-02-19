@@ -5,6 +5,7 @@ import (
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 )
 
 func (r *repository) AddAirlineEmployee(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
@@ -15,7 +16,7 @@ func (r *repository) AddAirlineEmployee(ctx context.Context, tx output.Tx, emplo
 		"airline_id", employeeToUpdate.AirlineID,
 		"active", employeeToUpdate.Active)
 
-	dbTx, err := castTx(tx)
+	dbTx, err := common.CastTx(tx)
 	if err != nil {
 		return err
 	}

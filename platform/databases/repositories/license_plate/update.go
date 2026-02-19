@@ -10,7 +10,10 @@ import (
 )
 
 func (r *repository) UpdateLicensePlate(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
-	sqlTx := tx.(*common.SQLTX)
+	sqlTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
+	}
 
 	result, err := sqlTx.ExecContext(ctx, QueryUpdate,
 		registration.LicensePlate,

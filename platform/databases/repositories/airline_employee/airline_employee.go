@@ -4,22 +4,11 @@ import (
 	"time"
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
-	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/databases/common"
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/go-sql-driver/mysql"
 )
 
-// castTx casts an output.Tx to the concrete *common.SQLTX type.
-// Returns the concrete tx or an error if the cast fails.
-func castTx(tx output.Tx) (*common.SQLTX, error) {
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
-		log.Error(logger.LogDatabaseUnavailable, "error", logger.LogErrInvalidTransaction)
-		return nil, domain.ErrInvalidTransaction
-	}
-	return dbTx, nil
-}
+// castTx is now replaced by common.CastTx — see tx_helper.go
 
 // handleMySQLError inspects a MySQL error and returns the appropriate domain error.
 // It handles foreign key violations (1452) and duplicate entries (1062).

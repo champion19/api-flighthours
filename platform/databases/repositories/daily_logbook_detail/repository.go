@@ -197,6 +197,7 @@ type repository struct {
 	stmtInsert            *sql.Stmt
 	stmtUpdate            *sql.Stmt
 	stmtExistsByUniqueKey *sql.Stmt
+	stmtDelete            *sql.Stmt
 	db                    *sql.DB
 }
 
@@ -237,6 +238,10 @@ func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
 	if err != nil {
 		return nil, err
 	}
+	stmtDelete, err := prepare(QueryDelete)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Info(logger.LogDailyLogbookDetailRepoInitOK)
 
@@ -248,6 +253,7 @@ func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
 		stmtInsert:            stmtInsert,
 		stmtUpdate:            stmtUpdate,
 		stmtExistsByUniqueKey: stmtExistsByUniqueKey,
+		stmtDelete:            stmtDelete,
 	}, nil
 }
 
