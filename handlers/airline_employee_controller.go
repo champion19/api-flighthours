@@ -23,7 +23,7 @@ import (
 func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogAirlineEmployeeGet, "endpoint", "GET /employees/airline", "client_ip", c.ClientIP())
 
@@ -87,7 +87,7 @@ func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogAirlineEmployeeAdd, "endpoint", "PUT /employees/airline", "client_ip", c.ClientIP())
 
@@ -202,7 +202,7 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogAirlineEmployeeUpdate, "endpoint", "PUT /employees/airline-info", "client_ip", c.ClientIP())
 
@@ -322,7 +322,7 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogAirlineEmployeeActivate, "endpoint", "PATCH /employees/airline/activate", "client_ip", c.ClientIP())
 
@@ -376,7 +376,7 @@ func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 func (h handler) DeactivateEmployeeAirlineInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogAirlineEmployeeDeactivate, "endpoint", "PATCH /employees/airline/deactivate", "client_ip", c.ClientIP())
 

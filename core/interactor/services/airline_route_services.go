@@ -38,54 +38,6 @@ func (s *AirlineRouteService) ListAirlineRoutesByAirlineID(ctx context.Context, 
 	return s.repo.ListAirlineRoutesByAirlineID(ctx, airlineID)
 }
 
-// ActivateAirlineRoute activates an airline route
-func (s *AirlineRouteService) ActivateAirlineRoute(ctx context.Context, id string) error {
-	// First check if the airline route exists
-	_, err := s.repo.GetAirlineRouteByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	// Start transaction
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Update status
-	err = s.repo.UpdateAirlineRouteStatus(ctx, tx, id, true)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
-// DeactivateAirlineRoute deactivates an airline route
-func (s *AirlineRouteService) DeactivateAirlineRoute(ctx context.Context, id string) error {
-	// First check if the airline route exists
-	_, err := s.repo.GetAirlineRouteByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	// Start transaction
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Update status
-	err = s.repo.UpdateAirlineRouteStatus(ctx, tx, id, false)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
 // ActivateAirlineRouteTx activates an airline route using an external transaction
 func (s *AirlineRouteService) ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
 	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, true)

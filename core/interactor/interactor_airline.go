@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
@@ -67,29 +69,11 @@ func (i *AirlineInteractor) ActivateAirline(ctx context.Context, id string) (err
 		return domain.ErrAirlineNotFound
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineActivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.ActivateAirlineTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineActivateError, "airline_id", id, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineActivateError, "airline_id", id, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.ActivateAirlineTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineActivateError, "operation", "activate_airline", "airline_id", id, "commit_error", err)
 		return err
 	}
 
@@ -109,29 +93,11 @@ func (i *AirlineInteractor) DeactivateAirline(ctx context.Context, id string) (e
 		return domain.ErrAirlineNotFound
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineDeactivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeactivateAirlineTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineDeactivateError, "airline_id", id, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineDeactivateError, "airline_id", id, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.DeactivateAirlineTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineDeactivateError, "operation", "deactivate_airline", "airline_id", id, "commit_error", err)
 		return err
 	}
 

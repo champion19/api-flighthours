@@ -24,7 +24,7 @@ import (
 func (h handler) CreateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogMessageCreate,
 			"method", c.Request.Method,
@@ -103,7 +103,7 @@ func (h handler) CreateMessage() func(c *gin.Context) {
 func (h handler) UpdateMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogMessageUpdate,
 			"method", c.Request.Method,
@@ -180,7 +180,7 @@ func (h handler) UpdateMessage() func(c *gin.Context) {
 func (h handler) DeleteMessage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogMessageDelete,
 			"method", c.Request.Method,
@@ -233,7 +233,7 @@ func (h handler) DeleteMessage() func(c *gin.Context) {
 func (h handler) GetMessageByID() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogMessageGet,
 			"method", c.Request.Method,
@@ -290,7 +290,7 @@ func (h handler) GetMessageByID() func(c *gin.Context) {
 func (h handler) ListMessages() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogMessageList,
 			"method", c.Request.Method,
@@ -353,7 +353,7 @@ func (h handler) ListMessages() func(c *gin.Context) {
 func (h handler) ReloadMessageCache() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogMessageCacheReloading,
 			"method", c.Request.Method,

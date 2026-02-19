@@ -16,8 +16,6 @@ type fakeDailyLogbookDetailService struct {
 	getByIDFn           func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
 	listByLogbookFn     func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
 	listByEmployeeFn    func(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
-	createFn            func(ctx context.Context, detail domain.DailyLogbookDetail) error
-	updateFn            func(ctx context.Context, detail domain.DailyLogbookDetail) error
 	validateTimeFn      func(outTime, takeoffTime, landingTime, inTime string) error
 	createTxFn          func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	updateTxFn          func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
@@ -47,20 +45,6 @@ func (f *fakeDailyLogbookDetailService) ListDailyLogbookDetailsByEmployee(ctx co
 		return f.listByEmployeeFn(ctx, employeeID)
 	}
 	return nil, nil
-}
-
-func (f *fakeDailyLogbookDetailService) CreateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
-	if f.createFn != nil {
-		return f.createFn(ctx, detail)
-	}
-	return nil
-}
-
-func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetail(ctx context.Context, detail domain.DailyLogbookDetail) error {
-	if f.updateFn != nil {
-		return f.updateFn(ctx, detail)
-	}
-	return nil
 }
 
 func (f *fakeDailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {

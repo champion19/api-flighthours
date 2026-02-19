@@ -21,7 +21,7 @@ import (
 func (h *handler) ListDailyLogbooks() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogDailyLogbookList, "action", "list_my_logbooks")
 
@@ -75,7 +75,7 @@ func (h *handler) ListDailyLogbooks() gin.HandlerFunc {
 func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 		inputID := c.Param("id")
 
 		log.Info(logger.LogDailyLogbookGet, "input_id", inputID)
@@ -135,7 +135,7 @@ func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogDailyLogbookCreate, "action", "create_logbook")
 
@@ -189,6 +189,85 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 	}
 }
 
+// UpdateDailyLogbook godoc
+// @Summary      Update a daily logbook
+// @Description  Updates an existing daily logbook for the authenticated employee (accepts both UUID and obfuscated ID)
+// @Tags         DailyLogbooks
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Daily Logbook ID (obfuscated ID)"
+// @Param        request body UpdateDailyLogbookRequest true "Updated daily logbook data"
+// @Success      200  {object}  DailyLogbookResponse
+// @Failure      400  {object}  middleware.APIResponse
+// @Failure      401  {object}  middleware.APIResponse
+// @Failure      403  {object}  middleware.APIResponse
+// @Failure      404  {object}  middleware.APIResponse
+// @Failure      500  {object}  middleware.APIResponse
+// @Router       /daily-logbooks/{id} [put]
+// @Security     BearerAuth
+func (h *handler) UpdateDailyLogbook() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		log := log.WithTraceID(traceID)
+
+		// Get authenticated employee from context
+		employee, ok := middleware.GetAuthenticatedUser(c)
+		if !ok || employee == nil {
+			log.Error(logger.LogDailyLogbookUpdateError, "error", "unauthorized")
+			h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+			return
+		}
+
+		inputID := c.Param("id")
+		log.Info(logger.LogDailyLogbookUpdate, "input_id", inputID)
+
+		// Resolve ID (accepts both UUID and obfuscated ID)
+		logbookUUID, responseID := h.resolveID(inputID)
+		if logbookUUID == "" {
+			log.Warn(logger.LogDailyLogbookUpdateError, "error", "invalid ID")
+			h.Response.Error(c, domain.MsgValIDInvalid)
+			return
+		}
+
+		var req UpdateDailyLogbookRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Error(logger.LogDailyLogbookUpdateError, "error", err)
+			h.Response.Error(c, domain.MsgValJSONInvalid)
+			return
+		}
+
+		// Sanitize input data
+		req.Sanitize()
+
+		logbook, err := req.ToDomain(logbookUUID, employee.ID)
+		if err != nil {
+			log.Error(logger.LogDailyLogbookUpdateError, "error", err)
+			h.Response.Error(c, domain.MsgDailyLogbookUpdateError)
+			return
+		}
+
+		if err := h.DailyLogbookInteractor.UpdateDailyLogbook(c.Request.Context(), *logbook, employee.ID); err != nil {
+			log.Error(logger.LogDailyLogbookUpdateError, "error", err)
+			if err == domain.ErrFlightUnauthorized {
+				h.Response.Error(c, domain.MsgDailyLogbookUnauthorized)
+				return
+			}
+			h.Response.Error(c, domain.MsgDailyLogbookUpdateError)
+			return
+		}
+
+		// Encode employee ID for response
+		encodedEmployeeID, _ := h.EncodeID(employee.ID)
+
+		baseURL := GetBaseURL(c)
+		response := FromDomainDailyLogbook(logbook, responseID, encodedEmployeeID)
+		response.Links = BuildDailyLogbookLinks(baseURL, responseID)
+
+		log.Info(logger.LogDailyLogbookUpdateOK, "logbook_id", logbookUUID)
+		h.Response.SuccessWithData(c, domain.MsgDailyLogbookUpdated, response)
+	}
+}
+
 // DeleteDailyLogbook godoc
 // @Summary      Delete a daily logbook
 // @Description  Deletes an existing daily logbook for the authenticated employee (accepts both UUID and obfuscated ID)
@@ -207,7 +286,7 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 func (h *handler) DeleteDailyLogbook() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		// Get authenticated employee from context
 		employee, ok := middleware.GetAuthenticatedUser(c)
@@ -276,7 +355,7 @@ func (h *handler) DeleteDailyLogbook() gin.HandlerFunc {
 func (h *handler) ActivateDailyLogbook() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		// Get authenticated employee from context
 		employee, ok := middleware.GetAuthenticatedUser(c)
@@ -346,7 +425,7 @@ func (h *handler) ActivateDailyLogbook() gin.HandlerFunc {
 func (h *handler) DeactivateDailyLogbook() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		// Get authenticated employee from context
 		employee, ok := middleware.GetAuthenticatedUser(c)

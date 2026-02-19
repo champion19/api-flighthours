@@ -25,7 +25,7 @@ import(
 func (h *handler) GetManufacturerByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -77,7 +77,7 @@ func (h *handler) GetManufacturerByID() gin.HandlerFunc {
 func (h *handler) ListManufacturers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogManufacturerList,
 			"method", c.Request.Method,

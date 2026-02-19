@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
@@ -43,29 +45,11 @@ func (i *AirlineEmployeeInteractor) AddAirlineEmployee(ctx context.Context, empl
 
 	airlineInfo.ID = employeeID
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineEmployeeCreateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.AddAirlineEmployeeTx(ctx, tx, airlineInfo)
+		})
 	if err != nil {
-		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineEmployeeCreateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineEmployeeCreateError, "employee_id", employeeID, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.AddAirlineEmployeeTx(ctx, tx, airlineInfo); err != nil {
-		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineEmployeeCreateError, "operation", "add_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 
@@ -81,29 +65,11 @@ func (i *AirlineEmployeeInteractor) UpdateAirlineEmployee(ctx context.Context, e
 
 	airlineInfo.ID = employeeID
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineEmployeeUpdateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.UpdateAirlineEmployeeTx(ctx, tx, airlineInfo)
+		})
 	if err != nil {
-		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineEmployeeUpdateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineEmployeeUpdateError, "employee_id", employeeID, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.UpdateAirlineEmployeeTx(ctx, tx, airlineInfo); err != nil {
-		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineEmployeeUpdateError, "operation", "update_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 
@@ -123,29 +89,11 @@ func (i *AirlineEmployeeInteractor) ActivateAirlineEmployee(ctx context.Context,
 		return domain.ErrAirlineEmployeeNotFound
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineEmployeeActivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.ActivateAirlineEmployeeTx(ctx, tx, employeeID)
+		})
 	if err != nil {
-		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineEmployeeActivateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineEmployeeActivateError, "employee_id", employeeID, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.ActivateAirlineEmployeeTx(ctx, tx, employeeID); err != nil {
-		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineEmployeeActivateError, "operation", "activate_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 
@@ -165,29 +113,11 @@ func (i *AirlineEmployeeInteractor) DeactivateAirlineEmployee(ctx context.Contex
 		return domain.ErrAirlineEmployeeNotFound
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineEmployeeDeactivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeactivateAirlineEmployeeTx(ctx, tx, employeeID)
+		})
 	if err != nil {
-		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineEmployeeDeactivateError, "employee_id", employeeID, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineEmployeeDeactivateError, "employee_id", employeeID, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.DeactivateAirlineEmployeeTx(ctx, tx, employeeID); err != nil {
-		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineEmployeeDeactivateError, "operation", "deactivate_airline_employee", "employee_id", employeeID, "commit_error", err)
 		return err
 	}
 

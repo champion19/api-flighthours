@@ -21,7 +21,7 @@ import (
 func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 		inputID := c.Param("id")
 
 		log.Info(logger.LogDailyLogbookDetailGet, "input_id", inputID)
@@ -76,7 +76,7 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 		inputID := c.Param("id")
 
 		log.Info(logger.LogDailyLogbookDetailCreate, "logbook_id", inputID)
@@ -202,7 +202,7 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 		inputID := c.Param("id")
 
 		log.Info(logger.LogDailyLogbookDetailUpdate, "input_id", inputID)
@@ -308,7 +308,7 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 		inputID := c.Param("id")
 
 		log.Info(logger.LogDailyLogbookDetailList, "logbook_id", inputID)
@@ -376,7 +376,7 @@ func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 func (h *handler) ListMyFlights() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogDailyLogbookDetailList, "action", "list_my_flights")
 

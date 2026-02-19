@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
@@ -75,29 +77,11 @@ func (i *LicensePlateInteractor) CreateLicensePlate(ctx context.Context, registr
 
 	log.Info(logger.LogLicensePlateCreate, registration.ToLogger())
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogLicensePlateCreateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.CreateLicensePlateTx(ctx, tx, registration)
+		})
 	if err != nil {
-		log.Error(logger.LogLicensePlateCreateError, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogLicensePlateCreateError, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogLicensePlateCreateError, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.CreateLicensePlateTx(ctx, tx, registration); err != nil {
-		log.Error(logger.LogLicensePlateCreateError, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogLicensePlateCreateError, "commit_error", err)
 		return err
 	}
 
@@ -111,29 +95,11 @@ func (i *LicensePlateInteractor) UpdateLicensePlate(ctx context.Context, registr
 
 	log.Info(logger.LogLicensePlateUpdate, registration.ToLogger())
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogLicensePlateUpdateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.UpdateLicensePlateTx(ctx, tx, registration)
+		})
 	if err != nil {
-		log.Error(logger.LogLicensePlateUpdateError, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogLicensePlateUpdateError, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogLicensePlateUpdateError, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.UpdateLicensePlateTx(ctx, tx, registration); err != nil {
-		log.Error(logger.LogLicensePlateUpdateError, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogLicensePlateUpdateError, "commit_error", err)
 		return err
 	}
 
