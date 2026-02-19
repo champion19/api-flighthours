@@ -448,7 +448,7 @@ func (s service) VerifyEmailByToken(ctx context.Context, token string) (string, 
 		return "", domain.ErrInvalidToken
 	}
 
-	log.Debug("Email extracted from token", "email", email)
+	log.Debug(logger.LogEmployeeServiceEmailExtracted, "email", email)
 
 	user, err := s.keycloak.GetUserByEmail(ctx, email)
 	if err != nil {

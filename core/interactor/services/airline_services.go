@@ -28,33 +28,6 @@ func (s *AirlineService) ListAirlines(ctx context.Context, filters map[string]in
 	return s.repo.ListAirlines(ctx, filters)
 }
 
-func (s *AirlineService) UpdateAirlineStatus(ctx context.Context, id string, status bool) error {
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err = s.repo.UpdateAirlineStatus(ctx, tx, id, status); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func (s *AirlineService) ActivateAirline(ctx context.Context, id string) error {
-	return s.UpdateAirlineStatus(ctx, id, true)
-}
-
-func (s *AirlineService) DeactivateAirline(ctx context.Context, id string) error {
-	return s.UpdateAirlineStatus(ctx, id, false)
-}
-
 // ActivateAirlineTx sets the airline status to true using an external transaction
 func (s *AirlineService) ActivateAirlineTx(ctx context.Context, tx output.Tx, id string) error {
 	return s.repo.UpdateAirlineStatus(ctx, tx, id, true)

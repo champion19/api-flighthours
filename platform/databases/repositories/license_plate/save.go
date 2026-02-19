@@ -1,14 +1,14 @@
 package licenseplate
 
-import(
-"context"
-"strings"
+import (
+	"context"
+	"strings"
 
- domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
- "github.com/champion19/api-flighthours/core/ports/output"
- "github.com/champion19/api-flighthours/platform/databases/common"
+	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
+	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
+
 )
-
 
 func (r *repository) SaveLicensePlate(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 	sqlTx := tx.(*common.SQLTX)
@@ -26,7 +26,6 @@ func (r *repository) SaveLicensePlate(ctx context.Context, tx output.Tx, registr
 			"aircraft_model_id", registration.AircraftModelID,
 			"airline_id", registration.AirlineID,
 			"error", err.Error())
-
 
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			return domain.ErrLicensePlateDuplicatePlate

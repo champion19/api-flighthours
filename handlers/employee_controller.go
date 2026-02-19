@@ -23,7 +23,7 @@ func (h handler) RegisterEmployee() func(c *gin.Context) {
 
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogRegRequestReceived,
 			"method", c.Request.Method,
@@ -134,7 +134,7 @@ func (h handler) ResendVerificationEmail() gin.HandlerFunc {
 func (h handler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -190,7 +190,7 @@ func (h handler) Login() gin.HandlerFunc {
 func (h handler) RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req RefreshTokenRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -236,7 +236,7 @@ func (h handler) RefreshToken() gin.HandlerFunc {
 func (h handler) VerifyEmailByToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req VerifyEmailRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -285,7 +285,7 @@ func (h handler) VerifyEmailByToken() gin.HandlerFunc {
 func (h handler) GetEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogEmployeeGetByID, "endpoint", "GET /employees", "client_ip", c.ClientIP())
 
@@ -329,7 +329,7 @@ func (h handler) GetEmployee() gin.HandlerFunc {
 func (h handler) ChangePassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req ChangePasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -392,7 +392,7 @@ func (h handler) ChangePassword() gin.HandlerFunc {
 func (h handler) UpdateEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogEmployeeUpdateRequest, "endpoint", "PUT /employees", "client_ip", c.ClientIP())
 
@@ -453,7 +453,7 @@ func (h handler) UpdateEmployee() gin.HandlerFunc {
 func (h handler) DeleteEmployee() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogEmployeeDeleting, "endpoint", "DELETE /employees", "client_ip", c.ClientIP())
 
@@ -489,7 +489,7 @@ func (h handler) DeleteEmployee() gin.HandlerFunc {
 func (h handler) PasswordReset() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req PasswordResetRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -528,7 +528,7 @@ func (h handler) PasswordReset() gin.HandlerFunc {
 func (h handler) UpdatePassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		var req UpdatePasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -580,7 +580,7 @@ func (h handler) UpdatePassword() gin.HandlerFunc {
 func (h *handler) GetCrewMemberTypes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Info(logger.LogCrewMemberTypeGet, "client_ip", c.ClientIP())
 

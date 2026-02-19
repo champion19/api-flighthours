@@ -11,7 +11,7 @@ import (
 // The employee must already have airline info assigned (airline IS NOT NULL)
 // This operation is IDEMPOTENT - calling it multiple times with the same status returns success
 func (r *repository) UpdateAirlineEmployeeStatus(ctx context.Context, tx output.Tx, id string, active bool) error {
-	log.Debug("UpdateAirlineEmployeeStatus: Starting update",
+	log.Debug("UpdateAirlineEmployeeStatus:Starting update",
 		"employee_id", id,
 		"active", active)
 
@@ -36,7 +36,7 @@ func (r *repository) UpdateAirlineEmployeeStatus(ctx context.Context, tx output.
 	// Update the active status (idempotent - OK if already in desired state)
 	_, err = dbTx.ExecContext(ctx, QueryUpdateStatus, active, id)
 	if err != nil {
-		log.Error("UpdateAirlineEmployeeStatus: update failed",
+		log.Error("UpdateAirlineEmployeeStatus: failed to update status",
 			"employee_id", id,
 			"error", err)
 		return err

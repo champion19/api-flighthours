@@ -3,15 +3,16 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 type MessageInteractor struct {
 	service input.MessageService
-
 }
 
 func NewMessageInteractor(service input.MessageService) *MessageInteractor {
@@ -32,34 +33,13 @@ func (i *MessageInteractor) CreateMessage(ctx context.Context, message domain.Me
 	}
 	log.Success(logger.LogMessageInteractorCreateStep1OK)
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogMessageInteractorCreateStep2Error,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.SaveMessageToDB(ctx, tx, message)
+		})
 	if err != nil {
-		log.Error(logger.LogMessageInteractorCreateStep2Error, "error", err)
 		return
 	}
-	log.Success(logger.LogMessageInteractorCreateStep2OK)
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogMessageInteractorRollbackError, "error", rbErr)
-			} else {
-				log.Warn(logger.LogMessageInteractorRollbackOK, "error", err)
-			}
-		}
-	}()
-
-	if err = i.service.SaveMessageToDB(ctx, tx, message); err != nil {
-		log.Error(logger.LogMessageInteractorCreateStep3Error, "error", err)
-		return
-	}
-	log.Success(logger.LogMessageInteractorCreateStep3OK)
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogMessageInteractorCreateCommitErr, "error", err)
-		return
-	}
-	log.Success(logger.LogMessageInteractorCreateCommitOK)
 
 	result = &message
 	log.Success(logger.LogMessageInteractorCreateComplete, message.ToLogger())
@@ -87,35 +67,13 @@ func (i *MessageInteractor) UpdateMessage(ctx context.Context, message domain.Me
 	}
 	log.Success(logger.LogMessageInteractorUpdateStep2OK)
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogMessageInteractorUpdateStep3Error,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.UpdateMessageInDB(ctx, tx, message)
+		})
 	if err != nil {
-		log.Error(logger.LogMessageInteractorUpdateStep3Error, "error", err)
 		return
 	}
-	log.Success(logger.LogMessageInteractorUpdateStep3OK)
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogMessageInteractorRollbackError,
-					"rollback error", rbErr, "original error", err)
-			} else {
-				log.Warn(logger.LogMessageInteractorRollbackOK)
-			}
-		}
-	}()
-
-	if err = i.service.UpdateMessageInDB(ctx, tx, message); err != nil {
-		log.Error(logger.LogMessageInteractorUpdateStep4Error, "error", err)
-		return
-	}
-	log.Success(logger.LogMessageInteractorUpdateStep4OK)
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogMessageInteractorUpdateCommitErr, "error", err)
-		return
-	}
-	log.Success(logger.LogMessageInteractorUpdateCommitOK)
 
 	result = &message
 	log.Success(logger.LogMessageInteractorUpdateComplete, message.ToLogger())
@@ -139,39 +97,15 @@ func (i *MessageInteractor) DeleteMessage(ctx context.Context, id string) (err e
 	}
 	log.Success(logger.LogMessageInteractorDeleteStep1OK)
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogMessageInteractorDeleteStep2Error,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeleteMessageFromDB(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogMessageInteractorDeleteStep2Error, "error", err)
 		return err
 	}
-	log.Success(logger.LogMessageInteractorDeleteStep2OK)
 
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogMessageInteractorRollbackError,
-					"rollback_error", rbErr,
-					"original_error", err)
-			} else {
-				log.Warn(logger.LogMessageInteractorRollbackOK,
-					"original_error", err)
-			}
-		}
-	}()
-
-	if err = i.service.DeleteMessageFromDB(ctx, tx, id); err != nil {
-		log.Error(logger.LogMessageInteractorDeleteStep3Error, "error", err)
-		return err
-	}
-	log.Success(logger.LogMessageInteractorDeleteStep3OK)
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogMessageInteractorDeleteCommitErr, "error", err)
-		return err
-	}
-	log.Success(logger.LogMessageInteractorDeleteCommitOK)
-
-	log.Success("Mensaje eliminado exitosamente", "id", id)
+	log.Success(logger.LogMessageInteractorDeleteComplete, "id", id)
 
 	log.Info(logger.LogMessageCacheRefresh)
 

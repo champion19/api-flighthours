@@ -33,44 +33,6 @@ func (s *LicensePlateService) ListLicensePlates(ctx context.Context, filters map
 	return s.repo.ListLicensePlates(ctx, filters)
 }
 
-func (s *LicensePlateService) CreateLicensePlate(ctx context.Context, registration domain.LicensePlate) error {
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err = s.repo.SaveLicensePlate(ctx, tx, registration); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func (s *LicensePlateService) UpdateLicensePlate(ctx context.Context, registration domain.LicensePlate) error {
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err = s.repo.UpdateLicensePlate(ctx, tx, registration); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
 // CreateLicensePlateTx creates a license plate using an external transaction
 func (s *LicensePlateService) CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error {
 	return s.repo.SaveLicensePlate(ctx, tx, registration)

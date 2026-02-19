@@ -22,7 +22,7 @@ import (
 func (h *handler) GetAirlineByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -78,7 +78,7 @@ func (h *handler) GetAirlineByID() gin.HandlerFunc {
 func (h *handler) ActivateAirline() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -137,7 +137,7 @@ func (h *handler) ActivateAirline() gin.HandlerFunc {
 func (h *handler) DeactivateAirline() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		inputID := c.Param("id")
 		if inputID == "" {
@@ -193,7 +193,7 @@ func (h *handler) DeactivateAirline() gin.HandlerFunc {
 func (h *handler) ListAirlines() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
-		log := Logger.WithTraceID(traceID)
+		log := log.WithTraceID(traceID)
 
 		log.Debug(logger.LogAirlineList,
 			"method", c.Request.Method,

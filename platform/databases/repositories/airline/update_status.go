@@ -17,7 +17,7 @@ const (
 // UpdateAirlineStatus updates only the active status of an airline (HU3/HU4)
 // This operation is IDEMPOTENT - calling it multiple times with the same status returns success
 func (r *repository) UpdateAirlineStatus(ctx context.Context, tx output.Tx, id string, active bool) error {
-	log.Debug("UpdateAirlineStatus: Starting update",
+	log.Debug(logger.LogAirlineRepoUpdateStatusStart,
 		"airline_id", id,
 		"active", active)
 
@@ -40,7 +40,7 @@ func (r *repository) UpdateAirlineStatus(ctx context.Context, tx output.Tx, id s
 	}
 
 	if !exists {
-		log.Warn("UpdateAirlineStatus: Airline not found", "airline_id", id)
+		log.Warn(logger.LogAirlineRepoUpdateStatusNotFound, "airline_id", id)
 		return domain.ErrAirlineNotFound
 	}
 
@@ -53,7 +53,7 @@ func (r *repository) UpdateAirlineStatus(ctx context.Context, tx output.Tx, id s
 		return err
 	}
 
-	log.Debug("UpdateAirlineStatus: Status updated successfully (idempotent)",
+	log.Debug(logger.LogAirlineRepoUpdateStatusOK,
 		"airline_id", id,
 		"active", active)
 

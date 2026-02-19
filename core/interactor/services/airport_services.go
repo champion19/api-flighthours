@@ -39,36 +39,6 @@ func (s *AirportService) GetAirportsByType(ctx context.Context, airportType stri
 	return s.repo.GetAirportsByType(ctx, airportType)
 }
 
-// UpdateAirportStatus updates the status of an airport with transaction handling
-func (s *AirportService) UpdateAirportStatus(ctx context.Context, id string, status bool) error {
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err = s.repo.UpdateAirportStatus(ctx, tx, id, status); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-// ActivateAirport sets the airport status to true (active)
-func (s *AirportService) ActivateAirport(ctx context.Context, id string) error {
-	return s.UpdateAirportStatus(ctx, id, true)
-}
-
-// DeactivateAirport sets the airport status to false (inactive)
-func (s *AirportService) DeactivateAirport(ctx context.Context, id string) error {
-	return s.UpdateAirportStatus(ctx, id, false)
-}
-
 // ActivateAirportTx sets the airport status to true using an external transaction
 func (s *AirportService) ActivateAirportTx(ctx context.Context, tx output.Tx, id string) error {
 	return s.repo.UpdateAirportStatus(ctx, tx, id, true)

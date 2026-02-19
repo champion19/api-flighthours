@@ -40,7 +40,7 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 		entity.DutyTime,
 		entity.ApproachType,
 		entity.FlightType,
-		entity.ID, // WHERE clause
+		entity.ID,
 	)
 
 	if err != nil {

@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
@@ -86,29 +88,11 @@ func (i *AircraftModelInteractor) ActivateAircraftModel(ctx context.Context, id 
 		return err
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAircraftModelActivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.ActivateAircraftModelTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.ActivateAircraftModelTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAircraftModelActivateError, "aircraft_model_id", id, "commit_error", err)
 		return err
 	}
 
@@ -130,29 +114,11 @@ func (i *AircraftModelInteractor) DeactivateAircraftModel(ctx context.Context, i
 		return err
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAircraftModelDeactivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeactivateAircraftModelTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.DeactivateAircraftModelTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAircraftModelDeactivateError, "aircraft_model_id", id, "commit_error", err)
 		return err
 	}
 

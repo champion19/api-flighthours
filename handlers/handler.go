@@ -70,12 +70,12 @@ func New(
 	}
 }
 
-var Logger = logger.NewSlogLogger()
+var log logger.Logger = logger.NewSlogLogger()
 
 func (h *handler) EncodeID(uuid string) (string, error) {
 	encodedID, err := h.IDEncoder.Encode(uuid)
 	if err != nil {
-		Logger.Error(logger.LogMessageIDEncodeError,
+		log.Error(logger.LogMessageIDEncodeError,
 			"uuid", uuid,
 			"error", err)
 		return "", err
@@ -86,7 +86,7 @@ func (h *handler) EncodeID(uuid string) (string, error) {
 func (h *handler) DecodeID(encodedID string) (string, error) {
 	uuid, err := h.IDEncoder.Decode(encodedID)
 	if err != nil {
-		Logger.Error(logger.LogMessageIDDecodeError,
+		log.Error(logger.LogMessageIDDecodeError,
 			"encoded_id", encodedID,
 			"error", err)
 		return "", err
@@ -95,7 +95,7 @@ func (h *handler) DecodeID(encodedID string) (string, error) {
 }
 
 func (h *handler) HandleIDEncodingError(c *gin.Context, uuid string, err error) {
-	Logger.Error(logger.LogMessageIDEncodeError,
+	log.Error(logger.LogMessageIDEncodeError,
 		"uuid", uuid,
 		"error", err,
 		"client_ip", c.ClientIP())
@@ -103,7 +103,7 @@ func (h *handler) HandleIDEncodingError(c *gin.Context, uuid string, err error) 
 }
 
 func (h *handler) HandleIDDecodingError(c *gin.Context, encodedID string, err error) {
-	Logger.Error(logger.LogMessageIDDecodeError,
+	log.Error(logger.LogMessageIDDecodeError,
 		"encoded_id", encodedID,
 		"error", err,
 		"client_ip", c.ClientIP())
@@ -117,7 +117,7 @@ func (h *handler) resolveID(inputID string) (string, string) {
 
 	uuid, err := h.DecodeID(inputID)
 	if err != nil {
-		Logger.Warn(logger.LogMessageIDDecodeError, "encoded_id", inputID, "error", err)
+		log.Warn(logger.LogMessageIDDecodeError, "encoded_id", inputID, "error", err)
 		return "", ""
 	}
 	return uuid, inputID

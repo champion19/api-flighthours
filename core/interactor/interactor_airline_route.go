@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -79,37 +81,23 @@ func (i *AirlineRouteInteractor) ActivateAirlineRoute(ctx context.Context, trace
 
 	log.Info(logger.LogAirlineRouteActivate, "airline_route_id", id)
 
-	tx, err := i.service.BeginTx(ctx)
-	if err != nil {
-		log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineRouteActivateError, "airline_route_id", id, "rollback", "ok")
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineRouteActivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			if err := i.service.ActivateAirlineRouteTx(ctx, tx, id); err != nil {
+				if err == domain.ErrAirlineRouteNotFound {
+					log.Warn(logger.LogAirlineRouteNotFound, "airline_route_id", id)
+					return err
+				}
+				if err == domain.ErrAirlineRouteAlreadyActive {
+					log.Info(logger.LogAirlineRouteActivateOK, "airline_route_id", id, "status", "already_active")
+					return err
+				}
+				log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "error", err)
+				return err
 			}
-		}
-	}()
-
-	if err = i.service.ActivateAirlineRouteTx(ctx, tx, id); err != nil {
-		if err == domain.ErrAirlineRouteNotFound {
-			log.Warn(logger.LogAirlineRouteNotFound, "airline_route_id", id)
-			return err
-		}
-		if err == domain.ErrAirlineRouteAlreadyActive {
-			log.Info(logger.LogAirlineRouteActivateOK, "airline_route_id", id, "status", "already_active")
-			return err
-		}
-		log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineRouteActivateError, "airline_route_id", id, "commit_error", err)
+			return nil
+		})
+	if err != nil {
 		return err
 	}
 
@@ -123,37 +111,23 @@ func (i *AirlineRouteInteractor) DeactivateAirlineRoute(ctx context.Context, tra
 
 	log.Info(logger.LogAirlineRouteDeactivate, "airline_route_id", id)
 
-	tx, err := i.service.BeginTx(ctx)
-	if err != nil {
-		log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "rollback", "ok")
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogAirlineRouteDeactivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			if err := i.service.DeactivateAirlineRouteTx(ctx, tx, id); err != nil {
+				if err == domain.ErrAirlineRouteNotFound {
+					log.Warn(logger.LogAirlineRouteNotFound, "airline_route_id", id)
+					return err
+				}
+				if err == domain.ErrAirlineRouteAlreadyInactive {
+					log.Info(logger.LogAirlineRouteDeactivateOK, "airline_route_id", id, "status", "already_inactive")
+					return err
+				}
+				log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "error", err)
+				return err
 			}
-		}
-	}()
-
-	if err = i.service.DeactivateAirlineRouteTx(ctx, tx, id); err != nil {
-		if err == domain.ErrAirlineRouteNotFound {
-			log.Warn(logger.LogAirlineRouteNotFound, "airline_route_id", id)
-			return err
-		}
-		if err == domain.ErrAirlineRouteAlreadyInactive {
-			log.Info(logger.LogAirlineRouteDeactivateOK, "airline_route_id", id, "status", "already_inactive")
-			return err
-		}
-		log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogAirlineRouteDeactivateError, "airline_route_id", id, "commit_error", err)
+			return nil
+		})
+	if err != nil {
 		return err
 	}
 

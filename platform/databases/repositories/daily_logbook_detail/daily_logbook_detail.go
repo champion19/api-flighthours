@@ -47,7 +47,6 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
 		LicensePlateID: d.LicensePlateID,
-
 	}
 
 	if d.OutTime.Valid {

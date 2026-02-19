@@ -3,8 +3,10 @@ package interactor
 import (
 	"context"
 
+	"github.com/champion19/api-flighthours/core/interactor/helpers"
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/input"
+	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
@@ -68,33 +70,46 @@ func (i *DailyLogbookInteractor) CreateDailyLogbook(ctx context.Context, logbook
 
 	log.Info(logger.LogDailyLogbookCreate, "employee_id", logbook.EmployeeID)
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookCreateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.CreateDailyLogbookTx(ctx, tx, logbook)
+		})
 	if err != nil {
-		log.Error(logger.LogDailyLogbookCreateError, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogDailyLogbookCreateError, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogDailyLogbookCreateError, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.CreateDailyLogbookTx(ctx, tx, logbook); err != nil {
-		log.Error(logger.LogDailyLogbookCreateError, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogDailyLogbookCreateError, "commit_error", err)
 		return err
 	}
 
 	log.Success(logger.LogDailyLogbookCreateOK, logbook.ToLogger())
+	return nil
+}
+
+// UpdateDailyLogbook updates an existing daily logbook
+func (i *DailyLogbookInteractor) UpdateDailyLogbook(ctx context.Context, logbook domain.DailyLogbook, employeeID string) (err error) {
+	traceID := middleware.GetTraceIDFromContext(ctx)
+	log := log.WithTraceID(traceID)
+
+	log.Info(logger.LogDailyLogbookUpdate, "logbook_id", logbook.ID)
+
+	// Verify logbook exists and belongs to the authenticated employee
+	existing, err := i.service.GetDailyLogbookByID(ctx, logbook.ID)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookNotFound, "logbook_id", logbook.ID)
+		return err
+	}
+
+	if existing.EmployeeID != employeeID {
+		log.Warn(logger.LogDailyLogbookUpdateError, "error", "unauthorized", "logbook_id", logbook.ID)
+		return domain.ErrFlightUnauthorized
+	}
+
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookUpdateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.UpdateDailyLogbookTx(ctx, tx, logbook)
+		})
+	if err != nil {
+		return err
+	}
+
+	log.Success(logger.LogDailyLogbookUpdateOK, logbook.ToLogger())
 	return nil
 }
 
@@ -105,29 +120,11 @@ func (i *DailyLogbookInteractor) DeleteDailyLogbook(ctx context.Context, id stri
 
 	log.Info(logger.LogDailyLogbookDelete, "logbook_id", id)
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDeleteError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeleteDailyLogbookTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDeleteError, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogDailyLogbookDeleteError, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogDailyLogbookDeleteError, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.DeleteDailyLogbookTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogDailyLogbookDeleteError, "logbook_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogDailyLogbookDeleteError, "commit_error", err)
 		return err
 	}
 
@@ -149,29 +146,11 @@ func (i *DailyLogbookInteractor) ActivateDailyLogbook(ctx context.Context, id st
 		return err
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookActivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.ActivateDailyLogbookTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogDailyLogbookActivateError, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogDailyLogbookActivateError, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogDailyLogbookActivateError, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.ActivateDailyLogbookTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogDailyLogbookActivateError, "logbook_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogDailyLogbookActivateError, "commit_error", err)
 		return err
 	}
 
@@ -193,29 +172,11 @@ func (i *DailyLogbookInteractor) DeactivateDailyLogbook(ctx context.Context, id 
 		return err
 	}
 
-	tx, err := i.service.BeginTx(ctx)
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDeactivateError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeactivateDailyLogbookTx(ctx, tx, id)
+		})
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDeactivateError, "error", err)
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
-				log.Error(logger.LogDailyLogbookDeactivateError, "rollback_error", rbErr, "original_error", err)
-			} else {
-				log.Warn(logger.LogDailyLogbookDeactivateError, "rollback", "ok")
-			}
-		}
-	}()
-
-	if err = i.service.DeactivateDailyLogbookTx(ctx, tx, id); err != nil {
-		log.Error(logger.LogDailyLogbookDeactivateError, "logbook_id", id, "error", err)
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Error(logger.LogDailyLogbookDeactivateError, "commit_error", err)
 		return err
 	}
 
