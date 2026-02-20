@@ -703,6 +703,46 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		t.Logf("status: %d", w.Code)
 	})
 
+	t.Run("interactor unauthorized - logbook owned by different employee", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: "other-employee-id"}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("interactor generic save error", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return errors.New("unexpected interactor error")
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
 	t.Run("refetch error after create", func(t *testing.T) {
 		logbookSvc := &fakeDailyLogbookService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {

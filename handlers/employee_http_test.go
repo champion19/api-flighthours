@@ -504,6 +504,66 @@ func TestHTTP_VerifyEmailByToken(t *testing.T) {
 			t.Errorf("expected success=false, got %v", response["success"])
 		}
 	})
+
+	t.Run("user not found - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			verifyEmailByTokenFn: func(ctx context.Context, token string) (string, error) {
+				return "", domain.ErrUserNotFound
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"token":"token-for-unknown-user"}`
+		req := httptest.NewRequest(http.MethodPost, "/verify-email", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Error("expected non-200 status for user not found")
+		}
+	})
+
+	t.Run("email already verified - returns warning", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			verifyEmailByTokenFn: func(ctx context.Context, token string) (string, error) {
+				return "", domain.ErrEmailAlreadyVerified
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"token":"token-already-verified"}`
+		req := httptest.NewRequest(http.MethodPost, "/verify-email", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusInternalServerError {
+			t.Error("expected non-500 for already verified")
+		}
+	})
+
+	t.Run("generic error - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			verifyEmailByTokenFn: func(ctx context.Context, token string) (string, error) {
+				return "", errors.New("unexpected error")
+			},
+		}
+
+		router := newRouter(fake)
+		body := `{"token":"token-causes-error"}`
+		req := httptest.NewRequest(http.MethodPost, "/verify-email", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Error("expected non-200 for generic error")
+		}
+	})
 }
 
 func TestHTTP_ResendVerificationEmail(t *testing.T) {
@@ -1251,6 +1311,31 @@ func TestHTTP_UpdateEmployee(t *testing.T) {
 
 		if w.Code == http.StatusOK {
 			t.Error("expected non-200 status for invalid JSON")
+		}
+	})
+
+	t.Run("interactor error - returns error", func(t *testing.T) {
+		fake := &fakeEmployeeInteractor{
+			updateEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.UpdateEmployee, error) {
+				return nil, errors.New("database error")
+			},
+		}
+
+		authUser := &domain.Employee{
+			ID:    "12345678-1234-1234-1234-123456789abc",
+			Email: "user@example.com",
+		}
+		router := newRouterWithAuth(fake, authUser)
+
+		body := `{"name":"Updated Name","identification_number":"12345"}`
+		req := httptest.NewRequest(http.MethodPut, "/employees", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Error("expected non-200 status for interactor error")
 		}
 	})
 }

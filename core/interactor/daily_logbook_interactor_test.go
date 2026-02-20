@@ -439,3 +439,98 @@ func TestDailyLogbookInteractor_Delete(t *testing.T) {
 		}
 	})
 }
+
+func TestDailyLogbookInteractor_Update(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-1"}, nil
+			},
+			updateTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.UpdateDailyLogbook(context.Background(), domain.DailyLogbook{ID: "lb-1"}, "emp-1")
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return nil, errors.New("not found")
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.UpdateDailyLogbook(context.Background(), domain.DailyLogbook{ID: "lb-1"}, "emp-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("unauthorized - different employee", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: id, EmployeeID: "other-emp"}, nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.UpdateDailyLogbook(context.Background(), domain.DailyLogbook{ID: "lb-1"}, "emp-1")
+		if !errors.Is(err, domain.ErrFlightUnauthorized) {
+			t.Errorf("expected ErrFlightUnauthorized, got %v", err)
+		}
+	})
+
+	t.Run("update tx error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-1"}, nil
+			},
+			updateTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return errors.New("update failed")
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.UpdateDailyLogbook(context.Background(), domain.DailyLogbook{ID: "lb-1"}, "emp-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("begin tx error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-1"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return nil, errors.New("tx error")
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.UpdateDailyLogbook(context.Background(), domain.DailyLogbook{ID: "lb-1"}, "emp-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("commit error", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-1"}, nil
+			},
+			beginTxFn: func(ctx context.Context) (output.Tx, error) {
+				return &fakeTx{commitFn: func() error { return errors.New("commit error") }}, nil
+			},
+			updateTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return nil
+			},
+		}
+		inter := NewDailyLogbookInteractor(svc)
+		err := inter.UpdateDailyLogbook(context.Background(), domain.DailyLogbook{ID: "lb-1"}, "emp-1")
+		if err == nil {
+			t.Error("expected commit error")
+		}
+	})
+}
