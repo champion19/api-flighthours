@@ -11,8 +11,11 @@ import (
 // Idempotent: if the status is already the desired value, MySQL reports 0 rows affected
 // which is NOT an error. Existence is validated beforehand in the interactor.
 func (r *repository) UpdateAirportStatus(ctx context.Context, tx output.Tx, id string, status bool) error {
-	sqlTx := tx.(*common.SQLTX)
+	sqlTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
+	}
 
-	_, err := sqlTx.ExecContext(ctx, QueryUpdateStatus, status, id)
+	_, err = sqlTx.ExecContext(ctx, QueryUpdateStatus, status, id)
 	return err
 }

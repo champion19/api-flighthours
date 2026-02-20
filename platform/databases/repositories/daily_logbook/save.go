@@ -10,9 +10,12 @@ import (
 
 // SaveDailyLogbook creates a new daily logbook entry
 func (r *repository) SaveDailyLogbook(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
-	sqlTx := tx.(*common.SQLTX)
+	sqlTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
+	}
 
-	_, err := sqlTx.ExecContext(ctx, QueryInsert,
+	_, err = sqlTx.ExecContext(ctx, QueryInsert,
 		logbook.ID,
 		logbook.LogDate,
 		logbook.EmployeeID,

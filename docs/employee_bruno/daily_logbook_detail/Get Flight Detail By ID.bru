@@ -1,0 +1,60 @@
+meta {
+  name: Get Flight Detail By ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/daily-logbook-details/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{detail-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Consultar Vuelo por ID (HU45)
+  
+  Consulta la información de un vuelo específico por su ID.
+  El vuelo debe pertenecer al empleado autenticado.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Path Parameters
+  - `id`: ID del vuelo (encoded ID)
+  
+  ## Respuesta exitosa (200) - `VUE_CON_EXI_04801`
+  ```json
+  {
+    "id": "encoded-id",
+    "daily_logbook_id": "encoded-logbook-id",
+    "flight_real_date": "2026-02-10",
+    "flight_number": "AV-123",
+    "airline_route_id": "encoded-route-id",
+    "license_plate_id": "encoded-plate-id",
+    "passengers": 150,
+    "out_time": "08:00",
+    "takeoff_time": "08:15",
+    "landing_time": "10:30",
+    "in_time": "10:45",
+    "pilot_role": "PIC",
+    "air_time": "02:15",
+    "block_time": "02:45",
+    "_links": { ... }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Vuelo no pertenece al empleado (`VUE_AUTH_ERR_00001`)
+  - 404: Vuelo no encontrado (`VUE_CON_ERR_04803`)
+  - 500: Error interno (`VUE_CON_ERR_04804`)
+}

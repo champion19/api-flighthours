@@ -82,6 +82,10 @@ func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
 	r.FlightType = TrimStringPtr(r.FlightType)
 }
 
+// ============================================
+// RESPONSE DTOs
+// ============================================
+
 // DailyLogbookDetailResponse represents the response for a detail
 type DailyLogbookDetailResponse struct {
 	ID                  string  `json:"id"`
@@ -112,6 +116,10 @@ type DailyLogbookDetailResponse struct {
 	ModelName           string  `json:"model_name,omitempty"`
 	Links               []Link  `json:"_links,omitempty"`
 }
+
+// ============================================
+// MAPPERS
+// ============================================
 
 // ToDomainDailyLogbookDetail converts a create request to domain model
 func ToDomainDailyLogbookDetail(logbookID string, req CreateDailyLogbookDetailRequest) domain.DailyLogbookDetail {

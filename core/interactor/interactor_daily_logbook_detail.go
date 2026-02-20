@@ -186,6 +186,33 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 	return nil
 }
 
+// DeleteDailyLogbookDetail deletes a detail
+func (i *DailyLogbookDetailInteractor) DeleteDailyLogbookDetail(ctx context.Context, traceID string, id string) error {
+	log.Info(logger.LogDailyLogbookDetailDelete, "trace_id", traceID, "id", id)
+
+	// Verify detail exists
+	existing, err := i.service.GetDailyLogbookDetailByID(ctx, id)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDetailDeleteError, "trace_id", traceID, "error", err)
+		return err
+	}
+	if existing == nil {
+		log.Warn(logger.LogDailyLogbookDetailNotFound, "trace_id", traceID, "id", id)
+		return domain.ErrFlightNotFound
+	}
+
+	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailDeleteError,
+		func(ctx context.Context, tx output.Tx) error {
+			return i.service.DeleteDailyLogbookDetailTx(ctx, tx, id)
+		})
+	if err != nil {
+		return err
+	}
+
+	log.Info(logger.LogDailyLogbookDetailDeleteOK, "trace_id", traceID, "id", id)
+	return nil
+}
+
 // VerifyLogbookOwnership verifies that a logbook belongs to the specified employee
 func (i *DailyLogbookDetailInteractor) VerifyLogbookOwnership(ctx context.Context, logbookID string, employeeID string) error {
 	logbook, err := i.logbookService.GetDailyLogbookByID(ctx, logbookID)

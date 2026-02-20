@@ -282,3 +282,31 @@ func TestDailyLogbookService_DeleteDailyLogbookTx(t *testing.T) {
 		}
 	})
 }
+
+func TestDailyLogbookService_UpdateDailyLogbookTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return nil
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.UpdateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{ID: "lb-1"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookRepo{
+			updateFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return errors.New("update failed")
+			},
+		}
+		svc := NewDailyLogbookService(repo)
+		err := svc.UpdateDailyLogbookTx(context.Background(), &mockTx{}, domain.DailyLogbook{ID: "lb-1"})
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+}

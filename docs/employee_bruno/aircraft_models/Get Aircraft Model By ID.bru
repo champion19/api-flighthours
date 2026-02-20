@@ -1,0 +1,48 @@
+meta {
+  name: Get Aircraft Model By ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/aircraft-models/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{aircraftModelId}}
+}
+
+vars:pre-request {
+  aircraftModelId: k2aBhGrDS1XxUNrZUAnBtn5RFxxBiaJD
+}
+
+docs {
+  # Get Aircraft Model By ID
+  
+  Obtiene un modelo de aeronave por su ID (acepta ID ofuscado).
+  Este endpoint es público, no requiere autenticación.
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_ACM_GET_EXI_00001",
+    "message": "...",
+    "data": {
+      "id": "encoded-id",
+      "model_name": "Airbus A320neo",
+      "aircraft_type_name": "Narrow Body",
+      "engine_type_name": "Turbofan",
+      "status": true,
+      "_links": [...]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (MOD_ACM_VAL_ERR_00001)
+  - 404: Modelo no encontrado (MOD_ACM_GET_ERR_00001)
+  - 500: Error interno (MOD_ACM_GET_ERR_00002)
+}

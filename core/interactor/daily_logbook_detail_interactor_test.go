@@ -20,6 +20,7 @@ type fakeDailyLogbookDetailService struct {
 	createTxFn          func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	updateTxFn          func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	deleteTxFn          func(ctx context.Context, tx output.Tx, id string) error
 }
 
 func (f *fakeDailyLogbookDetailService) BeginTx(ctx context.Context) (output.Tx, error) {
@@ -73,6 +74,13 @@ func (f *fakeDailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, e
 		return f.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
 	}
 	return false, nil
+}
+
+func (f *fakeDailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deleteTxFn != nil {
+		return f.deleteTxFn(ctx, tx, id)
+	}
+	return nil
 }
 
 func TestNewDailyLogbookDetailInteractor(t *testing.T) {
@@ -795,6 +803,66 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookActiveAndOwned(t *testing.T) 
 		err := inter.VerifyLogbookActiveAndOwned(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected inactive error")
+		}
+	})
+}
+
+func TestDailyLogbookDetailInteractor_Delete(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		svc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return &domain.DailyLogbookDetail{ID: "d-1", DailyLogbookID: "lb-1"}, nil
+			},
+			deleteTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		svc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return nil, nil
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
+		if err == nil {
+			t.Error("expected not found error")
+		}
+	})
+
+	t.Run("get by ID error", func(t *testing.T) {
+		svc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return nil, errors.New("db error")
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+
+	t.Run("delete service error", func(t *testing.T) {
+		svc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return &domain.DailyLogbookDetail{ID: "d-1", DailyLogbookID: "lb-1"}, nil
+			},
+			deleteTxFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return errors.New("delete error")
+			},
+		}
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
+		if err == nil {
+			t.Error("expected delete error")
 		}
 	})
 }

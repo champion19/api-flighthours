@@ -1,0 +1,38 @@
+meta {
+  name: List My Flights
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/employees/flights
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Listar Mis Vuelos (Todos)
+  
+  Lista TODOS los vuelos del empleado autenticado, sin importar la bitácora.
+  Este endpoint hace JOIN a través de daily_logbook para obtener todos los
+  daily_logbook_detail asociados al empleado.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Respuesta exitosa (200) - `VUE_LIST_EXI_04800`
+  Retorna una lista de todos los vuelos del empleado con:
+  - Información del vuelo (fecha, número, tiempos)
+  - Ruta de aerolínea (origen → destino)
+  - Matrícula de aeronave y modelo
+  - Rol del piloto
+  - Ordenados por fecha descendente y hora ascendente
+  
+  ## Errores
+  - 401: No autenticado (`VUE_AUTH_ERR_00001`)
+  - 500: Error al listar (`VUE_LIST_ERR_04802`)
+}

@@ -165,6 +165,23 @@ func TestHTTP_GetLicensePlateByPlate(t *testing.T) {
 			t.Errorf("expected error status, got 200")
 		}
 	})
+
+	t.Run("service error - returns error", func(t *testing.T) {
+		svc := &fakeLicensePlateService{
+			getByPlateFn: func(ctx context.Context, plate string) (*domain.LicensePlate, error) {
+				return nil, errors.New("database connection error")
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodGet, "/license-plates/HK-9999", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
 }
 
 func TestHTTP_ListLicensePlates(t *testing.T) {
@@ -212,6 +229,53 @@ func TestHTTP_ListLicensePlates(t *testing.T) {
 
 		if w.Code == http.StatusOK {
 			t.Errorf("expected error status, got 200")
+		}
+	})
+
+	t.Run("success - with license_plate filter", func(t *testing.T) {
+		svc := &fakeLicensePlateService{
+			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error) {
+				if filters["license_plate"] != "HK-5432" {
+					t.Errorf("expected license_plate filter HK-5432, got %v", filters["license_plate"])
+				}
+				return []domain.LicensePlate{
+					{ID: "uuid-1", LicensePlate: "HK-5432", AircraftModelID: "m1", AirlineID: "a1"},
+				}, nil
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodGet, "/license-plates?license_plate=HK-5432", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d. body=%s", w.Code, w.Body.String())
+		}
+	})
+
+	t.Run("success - with airline_id filter", func(t *testing.T) {
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440010"
+		encodedAirlineID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeLicensePlateService{
+			listFn: func(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error) {
+				if _, ok := filters["airline_id"]; !ok {
+					t.Error("expected airline_id filter to be set")
+				}
+				return []domain.LicensePlate{
+					{ID: "uuid-1", LicensePlate: "HK-5432", AircraftModelID: "m1", AirlineID: airlineUUID},
+				}, nil
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodGet, "/license-plates?airline_id="+encodedAirlineID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d. body=%s", w.Code, w.Body.String())
 		}
 	})
 }
@@ -453,6 +517,120 @@ func TestHTTP_UpdateLicensePlate(t *testing.T) {
 
 		if w.Code == http.StatusOK {
 			t.Errorf("expected error status for invalid JSON, got 200")
+		}
+	})
+
+	t.Run("invalid model ID in body", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(testUUID)
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedAirlineID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeLicensePlateService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+				return &domain.LicensePlate{ID: testUUID}, nil
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-NEW","aircraft_model_id":"invalid!!!","airline_id":"` + encodedAirlineID + `"}`
+		req := httptest.NewRequest(http.MethodPut, "/license-plates/"+encodedID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status for invalid model ID, got 200")
+		}
+	})
+
+	t.Run("invalid airline ID in body", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
+		encodedID, _ := enc.Encode(testUUID)
+		encodedModelID, _ := enc.Encode(modelUUID)
+
+		svc := &fakeLicensePlateService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+				return &domain.LicensePlate{ID: testUUID}, nil
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-NEW","aircraft_model_id":"` + encodedModelID + `","airline_id":"invalid!!!"}`
+		req := httptest.NewRequest(http.MethodPut, "/license-plates/"+encodedID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status for invalid airline ID, got 200")
+		}
+	})
+
+	t.Run("identical data - duplicate error", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedID, _ := enc.Encode(testUUID)
+		encodedModelID, _ := enc.Encode(modelUUID)
+		encodedAirlineID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeLicensePlateService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+				// Return data identical to what will be sent in the body
+				return &domain.LicensePlate{
+					ID:              testUUID,
+					LicensePlate:    "HK-SAME",
+					AircraftModelID: modelUUID,
+					AirlineID:       airlineUUID,
+				}, nil
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-SAME","aircraft_model_id":"` + encodedModelID + `","airline_id":"` + encodedAirlineID + `"}`
+		req := httptest.NewRequest(http.MethodPut, "/license-plates/"+encodedID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status for duplicate data, got 200")
+		}
+	})
+
+	t.Run("update service error", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
+		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
+		encodedID, _ := enc.Encode(testUUID)
+		encodedModelID, _ := enc.Encode(modelUUID)
+		encodedAirlineID, _ := enc.Encode(airlineUUID)
+
+		svc := &fakeLicensePlateService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.LicensePlate, error) {
+				return &domain.LicensePlate{
+					ID:              testUUID,
+					LicensePlate:    "HK-OLD",
+					AircraftModelID: modelUUID,
+					AirlineID:       airlineUUID,
+				}, nil
+			},
+			updateFn: func(ctx context.Context, registration domain.LicensePlate) error {
+				return errors.New("db write error")
+			},
+		}
+
+		router := newLicensePlateTestRouter(svc, enc, resp, errHandler)
+		body := `{"license_plate":"HK-NEW","aircraft_model_id":"` + encodedModelID + `","airline_id":"` + encodedAirlineID + `"}`
+		req := httptest.NewRequest(http.MethodPut, "/license-plates/"+encodedID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status for update error, got 200")
 		}
 	})
 }

@@ -146,6 +146,38 @@ func TestHTTP_GetAircraftModelByID(t *testing.T) {
 			t.Errorf("expected error status, got 200")
 		}
 	})
+
+	t.Run("service error - returns 500", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(testUUID)
+
+		svc := &fakeAircraftModelServiceForHandler{
+			getByIDFn: func(ctx context.Context, id string) (*domain.AircraftModel, error) {
+				return nil, errors.New("db connection error")
+			},
+		}
+
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodGet, "/aircraft-models/"+encodedID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
+
+	t.Run("invalid ID - returns error", func(t *testing.T) {
+		svc := &fakeAircraftModelServiceForHandler{}
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodGet, "/aircraft-models/invalid!!!", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
 }
 
 func TestHTTP_ListAircraftModels(t *testing.T) {
@@ -244,6 +276,23 @@ func TestHTTP_GetAircraftModelsByFamily(t *testing.T) {
 			t.Errorf("expected error status for empty family, got 200")
 		}
 	})
+
+	t.Run("service error - returns error", func(t *testing.T) {
+		svc := &fakeAircraftModelServiceForHandler{
+			getByFamilyFn: func(ctx context.Context, family string) ([]domain.AircraftModel, error) {
+				return nil, errors.New("db error")
+			},
+		}
+
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodGet, "/aircraft-families/737", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
 }
 
 func TestHTTP_ActivateAircraftModel(t *testing.T) {
@@ -299,6 +348,38 @@ func TestHTTP_ActivateAircraftModel(t *testing.T) {
 			t.Errorf("expected error status, got 200")
 		}
 	})
+
+	t.Run("service error - returns error", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(testUUID)
+
+		svc := &fakeAircraftModelServiceForHandler{
+			activateFn: func(ctx context.Context, id string) error {
+				return errors.New("activation failed")
+			},
+		}
+
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodPatch, "/aircraft-models/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
+
+	t.Run("invalid ID - returns error", func(t *testing.T) {
+		svc := &fakeAircraftModelServiceForHandler{}
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodPatch, "/aircraft-models/invalid!!!/activate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
 }
 
 func TestHTTP_DeactivateAircraftModel(t *testing.T) {
@@ -347,6 +428,38 @@ func TestHTTP_DeactivateAircraftModel(t *testing.T) {
 
 		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
 		req := httptest.NewRequest(http.MethodPatch, "/aircraft-models/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
+
+	t.Run("service error - returns error", func(t *testing.T) {
+		testUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(testUUID)
+
+		svc := &fakeAircraftModelServiceForHandler{
+			deactivateFn: func(ctx context.Context, id string) error {
+				return errors.New("deactivation failed")
+			},
+		}
+
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodPatch, "/aircraft-models/"+encodedID+"/deactivate", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK {
+			t.Errorf("expected error status, got 200")
+		}
+	})
+
+	t.Run("invalid ID - returns error", func(t *testing.T) {
+		svc := &fakeAircraftModelServiceForHandler{}
+		router := newAircraftModelTestRouter(svc, enc, resp, errHandler)
+		req := httptest.NewRequest(http.MethodPatch, "/aircraft-models/invalid!!!/deactivate", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 

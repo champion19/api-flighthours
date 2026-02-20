@@ -1,0 +1,65 @@
+meta {
+  name: Deactivate Airport
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/airports/:id/deactivate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: Y6BkCY59HVVwf8JnfNMgFWvxuzDLc4MK
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+vars:pre-request {
+  id: Y6BkCY59HVVwf8JnfNMgFWvxuzDLc4MK
+}
+
+docs {
+  # Deactivate Airport (HU6 - Inactivar el Aeropuerto)
+  
+  Desactiva un aeropuerto por su ID.
+  Este endpoint requiere autenticación con JWT y rol de administrador.
+  
+  ## Flujo
+  1. POST /login → Obtener token (ejecutar Login.bru primero)
+  2. PATCH /airports/:id/deactivate → Desactivar aeropuerto ✅
+  
+  ## Path Parameters
+  - `id`: ID del aeropuerto (encoded)
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_APT_DEACTIVATE_EXI_00003",
+    "message": "...",
+    "data": {
+      "success": true,
+      "active": false,
+      "_links": [
+        {"rel": "self", "href": "/airports/:id", "method": "GET"},
+        {"rel": "activate", "href": "/airports/:id/activate", "method": "PATCH"},
+        {"rel": "collection", "href": "/airports", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (MOD_V_ID_ERR_00013)
+  - 401: No autenticado (GEN_AUTH_ERR_00002)
+  - 403: Sin permisos (GEN_FORBIDDEN_ERR_00003)
+  - 404: Aeropuerto no encontrado (MOD_APT_NOT_FOUND_ERR_00001)
+  - 500: Error interno (MOD_APT_DEACTIVATE_ERR_00003)
+}

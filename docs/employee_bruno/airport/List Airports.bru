@@ -1,0 +1,43 @@
+meta {
+  name: List Airports
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/airports
+  body: none
+  auth: none
+}
+
+docs {
+  # List Airports (HU4 - Consultar Aeropuertos)
+
+  Lista todos los aeropuertos del sistema.
+  Este endpoint NO requiere autenticación (público).
+
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_APT_GET_EXI_00001",
+    "data": {
+      "airports": [
+        {
+          "id": "encoded_airport_id",
+          "name": "El Dorado International Airport",
+          "city": "Bogotá",
+          "country": "Colombia",
+          "iata_code": "BOG",
+          "airport_type": "INTERNACIONAL",
+          "active": true
+        }
+      ],
+      "_links": [...]
+    }
+  }
+  ```
+
+  ## Errores
+  - 500: Error interno del servidor (GEN_SRV_ERR_00001)
+}

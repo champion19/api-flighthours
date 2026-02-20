@@ -1,0 +1,63 @@
+meta {
+  name: Add My Employee Airline Info
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/employees/airline
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "airline_id": "vyY2TPnPHQRguoepinx5irokud88CeEW",
+    "bp": "4472024",
+    "start_date": "2025-11-01",
+    "end_date": "2026-11-01"
+  }
+}
+
+docs {
+  # Add My Airline Info (HU26 - Agregar la Información del Empleado de la Aerolínea)
+  
+  Agrega la información de aerolínea para el empleado autenticado.
+  Los campos como Name, IdentificationNumber, Role ya vienen del Employee, solo se agregan los datos de aerolínea.
+  
+  ## Flujo
+  1. POST /login → Obtener token
+  2. PUT /employee/me/airline → Agregar info de aerolínea ✅
+  3. GET /employee/me/airline → Consultar info de aerolínea
+  
+  ## Body
+  | Campo | Tipo | Requerido | Descripción |
+  |-------|------|-----------|-------------|
+  | airline_id | string | ✅ | ID ofuscado de la aerolínea |
+  | bp | string | ❌ | Código Business Partner |
+  | start_date | string | ✅ | Fecha inicio (YYYY-MM-DD) |
+  | end_date | string | ❌ | Fecha fin (YYYY-MM-DD) |
+  | active | bool | ❌ | Estado activo |
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "EMP_AIR_ADD_EXI_02601",
+    "data": {
+      "added": true,
+      "airline_id": "zVL6fRnRcd8McYrNhXD8u2okijnnSReo",
+      "airline_name": "Avianca",
+      "bp": "CP003",
+      "start_date": "2025-01-01",
+      "end_date": "2030-12-31",
+      "active": true,
+      "_links": [...]
+    }
+  }
+  ```
+}

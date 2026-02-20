@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "airline_route",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

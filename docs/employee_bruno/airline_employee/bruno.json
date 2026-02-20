@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "airline_employee",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -11,9 +11,9 @@ import (
 )
 
 func (r *repository) UpdateMessage(ctx context.Context, tx output.Tx, message domain.Message) error {
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
-		return domain.ErrInvalidTransaction
+	dbTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
 	}
 
 	var setClauses []string
@@ -34,11 +34,11 @@ func (r *repository) UpdateMessage(ctx context.Context, tx output.Tx, message do
 		return domain.ErrMessageCannotUpdate
 	}
 
-	args = append(args, message.ID,message.Code)
+	args = append(args, message.ID, message.Code)
 
 	query := fmt.Sprintf("UPDATE system_messages SET %s WHERE id = ? and message_code = ?", strings.Join(setClauses, ", "))
 
-result, err := dbTx.ExecContext(ctx, query, args...)
+	result, err := dbTx.ExecContext(ctx, query, args...)
 	if err != nil {
 		return domain.ErrMessageCannotUpdate
 	}

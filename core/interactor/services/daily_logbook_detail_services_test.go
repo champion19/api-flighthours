@@ -20,6 +20,7 @@ type mockDailyLogbookDetailRepo struct {
 	updateFn            func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	beginTxFn           func(ctx context.Context) (output.Tx, error)
 	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	deleteFn            func(ctx context.Context, tx output.Tx, id string) error
 }
 
 func (m *mockDailyLogbookDetailRepo) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
@@ -69,6 +70,13 @@ func (m *mockDailyLogbookDetailRepo) ExistsByUniqueKey(ctx context.Context, empl
 		return m.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
 	}
 	return false, nil
+}
+
+func (m *mockDailyLogbookDetailRepo) DeleteDailyLogbookDetail(ctx context.Context, tx output.Tx, id string) error {
+	if m.deleteFn != nil {
+		return m.deleteFn(ctx, tx, id)
+	}
+	return nil
 }
 
 func TestNewDailyLogbookDetailService(t *testing.T) {
@@ -310,6 +318,34 @@ func TestDailyLogbookDetailService_ExistsByUniqueKey(t *testing.T) {
 		}
 		svc := NewDailyLogbookDetailService(repo)
 		_, err := svc.ExistsByUniqueKey(context.Background(), "emp-lb-1", "2026-01-15", "AV123", "lp-1")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestDailyLogbookDetailService_DeleteTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return nil
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.DeleteDailyLogbookDetailTx(context.Background(), &mockTx{}, "d-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockDailyLogbookDetailRepo{
+			deleteFn: func(ctx context.Context, tx output.Tx, id string) error {
+				return errors.New("delete failed")
+			},
+		}
+		svc := NewDailyLogbookDetailService(repo)
+		err := svc.DeleteDailyLogbookDetailTx(context.Background(), &mockTx{}, "d-1")
 		if err == nil {
 			t.Fatal("expected error")
 		}

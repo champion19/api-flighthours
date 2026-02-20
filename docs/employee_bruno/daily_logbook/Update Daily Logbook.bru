@@ -1,0 +1,61 @@
+meta {
+  name: Update Daily Logbook
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/daily-logbooks/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "log_date": "2026-02-18",
+    "book_page": 23156877866,
+    "status": true
+  }
+}
+
+docs {
+  # Actualizar Bitácora Diaria
+  
+  Actualiza una bitácora diaria existente del empleado autenticado.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Path Parameters
+  - `id`: ID de la bitácora diaria (encoded ID)
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  - Content-Type: application/json
+  
+  ## Request Body
+  - **log_date** (required): Fecha de la bitácora (YYYY-MM-DD)
+  - **book_page** (optional): Número de página del libro físico
+  - **status** (optional): Estado activo/inactivo (true/false)
+  
+  ## Respuesta exitosa (200)
+  Retorna la bitácora actualizada con su ID encoded y links HATEOAS.
+  
+  ## Errores
+  - 400: JSON inválido / Fecha con formato incorrecto
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado
+  - 500: Error interno
+}

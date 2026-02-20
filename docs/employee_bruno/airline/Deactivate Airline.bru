@@ -1,0 +1,65 @@
+meta {
+  name: Deactivate Airline
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/airlines/:id/deactivate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: zVL6fRnRcd8McYrNhXD8u2okijnnSReo
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+vars:pre-request {
+  id: vyY2TPnPHQRguoepinx5irokud88CeEW
+}
+
+docs {
+  # Deactivate Airline (HU2 - Inactivar Aerolínea)
+  
+  Desactiva una aerolínea por su ID.
+  Este endpoint requiere autenticación con JWT y rol de administrador.
+  
+  ## Flujo
+  1. POST /login → Obtener token (desde airline_employee/Login)
+  2. PATCH /airlines/:id/deactivate → Desactivar aerolínea ✅
+  
+  ## Path Parameters
+  - `id`: ID de la aerolínea (encoded o UUID)
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_AIR_DEACTIVATE_EXI_00003",
+    "message": "...",
+    "data": {
+      "success": true,
+      "active": false,
+      "_links": [
+        {"rel": "self", "href": "/airlines/:id", "method": "GET"},
+        {"rel": "activate", "href": "/airlines/:id/activate", "method": "PATCH"},
+        {"rel": "list", "href": "/airlines", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (MOD_V_ID_ERR_00013)
+  - 401: No autenticado (GEN_AUTH_ERR_00002)
+  - 403: Sin permisos (GEN_FORBIDDEN_ERR_00003)
+  - 404: Aerolínea no encontrada (MOD_AIR_NOT_FOUND_ERR_00001)
+  - 500: Error interno (MOD_AIR_DEACTIVATE_ERR_00003)
+}

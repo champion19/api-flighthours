@@ -104,6 +104,7 @@ type DailyLogbookDetailRepository interface {
 	SaveDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 	ExistsByUniqueKey(ctx context.Context, employeeID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	DeleteDailyLogbookDetail(ctx context.Context, tx Tx, id string) error
 }
 
 type DailyLogbookRepository interface {

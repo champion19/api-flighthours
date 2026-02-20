@@ -1,0 +1,53 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "emma@yopmail.com",
+    "password": "12345678"
+  }
+}
+
+script:post-response {
+  // Guardar el access_token en la variable de ambiente
+  if (res.body && res.body.data && res.body.data.access_token) {
+    bru.setEnvVar("access-token", res.body.data.access_token);
+    bru.setEnvVar("refresh-token", res.body.data.refresh_token);
+    console.log("✅ Token guardado exitosamente en el ambiente");
+  }
+}
+
+docs {
+  # Login - Autenticación para Airline Employee
+  
+  Autentica a un usuario y guarda automáticamente el token en el environment.
+  
+  ## Flujo
+  1. Ejecuta este Login primero
+  2. El token se guarda automáticamente en `{{access-token}}`
+  3. Luego usa los endpoints protegidos:
+     - GET /employee/me/airline
+     - PUT /employee/me/airline
+  
+  ## Request Body
+  - **email**: Email del usuario registrado
+  - **password**: Contraseña del usuario
+  
+  ## Respuestas
+  - 200: Login exitoso - Devuelve access_token y refresh_token
+  - 401: Credenciales inválidas
+  - 403: Email no verificado
+}

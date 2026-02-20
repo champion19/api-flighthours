@@ -1,0 +1,51 @@
+meta {
+  name: Login
+  type: http
+  seq: 0
+}
+
+post {
+  url: {{baseUrl}}/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "josedalogo@yopmail.com",
+    "password": "Jose2026!"
+  }
+}
+
+script:post-response {
+  // Guardar el access_token en la variable de ambiente
+  if (res.body && res.body.data && res.body.data.access_token) {
+    bru.setEnvVar("access-token", res.body.data.access_token);
+    bru.setEnvVar("refresh-token", res.body.data.refresh_token);
+    console.log("✅ Token guardado exitosamente en el ambiente");
+  }
+}
+
+docs {
+  # Login - Autenticación para Aircraft Registration
+  
+  Autentica a un usuario y guarda automáticamente el token en el environment.
+  Todos los endpoints de Aircraft Registration requieren autenticación.
+  
+  ## Flujo
+  1. Ejecuta este Login primero
+  2. El token se guarda automáticamente en `{{access-token}}`
+  3. Luego usa los endpoints protegidos:
+     - GET /aircraft-registrations (listar)
+     - GET /aircraft-registrations/:id (consultar por ID)
+     - POST /aircraft-registrations (crear)
+     - PUT /aircraft-registrations/:id (actualizar)
+  
+  ## Request Body
+  - **email**: Email del usuario registrado
+  - **password**: Contraseña del usuario
+}

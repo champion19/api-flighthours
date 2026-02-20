@@ -1,0 +1,46 @@
+meta {
+  name: Get Manufacturer By ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/manufacturers/{{manufacturer-id}}
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  manufacturer-id: XwdEsEKzC83JFr1zSXL6T8wcvP1Hd4W
+}
+
+docs {
+  # Get Manufacturer By ID (HU29 - Consultar la Información del Fabricante)
+  
+  Obtiene la información detallada de un fabricante por su ID.
+  Este endpoint NO requiere autenticación (público).
+  
+  ## Path Parameters
+  - `id`: ID del fabricante (encoded)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "FAB_CON_EXI_03101",
+    "data": {
+      "id": "encoded_manufacturer_id",
+      "name": "Boeing",
+      "_links": [
+        {"rel": "self", "href": "/manufacturers/:id", "method": "GET"},
+        {"rel": "collection", "href": "/manufacturers", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (MOD_V_ID_ERR_00013)
+  - 404: Fabricante no encontrado (FAB_CON_ERR_03102)
+  - 500: Error interno del servidor (FAB_CON_ERR_03103)
+}

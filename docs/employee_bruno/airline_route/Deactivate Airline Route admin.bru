@@ -1,0 +1,56 @@
+meta {
+  name: Deactivate Airline Route admin
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/airline-routes/:id/deactivate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: oey3cwA4tj3ziQpkUGGnca2LU1jyCJwn
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+vars:pre-request {
+  id: k2aBhGrDS1XxUNrZUAnBtn5RFxxBiaJD
+}
+
+docs {
+  # Deactivate Airline Route (HU38 - Desactivar la Información de la Ruta Aerolínea)
+  
+  Desactiva una ruta de aerolínea por su ID.
+  Este endpoint REQUIERE autenticación con JWT.
+  
+  ## Flujo
+  1. POST /login → Obtener token (usando Login.bru)
+  2. PATCH /airline-routes/:id/deactivate → Desactivar ruta aerolínea ✅
+  
+  ## Path Parameters
+  - `id`: ID de la ruta aerolínea (encoded o UUID)
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "RUT_AIR_INA_EXI_04101",
+    "message": "Ruta aerolínea desactivada exitosamente"
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido
+  - 401: No autenticado
+  - 404: Ruta aerolínea no encontrada (RUT_AIR_CON_ERR_04002)
+  - 409: La ruta aerolínea ya está inactiva (RUT_AIR_INA_ERR_04103)
+  - 500: Error interno del servidor
+}

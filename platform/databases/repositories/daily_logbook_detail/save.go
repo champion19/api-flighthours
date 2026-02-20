@@ -6,6 +6,7 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -14,7 +15,7 @@ func (r *repository) SaveDailyLogbookDetail(ctx context.Context, tx output.Tx, d
 
 	entity := FromDomain(&detail)
 
-	sqlTx, err := castDetailTx(tx)
+	sqlTx, err := common.CastTx(tx)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid transaction type")
 		return err

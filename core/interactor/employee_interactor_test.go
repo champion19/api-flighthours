@@ -404,6 +404,199 @@ func TestInteractor_RegisterEmployee(t *testing.T) {
 			t.Fatalf("expected keycloak rollback called once, got %d", calledRollbackKC)
 		}
 	})
+
+	t.Run("generic service error => returns error directly", func(t *testing.T) {
+		genericErr := errors.New("unexpected service failure")
+		svc := &fakeService{
+			registerEmployeeFn: func(context.Context, domain.Employee) (*dto.RegisterEmployee, error) {
+				return nil, genericErr
+			},
+		}
+		i := NewInteractor(svc)
+
+		res, err := i.RegisterEmployee(ctx, mkEmployee())
+		if res != nil {
+			t.Fatalf("expected nil result")
+		}
+		if !errors.Is(err, genericErr) {
+			t.Fatalf("expected %v, got %v", genericErr, err)
+		}
+	})
+
+	t.Run("ErrIncompleteRegistration + CheckAndClean succeeds => returns ErrIncompleteRegistration", func(t *testing.T) {
+		svc := &fakeService{
+			registerEmployeeFn: func(context.Context, domain.Employee) (*dto.RegisterEmployee, error) {
+				return nil, domain.ErrIncompleteRegistration
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if !errors.Is(err, domain.ErrIncompleteRegistration) {
+			t.Fatalf("expected %v, got %v", domain.ErrIncompleteRegistration, err)
+		}
+	})
+
+	t.Run("BeginTx error => returns error", func(t *testing.T) {
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn: func(context.Context) (output.Tx, error) {
+				return nil, errors.New("begin tx failed")
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("CreateUserInKeycloak error => rolls back tx", func(t *testing.T) {
+		tx := &fakeTx{}
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn:  func(context.Context, output.Tx, domain.Employee) error { return nil },
+			createUserFn: func(context.Context, *domain.Employee) (string, error) {
+				return "", errors.New("keycloak create failed")
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !tx.rolledBack {
+			t.Error("expected tx.Rollback to be called")
+		}
+	})
+
+	t.Run("AssignUserRole error => rolls back keycloak and tx", func(t *testing.T) {
+		tx := &fakeTx{}
+		rollbackKCCalled := false
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn:  func(context.Context, output.Tx, domain.Employee) error { return nil },
+			createUserFn:    func(context.Context, *domain.Employee) (string, error) { return "kc1", nil },
+			setPasswordFn:   func(context.Context, string, string) error { return nil },
+			assignRoleFn: func(context.Context, string, string) error {
+				return errors.New("assign role failed")
+			},
+			rollbackKcFn: func(context.Context, string) error {
+				rollbackKCCalled = true
+				return nil
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !tx.rolledBack {
+			t.Error("expected tx.Rollback")
+		}
+		if !rollbackKCCalled {
+			t.Error("expected keycloak rollback")
+		}
+	})
+
+	t.Run("UpdateEmployeeKeycloakID error => rolls back keycloak and tx", func(t *testing.T) {
+		tx := &fakeTx{}
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn:  func(context.Context, output.Tx, domain.Employee) error { return nil },
+			createUserFn:    func(context.Context, *domain.Employee) (string, error) { return "kc1", nil },
+			setPasswordFn:   func(context.Context, string, string) error { return nil },
+			assignRoleFn:    func(context.Context, string, string) error { return nil },
+			updateKcIDFn: func(context.Context, output.Tx, string, string) error {
+				return errors.New("update kc id failed")
+			},
+			rollbackKcFn: func(context.Context, string) error { return nil },
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !tx.rolledBack {
+			t.Error("expected tx.Rollback")
+		}
+	})
+
+	t.Run("Commit error => returns error", func(t *testing.T) {
+		tx := &fakeTx{commitFn: func() error { return errors.New("commit failed") }}
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn:  func(context.Context, output.Tx, domain.Employee) error { return nil },
+			createUserFn:    func(context.Context, *domain.Employee) (string, error) { return "kc1", nil },
+			setPasswordFn:   func(context.Context, string, string) error { return nil },
+			assignRoleFn:    func(context.Context, string, string) error { return nil },
+			updateKcIDFn:    func(context.Context, output.Tx, string, string) error { return nil },
+			rollbackKcFn:    func(context.Context, string) error { return nil },
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("SendVerificationEmail error => still succeeds", func(t *testing.T) {
+		sendEmailCalled := false
+		tx := &fakeTx{}
+		svc := &fakeService{
+			registerEmployeeFn: func(ctx context.Context, employee domain.Employee) (*dto.RegisterEmployee, error) {
+				return &dto.RegisterEmployee{Employee: employee, Message: "ok"}, nil
+			},
+			checkAndCleanFn: func(context.Context, string) error { return nil },
+			beginTxFn:       func(context.Context) (output.Tx, error) { return tx, nil },
+			saveEmployeeFn:  func(context.Context, output.Tx, domain.Employee) error { return nil },
+			createUserFn:    func(context.Context, *domain.Employee) (string, error) { return "kc1", nil },
+			setPasswordFn:   func(context.Context, string, string) error { return nil },
+			assignRoleFn:    func(context.Context, string, string) error { return nil },
+			updateKcIDFn:    func(context.Context, output.Tx, string, string) error { return nil },
+			rollbackKcFn:    func(context.Context, string) error { return nil },
+			sendVerificationEmailFn: func(context.Context, string) error {
+				sendEmailCalled = true
+				return errors.New("email send failed")
+			},
+		}
+		i := NewInteractor(svc)
+
+		res, err := i.RegisterEmployee(ctx, mkEmployee())
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res == nil {
+			t.Fatal("expected non-nil result")
+		}
+		// SendVerificationEmail runs in goroutine; give it a moment
+		_ = sendEmailCalled
+	})
 }
 
 func TestInteractor_Login(t *testing.T) {
@@ -561,6 +754,39 @@ func TestInteractor_UpdateEmployee(t *testing.T) {
 		}
 		if !tx.rolledBack {
 			t.Error("expected tx.Rollback to be called")
+		}
+	})
+
+	t.Run("commit fails => returns error", func(t *testing.T) {
+		tx := &fakeTx{commitFn: func() error { return errors.New("commit failed") }}
+		svc := &fakeService{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) { return tx, nil },
+			updateEmployeeFn: func(ctx context.Context, txArg output.Tx, e domain.Employee) error {
+				return nil
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.UpdateEmployee(ctx, domain.Employee{ID: "e1"})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("update fails and rollback fails => returns original error", func(t *testing.T) {
+		tx := &fakeTx{rollbackFn: func() error { return errors.New("rollback failed") }}
+		updateErr := errors.New("update failed")
+		svc := &fakeService{
+			beginTxFn: func(ctx context.Context) (output.Tx, error) { return tx, nil },
+			updateEmployeeFn: func(ctx context.Context, txArg output.Tx, e domain.Employee) error {
+				return updateErr
+			},
+		}
+		i := NewInteractor(svc)
+
+		_, err := i.UpdateEmployee(ctx, domain.Employee{ID: "e1"})
+		if !errors.Is(err, updateErr) {
+			t.Fatalf("expected %v, got %v", updateErr, err)
 		}
 	})
 }

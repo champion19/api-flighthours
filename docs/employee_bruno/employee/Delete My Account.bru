@@ -1,0 +1,52 @@
+meta {
+  name: Delete My Account
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/employees
+  body: none
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # HU22 - Eliminar la Información del Empleado
+  
+  Permite al empleado autenticado eliminar permanentemente su cuenta del sistema.
+  
+  ## ⚠️ ADVERTENCIA
+  **Esta operación es IRREVERSIBLE**. El usuario será eliminado de:
+  - Sistema de autenticación (Keycloak)
+  - Base de datos (MySQL)
+  
+  ## Autenticación
+  🔐 **Requiere token JWT** - Usa `{{access-token}}` del ambiente
+  
+  Primero ejecuta el request "Login" para obtener el token.
+  
+  ## Flujo de Eliminación
+  1. Valida que el usuario esté autenticado
+  2. Elimina el usuario de Keycloak
+  3. Elimina el registro de la base de datos
+  4. Retorna confirmación de eliminación
+  
+  ## Respuestas
+  - 200: Cuenta eliminada exitosamente (MOD_U_DEL_EXI_00003)
+  - 401: No autorizado - Token inválido o expirado (GEN_AUTH_ERR_00002)
+  - 404: Empleado no encontrado (MOD_U_GET_ERR_00003)
+  - 500: Error al eliminar cuenta (MOD_U_DEL_ERR_00012)
+  
+  ## Notas
+  - No se puede cancelar esta operación una vez ejecutada
+  - El token JWT quedará inválido después de la eliminación
+  - El usuario deberá registrarse nuevamente si desea acceder al sistema
+}

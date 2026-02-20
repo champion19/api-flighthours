@@ -1,0 +1,51 @@
+meta {
+  name: Get Daily Logbook By ID
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/daily-logbooks/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Consultar Bitácora Diaria por ID
+  
+  Consulta la información de una bitácora diaria específica por su ID.
+  La bitácora debe pertenecer al empleado autenticado.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Path Parameters
+  - `id`: ID de la bitácora (encoded ID)
+  
+  ## Respuesta exitosa (200) - `BIT_CON_EXI_01901`
+  ```json
+  {
+    "id": "encoded-id",
+    "log_date": "2026-02-10",
+    "employee_id": "encoded-employee-id",
+    "book_page": 1,
+    "status": "active",
+    "_links": [...]
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado (`BIT_AUTH_ERR_00001`)
+  - 404: Bitácora no encontrada (`BIT_CON_ERR_01903`)
+  - 500: Error interno (`BIT_CON_ERR_01904`)
+}

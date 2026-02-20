@@ -3,7 +3,6 @@ package employee
 import (
 	"context"
 
-
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/databases/common"
@@ -14,12 +13,12 @@ func (r *repository) Save(ctx context.Context, tx output.Tx, employee domain.Emp
 
 	employeeToSave := FromDomain(employee)
 
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
-		return domain.ErrInvalidTransaction
+	dbTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
 	}
 
-	_, err := dbTx.ExecContext(ctx, QuerySave,
+	_, err = dbTx.ExecContext(ctx, QuerySave,
 		employeeToSave.ID,
 		employeeToSave.Name,
 		employeeToSave.Airline,
@@ -34,10 +33,9 @@ func (r *repository) Save(ctx context.Context, tx output.Tx, employee domain.Emp
 
 	if err != nil {
 
-
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
 			return domain.ErrDuplicateUser
-		}else{
+		} else {
 			return domain.ErrUserCannotSave
 		}
 	}

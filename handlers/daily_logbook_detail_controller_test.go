@@ -29,6 +29,7 @@ type fakeDailyLogbookDetailService struct {
 	createFn         func(ctx context.Context, detail domain.DailyLogbookDetail) error
 	updateFn         func(ctx context.Context, detail domain.DailyLogbookDetail) error
 	validateTimeFn   func(outTime, takeoffTime, landingTime, inTime string) error
+	deleteFn         func(ctx context.Context, id string) error
 }
 
 func (f *fakeDailyLogbookDetailService) BeginTx(ctx context.Context) (output.Tx, error) {
@@ -79,6 +80,13 @@ func (f *fakeDailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, e
 	return false, nil
 }
 
+func (f *fakeDailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.Context, tx output.Tx, id string) error {
+	if f.deleteFn != nil {
+		return f.deleteFn(ctx, id)
+	}
+	return nil
+}
+
 func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 
@@ -103,6 +111,8 @@ func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache
 		{Code: domain.MsgValIDInvalid, Type: cachetypes.TypeError, Content: "invalid id"},
 		{Code: domain.MsgValJSONInvalid, Type: cachetypes.TypeError, Content: "invalid json"},
 		{Code: domain.MsgValFieldFormat, Type: cachetypes.TypeError, Content: "invalid field format"},
+		{Code: domain.MsgFlightDeleted, Type: cachetypes.TypeSuccess, Content: "flight deleted"},
+		{Code: domain.MsgFlightDeleteError, Type: cachetypes.TypeError, Content: "error deleting flight"},
 	}}
 	cache := messaging.NewMessageCache(repo, 0)
 	if err := cache.LoadMessages(context.Background()); err != nil {
@@ -138,6 +148,7 @@ func newDailyLogbookDetailTestRouter(
 	r.POST("/daily-logbooks/:id/details", h.CreateDailyLogbookDetail())
 	r.PUT("/daily-logbook-details/:id", h.UpdateDailyLogbookDetail())
 	r.GET("/employees/flights", h.ListMyFlights())
+	r.DELETE("/daily-logbook-details/:id", h.DeleteDailyLogbookDetail())
 	return r
 }
 
@@ -679,6 +690,46 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
 				return domain.ErrFlightInvalidLicensePlate
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("interactor unauthorized - logbook owned by different employee", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: "other-employee-id"}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(validBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("interactor generic save error", func(t *testing.T) {
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				return errors.New("unexpected interactor error")
 			},
 		}
 		authUser := &domain.Employee{ID: testEmployeeID}
@@ -1285,4 +1336,135 @@ func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
 	if detail.PilotRole == nil {
 		t.Error("expected PilotRole to be set")
 	}
+}
+
+// ── DeleteDailyLogbookDetail ──────────────────────────────────────────
+
+func TestHTTP_DeleteDailyLogbookDetail(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cache := newTestDailyLogbookDetailMessageCache(t)
+	resp := middleware.NewResponseHandler(cache)
+	errHandler := middleware.NewErrorHandler(cache)
+	enc, err := idencoder.NewHashidsEncoder(idencoder.Config{Secret: "test-secret", MinLength: 10}, noopLogger{})
+	if err != nil {
+		t.Fatalf("failed to create encoder: %v", err)
+	}
+
+	testDetailID := "550e8400-e29b-41d4-a716-446655440010"
+	testLogbookID := "550e8400-e29b-41d4-a716-446655440002"
+	testEmployeeID := "550e8400-e29b-41d4-a716-446655440001"
+	testRouteID := "550e8400-e29b-41d4-a716-446655440003"
+	testAircraftID := "550e8400-e29b-41d4-a716-446655440004"
+	encodedDetailID, _ := enc.Encode(testDetailID)
+
+	t.Run("success", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return &domain.DailyLogbookDetail{
+					ID:             testDetailID,
+					DailyLogbookID: testLogbookID,
+					FlightNumber:   "AV123",
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
+					AirlineRouteID: testRouteID,
+					LicensePlateID: testAircraftID,
+				}, nil
+			},
+		}
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbook-details/"+encodedDetailID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("unauthorized - no employee", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{}
+		logbookSvc := &fakeDailyLogbookService{}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, nil)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbook-details/"+encodedDetailID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("unauthorized - different owner", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return &domain.DailyLogbookDetail{
+					ID:             testDetailID,
+					DailyLogbookID: testLogbookID,
+				}, nil
+			},
+		}
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: "other-employee"}, nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbook-details/"+encodedDetailID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return nil, nil
+			},
+		}
+		logbookSvc := &fakeDailyLogbookService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbook-details/"+encodedDetailID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return nil, errors.New("db error")
+			},
+		}
+		logbookSvc := &fakeDailyLogbookService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbook-details/"+encodedDetailID, nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
+
+	t.Run("invalid ID", func(t *testing.T) {
+		detailSvc := &fakeDailyLogbookDetailService{}
+		logbookSvc := &fakeDailyLogbookService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodDelete, "/daily-logbook-details/invalid!!!", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		t.Logf("status: %d", w.Code)
+	})
 }
