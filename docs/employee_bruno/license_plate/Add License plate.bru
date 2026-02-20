@@ -1,0 +1,68 @@
+meta {
+  name: Add License plate
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/license-plates
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "license_plate": "HK-1235",
+    "aircraft_model_id": "8AeVfQ4eH2DWcd3WU3z3txQYS3d4FL69",
+    "airline_id": "zVL6fRnRcd8McYrNhXD8u2okijnnSReo"
+  }
+}
+
+docs {
+  # Create Aircraft Registration (HU35 - Registrar Matrícula de Aeronave)
+  
+  Crea una nueva matrícula de aeronave.
+  La matrícula (license_plate) debe ser única.
+  Los IDs de aircraft_model_id y airline_id deben ser IDs encoded válidos.
+  Este endpoint requiere autenticación con JWT.
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  - Content-Type: application/json
+  
+  ## Request Body
+  - **license_plate** (required): Número de matrícula de la aeronave (ej: "HK-5432")
+  - **aircraft_model_id** (required): ID del modelo de aeronave (encoded ID)
+  - **airline_id** (required): ID de la aerolínea (encoded ID)
+  
+  ## Respuesta exitosa (201)
+  ```json
+  {
+    "id": "encoded-id",
+    "license_plate": "HK-5432",
+    "model_name": "Airbus A320neo",
+    "airline_name": "Avianca",
+    "aircraft_model_id": "encoded-model-id",
+    "airline_id": "encoded-airline-id",
+    "_links": [
+      {"rel": "self", "href": "/aircraft-registrations/:id", "method": "GET"},
+      {"rel": "update", "href": "/aircraft-registrations/:id", "method": "PUT"},
+      {"rel": "collection", "href": "/aircraft-registrations", "method": "GET"}
+    ]
+  }
+  ```
+  
+  ## Errores
+  - 400: JSON inválido / Datos faltantes
+  - 401: No autenticado
+  - 409: Matrícula duplicada
+  - 500: Error interno
+}

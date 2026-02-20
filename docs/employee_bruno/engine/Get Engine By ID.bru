@@ -1,0 +1,48 @@
+meta {
+  name: Get Engine By ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/engines/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{engine-id}}
+}
+
+docs {
+  # Get Engine By ID (HU35 - Consultar la Información del Motor)
+  
+  Obtiene la información de un motor específico por su ID.
+  Este endpoint es PÚBLICO - NO requiere autenticación.
+  
+  ## Path Parameters
+  - `id`: ID del motor (encoded o UUID)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOT_CON_EXI_03701",
+    "message": "...",
+    "data": {
+      "id": "encoded_engine_id",
+      "engine_name": "CFM56-5B4",
+      "engine_code": "CFM56",
+      "status": "active",
+      "_links": [
+        {"rel": "self", "href": "/engines/encoded_id", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido
+  - 404: Motor no encontrado
+  - 500: Error interno del servidor
+}

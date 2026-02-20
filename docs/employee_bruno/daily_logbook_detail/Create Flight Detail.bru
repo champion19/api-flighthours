@@ -1,0 +1,83 @@
+meta {
+  name: Create Flight Detail
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/daily-logbooks/:id/details
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "flight_real_date": "2026-02-19",
+    "flight_number": "4456",
+    "airline_route_id": "dBQoCr9Xh4antnMxhXRAFMv9FRyrSkzo",
+    "license_plate_id": "jEYauExUepeHnR8CxY5FLLesDpGTQve"
+  }
+}
+
+docs {
+  # Registrar Vuelo (HU47)
+  
+  Registra un nuevo vuelo en una bitácora diaria.
+  La bitácora debe pertenecer al empleado autenticado.
+  Los IDs de airline_route_id y license_plate_id deben ser IDs encoded válidos.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Path Parameters
+  - `id`: ID de la bitácora diaria (encoded ID)
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  - Content-Type: application/json
+  
+  ## Request Body
+  - **flight_real_date** (required): Fecha real del vuelo (YYYY-MM-DD)
+  - **flight_number** (required): Número de vuelo (ej: "AV-0123")
+  - **airline_route_id** (required): ID de la ruta de aerolínea (encoded ID)
+  - **license_plate_id** (required): ID de la matrícula de aeronave (encoded ID)
+  - **passengers** (optional): Número de pasajeros
+  - **out_time** (required): Hora de salida de puerta (HH:MM)
+  - **takeoff_time** (required): Hora de despegue (HH:MM)
+  - **landing_time** (required): Hora de aterrizaje (HH:MM)
+  - **in_time** (required): Hora de llegada a puerta (HH:MM)
+  - **pilot_role** (required): Rol del piloto (ej: "PIC", "SIC", "OBS")
+  - **companion_name** (optional): Nombre del acompañante
+  - **air_time** (required): Tiempo en aire (HH:MM)
+  - **block_time** (required): Tiempo de bloque (HH:MM)
+  - **duty_time** (optional): Tiempo de servicio (HH:MM)
+  - **approach_type** (optional): Tipo de aproximación (ej: "ILS", "VOR", "VISUAL")
+  - **flight_type** (optional): Tipo de vuelo (ej: "COMERCIAL", "ENTRENAMIENTO")
+  
+  ## Secuencia de tiempos
+  Los tiempos deben respetar: out < takeoff < landing < in
+  
+  ## Respuesta exitosa (201) - `VUE_REG_EXI_05001`
+  Retorna el vuelo creado con su ID encoded y header Location.
+  
+  ## Errores
+  - 400: JSON inválido / Datos faltantes / Secuencia de tiempos inválida (`VUE_VAL_ERR_04808`)
+  - 400: Ruta de aerolínea inválida (`VUE_VAL_ERR_04805`)
+  - 400: Bitácora inválida (`VUE_VAL_ERR_04806`)
+  - 400: Matrícula inválida (`VUE_VAL_ERR_04807`)
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado (`VUE_AUTH_ERR_00001`)
+  - 500: Error interno (`VUE_REG_ERR_05004`)
+}

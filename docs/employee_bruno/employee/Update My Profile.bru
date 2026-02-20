@@ -1,0 +1,71 @@
+meta {
+  name: Update My Profile
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/employees
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "name": "Juan Pérez Actualizado",
+    "identificationNumber": "1234567890"
+  }
+}
+
+docs {
+  # HU23 - Modificar la Información del Empleado
+  
+  Permite al empleado autenticado modificar su información personal.
+  
+  ## Autenticación
+  🔐 **Requiere token JWT** - Usa `{{access-token}}` del ambiente
+  
+  Primero ejecuta el request "Login" para obtener el token.
+  
+  ## Campos Modificables
+  | Campo | Tipo | Requerido | Descripción |
+  |-------|------|-----------|-------------|
+  | name | string | ✅ Sí | Nombre completo |
+  | identificationNumber | string | ✅ Sí | Número de identificación |
+  | start_date | string | ❌ No | Fecha inicio (YYYY-MM-DD) |
+  | end_date | string | ❌ No | Fecha fin (YYYY-MM-DD) |
+  | active | boolean | ❌ No | Estado activo/inactivo |
+  
+  ## Campos NO Modificables (Inmutables)
+  | Campo | Razón |
+  |-------|-------|
+  | email | Se maneja en endpoint separado |
+  | password | Usar /auth/change-password |
+  | role | Inmutable - Se establece solo en registro |
+  
+  ## Información de Aerolínea
+  Para modificar información de aerolínea (airline_id, bp), usar:
+  - `PUT /employee/me/airline` (HU26)
+  
+  ## Validaciones
+  - Fechas en formato YYYY-MM-DD
+  - start_date debe ser anterior o igual a end_date
+  - El empleado debe estar autenticado
+  
+  ## Respuestas
+  - 200: Empleado actualizado (MOD_U_UPD_EXI_00002)
+  - 400: Formato de datos inválido (MOD_V_VAL_ERR_00001)
+  - 400: Formato de fecha inválido (MOD_V_DATE_ERR_00018)
+  - 400: Fecha inicio posterior a fin (MOD_V_DATE_ERR_00017)
+  - 401: No autorizado - Token inválido o expirado (GEN_AUTH_ERR_00002)
+  - 404: Empleado no encontrado (MOD_U_GET_ERR_00003)
+  - 500: Error interno del servidor (GEN_SRV_ERR_00001)
+}

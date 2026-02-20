@@ -1,0 +1,53 @@
+meta {
+  name: Get Route By ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/routes/{{route-id}}
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  route-id: RrydfpW2u8QGhKYoH8LptV3JcJ5NCGQ5
+}
+
+docs {
+  # Get Route By ID (HU36 - Consultar Información Ruta)
+  
+  Obtiene la información detallada de una ruta por su ID.
+  Este endpoint NO requiere autenticación.
+  
+  ## Path Parameters
+  - `id`: ID de la ruta (puede ser encoded o UUID)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "RUT_CON_EXI_03001",
+    "data": {
+      "id": "encoded_route_id",
+      "origin_airport_id": "encoded_origin_id",
+      "origin_iata_code": "BOG",
+      "origin_airport_name": "El Dorado International Airport",
+      "destination_airport_id": "encoded_dest_id",
+      "destination_iata_code": "MDE",
+      "destination_airport_name": "José María Córdova International Airport",
+      "origin_country": "Colombia",
+      "destination_country": "Colombia",
+      "airport_type": "Nacional",
+      "estimated_flight_time": "00:55:00",
+      "route_code": "BOG-MDE",
+      "_links": [...]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido
+  - 404: Ruta no encontrada (RUT_CON_ERR_03002)
+  - 500: Error interno del servidor
+}

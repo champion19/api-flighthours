@@ -1,0 +1,40 @@
+meta {
+  name: List Aircraft Models
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/aircraft-models
+  body: none
+  auth: none
+}
+
+docs {
+  # List Aircraft Models (HU40 - Listar Tipos Aeronave)
+
+  Lista todos los modelos de aeronave registrados.
+  Este endpoint es público, no requiere autenticación.
+
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_ACM_LIST_EXI_00001",
+    "message": "...",
+    "data": [
+      {
+        "id": "encoded-id",
+        "model_name": "Airbus A320neo",
+        "aircraft_type_name": "Narrow Body",
+        "engine_type_name": "Turbofan",
+        "status": true,
+        "_links": [...]
+      }
+    ]
+  }
+  ```
+
+  ## Errores
+  - 500: Error interno (MOD_ACM_LIST_ERR_00001)
+}

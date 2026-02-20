@@ -1,0 +1,53 @@
+meta {
+  name: Deactivate My Employee Airline Info
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/employees/airline/deactivate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Deactivate My Airline Info (HU28 - Inactivar Empleado Aerolínea)
+  
+  Desactiva la información de aerolínea del empleado autenticado.
+  El empleado debe tener información de aerolínea asignada previamente.
+  Este endpoint requiere autenticación con JWT.
+  
+  ## Flujo
+  1. POST /login → Obtener token
+  2. PATCH /employee/me/airline/deactivate → Desactivar info de aerolínea ✅
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "EMP_AIR_DES_EXI_02804",
+    "message": "...",
+    "data": {
+      "success": true,
+      "active": false,
+      "_links": [
+        {"rel": "self", "href": "/employee/me/airline", "method": "GET"},
+        {"rel": "activate", "href": "/employee/me/airline/activate", "method": "PATCH"},
+        {"rel": "profile", "href": "/employee/me", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 401: No autenticado
+  - 404: El empleado no tiene información de aerolínea asignada
+  - 500: Error interno del servidor
+}

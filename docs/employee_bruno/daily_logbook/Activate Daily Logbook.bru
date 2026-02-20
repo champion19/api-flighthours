@@ -1,0 +1,63 @@
+meta {
+  name: Activate Daily Logbook
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/daily-logbooks/:id/activate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Activar Bitácora Diaria (HU11)
+
+  Activa (abre) una bitácora diaria previamente cerrada.
+  Permite nuevamente crear y editar vuelos en esta página de bitácora.
+  La bitácora debe pertenecer al empleado autenticado.
+
+  ## Flujo
+  1. POST /login → Obtener token (ejecutar Login.bru primero)
+  2. PATCH /daily-logbooks/:id/activate → Activar bitácora ✅
+
+  ## Path Parameters
+  - `id`: ID de la bitácora (encoded ID)
+
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+
+  ## Respuesta exitosa (200) - `BIT_ACT_EXI_01501`
+  ```json
+  {
+    "success": true,
+    "code": "BIT_ACT_EXI_01501",
+    "message": "...",
+    "data": {
+      "id": "encoded-id",
+      "status": "active",
+      "updated": true,
+      "_links": [
+        {"rel": "self", "href": "/daily-logbooks/:id", "method": "GET"},
+        {"rel": "deactivate", "href": "/daily-logbooks/:id/deactivate", "method": "PATCH"},
+        {"rel": "collection", "href": "/daily-logbooks", "method": "GET"}
+      ]
+    }
+  }
+  ```
+
+  ## Errores
+  - 400: ID inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado (`BIT_AUTH_ERR_00001`)
+  - 404: Bitácora no encontrada (`BIT_CON_ERR_01903`)
+  - 500: Error interno (`BIT_ACT_ERR_01504`)
+}

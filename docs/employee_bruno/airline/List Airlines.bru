@@ -1,0 +1,51 @@
+meta {
+  name: List Airlines
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/airlines
+  body: none
+  auth: none
+}
+
+params:query {
+  ~status: active
+}
+
+docs {
+  # List Airlines (HU - Consultar Lista de Aerolíneas)
+  
+  Obtiene la lista de todas las aerolíneas registradas en el sistema.
+  Este endpoint NO requiere autenticación.
+  
+  ## Query Parameters (opcionales)
+  - `status`: Filtrar por estado
+    - `active` o `true` o `1`: Solo aerolíneas activas
+    - `inactive` o `false` o `0`: Solo aerolíneas inactivas
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "airlines": [
+      {
+        "id": "encoded_airline_id",
+        "airline_name": "Avianca",
+        "airline_code": "AV",
+        "status": "active",
+        "_links": [
+          {"rel": "self", "href": "/airlines/encoded_id", "method": "GET"}
+        ]
+      }
+    ],
+    "total": 1,
+    "_links": [
+      {"rel": "self", "href": "/airlines", "method": "GET"}
+    ]
+  }
+  ```
+  
+  ## Errores
+  - 500: Error interno del servidor
+}

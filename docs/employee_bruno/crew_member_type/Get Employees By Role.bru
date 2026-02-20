@@ -1,0 +1,40 @@
+meta {
+  name: Get Crew Member Types
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/crew-member-types
+  body: none
+  auth: none
+}
+
+docs {
+  # Consultar Tipos de Integrante (HU44)
+
+  Retorna los tipos de integrante disponibles (captain, copilot).
+  Este endpoint es un **catálogo estático**: devuelve los valores
+  del ENUM `crew_role` definido en el dominio, sin consultar
+  la base de datos.
+
+  ## Endpoint público
+  No requiere autenticación.
+
+  ## Respuesta exitosa (200) - `TIN_CON_EXI_04701`
+  ```json
+  {
+    "success": true,
+    "code": "TIN_CON_EXI_04701",
+    "message": "...",
+    "data": [
+      "captain",
+      "copilot"
+    ]
+  }
+  ```
+
+  ## Uso
+  Los valores retornados se usan para el campo `crew_role`
+  al crear o actualizar un `daily_logbook_detail`.
+}

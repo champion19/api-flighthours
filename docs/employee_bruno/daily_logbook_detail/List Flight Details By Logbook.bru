@@ -1,0 +1,45 @@
+meta {
+  name: List Flight Details By Logbook
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/daily-logbooks/:id/details
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Listar Vuelos de una Bitácora (HU45)
+  
+  Lista todos los vuelos asociados a una bitácora diaria.
+  La bitácora debe pertenecer al empleado autenticado.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Path Parameters
+  - `id`: ID de la bitácora diaria (encoded ID)
+  
+  ## Respuesta exitosa (200) - `VUE_LIST_EXI_04800`
+  Retorna una lista de vuelos con sus datos completos, incluyendo:
+  - Información del vuelo (fecha, número, tiempos)
+  - Ruta de aerolínea (origen → destino)
+  - Matrícula de aeronave
+  - Rol del piloto
+  
+  ## Errores
+  - 400: ID de bitácora inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado (`VUE_AUTH_ERR_00001`)
+  - 500: Error al listar (`VUE_LIST_ERR_04802`)
+}

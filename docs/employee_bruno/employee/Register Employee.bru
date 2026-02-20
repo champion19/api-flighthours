@@ -1,0 +1,60 @@
+meta {
+  name: Register Employee
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Emma",
+    "email": "emman7@yopmail.com",
+    "password": "123456788000",
+    "identificationnumber": "10369611990",
+    "role": "pilot"
+  }
+}
+
+docs {
+  # HU17 - Agregar la información del Empleado
+
+  Registra una nueva cuenta de empleado en el sistema.
+
+  ## Campos Requeridos
+  | Campo | Tipo | Descripción |
+  |-------|------|-------------|
+  | name | string | Nombre completo (1-120 caracteres) |
+  | email | string | Email único (formato válido) |
+  | password | string | Contraseña (mínimo 8 caracteres) |
+  | identificationnumber | string | Número de identificación (7-10 dígitos) |
+  | role | string | Rol del empleado (solo "pilot" por ahora) |
+
+  ## Campos Opcionales
+  | Campo | Tipo | Descripción |
+  |-------|------|-------------|
+  | start_date | string | Fecha inicio contrato (YYYY-MM-DD) |
+  | end_date | string | Fecha fin contrato (YYYY-MM-DD) |
+
+  > **Nota**: Las fechas pueden agregarse después en el endpoint de Update.
+  > El `role` es **inmutable** después del registro.
+
+  ## Validaciones
+  - Email único en el sistema
+  - identificationnumber solo dígitos (7-10 caracteres)
+  - Contraseña mínimo 8 caracteres
+
+  ## Respuestas
+  - 201: Cuenta creada exitosamente
+  - 400: Error de validación
+  - 409: Email o número de identidad ya registrado
+  - 500: Error interno del servidor
+}

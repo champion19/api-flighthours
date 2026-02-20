@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "daily_logbook",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

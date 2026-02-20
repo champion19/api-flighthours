@@ -1,0 +1,63 @@
+meta {
+  name: Deactivate Daily Logbook
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/daily-logbooks/:id/deactivate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Inactivar Bitácora Diaria (HU12)
+
+  Cierra una bitácora diaria. Una vez cerrada, no se pueden crear
+  ni editar vuelos en esta página hasta que se reactive.
+  La bitácora debe pertenecer al empleado autenticado.
+
+  ## Flujo
+  1. POST /login → Obtener token (ejecutar Login.bru primero)
+  2. PATCH /daily-logbooks/:id/deactivate → Cerrar bitácora ✅
+
+  ## Path Parameters
+  - `id`: ID de la bitácora (encoded ID)
+
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+
+  ## Respuesta exitosa (200) - `BIT_INA_EXI_01401`
+  ```json
+  {
+    "success": true,
+    "code": "BIT_INA_EXI_01401",
+    "message": "...",
+    "data": {
+      "id": "encoded-id",
+      "status": "inactive",
+      "updated": true,
+      "_links": [
+        {"rel": "self", "href": "/daily-logbooks/:id", "method": "GET"},
+        {"rel": "activate", "href": "/daily-logbooks/:id/activate", "method": "PATCH"},
+        {"rel": "collection", "href": "/daily-logbooks", "method": "GET"}
+      ]
+    }
+  }
+  ```
+
+  ## Errores
+  - 400: ID inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado (`BIT_AUTH_ERR_00001`)
+  - 404: Bitácora no encontrada (`BIT_CON_ERR_01903`)
+  - 500: Error interno (`BIT_INA_ERR_01404`)
+}
