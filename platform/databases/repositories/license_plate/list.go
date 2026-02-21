@@ -8,27 +8,7 @@ import (
 )
 
 func (r *repository) ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error) {
-	var rows *sql.Rows
-	var err error
-
-	if licensePlate, ok := filters["license_plate"]; ok {
-		plateStr, isString := licensePlate.(string)
-		if isString && plateStr != "" {
-			rows, err = r.stmtGetByLicensePlate.QueryContext(ctx, plateStr)
-		} else {
-			rows, err = r.stmtGetAll.QueryContext(ctx)
-		}
-	} else if airlineID, ok := filters["airline_id"]; ok {
-		airlineIDStr, isString := airlineID.(string)
-		if isString && airlineIDStr != "" {
-			rows, err = r.stmtGetByAirline.QueryContext(ctx, airlineIDStr)
-		} else {
-			rows, err = r.stmtGetAll.QueryContext(ctx)
-		}
-	} else {
-		rows, err = r.stmtGetAll.QueryContext(ctx)
-	}
-
+	rows, err := r.resolveListQuery(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +35,20 @@ func (r *repository) ListLicensePlates(ctx context.Context, filters map[string]i
 	}
 
 	return registrations, nil
+}
+
+func (r *repository) resolveListQuery(ctx context.Context, filters map[string]interface{}) (*sql.Rows, error) {
+	if val, ok := filters["license_plate"]; ok {
+		if plate, isStr := val.(string); isStr && plate != "" {
+			return r.stmtGetByLicensePlate.QueryContext(ctx, plate)
+		}
+	}
+
+	if val, ok := filters["airline_id"]; ok {
+		if airlineID, isStr := val.(string); isStr && airlineID != "" {
+			return r.stmtGetByAirline.QueryContext(ctx, airlineID)
+		}
+	}
+
+	return r.stmtGetAll.QueryContext(ctx)
 }

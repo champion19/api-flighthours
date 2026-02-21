@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
@@ -204,22 +205,7 @@ func (h *handler) UpdateLicensePlate() gin.HandlerFunc {
 
 		registrationUUID, responseID := h.resolveID(inputID)
 		if registrationUUID == "" {
-			// Before returning 404, check if the license plate from the body already exists
-			var checkReq UpdateLicensePlateRequest
-			if err := c.ShouldBindJSON(&checkReq); err == nil {
-				checkReq.Sanitize()
-				if checkReq.LicensePlate != "" {
-					filters := map[string]interface{}{"license_plate": checkReq.LicensePlate}
-					existing, _ := h.LicensePlateInteractor.ListLicensePlates(ctx, filters)
-					if len(existing) > 0 {
-						log.Warn(logger.LogLicensePlateUpdateError, "id", inputID, "license_plate", checkReq.LicensePlate, "reason", "duplicate", "client_ip", c.ClientIP())
-						_ = c.Error(domain.ErrLicensePlateDuplicatePlate)
-						return
-					}
-				}
-			}
-			log.Warn(logger.LogLicensePlateNotFound, "id", inputID, "client_ip", c.ClientIP())
-			_ = c.Error(domain.ErrLicensePlateNotFound)
+			h.checkDuplicateOnInvalidID(c, ctx, inputID, log)
 			return
 		}
 
@@ -248,16 +234,10 @@ func (h *handler) UpdateLicensePlate() gin.HandlerFunc {
 		}
 		req.AirlineID = resolvedAirlineID
 
-		// Check if the data is identical to what's already stored → duplicate
-		currentReg, err := h.LicensePlateInteractor.GetLicensePlateByID(ctx, registrationUUID)
-		if err == nil && currentReg != nil {
-			if currentReg.LicensePlate == req.LicensePlate &&
-				currentReg.AircraftModelID == req.AircraftModelID &&
-				currentReg.AirlineID == req.AirlineID {
-				log.Warn(logger.LogLicensePlateUpdateError, "id", registrationUUID, "reason", "duplicate_data", "client_ip", c.ClientIP())
-				_ = c.Error(domain.ErrLicensePlateDuplicatePlate)
-				return
-			}
+		if h.isDuplicateData(ctx, registrationUUID, req) {
+			log.Warn(logger.LogLicensePlateUpdateError, "id", registrationUUID, "reason", "duplicate_data", "client_ip", c.ClientIP())
+			_ = c.Error(domain.ErrLicensePlateDuplicatePlate)
+			return
 		}
 
 		registration := req.ToDomain(registrationUUID)
@@ -285,4 +265,32 @@ func (h *handler) UpdateLicensePlate() gin.HandlerFunc {
 		log.Success(logger.LogLicensePlateUpdateOK, updatedRegistration.ToLogger())
 		c.JSON(http.StatusOK, response)
 	}
+}
+
+func (h *handler) checkDuplicateOnInvalidID(c *gin.Context, ctx context.Context, inputID string, log logger.Logger) {
+	var checkReq UpdateLicensePlateRequest
+	if c.ShouldBindJSON(&checkReq) == nil {
+		checkReq.Sanitize()
+		if checkReq.LicensePlate != "" {
+			filters := map[string]interface{}{"license_plate": checkReq.LicensePlate}
+			existing, _ := h.LicensePlateInteractor.ListLicensePlates(ctx, filters)
+			if len(existing) > 0 {
+				log.Warn(logger.LogLicensePlateUpdateError, "id", inputID, "license_plate", checkReq.LicensePlate, "reason", "duplicate", "client_ip", c.ClientIP())
+				_ = c.Error(domain.ErrLicensePlateDuplicatePlate)
+				return
+			}
+		}
+	}
+	log.Warn(logger.LogLicensePlateNotFound, "id", inputID, "client_ip", c.ClientIP())
+	_ = c.Error(domain.ErrLicensePlateNotFound)
+}
+
+func (h *handler) isDuplicateData(ctx context.Context, registrationUUID string, req UpdateLicensePlateRequest) bool {
+	currentReg, err := h.LicensePlateInteractor.GetLicensePlateByID(ctx, registrationUUID)
+	if err != nil || currentReg == nil {
+		return false
+	}
+	return currentReg.LicensePlate == req.LicensePlate &&
+		currentReg.AircraftModelID == req.AircraftModelID &&
+		currentReg.AirlineID == req.AirlineID
 }

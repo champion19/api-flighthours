@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // Register MySQL driver for database/sql
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/mysql"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -58,7 +58,7 @@ func StartMySQL(ctx context.Context) (*MySQLContainer, error) {
 
 	// Wait for connection
 	for i := 0; i < 30; i++ {
-		if err := db.Ping(); err == nil {
+		if pingErr := db.Ping(); pingErr == nil {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
@@ -160,11 +160,23 @@ func (m *MySQLContainer) SetupMessageSchema(ctx context.Context) error {
 	return err
 }
 
+// MessageData holds parameters for inserting a test message
+type MessageData struct {
+	ID       string
+	Code     string
+	Type     string
+	Category string
+	Module   string
+	Title    string
+	Content  string
+	Active   bool
+}
+
 // InsertMessage inserts test data into system_messages table
-func (m *MySQLContainer) InsertMessage(ctx context.Context, id, code, msgType, category, module, title, content string, active bool) error {
+func (m *MySQLContainer) InsertMessage(ctx context.Context, msg MessageData) error {
 	_, err := m.DB.ExecContext(ctx,
 		"INSERT INTO system_messages (id, message_code, type, category, module, message_title, message_content, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		id, code, msgType, category, module, title, content, active)
+		msg.ID, msg.Code, msg.Type, msg.Category, msg.Module, msg.Title, msg.Content, msg.Active)
 	return err
 }
 

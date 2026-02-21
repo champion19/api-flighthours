@@ -131,7 +131,13 @@ func newDailyLogbookDetailTestRouter(
 ) *gin.Engine {
 	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc)
 	logbookInteractor := interactor.NewDailyLogbookInteractor(logbookSvc)
-	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, detailInteractor, logbookInteractor, nil, nil)
+	h := New(HandlerDeps{
+		EmployeeInteractor: &fakeEmployeeInteractor{},
+		IDEncoder: enc,
+		Response: resp,
+		DailyLogbookDetailInteractor: detailInteractor,
+		DailyLogbookInteractor: logbookInteractor,
+		})
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

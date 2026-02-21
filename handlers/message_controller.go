@@ -297,23 +297,7 @@ func (h handler) ListMessages() func(c *gin.Context) {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP())
 
-		filters := make(map[string]interface{})
-		if module := c.Query("module"); module != "" {
-			filters["module"] = module
-		}
-		if msgType := c.Query("type"); msgType != "" {
-			filters["type"] = msgType
-		}
-		if category := c.Query("category"); category != "" {
-			filters["category"] = category
-		}
-		if active := c.Query("active"); active != "" {
-			if active == "true" || active == "1" {
-				filters["active"] = true
-			} else if active == "false" || active == "0" {
-				filters["active"] = false
-			}
-		}
+		filters := buildMessageFilters(c)
 
 		messages, err := h.MessageInteractor.ListMessages(c, filters)
 		if err != nil {
@@ -337,6 +321,33 @@ func (h handler) ListMessages() func(c *gin.Context) {
 			"client_ip", c.ClientIP())
 
 		h.Response.DataOnly(c, response)
+	}
+}
+
+func buildMessageFilters(c *gin.Context) map[string]interface{} {
+	filters := make(map[string]interface{})
+
+	if module := c.Query("module"); module != "" {
+		filters["module"] = module
+	}
+	if msgType := c.Query("type"); msgType != "" {
+		filters["type"] = msgType
+	}
+	if category := c.Query("category"); category != "" {
+		filters["category"] = category
+	}
+
+	parseActiveFilter(c, filters)
+	return filters
+}
+
+func parseActiveFilter(c *gin.Context, filters map[string]interface{}) {
+	active := c.Query("active")
+	switch active {
+	case "true", "1":
+		filters["active"] = true
+	case "false", "0":
+		filters["active"] = false
 	}
 }
 

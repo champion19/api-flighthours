@@ -230,7 +230,7 @@ func TestJsonValidator_RestoresBody(t *testing.T) {
 		r.Use(builder.jsonValidator(schema))
 		r.POST("/test", func(c *gin.Context) {
 			var data map[string]interface{}
-			if err := c.ShouldBindJSON(&data); err == nil {
+			if c.ShouldBindJSON(&data) == nil {
 				bodyReadable = true
 			}
 			c.JSON(http.StatusOK, gin.H{"ok": true})

@@ -108,7 +108,7 @@ func (m *MockService) SendVerificationEmail(ctx context.Context, userID string) 
 }
 
 func (m *MockService) SendPasswordResetEmail(ctx context.Context, email string) error {
-	args := m.Called(ctx, email)
+	args := m.Called(ctx, "passwordReset", email)
 	return args.Error(0)
 }
 
@@ -136,7 +136,7 @@ func (m *MockService) GetEmployeeByKeycloakID(ctx context.Context, keycloakUserI
 }
 
 func (m *MockService) UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error {
-	args := m.Called(ctx, tx, employee)
+	args := m.Called(ctx, "update", tx, employee)
 	return args.Error(0)
 }
 

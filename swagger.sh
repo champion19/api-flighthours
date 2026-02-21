@@ -47,7 +47,7 @@ generate_docs() {
         swag init -g "$MAIN_FILE" -o "$SWAGGER_DIR" --parseDependency --parseInternal
     else
         echo -e "${YELLOW}swag CLI no encontrado. Usando Docker...${NC}"
-        if [ ! "$(docker images -q flighthours-swag 2> /dev/null)" ]; then
+        if [[ ! "$(docker images -q flighthours-swag 2> /dev/null)" ]]; then
             echo -e "${YELLOW}Construyendo imagen Docker...${NC}"
             docker build -f "$SWAGGER_DIR/Dockerfile.swag" -t flighthours-swag .
         fi
@@ -87,7 +87,7 @@ serve_api() {
 validate_docs() {
     echo -e "${BLUE}🔍 Validando documentación Swagger...${NC}"
 
-    if [ ! -f "$SWAGGER_DIR/swagger.json" ]; then
+    if [[ ! -f "$SWAGGER_DIR/swagger.json" ]]; then
         echo -e "${RED}✗ Error: swagger.json no existe. Ejecuta './swagger.sh generate' primero${NC}"
         exit 1
     fi
@@ -105,7 +105,7 @@ validate_docs() {
     fi
 
     # Verificar que docs.go existe
-    if [ -f "$SWAGGER_DIR/docs.go" ]; then
+    if [[ -f "$SWAGGER_DIR/docs.go" ]]; then
         echo -e "${GREEN}✓ docs.go existe${NC}"
     else
         echo -e "${RED}✗ docs.go no existe${NC}"

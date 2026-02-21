@@ -17,7 +17,7 @@ export const options = {
 
 const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1';
 
-export default function () {
+export default function loadTest() {
 
   group('Messages API - Success Cases', function () {
     const messagesRes = http.get(`${BASE_URL}/messages`);

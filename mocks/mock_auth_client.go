@@ -62,7 +62,7 @@ func (m *MockAuthClient) AssignRole(ctx context.Context, userID string, roleName
 }
 
 func (m *MockAuthClient) RemoveRole(ctx context.Context, userID string, roleName string) error {
-	args := m.Called(ctx, userID, roleName)
+	args := m.Called(ctx, "removeRole", userID, roleName)
 	return args.Error(0)
 }
 
@@ -75,17 +75,17 @@ func (m *MockAuthClient) GetUserRoles(ctx context.Context, userID string) ([]*go
 }
 
 func (m *MockAuthClient) SendVerificationEmail(ctx context.Context, userID string) error {
-	args := m.Called(ctx, userID)
+	args := m.Called(ctx, "verification", userID)
 	return args.Error(0)
 }
 
 func (m *MockAuthClient) SendPasswordResetEmail(ctx context.Context, userID string) error {
-	args := m.Called(ctx, userID)
+	args := m.Called(ctx, "passwordReset", userID)
 	return args.Error(0)
 }
 
 func (m *MockAuthClient) VerifyEmail(ctx context.Context, userID string) error {
-	args := m.Called(ctx, userID)
+	args := m.Called(ctx, "verifyEmail", userID)
 	return args.Error(0)
 }
 

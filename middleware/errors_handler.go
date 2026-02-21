@@ -134,72 +134,86 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		if len(c.Errors) > 0 {
-			err := c.Errors.Last().Err
+		if len(c.Errors) == 0 {
+			return
+		}
 
-			traceID := GetRequestID(c)
-			log := log.WithTraceID(traceID)
+		err := c.Errors.Last().Err
 
-			var params []string
-			var fieldErrors []ValidationFieldError
-			if validationFields, exists := c.Get("validation_fields"); exists {
-				if fields, ok := validationFields.([]string); ok {
-					// Build field-level error details for the response
-					for _, field := range fields {
-						fieldErrors = append(fieldErrors, ValidationFieldError{
-							Field:   field,
-							Message: "This field is not valid",
-						})
-					}
-					// Build params for message template substitution
-					if len(fields) > 1 {
-						fieldsStr := fields[0]
-						for i := 1; i < len(fields); i++ {
-							fieldsStr += ", " + fields[i]
-						}
-						params = []string{fieldsStr}
-					} else {
-						params = fields
-					}
-				}
+		traceID := GetRequestID(c)
+		log := log.WithTraceID(traceID)
+
+		params, fieldErrors := buildValidationFields(c)
+
+		if messageCode, ok := errorToMessageCode[err]; ok {
+			msg := h.cache.GetMessageResponse(messageCode, params...)
+			status := h.cache.GetHTTPStatus(messageCode)
+
+			if msg != nil {
+				log.Warn(logger.LogMiddlewareErrorCaught,
+					"error", err.Error(),
+					"code", msg.Code,
+					"status", status,
+					"fields", params,
+					"path", c.Request.URL.Path,
+					"method", c.Request.Method,
+					"client_ip", c.ClientIP())
+
+				c.JSON(status, ErrorResponse{
+					Success: false,
+					Code:    msg.Code,
+					Message: msg.Content,
+					Fields:  fieldErrors,
+				})
+				return
 			}
+		}
 
-			if messageCode, ok := errorToMessageCode[err]; ok {
-				msg := h.cache.GetMessageResponse(messageCode, params...)
-				status := h.cache.GetHTTPStatus(messageCode)
+		log.Error(logger.LogMiddlewareInternalErr,
+			"error", err.Error(),
+			"path", c.Request.URL.Path,
+			"method", c.Request.Method,
+			"client_ip", c.ClientIP())
 
-				if msg != nil {
-					log.Warn(logger.LogMiddlewareErrorCaught,
-						"error", err.Error(),
-						"code", msg.Code,
-						"status", status,
-						"fields", params,
-						"path", c.Request.URL.Path,
-						"method", c.Request.Method,
-						"client_ip", c.ClientIP())
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Success: false,
+			Code:    domain.MsgServerError,
+			Message: "Error interno del servidor",
+		})
+	}
 
-					c.JSON(status, ErrorResponse{
-						Success: false,
-						Code:    msg.Code,
-						Message: msg.Content,
-						Fields:  fieldErrors,
-					})
-					return
-				}
-			}
+}
 
-			log.Error(logger.LogMiddlewareInternalErr,
-				"error", err.Error(),
-				"path", c.Request.URL.Path,
-				"method", c.Request.Method,
-				"client_ip", c.ClientIP())
+func buildValidationFields(c *gin.Context) ([]string, []ValidationFieldError) {
+	validationFields, exists := c.Get("validation_fields")
+	if !exists {
+		return nil, nil
+	}
 
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Success: false,
-				Code:    domain.MsgServerError,
-				Message: "Error interno del servidor",
-			})
+	fields, ok := validationFields.([]string)
+	if !ok {
+		return nil, nil
+	}
+
+	fieldErrors := make([]ValidationFieldError, len(fields))
+	for i, field := range fields {
+		fieldErrors[i] = ValidationFieldError{
+			Field:   field,
+			Message: "This field is not valid",
 		}
 	}
 
+	return buildFieldParams(fields), fieldErrors
+}
+
+func buildFieldParams(fields []string) []string {
+	if len(fields) <= 1 {
+		return fields
+	}
+
+	fieldsStr := fields[0]
+	for i := 1; i < len(fields); i++ {
+		fieldsStr += ", " + fields[i]
+	}
+	return []string{fieldsStr}
 }

@@ -18,7 +18,7 @@ func (m *MockTx) Commit() error {
 }
 
 func (m *MockTx) Rollback() error {
-	args := m.Called()
+	args := m.Called("rollback")
 	return args.Error(0)
 }
 
@@ -40,7 +40,7 @@ func (m *MockRepository) Save(ctx context.Context, tx output.Tx, employee domain
 }
 
 func (m *MockRepository) UpdateEmployee(ctx context.Context, tx output.Tx, employee domain.Employee) error {
-	args := m.Called(ctx, tx, employee)
+	args := m.Called(ctx, "update", tx, employee)
 	return args.Error(0)
 }
 

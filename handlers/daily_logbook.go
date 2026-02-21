@@ -6,6 +6,8 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
+const dateFormatISO = "2006-01-02"
+
 // DailyLogbookResponse - Response DTO for daily logbook data
 type DailyLogbookResponse struct {
 	ID         string `json:"id"`
@@ -24,7 +26,7 @@ func FromDomainDailyLogbook(logbook *domain.DailyLogbook, encodedID, encodedEmpl
 	}
 	return DailyLogbookResponse{
 		ID:         encodedID,
-		LogDate:    logbook.LogDate.Format("2006-01-02"),
+		LogDate:    logbook.LogDate.Format(dateFormatISO),
 		EmployeeID: encodedEmployeeID,
 		BookPage:   logbook.BookPage,
 		Status:     status,
@@ -44,7 +46,7 @@ func (r *CreateDailyLogbookRequest) Sanitize() {
 
 // ToDomain converts the request to a domain model
 func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLogbook, error) {
-	logDate, err := time.ParseInLocation("2006-01-02", r.LogDate, time.Local)
+	logDate, err := time.ParseInLocation(dateFormatISO, r.LogDate, time.Local)
 	if err != nil {
 		return nil, domain.ErrInvalidDateFormat
 	}
@@ -65,6 +67,7 @@ type UpdateDailyLogbookRequest struct {
 	BookPage *int   `json:"book_page,omitempty"`
 	Status   *bool  `json:"status,omitempty"`
 }
+
 // Sanitize trims whitespace from UpdateDailyLogbookRequest fields
 func (r *UpdateDailyLogbookRequest) Sanitize() {
 	r.LogDate = TrimString(r.LogDate)
@@ -72,7 +75,7 @@ func (r *UpdateDailyLogbookRequest) Sanitize() {
 
 // ToDomain converts the request to a domain model for update
 func (r *UpdateDailyLogbookRequest) ToDomain(id, employeeID string) (*domain.DailyLogbook, error) {
-	logDate, err := time.Parse("2006-01-02", r.LogDate)
+	logDate, err := time.Parse(dateFormatISO, r.LogDate)
 	if err != nil {
 		return nil, domain.ErrInvalidDateFormat
 	}
@@ -90,7 +93,6 @@ func (r *UpdateDailyLogbookRequest) ToDomain(id, employeeID string) (*domain.Dai
 		Status:     status,
 	}, nil
 }
-
 
 // DailyLogbookListResponse - Response DTO for listing daily logbooks
 type DailyLogbookListResponse struct {

@@ -42,39 +42,64 @@ func ValidateError(c *gin.Context, err error, details interface{}, statusCode in
 		return
 	}
 
-	fieldErrors := make(map[string]string)
-
-	if detailsList, exists := detailsMap["details"].([]interface{}); exists {
-		for _, item := range detailsList {
-			fieldDetail, ok := item.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			if valid, exists := fieldDetail["valid"].(bool); exists && !valid {
-
-				path := ""
-				if instanceLoc, exists := fieldDetail["instanceLocation"].(string); exists {
-					path = instanceLoc
-					if len(path) > 0 && path[0] == '/' {
-						path = path[1:]
-					}
-				}
-
-				if errorsMap, exists := fieldDetail["errors"].(map[string]interface{}); exists && path != "" {
-					for _, msg := range errorsMap {
-						if strMsg, ok := msg.(string); ok {
-							fieldErrors[path] = strMsg
-						}
-					}
-				}
-			}
-		}
-	}
+	fieldErrors := extractFieldErrors(detailsMap)
 
 	c.JSON(statusCode, gin.H{
 		"error":   err.Error(),
 		"invalid": fieldErrors,
 	})
 	c.Abort()
+}
+
+func extractFieldErrors(detailsMap map[string]interface{}) map[string]string {
+	fieldErrors := make(map[string]string)
+
+	detailsList, exists := detailsMap["details"].([]interface{})
+	if !exists {
+		return fieldErrors
+	}
+
+	for _, item := range detailsList {
+		fieldDetail, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		parseFieldDetail(fieldDetail, fieldErrors)
+	}
+
+	return fieldErrors
+}
+
+func parseFieldDetail(fieldDetail map[string]interface{}, fieldErrors map[string]string) {
+	valid, exists := fieldDetail["valid"].(bool)
+	if !exists || valid {
+		return
+	}
+
+	path := extractInstancePath(fieldDetail)
+	if path == "" {
+		return
+	}
+
+	errorsMap, exists := fieldDetail["errors"].(map[string]interface{})
+	if !exists {
+		return
+	}
+
+	for _, msg := range errorsMap {
+		if strMsg, ok := msg.(string); ok {
+			fieldErrors[path] = strMsg
+		}
+	}
+}
+
+func extractInstancePath(fieldDetail map[string]interface{}) string {
+	instanceLoc, exists := fieldDetail["instanceLocation"].(string)
+	if !exists {
+		return ""
+	}
+	if len(instanceLoc) > 0 && instanceLoc[0] == '/' {
+		return instanceLoc[1:]
+	}
+	return instanceLoc
 }

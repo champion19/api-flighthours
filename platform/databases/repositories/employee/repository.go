@@ -22,6 +22,8 @@ const (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errPreparingStatement = "error preparing statement"
+
 type repository struct {
 	stmtSave       *sql.Stmt
 	stmtGetByEmail *sql.Stmt
@@ -38,33 +40,33 @@ func NewClientRepository(db *sql.DB) (*repository, error) {
 	}
 	stmtSave, err := db.Prepare(QuerySave)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 	stmtGetByEmail, err := db.Prepare(QueryByEmail)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 	stmtGetByID, err := db.Prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 	stmtUpdate, err := db.Prepare(QueryUpdate)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 	stmtDelete, err := db.Prepare(QueryDelete)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtPatch, err := db.Prepare(QueryPatch)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 

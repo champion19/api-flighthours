@@ -12,7 +12,7 @@ export const options = {
   thresholds: defaultThresholds,
 };
 
-export default function () {
+export default function spikeTest() {
   defaultScenario();
 }
 

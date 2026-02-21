@@ -17,7 +17,7 @@ func (m *MockMessageCache) LoadMessages(ctx context.Context) error {
 }
 
 func (m *MockMessageCache) ReloadMessages(ctx context.Context) error {
-	args := m.Called(ctx)
+	args := m.Called(ctx, "reload")
 	return args.Error(0)
 }
 

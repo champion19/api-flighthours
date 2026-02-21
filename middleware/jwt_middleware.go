@@ -14,54 +14,20 @@ import (
 
 func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache, jwtValidator output.TokenValidator) gin.HandlerFunc {
 	tokenParser := jwt.NewTokenParser()
-	_ = tokenParser
 
 	return func(c *gin.Context) {
-
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		token, err := extractBearerToken(c)
+		if err != nil {
 			c.Error(domain.ErrInvalidToken)
 			c.Abort()
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.Error(domain.ErrInvalidToken)
+		claims, err := resolveTokenClaims(token, jwtValidator, tokenParser)
+		if err != nil {
+			c.Error(err)
 			c.Abort()
 			return
-		}
-
-		token := parts[1]
-
-		var claims map[string]interface{}
-		var err error
-
-		if jwtValidator != nil {
-
-			claims, err = jwtValidator.ValidateToken(token)
-			if err != nil {
-
-				switch {
-				case errors.Is(err, jwt.ErrTokenExpired):
-					c.Error(domain.ErrTokenExpired)
-				case errors.Is(err, jwt.ErrInvalidSignature):
-					c.Error(domain.ErrInvalidToken)
-				case errors.Is(err, jwt.ErrInvalidIssuer):
-					c.Error(domain.ErrInvalidToken)
-				default:
-					c.Error(domain.ErrInvalidToken)
-				}
-				c.Abort()
-				return
-			}
-		} else {
-			claims, err = tokenParser.ExtractClaimsFromToken(token)
-			if err != nil {
-				c.Error(domain.ErrInvalidToken)
-				c.Abort()
-				return
-			}
 		}
 
 		keycloakUserID, ok := claims["sub"].(string)
@@ -79,9 +45,45 @@ func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache
 		}
 
 		c.Set("authenticated_user", employee)
-
 		c.Next()
 	}
+}
+
+func extractBearerToken(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", domain.ErrInvalidToken
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", domain.ErrInvalidToken
+	}
+
+	return parts[1], nil
+}
+
+func resolveTokenClaims(token string, jwtValidator output.TokenValidator, tokenParser *jwt.TokenParser) (map[string]interface{}, error) {
+	if jwtValidator == nil {
+		claims, err := tokenParser.ExtractClaimsFromToken(token)
+		if err != nil {
+			return nil, domain.ErrInvalidToken
+		}
+		return claims, nil
+	}
+
+	claims, err := jwtValidator.ValidateToken(token)
+	if err != nil {
+		return nil, mapTokenError(err)
+	}
+	return claims, nil
+}
+
+func mapTokenError(err error) error {
+	if errors.Is(err, jwt.ErrTokenExpired) {
+		return domain.ErrTokenExpired
+	}
+	return domain.ErrInvalidToken
 }
 
 func GetAuthenticatedUser(c *gin.Context) (*domain.Employee, bool) {
