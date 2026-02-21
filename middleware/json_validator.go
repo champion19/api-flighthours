@@ -153,60 +153,56 @@ func (b *Builder) WithValidateRefreshToken() gin.HandlerFunc {
 
 func (b *Builder) jsonValidator(schema *jsonschema.Schema) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get request ID for trace correlation
 		traceId := GetRequestID(c)
 		log := log.WithTraceID(traceId)
 
-		bodyBytes, err := io.ReadAll(c.Request.Body)
+		data, err := readAndParseBody(c, log)
 		if err != nil {
-			if log != nil {
-				log.Error(logger.LogMiddlewareBodyReadError, "error", err, "path", c.Request.URL.Path)
-			}
-			c.Error(json_schema.ErrBodyReadFailed)
-			c.Abort()
-			return
-		}
-
-		c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-
-		var data map[string]interface{}
-		if err := json.Unmarshal(bodyBytes, &data); err != nil {
-			if log != nil {
-				log.Error(logger.LogMiddlewareJSONParseError, "error", err, "path", c.Request.URL.Path)
-			}
-			c.Error(json_schema.ErrBadRequest)
+			c.Error(err)
 			c.Abort()
 			return
 		}
 
 		result := schema.Validate(data)
 		if !result.IsValid() {
-			// Extract field names from validation errors
-			fieldNames := extractFieldNames(result.Errors)
-
-			// Classify the validation error
-			validationError := classifyValidationError(fieldNames, result.Errors)
-
-			// Store field names in context for error_handler to use in message parameters
-			// Translate technical names to English labels
-			if len(fieldNames) > 0 {
-				c.Set("validation_fields", translateFieldNames(fieldNames))
-			}
-
-			if log != nil {
-				log.Warn(logger.LogMiddlewareValidationFailed, "path", c.Request.URL.Path, "fields", fieldNames)
-			}
-			c.Error(validationError)
-			c.Abort()
+			handleValidationFailure(c, log, result)
 			return
 		}
 
-		if log != nil {
-			log.Debug(logger.LogMiddlewareValidationOK, "path", c.Request.URL.Path)
-		}
-
+		log.Debug(logger.LogMiddlewareValidationOK, "path", c.Request.URL.Path)
 		c.Next()
 	}
+}
+
+func readAndParseBody(c *gin.Context, log logger.Logger) (map[string]interface{}, error) {
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Error(logger.LogMiddlewareBodyReadError, "error", err, "path", c.Request.URL.Path)
+		return nil, json_schema.ErrBodyReadFailed
+	}
+
+	c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		log.Error(logger.LogMiddlewareJSONParseError, "error", err, "path", c.Request.URL.Path)
+		return nil, json_schema.ErrBadRequest
+	}
+
+	return data, nil
+}
+
+func handleValidationFailure(c *gin.Context, log logger.Logger, result *jsonschema.EvaluationResult) {
+	fieldNames := extractFieldNames(result.Errors)
+	validationError := classifyValidationError(fieldNames, result.Errors)
+
+	if len(fieldNames) > 0 {
+		c.Set("validation_fields", translateFieldNames(fieldNames))
+	}
+
+	log.Warn(logger.LogMiddlewareValidationFailed, "path", c.Request.URL.Path, "fields", fieldNames)
+	c.Error(validationError)
+	c.Abort()
 }
 
 // ============================================

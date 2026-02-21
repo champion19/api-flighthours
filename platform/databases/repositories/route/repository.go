@@ -68,6 +68,8 @@ const (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errPreparingStatement = "error preparing statement"
+
 type repository struct {
 	stmtGetByID          *sql.Stmt
 	stmtGetAll           *sql.Stmt
@@ -83,19 +85,19 @@ func NewRouteRepository(db *sql.DB) (*repository, error) {
 
 	stmtGetByID, err := db.Prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetAll, err := db.Prepare(QueryGetAll)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByAirportType, err := db.Prepare(QueryGetByAirportType)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 

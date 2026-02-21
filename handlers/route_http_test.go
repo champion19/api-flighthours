@@ -70,7 +70,11 @@ func TestHTTP_GetRouteByID(t *testing.T) {
 
 	newRouter := func(svc input.RouteService) *gin.Engine {
 		routeInteractor := interactor.NewRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		RouteInteractor: routeInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -189,7 +193,11 @@ func TestHTTP_ListRoutes(t *testing.T) {
 
 	newRouter := func(svc input.RouteService) *gin.Engine {
 		routeInteractor := interactor.NewRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, routeInteractor, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		RouteInteractor: routeInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

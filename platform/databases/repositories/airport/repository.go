@@ -19,6 +19,8 @@ const (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errPreparingStatement = "error preparing statement"
+
 type repository struct {
 	stmtGetByID      *sql.Stmt
 	stmtUpdateStatus *sql.Stmt
@@ -35,25 +37,25 @@ func NewAirportRepository(db *sql.DB) (*repository, error) {
 
 	stmtGetByID, err := db.Prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogAirportRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirportRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtUpdateStatus, err := db.Prepare(QueryUpdateStatus)
 	if err != nil {
-		log.Error(logger.LogAirportRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirportRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetAll, err := db.Prepare(QueryGetAll)
 	if err != nil {
-		log.Error(logger.LogAirportRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirportRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByStatus, err := db.Prepare(QueryGetByStatus)
 	if err != nil {
-		log.Error(logger.LogAirportRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirportRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 

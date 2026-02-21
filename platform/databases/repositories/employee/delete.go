@@ -9,13 +9,13 @@ import (
 
 func (r *repository) DeleteEmployee(ctx context.Context, tx output.Tx, id string) error {
 
-dbtx, err := r.db.BeginTx(context.Background(), nil)
-if err != nil {
-	return err
-}
+	dbtx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
 
-	_, err = dbtx.ExecContext(context.Background(),QueryDelete,id)
-  if err!=nil{
+	_, err = dbtx.ExecContext(ctx, QueryDelete, id)
+	if err != nil {
 		tx.Rollback()
 		return domain.ErrUserCannotSave
 	}

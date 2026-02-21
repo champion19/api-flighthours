@@ -120,7 +120,12 @@ func newDailyLogbookTestRouter(
 	authUser *domain.Employee,
 ) *gin.Engine {
 	logbookInteractor := interactor.NewDailyLogbookInteractor(svc)
-	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, logbookInteractor, nil, nil)
+	h := New(HandlerDeps{
+		EmployeeInteractor: &fakeEmployeeInteractor{},
+		IDEncoder: enc,
+		Response: resp,
+		DailyLogbookInteractor: logbookInteractor,
+		})
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

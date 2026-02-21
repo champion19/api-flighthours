@@ -124,7 +124,11 @@ func TestHTTP_GetAirportByID(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -234,7 +238,11 @@ func TestHTTP_DeactivateAirport(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -372,7 +380,11 @@ func TestHTTP_ListAirports(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -581,7 +593,11 @@ func TestHTTP_GetAirportsByType(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -671,7 +687,11 @@ func TestHTTP_GetAirportsByType(t *testing.T) {
 		svc := &fakeAirportService{}
 
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -710,7 +730,11 @@ func TestHTTP_GetAirportByID_EdgeCases(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -769,7 +793,11 @@ func TestHTTP_ActivateAirport(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

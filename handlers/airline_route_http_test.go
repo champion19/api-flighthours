@@ -117,7 +117,11 @@ func TestHTTP_ListAirlineRoutes(t *testing.T) {
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineRouteInteractor: airlineRouteInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -306,7 +310,11 @@ func TestHTTP_ActivateAirlineRoute(t *testing.T) {
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineRouteInteractor: airlineRouteInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -450,7 +458,11 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineRouteInteractor: airlineRouteInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -597,7 +609,13 @@ func TestHTTP_ListMyAirlineRoutes(t *testing.T) {
 	newMyRoutesRouter := func(aeSvc *fakeAirlineEmployeeService, arSvc *fakeAirlineRouteService, authUser *domain.Employee) *gin.Engine {
 		aeInteractor := interactor.NewAirlineEmployeeInteractor(aeSvc)
 		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(arSvc)
-		h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, aeInteractor, nil, nil, nil, nil, airlineRouteInteractor, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: &fakeEmployeeInteractor{},
+		IDEncoder: enc,
+		Response: resp,
+		AirlineEmployeeInteractor: aeInteractor,
+		AirlineRouteInteractor: airlineRouteInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

@@ -16,6 +16,8 @@ const (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errPreparingStatement = "error preparing statement"
+
 type repository struct {
 	stmtGetByID         *sql.Stmt
 	stmtGetAll          *sql.Stmt
@@ -33,31 +35,31 @@ func NewAircraftModelRepository(db *sql.DB) (*repository, error) {
 
 	stmtGetByID, err := db.Prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetAll, err := db.Prepare(QueryGetAll)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByEngineType, err := db.Prepare(QueryGetByEngineType)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByFamily, err := db.Prepare(QueryGetByFamily)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtUpdateStatus, err := db.Prepare(QueryUpdateStatus)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 

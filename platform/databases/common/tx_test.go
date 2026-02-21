@@ -23,7 +23,7 @@ func TestSQLTX_CommitPanicsWhenClosed(t *testing.T) {
 		tx := &SQLTX{Tx: nil, closed: true}
 
 		defer func() {
-			if r := recover(); r == nil {
+			if recover() == nil {
 				t.Error("expected panic when committing closed transaction")
 			}
 		}()
@@ -37,7 +37,7 @@ func TestSQLTX_RollbackPanicsWhenClosed(t *testing.T) {
 		tx := &SQLTX{Tx: nil, closed: true}
 
 		defer func() {
-			if r := recover(); r == nil {
+			if recover() == nil {
 				t.Error("expected panic when rolling back closed transaction")
 			}
 		}()

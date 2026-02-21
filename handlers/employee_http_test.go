@@ -146,7 +146,11 @@ func TestHTTP_Login(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -249,7 +253,11 @@ func TestHTTP_RefreshToken(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -351,7 +359,11 @@ func TestHTTP_PasswordReset(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -421,7 +433,11 @@ func TestHTTP_VerifyEmailByToken(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -579,7 +595,11 @@ func TestHTTP_ResendVerificationEmail(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -695,7 +715,11 @@ func TestHTTP_UpdatePassword(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -805,7 +829,11 @@ func TestHTTP_RegisterEmployee_WithMock(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -900,7 +928,11 @@ func TestHTTP_ChangePassword(t *testing.T) {
 	}
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -1061,7 +1093,11 @@ func TestHTTP_DeleteEmployee(t *testing.T) {
 
 	// Helper to create router with auth context middleware
 	newRouterWithAuth := func(interactor input.EmployeeInteractor, authUser *domain.Employee) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -1159,7 +1195,10 @@ func TestHTTP_GetEmployee(t *testing.T) {
 
 	// Helper to create router with auth context middleware
 	newRouterWithAuth := func(authUser *domain.Employee) *gin.Engine {
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -1233,7 +1272,11 @@ func TestHTTP_UpdateEmployee(t *testing.T) {
 
 	// Helper to create router with auth context middleware
 	newRouterWithAuth := func(interactor input.EmployeeInteractor, authUser *domain.Employee) *gin.Engine {
-		h := New(nil, interactor, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: interactor,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -1365,7 +1408,11 @@ func TestHTTP_GetCrewMemberTypes(t *testing.T) {
 	_ = errHandler
 
 	newRouter := func() *gin.Engine {
-		h := New(nil, &fakeEmployeeInteractor{}, enc, crewResp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: &fakeEmployeeInteractor{},
+		IDEncoder: enc,
+		Response: crewResp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

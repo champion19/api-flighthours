@@ -1,4 +1,4 @@
-FROM grafana/grafana:latest
+FROM grafana/grafana:11.3.0
 
 LABEL maintainer="FlightHours Backend Team"
 LABEL description="Custom Grafana image for FlightHours Backend monitoring"

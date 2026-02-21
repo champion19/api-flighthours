@@ -116,7 +116,11 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -277,7 +281,11 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -395,7 +403,11 @@ func TestHTTP_DeactivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -514,7 +526,11 @@ func TestHTTP_ListAirlines(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

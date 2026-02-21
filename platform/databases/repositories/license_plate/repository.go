@@ -72,6 +72,8 @@ const (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errPreparingStatement = "error preparing statement"
+
 type repository struct {
 	stmtGetByID           *sql.Stmt
 	stmtGetAll            *sql.Stmt
@@ -90,37 +92,37 @@ func NewLicensePlateRepository(db *sql.DB) (*repository, error) {
 
 	stmtGetByID, err := db.Prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetAll, err := db.Prepare(QueryGetAll)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByAirline, err := db.Prepare(QueryGetByAirline)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByLicensePlate, err := db.Prepare(QueryGetByLicensePlate)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtInsert, err := db.Prepare(QueryInsert)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtUpdate, err := db.Prepare(QueryUpdate)
 	if err != nil {
-		log.Error(logger.LogDatabaseUnavailable, "error preparing statement", err)
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
 		return nil, err
 	}
 

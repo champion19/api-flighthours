@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const errEmptyIDParam = "empty id parameter"
+
 // GetAirportByID godoc
 // @Summary      Get airport by ID
 // @Description  Returns airport information by ID (accepts both UUID and obfuscated ID)
@@ -26,7 +28,7 @@ func (h *handler) GetAirportByID() gin.HandlerFunc {
 
 		inputID := c.Param("id")
 		if inputID == "" {
-			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			log.Error(logger.LogMessageIDDecodeError, "error", errEmptyIDParam, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -79,7 +81,7 @@ func (h *handler) ActivateAirport() gin.HandlerFunc {
 
 		inputID := c.Param("id")
 		if inputID == "" {
-			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			log.Error(logger.LogMessageIDDecodeError, "error", errEmptyIDParam, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -119,7 +121,6 @@ func (h *handler) ActivateAirport() gin.HandlerFunc {
 	}
 }
 
-
 // DeactivateAirport godoc
 // @Summary      Deactivate airport
 // @Description  Sets airport status to inactive (accepts both UUID and obfuscated ID)
@@ -139,7 +140,7 @@ func (h *handler) DeactivateAirport() gin.HandlerFunc {
 
 		inputID := c.Param("id")
 		if inputID == "" {
-			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			log.Error(logger.LogMessageIDDecodeError, "error", errEmptyIDParam, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}

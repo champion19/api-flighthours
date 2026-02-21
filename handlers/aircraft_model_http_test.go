@@ -75,7 +75,12 @@ func (f *fakeAircraftModelServiceForHandler) DeactivateAircraftModelTx(ctx conte
 
 func newAircraftModelTestRouter(svc input.AircraftModelService, enc *idencoder.HashidsEncoder, resp *middleware.ResponseHandler, errHandler *middleware.ErrorHandler) *gin.Engine {
 	aircraftModelInteractor := interactor.NewAircraftModelInteractor(svc)
-	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, aircraftModelInteractor, nil)
+	h := New(HandlerDeps{
+		EmployeeInteractor: &fakeEmployeeInteractor{},
+		IDEncoder: enc,
+		Response: resp,
+		AircraftModelInteractor: aircraftModelInteractor,
+		})
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

@@ -14,7 +14,6 @@ func TrimStringPtr(s *string) *string {
 	return &trimmed
 }
 
-type Sanitizable interface {
+type Sanitizer interface {
 	Sanitize()
 }
-

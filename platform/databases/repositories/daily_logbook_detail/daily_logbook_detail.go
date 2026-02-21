@@ -47,6 +47,15 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		LicensePlateID: d.LicensePlateID,
 	}
 
+	d.mapTimeFields(detail)
+	d.mapRoleFields(detail)
+	d.mapOptionalFields(detail)
+	d.mapDenormalizedFields(detail)
+
+	return detail
+}
+
+func (d *DailyLogbookDetail) mapTimeFields(detail *domain.DailyLogbookDetail) {
 	if d.OutTime.Valid {
 		detail.OutTime = &d.OutTime.String
 	}
@@ -59,6 +68,18 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	if d.InTime.Valid {
 		detail.InTime = &d.InTime.String
 	}
+	if d.AirTime.Valid {
+		detail.AirTime = &d.AirTime.String
+	}
+	if d.BlockTime.Valid {
+		detail.BlockTime = &d.BlockTime.String
+	}
+	if d.DutyTime.Valid {
+		detail.DutyTime = &d.DutyTime.String
+	}
+}
+
+func (d *DailyLogbookDetail) mapRoleFields(detail *domain.DailyLogbookDetail) {
 	if d.PilotRole.Valid {
 		pilotRole := domain.PilotRole(d.PilotRole.String)
 		detail.PilotRole = &pilotRole
@@ -67,39 +88,29 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		crewRole := domain.CrewRole(d.CrewRole.String)
 		detail.CrewRole = &crewRole
 	}
-	if d.AirTime.Valid {
-		detail.AirTime = &d.AirTime.String
-	}
-	if d.BlockTime.Valid {
-		detail.BlockTime = &d.BlockTime.String
-	}
+}
 
+func (d *DailyLogbookDetail) mapOptionalFields(detail *domain.DailyLogbookDetail) {
 	if d.Passengers.Valid {
 		passengers := int(d.Passengers.Int64)
 		detail.Passengers = &passengers
 	}
-
 	if d.CompanionName.Valid {
 		detail.CompanionName = &d.CompanionName.String
 	}
-
-	if d.DutyTime.Valid {
-		detail.DutyTime = &d.DutyTime.String
-	}
-
 	if d.ApproachType.Valid {
 		approachType := domain.ApproachType(d.ApproachType.String)
 		detail.ApproachType = &approachType
 	}
-
 	if d.FlightType.Valid {
 		detail.FlightType = &d.FlightType.String
 	}
-
 	if d.EmployeeLogbookID.Valid {
 		detail.EmployeeLogbookID = &d.EmployeeLogbookID.String
 	}
+}
 
+func (d *DailyLogbookDetail) mapDenormalizedFields(detail *domain.DailyLogbookDetail) {
 	if d.LogDate.Valid {
 		detail.LogDate = d.LogDate.String
 	}
@@ -121,8 +132,6 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	if d.AirlineCode.Valid {
 		detail.AirlineCode = d.AirlineCode.String
 	}
-
-	return detail
 }
 
 func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {

@@ -11,7 +11,9 @@ LOG_FILE="/var/log/volume-cleanup.log"
 RETENTION_DAYS=30
 
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    local message="$1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $message" | tee -a "$LOG_FILE"
+    return 0
 }
 
 log "=== Iniciando limpieza de volúmenes Docker ==="
@@ -40,6 +42,7 @@ cleanup_prometheus() {
     else
         log "Directorio /prometheus no encontrado (volumen no montado)"
     fi
+    return 0
 }
 
 # Función para limpiar datos antiguos de Loki
@@ -72,6 +75,7 @@ cleanup_loki() {
     else
         log "Directorio /loki no encontrado (volumen no montado)"
     fi
+    return 0
 }
 
 # Función para limpiar datos antiguos de Grafana (principalmente dashboards temporales)

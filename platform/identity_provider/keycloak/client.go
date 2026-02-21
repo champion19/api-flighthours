@@ -18,6 +18,8 @@ import (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errUserIDEmpty = "userID cannot be empty"
+
 type client struct {
 	gocloak        *gocloak.GoCloak
 	config         *config.KeycloakConfig
@@ -189,7 +191,7 @@ func (c *client) GetUserByEmail(ctx context.Context, email string) (*gocloak.Use
 
 func (c *client) GetUserByID(ctx context.Context, userID string) (*gocloak.User, error) {
 	if userID == "" {
-		return nil, fmt.Errorf("userID cannot be empty")
+		return nil, fmt.Errorf(errUserIDEmpty)
 	}
 
 	if err := c.ensureValidToken(ctx); err != nil {
@@ -233,7 +235,7 @@ func (c *client) UpdateUser(ctx context.Context, user *gocloak.User) error {
 
 func (c *client) DeleteUser(ctx context.Context, userID string) error {
 	if userID == "" {
-		return fmt.Errorf("userID cannot be empty")
+		return fmt.Errorf(errUserIDEmpty)
 	}
 
 	if err := c.ensureValidToken(ctx); err != nil {
@@ -358,7 +360,7 @@ func (c *client) RemoveRole(ctx context.Context, userID string, roleName string)
 
 func (c *client) GetUserRoles(ctx context.Context, userID string) ([]*gocloak.Role, error) {
 	if userID == "" {
-		return nil, fmt.Errorf("userID cannot be empty")
+		return nil, fmt.Errorf(errUserIDEmpty)
 	}
 
 	if err := c.ensureValidToken(ctx); err != nil {
@@ -380,7 +382,7 @@ func (c *client) GetUserRoles(ctx context.Context, userID string) ([]*gocloak.Ro
 
 func (c *client) SendVerificationEmail(ctx context.Context, userID string) error {
 	if userID == "" {
-		return fmt.Errorf("userID cannot be empty")
+		return fmt.Errorf(errUserIDEmpty)
 	}
 
 	if err := c.ensureValidToken(ctx); err != nil {
@@ -463,7 +465,7 @@ func (c *client) SendPasswordResetEmail(ctx context.Context, email string) error
 
 func (c *client) VerifyEmail(ctx context.Context, userID string) error {
 	if userID == "" {
-		return fmt.Errorf("userID cannot be empty")
+		return fmt.Errorf(errUserIDEmpty)
 	}
 
 	user, err := c.GetUserByID(ctx, userID)
@@ -558,28 +560,12 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		return "", "", fmt.Errorf("failed to decode token: %w", err)
 	}
 
-	if exp, ok := claims["exp"].(float64); ok {
-		expirationTime := time.Unix(int64(exp), 0)
-		if time.Now().After(expirationTime) {
-			log.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "token expired",
-				"expired_at", expirationTime.Format(time.RFC3339))
-			return "", "", fmt.Errorf("token has expired")
-		}
-		log.Debug(logger.LogKeycloakTokenExpirationValidated, "expires_at", expirationTime.Format(time.RFC3339))
-	} else {
-		log.Warn(logger.LogKeycloakTokenMissingExpiration)
+	if err := validateExpiration(claims); err != nil {
+		return "", "", err
 	}
 
-	expectedIssuer := fmt.Sprintf("%s/realms/%s", c.config.ServerURL, c.config.Realm)
-	if iss, ok := claims["iss"].(string); ok {
-		if iss != expectedIssuer {
-			log.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "invalid issuer",
-				"expected", expectedIssuer, "got", iss)
-			return "", "", fmt.Errorf("invalid token issuer")
-		}
-		log.Debug(logger.LogKeycloakTokenIssuerValidated, "issuer", iss)
-	} else {
-		log.Warn(logger.LogKeycloakTokenMissingIssuer)
+	if err := c.validateIssuer(claims); err != nil {
+		return "", "", err
 	}
 
 	if typ, ok := claims["typ"].(string); ok {
@@ -603,18 +589,13 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		return "", "", fmt.Errorf("user not found in Keycloak: %w", err)
 	}
 
-	var email string
-	if user.Email != nil {
-		email = *user.Email
-	} else if emailClaim, ok := claims["email"].(string); ok {
-		email = emailClaim
-	}
-
 	if user.Enabled != nil && !*user.Enabled {
 		log.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "user is disabled",
 			"user_id", userID)
 		return "", "", fmt.Errorf("user account is disabled")
 	}
+
+	email := extractEmail(user, claims)
 
 	log.Success(logger.LogKeycloakPasswordTokenValidOK,
 		"user_id", userID,
@@ -622,6 +603,52 @@ func (c *client) ValidateActionToken(ctx context.Context, token string) (string,
 		"realm", c.config.Realm)
 
 	return userID, email, nil
+}
+
+func validateExpiration(claims map[string]interface{}) error {
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		log.Warn(logger.LogKeycloakTokenMissingExpiration)
+		return nil
+	}
+
+	expirationTime := time.Unix(int64(exp), 0)
+	if time.Now().After(expirationTime) {
+		log.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "token expired",
+			"expired_at", expirationTime.Format(time.RFC3339))
+		return fmt.Errorf("token has expired")
+	}
+
+	log.Debug(logger.LogKeycloakTokenExpirationValidated, "expires_at", expirationTime.Format(time.RFC3339))
+	return nil
+}
+
+func (c *client) validateIssuer(claims map[string]interface{}) error {
+	iss, ok := claims["iss"].(string)
+	if !ok {
+		log.Warn(logger.LogKeycloakTokenMissingIssuer)
+		return nil
+	}
+
+	expectedIssuer := fmt.Sprintf("%s/realms/%s", c.config.ServerURL, c.config.Realm)
+	if iss != expectedIssuer {
+		log.Error(logger.LogKeycloakPasswordTokenInvalid, "reason", "invalid issuer",
+			"expected", expectedIssuer, "got", iss)
+		return fmt.Errorf("invalid token issuer")
+	}
+
+	log.Debug(logger.LogKeycloakTokenIssuerValidated, "issuer", iss)
+	return nil
+}
+
+func extractEmail(user *gocloak.User, claims map[string]interface{}) string {
+	if user.Email != nil {
+		return *user.Email
+	}
+	if emailClaim, ok := claims["email"].(string); ok {
+		return emailClaim
+	}
+	return ""
 }
 
 func splitToken(token string) []string {

@@ -44,25 +44,25 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	errorHandler := middleware.NewErrorHandler(dependencies.MessagingCache)
 	app.Use(errorHandler.Handle())
 
-	handler := handlers.New(
-		dependencies.EmployeeService,
-		dependencies.Interactor,
-		dependencies.IDEncoder,
-		dependencies.ResponseHandler,
-		dependencies.MessageInteractor,
-		dependencies.MessagingCache,
-		dependencies.AirlineInteractor,
-		dependencies.AirlineEmployeeInteractor,
-		dependencies.EngineInteractor,
-		dependencies.RouteInteractor,
-		dependencies.ManufacturerInteractor,
-		dependencies.AirportInteractor,
-		dependencies.AirlineRouteInteractor,
-		dependencies.DailyLogbookDetailInteractor,
-		dependencies.DailyLogbookInteractor,
-		dependencies.AircraftModelInteractor,
-		dependencies.LicensePlateInteractor,
-	)
+	handler := handlers.New(handlers.HandlerDeps{
+		Service:                      dependencies.EmployeeService,
+		EmployeeInteractor:           dependencies.Interactor,
+		IDEncoder:                    dependencies.IDEncoder,
+		Response:                     dependencies.ResponseHandler,
+		MessageInteractor:            dependencies.MessageInteractor,
+		MessagingCache:               dependencies.MessagingCache,
+		AirlineInteractor:            dependencies.AirlineInteractor,
+		AirlineEmployeeInteractor:    dependencies.AirlineEmployeeInteractor,
+		EngineInteractor:             dependencies.EngineInteractor,
+		RouteInteractor:              dependencies.RouteInteractor,
+		ManufacturerInteractor:       dependencies.ManufacturerInteractor,
+		AirportInteractor:            dependencies.AirportInteractor,
+		AirlineRouteInteractor:       dependencies.AirlineRouteInteractor,
+		DailyLogbookDetailInteractor: dependencies.DailyLogbookDetailInteractor,
+		DailyLogbookInteractor:       dependencies.DailyLogbookInteractor,
+		AircraftModelInteractor:      dependencies.AircraftModelInteractor,
+		LicensePlateInteractor:       dependencies.LicensePlateInteractor,
+	})
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
 	if err != nil {

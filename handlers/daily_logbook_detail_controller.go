@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const errInvalidID = "invalid ID"
+
 // GetDailyLogbookDetail retrieves a daily logbook detail by ID
 // @Summary Get daily logbook detail by ID
 // @Description Retrieves a specific daily logbook detail (flight segment)
@@ -29,7 +31,7 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 		// Resolve ID (supports both UUID and obfuscated ID)
 		detailUUID, responseID := h.resolveID(inputID)
 		if detailUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailGetError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookDetailGetError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -81,7 +83,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 
 		log.Info(logger.LogDailyLogbookDetailCreate, "logbook_id", inputID)
 
-		// Get authenticated user
 		employee, ok := middleware.GetAuthenticatedUser(c)
 		if !ok {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "error", "unauthorized")
@@ -89,7 +90,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Resolve logbook ID
 		logbookUUID, _ := h.resolveID(inputID)
 		if logbookUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid logbook ID")
@@ -97,7 +97,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Parse and sanitize request
 		var req CreateDailyLogbookDetailRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "error", err)
@@ -106,7 +105,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.Sanitize()
 
-		// Resolve airline_route_id
 		routeUUID, _ := h.resolveID(req.AirlineRouteID)
 		if routeUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid route ID")
@@ -115,7 +113,6 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		// Resolve license_plate_id
 		licensePlateUUID, _ := h.resolveID(req.LicensePlateID)
 		if licensePlateUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid license plate ID")
@@ -124,45 +121,16 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.LicensePlateID = licensePlateUUID
 
-		// Convert to domain
 		detail := ToDomainDailyLogbookDetail(logbookUUID, req)
 		detail.SetID()
-
-		// Set employee logbook ID
 		detail.EmployeeLogbookID = &employee.ID
 
-		// Create detail (ownership is verified by the interactor)
 		if err := h.DailyLogbookDetailInteractor.CreateDailyLogbookDetail(c.Request.Context(), traceID, detail, employee.ID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "error", err)
-			if err == domain.ErrFlightUnauthorized {
-				h.Response.Error(c, domain.MsgFlightUnauthorized)
-				return
-			}
-			if err == domain.ErrFlightInvalidLogbook {
-				h.Response.Error(c, domain.MsgFlightInvalidLogbook)
-				return
-			}
-			if err == domain.ErrFlightInvalidRoute {
-				h.Response.Error(c, domain.MsgFlightInvalidRoute)
-				return
-			}
-			if err == domain.ErrFlightInvalidLicensePlate {
-				h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
-				return
-			}
-			if err == domain.ErrFlightInvalidTimeSequence {
-				h.Response.Error(c, domain.MsgFlightInvalidTimeSequence)
-				return
-			}
-			if err == domain.ErrFlightDuplicate {
-				h.Response.Error(c, domain.MsgFlightDuplicate)
-				return
-			}
-			h.Response.Error(c, domain.MsgFlightSaveError)
+			h.Response.Error(c, mapCreateError(err))
 			return
 		}
 
-		// Refetch to get denormalized data
 		createdDetail, err := h.DailyLogbookDetailInteractor.GetDailyLogbookDetailByID(c.Request.Context(), traceID, detail.ID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "error", err)
@@ -170,18 +138,35 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Encode IDs for response
 		encodedID, _ := h.EncodeID(detail.ID)
 		encodedLogbookID, _ := h.EncodeID(logbookUUID)
 		encodedRouteID, _ := h.EncodeID(req.AirlineRouteID)
 		encodedAircraftID, _ := h.EncodeID(req.LicensePlateID)
 
-		// Build response
 		response := FromDomainDailyLogbookDetail(createdDetail, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 
 		log.Info(logger.LogDailyLogbookDetailCreateOK, "id", detail.ID)
 		h.Response.SuccessWithData(c, domain.MsgFlightCreated, response)
+	}
+}
+
+func mapCreateError(err error) string {
+	switch err {
+	case domain.ErrFlightUnauthorized:
+		return domain.MsgFlightUnauthorized
+	case domain.ErrFlightInvalidLogbook:
+		return domain.MsgFlightInvalidLogbook
+	case domain.ErrFlightInvalidRoute:
+		return domain.MsgFlightInvalidRoute
+	case domain.ErrFlightInvalidLicensePlate:
+		return domain.MsgFlightInvalidLicensePlate
+	case domain.ErrFlightInvalidTimeSequence:
+		return domain.MsgFlightInvalidTimeSequence
+	case domain.ErrFlightDuplicate:
+		return domain.MsgFlightDuplicate
+	default:
+		return domain.MsgFlightSaveError
 	}
 }
 
@@ -207,7 +192,6 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 
 		log.Info(logger.LogDailyLogbookDetailUpdate, "input_id", inputID)
 
-		// Get authenticated user
 		employee, ok := middleware.GetAuthenticatedUser(c)
 		if !ok {
 			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", "unauthorized")
@@ -215,15 +199,13 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Resolve detail ID
 		detailUUID, responseID := h.resolveID(inputID)
 		if detailUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
 
-		// Parse and sanitize request
 		var req UpdateDailyLogbookDetailRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)
@@ -232,7 +214,6 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.Sanitize()
 
-		// Resolve airline_route_id
 		routeUUID, _ := h.resolveID(req.AirlineRouteID)
 		if routeUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid route ID")
@@ -241,7 +222,6 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		// Resolve license_plate_id
 		aircraftUUID, _ := h.resolveID(req.LicensePlateID)
 		if aircraftUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid license plate ID")
@@ -250,29 +230,14 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.LicensePlateID = aircraftUUID
 
-		// Convert to domain
 		detail := ToDomainDailyLogbookDetailUpdate(detailUUID, req)
 
-		// Update detail (ownership is verified by the interactor)
 		if err := h.DailyLogbookDetailInteractor.UpdateDailyLogbookDetail(c.Request.Context(), traceID, detail, employee.ID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)
-			if err == domain.ErrFlightUnauthorized {
-				h.Response.Error(c, domain.MsgFlightUnauthorized)
-				return
-			}
-			if err == domain.ErrFlightNotFound {
-				h.Response.Error(c, domain.MsgFlightNotFound)
-				return
-			}
-			if err == domain.ErrFlightInvalidTimeSequence {
-				h.Response.Error(c, domain.MsgFlightInvalidTimeSequence)
-				return
-			}
-			h.Response.Error(c, domain.MsgFlightUpdateError)
+			h.Response.Error(c, mapUpdateError(err))
 			return
 		}
 
-		// Refetch to get denormalized data
 		updatedDetail, err := h.DailyLogbookDetailInteractor.GetDailyLogbookDetailByID(c.Request.Context(), traceID, detailUUID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)
@@ -280,17 +245,28 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Encode IDs for response
 		encodedLogbookID, _ := h.EncodeID(updatedDetail.DailyLogbookID)
 		encodedRouteID, _ := h.EncodeID(updatedDetail.AirlineRouteID)
 		encodedAircraftID, _ := h.EncodeID(updatedDetail.LicensePlateID)
 
-		// Build response
 		response := FromDomainDailyLogbookDetail(updatedDetail, responseID, encodedLogbookID, encodedRouteID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, responseID)
 
 		log.Info(logger.LogDailyLogbookDetailUpdateOK, "id", detailUUID)
 		h.Response.SuccessWithData(c, domain.MsgFlightUpdated, response)
+	}
+}
+
+func mapUpdateError(err error) string {
+	switch err {
+	case domain.ErrFlightUnauthorized:
+		return domain.MsgFlightUnauthorized
+	case domain.ErrFlightNotFound:
+		return domain.MsgFlightNotFound
+	case domain.ErrFlightInvalidTimeSequence:
+		return domain.MsgFlightInvalidTimeSequence
+	default:
+		return domain.MsgFlightUpdateError
 	}
 }
 
@@ -314,7 +290,6 @@ func (h *handler) DeleteDailyLogbookDetail() gin.HandlerFunc {
 
 		log.Info(logger.LogDailyLogbookDetailDelete, "input_id", inputID)
 
-		// Get authenticated user
 		employee, ok := middleware.GetAuthenticatedUser(c)
 		if !ok {
 			log.Error(logger.LogDailyLogbookDetailDeleteError, "error", "unauthorized")
@@ -322,23 +297,17 @@ func (h *handler) DeleteDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Resolve detail ID
 		detailUUID, _ := h.resolveID(inputID)
 		if detailUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailDeleteError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookDetailDeleteError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
 
-		// Verify ownership via detail's logbook
 		ownerID, err := h.DailyLogbookDetailInteractor.GetDetailLogbookOwner(c.Request.Context(), detailUUID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookDetailDeleteError, "error", err)
-			if err == domain.ErrFlightNotFound {
-				h.Response.Error(c, domain.MsgFlightNotFound)
-				return
-			}
-			h.Response.Error(c, domain.MsgFlightDeleteError)
+			h.Response.Error(c, mapDeleteError(err))
 			return
 		}
 		if ownerID != employee.ID {
@@ -347,20 +316,22 @@ func (h *handler) DeleteDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 
-		// Delete detail
 		if err := h.DailyLogbookDetailInteractor.DeleteDailyLogbookDetail(c.Request.Context(), traceID, detailUUID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailDeleteError, "error", err)
-			if err == domain.ErrFlightNotFound {
-				h.Response.Error(c, domain.MsgFlightNotFound)
-				return
-			}
-			h.Response.Error(c, domain.MsgFlightDeleteError)
+			h.Response.Error(c, mapDeleteError(err))
 			return
 		}
 
 		log.Info(logger.LogDailyLogbookDetailDeleteOK, "id", detailUUID)
 		h.Response.Success(c, domain.MsgFlightDeleted)
 	}
+}
+
+func mapDeleteError(err error) string {
+	if err == domain.ErrFlightNotFound {
+		return domain.MsgFlightNotFound
+	}
+	return domain.MsgFlightDeleteError
 }
 
 // ListDailyLogbookDetails lists all details for a logbook

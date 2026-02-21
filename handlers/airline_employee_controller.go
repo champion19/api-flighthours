@@ -9,6 +9,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	pathEmployeesAirline = "/flighthours/api/v1/employees/airline"
+	pathEmployees        = "/flighthours/api/v1/employees"
+)
+
+// parseDatesFromRequest parses start_date and optional end_date from the request.
+func parseDatesFromRequest(startDateStr, endDateStr string) (time.Time, time.Time, error) {
+	startDate, err := time.ParseInLocation(dateFormatISO, startDateStr, time.Local)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	var endDate time.Time
+	if endDateStr != "" {
+		endDate, err = time.ParseInLocation(dateFormatISO, endDateStr, time.Local)
+		if err != nil {
+			return time.Time{}, time.Time{}, err
+		}
+	}
+	return startDate, endDate, nil
+}
+
 // GetEmployeeAirlineInfo godoc
 // @Summary      Get authenticated employee's airline information
 // @Description  Returns the airline information (airline_id, airline_name, bp) of the authenticated employee
@@ -51,18 +73,18 @@ func (h handler) GetEmployeeAirlineInfo() gin.HandlerFunc {
 			}
 			response.Bp = airlineInfo.Bp
 			if !airlineInfo.StartDate.IsZero() {
-				response.StartDate = airlineInfo.StartDate.Format("2006-01-02")
+				response.StartDate = airlineInfo.StartDate.Format(dateFormatISO)
 			}
 			if !airlineInfo.EndDate.IsZero() {
-				response.EndDate = airlineInfo.EndDate.Format("2006-01-02")
+				response.EndDate = airlineInfo.EndDate.Format(dateFormatISO)
 			}
 		}
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "update", Method: "PUT"},
-			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline, Rel: "self", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline, Rel: "update", Method: "PUT"},
+			{Href: baseURL + pathEmployees, Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeGetOK, "employee_id", employee.ID, "has_airline", response.AirlineID != "", "client_ip", c.ClientIP())
@@ -91,7 +113,6 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 
 		log.Info(logger.LogAirlineEmployeeAdd, "endpoint", "PUT /employees/airline", "client_ip", c.ClientIP())
 
-		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
 		if !exists {
 			log.Error(logger.LogEmployeeNotFound, "error", logger.LogErrAuthUserNotInContext, "client_ip", c.ClientIP())
@@ -108,59 +129,31 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 
 		req.Sanitize()
 
-		// Decode the airline_id
-		airlineUUID, _ := h.resolveID(req.AirlineID)
-		if airlineUUID == "" {
-			log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrInvalidAirlineID, "client_ip", c.ClientIP())
-			h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
+		airlineUUID, airline, errMsg := h.resolveAndVerifyAirline(c, req.AirlineID, logger.LogAirlineEmployeeAddError)
+		if errMsg != "" {
+			h.Response.Error(c, errMsg)
 			return
 		}
 
-		// Verify airline exists
-		airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), airlineUUID)
-		if err != nil || airline == nil {
-			log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrAirlineNotFound, "airline_id", airlineUUID, "client_ip", c.ClientIP())
-			h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
-			return
-		}
-
-		// Parse dates using local timezone to avoid date shift when saving to MySQL
-		layout := "2006-01-02"
-		startDate, err := time.ParseInLocation(layout, req.StartDate, time.Local)
+		startDate, endDate, err := parseDatesFromRequest(req.StartDate, req.EndDate)
 		if err != nil {
-			log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrInvalidStartDate, "client_ip", c.ClientIP())
+			log.Error(logger.LogAirlineEmployeeAddError, "error", err, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValInvalidDateFormat)
 			return
 		}
 
-		var endDate time.Time
-		if req.EndDate != "" {
-			endDate, err = time.ParseInLocation(layout, req.EndDate, time.Local)
-			if err != nil {
-				log.Error(logger.LogAirlineEmployeeAddError, "error", logger.LogErrInvalidEndDate, "client_ip", c.ClientIP())
-				h.Response.Error(c, domain.MsgValInvalidDateFormat)
-				return
-			}
-		}
-
-		// Create AirlineEmployee domain object (Active defaults to true for new employees)
 		airlineEmployeeInfo := domain.AirlineEmployee{
 			ID:        employee.ID,
 			AirlineID: airlineUUID,
 			Bp:        req.Bp,
 			StartDate: startDate,
 			EndDate:   endDate,
-			Active:    true, // New airline employees are active by default
+			Active:    true,
 		}
 
-		// Add airline info via AirlineEmployeeInteractor
 		if err := h.AirlineEmployeeInteractor.AddAirlineEmployee(c.Request.Context(), employee.ID, airlineEmployeeInfo); err != nil {
 			log.Error(logger.LogAirlineEmployeeAddError, "error", err, "client_ip", c.ClientIP())
-			if err == domain.ErrInvalidForeignKey {
-				h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
-				return
-			}
-			h.Response.Error(c, domain.MsgAirlineEmployeeSaveError)
+			h.Response.Error(c, mapAirlineEmployeeSaveError(err))
 			return
 		}
 
@@ -169,14 +162,14 @@ func (h handler) AddEmployeeAirlineInfo() gin.HandlerFunc {
 			AirlineID:   encodedAirlineID,
 			AirlineName: airline.AirlineName,
 			Bp:          req.Bp,
-			StartDate:   startDate.Format(layout),
-			EndDate:     endDate.Format(layout),
+			StartDate:   startDate.Format(dateFormatISO),
+			EndDate:     endDate.Format(dateFormatISO),
 		}
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline, Rel: "self", Method: "GET"},
+			{Href: baseURL + pathEmployees, Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeAddOK, "employee_id", employee.ID, "airline_id", airlineUUID, "client_ip", c.ClientIP())
@@ -206,7 +199,6 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		log.Info(logger.LogAirlineEmployeeUpdate, "endpoint", "PUT /employees/airline-info", "client_ip", c.ClientIP())
 
-		// Get authenticated employee (core data)
 		employee, exists := middleware.GetAuthenticatedUser(c)
 		if !exists {
 			log.Error(logger.LogEmployeeNotFound, "error", logger.LogErrAuthUserNotInContext, "client_ip", c.ClientIP())
@@ -231,59 +223,31 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		req.Sanitize()
 
-		// Decode the airline_id
-		airlineUUID, _ := h.resolveID(req.AirlineID)
-		if airlineUUID == "" {
-			log.Error(logger.LogAirlineEmployeeUpdateError, "error", logger.LogErrInvalidAirlineID, "client_ip", c.ClientIP())
-			h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
+		airlineUUID, airline, errMsg := h.resolveAndVerifyAirline(c, req.AirlineID, logger.LogAirlineEmployeeUpdateError)
+		if errMsg != "" {
+			h.Response.Error(c, errMsg)
 			return
 		}
 
-		// Verify airline exists
-		airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), airlineUUID)
-		if err != nil || airline == nil {
-			log.Error(logger.LogAirlineEmployeeUpdateError, "error", logger.LogErrAirlineNotFound, "airline_id", airlineUUID, "client_ip", c.ClientIP())
-			h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
-			return
-		}
-
-		// Parse dates using local timezone to avoid date shift when saving to MySQL
-		layout := "2006-01-02"
-		startDate, err := time.ParseInLocation(layout, req.StartDate, time.Local)
+		startDate, endDate, err := parseDatesFromRequest(req.StartDate, req.EndDate)
 		if err != nil {
-			log.Error(logger.LogAirlineEmployeeUpdateError, "error", logger.LogErrInvalidStartDate, "client_ip", c.ClientIP())
+			log.Error(logger.LogAirlineEmployeeUpdateError, "error", err, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValInvalidDateFormat)
 			return
 		}
 
-		var endDate time.Time
-		if req.EndDate != "" {
-			endDate, err = time.ParseInLocation(layout, req.EndDate, time.Local)
-			if err != nil {
-				log.Error(logger.LogAirlineEmployeeUpdateError, "error", logger.LogErrInvalidEndDate, "client_ip", c.ClientIP())
-				h.Response.Error(c, domain.MsgValInvalidDateFormat)
-				return
-			}
-		}
-
-		// Create AirlineEmployee domain object (Active is not updated in HU25)
 		airlineEmployeeInfo := domain.AirlineEmployee{
 			ID:        employee.ID,
 			AirlineID: airlineUUID,
 			Bp:        req.Bp,
 			StartDate: startDate,
 			EndDate:   endDate,
-			Active:    existingAirlineInfo.Active, // Preserve existing active status
+			Active:    existingAirlineInfo.Active,
 		}
 
-		// Update airline info via AirlineEmployeeInteractor
 		if err := h.AirlineEmployeeInteractor.UpdateAirlineEmployee(c.Request.Context(), employee.ID, airlineEmployeeInfo); err != nil {
 			log.Error(logger.LogAirlineEmployeeUpdateError, "error", err, "client_ip", c.ClientIP())
-			if err == domain.ErrInvalidForeignKey {
-				h.Response.Error(c, domain.MsgAirlineEmployeeInvalidAirline)
-				return
-			}
-			h.Response.Error(c, domain.MsgAirlineEmployeeUpdateError)
+			h.Response.Error(c, mapAirlineEmployeeUpdateError(err))
 			return
 		}
 
@@ -293,19 +257,50 @@ func (h handler) UpdateEmployeeAirlineInfo() gin.HandlerFunc {
 			AirlineID:   encodedAirlineID,
 			AirlineName: airline.AirlineName,
 			Bp:          req.Bp,
-			StartDate:   startDate.Format(layout),
-			EndDate:     endDate.Format(layout),
+			StartDate:   startDate.Format(dateFormatISO),
+			EndDate:     endDate.Format(dateFormatISO),
 		}
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline, Rel: "self", Method: "GET"},
+			{Href: baseURL + pathEmployees, Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeUpdateOK, "employee_id", employee.ID, "airline_id", airlineUUID, "client_ip", c.ClientIP())
 		h.Response.SuccessWithData(c, domain.MsgAirlineEmployeeUpdated, response)
 	}
+}
+
+// resolveAndVerifyAirline resolves the airline ID and verifies the airline exists.
+func (h handler) resolveAndVerifyAirline(c *gin.Context, airlineID, logMsg string) (string, *domain.Airline, string) {
+	airlineUUID, _ := h.resolveID(airlineID)
+	if airlineUUID == "" {
+		log.Error(logMsg, "error", logger.LogErrInvalidAirlineID, "client_ip", c.ClientIP())
+		return "", nil, domain.MsgAirlineEmployeeInvalidAirline
+	}
+
+	airline, err := h.AirlineInteractor.GetAirlineByID(c.Request.Context(), airlineUUID)
+	if err != nil || airline == nil {
+		log.Error(logMsg, "error", logger.LogErrAirlineNotFound, "airline_id", airlineUUID, "client_ip", c.ClientIP())
+		return "", nil, domain.MsgAirlineEmployeeInvalidAirline
+	}
+
+	return airlineUUID, airline, ""
+}
+
+func mapAirlineEmployeeSaveError(err error) string {
+	if err == domain.ErrInvalidForeignKey {
+		return domain.MsgAirlineEmployeeInvalidAirline
+	}
+	return domain.MsgAirlineEmployeeSaveError
+}
+
+func mapAirlineEmployeeUpdateError(err error) string {
+	if err == domain.ErrInvalidForeignKey {
+		return domain.MsgAirlineEmployeeInvalidAirline
+	}
+	return domain.MsgAirlineEmployeeUpdateError
 }
 
 // ActivateEmployeeAirlineInfo godoc
@@ -352,9 +347,9 @@ func (h handler) ActivateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employees/airline/deactivate", Rel: "deactivate", Method: "PATCH"},
-			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline, Rel: "self", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline + "/deactivate", Rel: "deactivate", Method: "PATCH"},
+			{Href: baseURL + pathEmployees, Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeActivateOK, "employee_id", employee.ID, "client_ip", c.ClientIP())
@@ -406,9 +401,9 @@ func (h handler) DeactivateEmployeeAirlineInfo() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response.Links = []Link{
-			{Href: baseURL + "/flighthours/api/v1/employees/airline", Rel: "self", Method: "GET"},
-			{Href: baseURL + "/flighthours/api/v1/employees/airline/activate", Rel: "activate", Method: "PATCH"},
-			{Href: baseURL + "/flighthours/api/v1/employees", Rel: "profile", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline, Rel: "self", Method: "GET"},
+			{Href: baseURL + pathEmployeesAirline + "/activate", Rel: "activate", Method: "PATCH"},
+			{Href: baseURL + pathEmployees, Rel: "profile", Method: "GET"},
 		}
 
 		log.Success(logger.LogAirlineEmployeeDeactivateOK, "employee_id", employee.ID, "client_ip", c.ClientIP())

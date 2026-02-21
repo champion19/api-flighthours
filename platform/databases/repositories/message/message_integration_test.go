@@ -60,7 +60,7 @@ func TestRepository_GetMessageByCode_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	testContainer.CleanMessageTable(ctx)
-	testContainer.InsertMessage(ctx, "msg-1", "ERR001", "error", "validation", "auth", "Error Title", "Error content", true)
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "msg-1", Code: "ERR001", Type: "error", Category: "validation", Module: "auth", Title: "Error Title", Content: "Error content", Active: true})
 
 	repo, _ := NewMessageRepository(testContainer.DB)
 
@@ -96,7 +96,7 @@ func TestRepository_GetMessageByID_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	testContainer.CleanMessageTable(ctx)
-	testContainer.InsertMessage(ctx, "msg-id-123", "INFO001", "info", "general", "system", "Info Title", "Info content", true)
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "msg-id-123", Code: "INFO001", Type: "info", Category: "general", Module: "system", Title: "Info Title", Content: "Info content", Active: true})
 
 	repo, _ := NewMessageRepository(testContainer.DB)
 
@@ -132,9 +132,9 @@ func TestRepository_ListActiveMessages_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	testContainer.CleanMessageTable(ctx)
-	testContainer.InsertMessage(ctx, "m1", "MSG001", "info", "cat1", "mod1", "Title1", "Content1", true)
-	testContainer.InsertMessage(ctx, "m2", "MSG002", "error", "cat2", "mod2", "Title2", "Content2", true)
-	testContainer.InsertMessage(ctx, "m3", "MSG003", "warning", "cat3", "mod3", "Title3", "Content3", false) // inactive
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "m1", Code: "MSG001", Type: "info", Category: "cat1", Module: "mod1", Title: "Title1", Content: "Content1", Active: true})
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "m2", Code: "MSG002", Type: "error", Category: "cat2", Module: "mod2", Title: "Title2", Content: "Content2", Active: true})
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "m3", Code: "MSG003", Type: "warning", Category: "cat3", Module: "mod3", Title: "Title3", Content: "Content3", Active: false}) // inactive
 
 	repo, _ := NewMessageRepository(testContainer.DB)
 
@@ -156,9 +156,9 @@ func TestRepository_GetByType_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	testContainer.CleanMessageTable(ctx)
-	testContainer.InsertMessage(ctx, "e1", "ERR001", "error", "cat", "mod", "Error1", "Content", true)
-	testContainer.InsertMessage(ctx, "e2", "ERR002", "error", "cat", "mod", "Error2", "Content", true)
-	testContainer.InsertMessage(ctx, "i1", "INFO001", "info", "cat", "mod", "Info1", "Content", true)
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "e1", Code: "ERR001", Type: "error", Category: "cat", Module: "mod", Title: "Error1", Content: "Content", Active: true})
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "e2", Code: "ERR002", Type: "error", Category: "cat", Module: "mod", Title: "Error2", Content: "Content", Active: true})
+	testContainer.InsertMessage(ctx, testhelper.MessageData{ID: "i1", Code: "INFO001", Type: "info", Category: "cat", Module: "mod", Title: "Info1", Content: "Content", Active: true})
 
 	repo, _ := NewMessageRepository(testContainer.DB)
 

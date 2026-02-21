@@ -12,12 +12,12 @@ import (
 )
 
 type Config struct {
-	Environment  string         `json:"environment"`
-	Database     Database       `json:"database"`
-	Server       Server         `json:"server"`
-	Resend       Resend         `json:"resend"`
-	Verification Verification   `json:"verification"`
-	Keycloak     KeycloakConfig `json:"keycloak"`
+	Environment  string          `json:"environment"`
+	Database     Database        `json:"database"`
+	Server       Server          `json:"server"`
+	Resend       Resend          `json:"resend"`
+	Verification Verification    `json:"verification"`
+	Keycloak     KeycloakConfig  `json:"keycloak"`
 	IDEncoder    IDEncoderConfig `json:"id_encoder"`
 }
 
@@ -74,12 +74,14 @@ func LoadConfig() (*Config, error) {
 		env = "local"
 	}
 
+	const localConfigFile = "local-config.json"
+
 	var configFile string
 	switch env {
 	case "railway":
 		configFile = "railway-config.json"
 	default:
-		configFile = "local-config.json"
+		configFile = localConfigFile
 	}
 
 	configPath := filepath.Join(root, "config", configFile)
@@ -87,8 +89,8 @@ func LoadConfig() (*Config, error) {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		slog.Warn(logger.LogConfigFileNotFound,
 			slog.String("requested_file", configFile),
-			slog.String("fallback_file", "local-config.json"))
-		configPath = filepath.Join(root, "config", "local-config.json")
+			slog.String("fallback_file", localConfigFile))
+		configPath = filepath.Join(root, "config", localConfigFile)
 	}
 
 	file, err := os.ReadFile(configPath)
@@ -118,6 +120,21 @@ func LoadConfig() (*Config, error) {
 	}
 	if adminPass := os.Getenv("KEYCLOAK_ADMIN_PASSWORD"); adminPass != "" {
 		config.Keycloak.AdminPass = adminPass
+	}
+
+	// Override Resend config from env vars
+	if resendKey := os.Getenv("RESEND_API_KEY"); resendKey != "" {
+		config.Resend.APIKey = resendKey
+	}
+
+	// Override ID encoder config from env vars
+	if idSecret := os.Getenv("ID_ENCODER_SECRET"); idSecret != "" {
+		config.IDEncoder.Secret = idSecret
+	}
+
+	// Override database password from env var
+	if dbPass := os.Getenv("DB_PASSWORD"); dbPass != "" {
+		config.Database.Password = dbPass
 	}
 
 	slog.Info(logger.LogAppConfigLoaded,
@@ -171,7 +188,6 @@ func (c *Config) GetKeycloakJWKSURL() string {
 		c.Keycloak.ServerURL,
 		c.Keycloak.Realm)
 }
-
 
 func (c *Config) GetKeycloakIssuerURL() string {
 	return fmt.Sprintf("%s/realms/%s",

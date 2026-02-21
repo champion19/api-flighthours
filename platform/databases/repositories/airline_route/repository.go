@@ -138,6 +138,8 @@ const (
 
 var log logger.Logger = logger.NewSlogLogger()
 
+const errPreparingStatement = "error preparing statement"
+
 type repository struct {
 	stmtGetByID          *sql.Stmt
 	stmtGetAll           *sql.Stmt
@@ -155,37 +157,37 @@ func NewAirlineRouteRepository(db *sql.DB) (*repository, error) {
 
 	stmtGetByID, err := db.Prepare(QueryByID)
 	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetAll, err := db.Prepare(QueryGetAll)
 	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByAirlineID, err := db.Prepare(QueryGetByAirlineID)
 	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByAirlineCode, err := db.Prepare(QueryGetByAirlineCode)
 	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtGetByStatus, err := db.Prepare(QueryGetByStatus)
 	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
 	stmtUpdateStatus, err := db.Prepare(QueryUpdateStatus)
 	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error preparing statement", err)
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
 	}
 
