@@ -16,10 +16,10 @@ touch /var/log/volume-cleanup.log
 
 # Verificar que los directorios estén montados
 echo "Verificando volúmenes montados:"
-[ -d "/var/log/flighthours-backend" ] && echo "  ✓ Logs del backend: /var/log/flighthours-backend" || echo "  ✗ Logs no montados"
-[ -d "/prometheus" ] && echo "  ✓ Prometheus data: /prometheus" || echo "  ✗ Prometheus no montado"
-[ -d "/loki" ] && echo "  ✓ Loki data: /loki" || echo "  ✗ Loki no montado"
-[ -d "/grafana" ] && echo "  ✓ Grafana data: /grafana" || echo "  ✗ Grafana no montado"
+[[ -d "/var/log/flighthours-backend" ]] && echo "  ✓ Logs del backend: /var/log/flighthours-backend" || echo "  ✗ Logs no montados"
+[[ -d "/prometheus" ]] && echo "  ✓ Prometheus data: /prometheus" || echo "  ✗ Prometheus no montado"
+[[ -d "/loki" ]] && echo "  ✓ Loki data: /loki" || echo "  ✗ Loki no montado"
+[[ -d "/grafana" ]] && echo "  ✓ Grafana data: /grafana" || echo "  ✗ Grafana no montado"
 echo ""
 
 # Función para ejecutar logrotate
@@ -68,7 +68,7 @@ echo ""
     current_hour=$(date +%H)
     current_min=$(date +%M)
 
-    if [ "$current_hour" -eq 2 ] && [ "$current_min" -lt 10 ]; then
+    if [[ "$current_hour" -eq 2 ]] && [[ "$current_min" -lt 10 ]]; then
       # Estamos entre 2:00 y 2:10 AM, ejecutar limpieza
       /usr/local/bin/cleanup-volumes.sh
       sleep 600  # Esperar 10 minutos para evitar ejecuciones múltiples
