@@ -1,0 +1,51 @@
+meta {
+  name: Get Flight Alerts
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/employees/flight-alerts
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Get Flight Alerts
+
+  Returns active flight alerts for the authenticated employee,
+  such as consecutive flight hours exceeding threshold or minimum monthly landings.
+
+  ## Authentication
+  Requires Bearer token (run Login first).
+
+  ## Success Response (200)
+  ```json
+  {
+    "alerts": [
+      {
+        "type": "CONSECUTIVE_HOURS",
+        "severity": "warning",
+        "message": "Consecutive flight hours approaching limit",
+        "current_value": 8,
+        "threshold": 10
+      },
+      {
+        "type": "MIN_LANDINGS",
+        "severity": "info",
+        "message": "Monthly landings below minimum",
+        "current_value": 2,
+        "threshold": 3
+      }
+    ]
+  }
+  ```
+
+  ## Errors
+  - 401: Not authenticated
+  - 500: Internal server error
+}
