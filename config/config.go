@@ -9,6 +9,7 @@ import (
 
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/tools/utils"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -67,6 +68,13 @@ func LoadConfig() (*Config, error) {
 	root, err := utils.FindModuleRoot()
 	if err != nil {
 		return nil, fmt.Errorf("error finding module root: %w", err)
+	}
+
+	// Load .env file from project root (non-fatal if not found)
+	envPath := filepath.Join(root, ".env")
+	if err := godotenv.Load(envPath); err != nil {
+		slog.Warn("No .env file found, using system environment variables",
+			slog.String("path", envPath))
 	}
 
 	env := os.Getenv("APP_ENV")
