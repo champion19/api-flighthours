@@ -22,9 +22,9 @@
       "minLength": 1,
       "maxLength": 50
     },
-    "license_plate_id": {
+    "tail_number_id": {
       "type": "string",
-      "description": "Aircraft registration ID (obfuscated ID)",
+      "description": "Tail number ID (obfuscated ID)",
       "minLength": 1,
       "maxLength": 50
     },
@@ -86,17 +86,10 @@
       "description": "Block time (HH:MM)",
       "pattern": "^\\d{2}:\\d{2}$"
     },
-    "duty_time": {
-      "type": "string",
-      "description": "Duty time (HH:MM)",
-      "pattern": "^\\d{2}:\\d{2}$"
-    },
     "approach_type": {
       "type": "string",
-      "description": "Approach type: NPA, PA, APV, or VISUAL",
+      "description": "Approach type: APV, VISUAL",
       "enum": [
-        "NPA",
-        "PA",
         "APV",
         "VISUAL"
       ]
@@ -117,7 +110,7 @@
     "flight_real_date",
     "flight_number",
     "airline_route_id",
-    "license_plate_id"
+    "tail_number_id"
   ],
   "additionalProperties": false
 }

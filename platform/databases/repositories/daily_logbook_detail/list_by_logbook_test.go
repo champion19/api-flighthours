@@ -63,11 +63,11 @@ func TestListDailyLogbookDetailsByLogbook_Empty(t *testing.T) {
 
 	cols := []string{
 		"id", "daily_logbook_id", "flight_real_date", "flight_number",
-		"airline_route_id", "license_plate_id", "passengers",
+		"airline_route_id", "tail_number_id", "passengers",
 		"out_time", "takeoff_time", "landing_time", "in_time",
 		"pilot_role", "companion_name", "crew_role",
-		"air_time", "block_time", "duty_time", "approach_type", "flight_type",
-		"employee_logbook_id", "log_date", "license_plate", "model_name",
+		"air_time", "block_time", "approach_type", "flight_type",
+		"employee_logbook_id", "log_date", "tail_number", "model_name",
 		"route_code", "origin_iata_code", "destination_iata_code", "airline_code",
 	}
 	rows := sqlmock.NewRows(cols)

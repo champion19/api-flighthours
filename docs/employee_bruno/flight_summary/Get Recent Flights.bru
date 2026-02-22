@@ -1,0 +1,55 @@
+meta {
+  name: Get Recent Flights
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/employees/recent-flights
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Get Recent Flights
+
+  Returns the 5 most recent flights for the authenticated employee,
+  ordered by date descending.
+
+  ## Authentication
+  Requires Bearer token (run Login first).
+
+  ## Success Response (200)
+  ```json
+  [
+    {
+      "id": "encoded-id",
+      "daily_logbook_id": "encoded-logbook-id",
+      "flight_real_date": "2026-02-20",
+      "flight_number": "AV123",
+      "airline_route_id": "encoded-route-id",
+      "actual_tail_number_id": "encoded-plate-id",
+      "passengers": 150,
+      "out_time": "08:00",
+      "takeoff_time": "08:15",
+      "landing_time": "10:30",
+      "in_time": "10:45",
+      "pilot_role": "PF",
+      "companion_name": "John Doe",
+      "crew_role": "captain",
+      "air_time": "02:15",
+      "block_time": "02:45",
+      "approach_type": "APV",
+      "flight_type": "COMMERCIAL"
+    }
+  ]
+  ```
+
+  ## Errors
+  - 401: Not authenticated
+  - 500: Internal server error
+}

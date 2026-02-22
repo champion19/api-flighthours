@@ -46,7 +46,7 @@ var fieldNameMapping = map[string]string{
 	"bp":         "BP Number",
 
 	// License Plate
-	"license_plate":     "License Plate",
+	"tail_number":     "License Plate",
 	"aircraft_model_id": "Aircraft Model",
 
 	// Daily Logbook
@@ -55,7 +55,7 @@ var fieldNameMapping = map[string]string{
 
 	// Daily Logbook Detail (Flight)
 	"airline_route_id": "Airline Route",
-	"license_plate_id": "Aircraft License Plate",
+	"tail_number_id": "Aircraft License Plate",
 	"flight_number":    "Flight Number",
 	"flight_real_date": "Flight Date",
 	"flight_type":      "Flight Type",
@@ -70,7 +70,6 @@ var fieldNameMapping = map[string]string{
 	"in_time":          "In Time",
 	"block_time":       "Block Time",
 	"air_time":         "Air Time",
-	"duty_time":        "Duty Time",
 
 	// Message Management
 	"code":     "Code",
@@ -129,11 +128,11 @@ func (b *Builder) WithValidateAddAirlineEmployee() gin.HandlerFunc {
 func (b *Builder) WithValidateUpdateAirlineEmployee() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.UpdateAirlineEmployeeValidator)
 }
-func (b *Builder) WithValidateCreateLicensePlate() gin.HandlerFunc {
-	return b.jsonValidator(b.Validators.CreateLicensePlateValidator)
+func (b *Builder) WithValidateCreateTailNumber() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.CreateTailNumberValidator)
 }
-func (b *Builder) WithValidateUpdateLicensePlate() gin.HandlerFunc {
-	return b.jsonValidator(b.Validators.UpdateLicensePlateValidator)
+func (b *Builder) WithValidateUpdateTailNumber() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.UpdateTailNumberValidator)
 }
 func (b *Builder) WithValidateCreateDailyLogbookDetail() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.CreateDailyLogbookDetailValidator)

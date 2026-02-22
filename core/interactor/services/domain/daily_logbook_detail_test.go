@@ -20,7 +20,7 @@ func TestDailyLogbookDetail_ToLogger(t *testing.T) {
 			FlightNumber:   "AV123",
 			FlightRealDate: "2025-01-15",
 			RouteCode:      "BOG-CLO",
-			LicensePlate:   "HK-5432",
+			TailNumber:   "HK-5432",
 			PilotRole:      pilotRolePtr(PilotRolePF),
 		}
 		result := d.ToLogger()
@@ -37,7 +37,7 @@ func TestDailyLogbookDetail_ToLogger(t *testing.T) {
 			FlightNumber:   "AV456",
 			FlightRealDate: "2025-01-16",
 			RouteCode:      "CLO-BOG",
-			LicensePlate:   "HK-1234",
+			TailNumber:   "HK-1234",
 			PilotRole:      pilotRolePtr(PilotRolePM),
 			CrewRole:       &crewRole,
 		}
@@ -87,8 +87,6 @@ func TestIsValidApproachType(t *testing.T) {
 		approachType string
 		want         bool
 	}{
-		{"NPA", "NPA", true},
-		{"PA", "PA", true},
 		{"APV", "APV", true},
 		{"VISUAL", "VISUAL", true},
 		{"empty is valid", "", true},
