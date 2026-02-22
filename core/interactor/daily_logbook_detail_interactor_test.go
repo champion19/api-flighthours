@@ -19,7 +19,7 @@ type fakeDailyLogbookDetailService struct {
 	validateTimeFn      func(outTime, takeoffTime, landingTime, inTime string) error
 	createTxFn          func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	updateTxFn          func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
-	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
 	deleteTxFn          func(ctx context.Context, tx output.Tx, id string) error
 }
 
@@ -69,9 +69,9 @@ func (f *fakeDailyLogbookDetailService) UpdateDailyLogbookDetailTx(ctx context.C
 	return nil
 }
 
-func (f *fakeDailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+func (f *fakeDailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 	if f.existsByUniqueKeyFn != nil {
-		return f.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
+		return f.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, tailNumberID)
 	}
 	return false, nil
 }
@@ -330,7 +330,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 	t.Run("duplicate flight detected", func(t *testing.T) {
 		empLbID := "emp-lb-1"
 		svc := &fakeDailyLogbookDetailService{
-			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 				return true, nil
 			},
 		}
@@ -345,7 +345,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 			EmployeeLogbookID: &empLbID,
 			FlightRealDate:    "2026-01-15",
 			FlightNumber:      "AV123",
-			LicensePlateID:    "lp-1",
+			TailNumberID:    "lp-1",
 		}, "emp-1")
 		if err == nil {
 			t.Error("expected duplicate error")
@@ -355,7 +355,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 	t.Run("exists by unique key error", func(t *testing.T) {
 		empLbID := "emp-lb-1"
 		svc := &fakeDailyLogbookDetailService{
-			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 				return false, errors.New("db error")
 			},
 		}
@@ -370,7 +370,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 			EmployeeLogbookID: &empLbID,
 			FlightRealDate:    "2026-01-15",
 			FlightNumber:      "AV123",
-			LicensePlateID:    "lp-1",
+			TailNumberID:    "lp-1",
 		}, "emp-1")
 		if err == nil {
 			t.Error("expected error from ExistsByUniqueKey")
@@ -380,7 +380,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 	t.Run("success with employee logbook ID no duplicate", func(t *testing.T) {
 		empLbID := "emp-lb-1"
 		svc := &fakeDailyLogbookDetailService{
-			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 				return false, nil
 			},
 			createTxFn: func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error {
@@ -398,7 +398,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 			EmployeeLogbookID: &empLbID,
 			FlightRealDate:    "2026-01-15",
 			FlightNumber:      "AV123",
-			LicensePlateID:    "lp-1",
+			TailNumberID:    "lp-1",
 		}, "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

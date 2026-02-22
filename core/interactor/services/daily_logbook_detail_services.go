@@ -109,6 +109,6 @@ func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, l
 }
 
 // ExistsByUniqueKey delegates duplicate check to the repository
-func (s *DailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
-	return s.repo.ExistsByUniqueKey(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
+func (s *DailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
+	return s.repo.ExistsByUniqueKey(ctx, employeeLogbookID, flightRealDate, flightNumber, tailNumberID)
 }

@@ -115,12 +115,12 @@ var (
 
 // License Plate Management Errors (MAT_*)
 var (
-	ErrLicensePlateNotFound       = errors.New("ERR_LICENSE_PLATE_NOT_FOUND")
-	ErrLicensePlateCannotSave     = errors.New("ERR_LICENSE_PLATE_CANNOT_SAVE")
-	ErrLicensePlateCannotUpdate   = errors.New("ERR_LICENSE_PLATE_CANNOT_UPDATE")
-	ErrLicensePlateDuplicatePlate = errors.New("ERR_LICENSE_PLATE_DUPLICATE_PLATE")
-	ErrLicensePlateInvalidModel   = errors.New("ERR_LICENSE_PLATE_INVALID_MODEL")
-	ErrLicensePlateInvalidAirline = errors.New("ERR_LICENSE_PLATE_INVALID_AIRLINE")
+	ErrTailNumberNotFound       = errors.New("ERR_TAIL_NUMBER_NOT_FOUND")
+	ErrTailNumberCannotSave     = errors.New("ERR_TAIL_NUMBER_CANNOT_SAVE")
+	ErrTailNumberCannotUpdate   = errors.New("ERR_TAIL_NUMBER_CANNOT_UPDATE")
+	ErrTailNumberDuplicatePlate = errors.New("ERR_TAIL_NUMBER_DUPLICATE_PLATE")
+	ErrTailNumberInvalidModel   = errors.New("ERR_TAIL_NUMBER_INVALID_MODEL")
+	ErrTailNumberInvalidAirline = errors.New("ERR_TAIL_NUMBER_INVALID_AIRLINE")
 )
 
 // Aircraft Model Management Errors (MOD_AM_*)
@@ -381,34 +381,34 @@ const (
 	// ========================================
 	// Consultar - MAT_CON_*
 	// ========================================
-	MsgLicensePlateGetOK    = "MAT_CON_EXI_03301" // Éxito - Matrícula consultada
-	MsgLicensePlateNotFound = "MAT_CON_ERR_03302" // Error - Matrícula no encontrada
-	MsgLicensePlateGetErr   = "MAT_CON_ERR_03303" // Error - Error técnico al consultar
+	MsgTailNumberGetOK    = "MAT_CON_EXI_03301" // Éxito - Matrícula consultada
+	MsgTailNumberNotFound = "MAT_CON_ERR_03302" // Error - Matrícula no encontrada
+	MsgTailNumberGetErr   = "MAT_CON_ERR_03303" // Error - Error técnico al consultar
 
 	// ========================================
 	// Agregar  - MAT_AGR_*
 	// ========================================
-	MsgLicensePlateCreated   = "MAT_AGR_EXI_03401" // Éxito - Matrícula creada
-	MsgLicensePlateSaveError = "MAT_AGR_ERR_03402" // Error - Error técnico al crear
-	MsgLicensePlateDuplicate = "MAT_AGR_ERR_03403" // Error - Matrícula duplicada
+	MsgTailNumberCreated   = "MAT_AGR_EXI_03401" // Éxito - Matrícula creada
+	MsgTailNumberSaveError = "MAT_AGR_ERR_03402" // Error - Error técnico al crear
+	MsgTailNumberDuplicate = "MAT_AGR_ERR_03403" // Error - Matrícula duplicada
 
 	// ========================================
 	// Editar  - MAT_EDI_*
 	// ========================================
-	MsgLicensePlateUpdated     = "MAT_EDI_EXI_03501" // Éxito - Matrícula actualizada
-	MsgLicensePlateUpdateError = "MAT_EDI_ERR_03502" // Error - Error técnico al editar
+	MsgTailNumberUpdated     = "MAT_EDI_EXI_03501" // Éxito - Matrícula actualizada
+	MsgTailNumberUpdateError = "MAT_EDI_ERR_03502" // Error - Error técnico al editar
 
 	// ========================================
 	// Listar - MAT_LIST_*
 	// ========================================
-	MsgLicensePlateListOK    = "MAT_LIST_EXI_03001" // Éxito - Lista de matrículas obtenida
-	MsgLicensePlateListError = "MAT_LIST_ERR_03002" // Error - Error al listar matrículas
+	MsgTailNumberListOK    = "MAT_LIST_EXI_03001" // Éxito - Lista de matrículas obtenida
+	MsgTailNumberListError = "MAT_LIST_ERR_03002" // Error - Error al listar matrículas
 
 	// ========================================
 	// Validaciones - MAT_VAL_*
 	// ========================================
-	MsgLicensePlateInvalidModel   = "MAT_VAL_ERR_03601" // Error - Modelo de aeronave inválido
-	MsgLicensePlateInvalidAirline = "MAT_VAL_ERR_03602" // Error - Aerolínea inválida
+	MsgTailNumberInvalidModel   = "MAT_VAL_ERR_03601" // Error - Modelo de aeronave inválido
+	MsgTailNumberInvalidAirline = "MAT_VAL_ERR_03602" // Error - Aerolínea inválida
 )
 
 // Aircraft Model Module (MOD_AM_*) - Modelo de Aeronave
@@ -584,7 +584,7 @@ var (
 	ErrFlightUnauthorized        = errors.New("ERR_FLIGHT_UNAUTHORIZED")
 	ErrFlightInvalidRoute        = errors.New("ERR_FLIGHT_INVALID_ROUTE")
 	ErrFlightInvalidLogbook      = errors.New("ERR_FLIGHT_INVALID_LOGBOOK")
-	ErrFlightInvalidLicensePlate = errors.New("ERR_FLIGHT_INVALID_LICENSE_PLATE")
+	ErrFlightInvalidTailNumber   = errors.New("ERR_FLIGHT_INVALID_TAIL_NUMBER")
 	ErrFlightInvalidTimeSequence = errors.New("ERR_FLIGHT_INVALID_TIME_SEQUENCE")
 	ErrFlightDuplicate           = errors.New("ERR_FLIGHT_DUPLICATE")
 )
@@ -658,7 +658,7 @@ const (
 	// ========================================
 	MsgFlightInvalidRoute        = "VUE_VAL_ERR_04805" // Error - Ruta de aerolínea inválida
 	MsgFlightInvalidLogbook      = "VUE_VAL_ERR_04806" // Error - Bitácora inválida
-	MsgFlightInvalidLicensePlate = "VUE_VAL_ERR_04807" // Error - Matrícula de aeronave inválida
+	MsgFlightInvalidTailNumber   = "VUE_VAL_ERR_04807" // Error - Matrícula de aeronave inválida
 	MsgFlightInvalidTimeSequence = "VUE_VAL_ERR_04808" // Error - Secuencia de tiempos inválida (out < takeoff < landing < in)
 
 	// ========================================
@@ -717,4 +717,26 @@ const (
 	// Validaciones - EMP_AIR_VAL_*
 	// ========================================
 	MsgAirlineEmployeeInvalidAirline = "EMP_AIR_VAL_ERR_02604" // Error - Aerolínea inválida
+)
+
+// Flight Summary Module (HVU_*) - Horas de Vuelo
+const (
+	// ========================================
+	// Consultar - HVU_CON_*
+	// ========================================
+	MsgFlightSummaryGetOK   = "HVU_CON_EXI_05101" // Éxito - Resumen de horas consultado
+	MsgFlightSummaryGetErr  = "HVU_CON_ERR_05102" // Error - Error técnico al consultar resumen
+	MsgFlightSummaryInvalid = "HVU_CON_ERR_05103" // Error - Período o fecha inválidos
+
+	// ========================================
+	// Alertas - HVU_ALR_*
+	// ========================================
+	MsgFlightAlertsGetOK  = "HVU_ALR_EXI_05201" // Éxito - Alertas consultadas
+	MsgFlightAlertsGetErr = "HVU_ALR_ERR_05202" // Error - Error técnico al consultar alertas
+
+	// ========================================
+	// Vuelos Recientes - HVU_REC_*
+	// ========================================
+	MsgRecentFlightsGetOK  = "HVU_REC_EXI_05301" // Éxito - Vuelos recientes consultados
+	MsgRecentFlightsGetErr = "HVU_REC_ERR_05302" // Error - Error técnico al consultar vuelos recientes
 )

@@ -12,7 +12,7 @@ const (
 	pathDeactivate = "/deactivate"
 
 	resourceDailyLogbooks    = "daily-logbooks"
-	resourceLicensePlates    = "license-plates"
+	resourceTailNumbers    = "tail-numbers"
 	resourceAircraftModels   = "aircraft-models"
 	resourceAirlineRoutes    = "airline-routes"
 	resourceAirlineEmployees = "airline-employees"
@@ -533,10 +533,10 @@ func BuildDailyLogbookDeletedLinks(baseURL string) []Link {
 // LICENSE PLATE HATEOAS LINKS
 // ============================================================================
 
-// BuildLicensePlateLinks construye links HATEOAS para una matrícula específica
-func BuildLicensePlateLinks(baseURL, registrationID string) []Link {
-	resourceURL := BuildResourceURL(baseURL, resourceLicensePlates, registrationID)
-	collectionURL := BuildCollectionURL(baseURL, resourceLicensePlates)
+// BuildTailNumberLinks construye links HATEOAS para una matrícula específica
+func BuildTailNumberLinks(baseURL, registrationID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, resourceTailNumbers, registrationID)
+	collectionURL := BuildCollectionURL(baseURL, resourceTailNumbers)
 
 	return []Link{
 		{
@@ -557,9 +557,9 @@ func BuildLicensePlateLinks(baseURL, registrationID string) []Link {
 	}
 }
 
-// BuildLicensePlateListLinks construye links para la lista de matrículas
-func BuildLicensePlateListLinks(baseURL string) []Link {
-	collectionURL := BuildCollectionURL(baseURL, "license-plates")
+// BuildTailNumberListLinks construye links para la lista de matrículas
+func BuildTailNumberListLinks(baseURL string) []Link {
+	collectionURL := BuildCollectionURL(baseURL, "tail-numbers")
 
 	return []Link{
 		{
@@ -575,10 +575,10 @@ func BuildLicensePlateListLinks(baseURL string) []Link {
 	}
 }
 
-// BuildLicensePlateCreatedLinks construye links para una matrícula recién creada
-func BuildLicensePlateCreatedLinks(baseURL, registrationID string) []Link {
-	resourceURL := BuildResourceURL(baseURL, resourceLicensePlates, registrationID)
-	collectionURL := BuildCollectionURL(baseURL, resourceLicensePlates)
+// BuildTailNumberCreatedLinks construye links para una matrícula recién creada
+func BuildTailNumberCreatedLinks(baseURL, registrationID string) []Link {
+	resourceURL := BuildResourceURL(baseURL, resourceTailNumbers, registrationID)
+	collectionURL := BuildCollectionURL(baseURL, resourceTailNumbers)
 
 	return []Link{
 		{

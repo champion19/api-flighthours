@@ -301,8 +301,8 @@ func TestWithValidateMethods(t *testing.T) {
 		ChangePasswordValidator:          schema,
 		AddAirlineEmployeeValidator:      schema,
 		UpdateAirlineEmployeeValidator:   schema,
-		CreateLicensePlateValidator:      schema,
-		UpdateLicensePlateValidator:      schema,
+		CreateTailNumberValidator:      schema,
+		UpdateTailNumberValidator:      schema,
 	}
 
 	builder := NewMiddlewareValidator(validators)
@@ -370,15 +370,15 @@ func TestWithValidateMethods(t *testing.T) {
 		}
 	})
 
-	t.Run("WithValidateCreateLicensePlate returns handler", func(t *testing.T) {
-		handler := builder.WithValidateCreateLicensePlate()
+	t.Run("WithValidateCreateTailNumber returns handler", func(t *testing.T) {
+		handler := builder.WithValidateCreateTailNumber()
 		if handler == nil {
 			t.Error("expected non-nil handler")
 		}
 	})
 
-	t.Run("WithValidateUpdateLicensePlate returns handler", func(t *testing.T) {
-		handler := builder.WithValidateUpdateLicensePlate()
+	t.Run("WithValidateUpdateTailNumber returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdateTailNumber()
 		if handler == nil {
 			t.Error("expected non-nil handler")
 		}

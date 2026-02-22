@@ -61,7 +61,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		DailyLogbookDetailInteractor: dependencies.DailyLogbookDetailInteractor,
 		DailyLogbookInteractor:       dependencies.DailyLogbookInteractor,
 		AircraftModelInteractor:      dependencies.AircraftModelInteractor,
-		LicensePlateInteractor:       dependencies.LicensePlateInteractor,
+		TailNumberInteractor:       dependencies.TailNumberInteractor,
+		FlightSummaryInteractor:      dependencies.FlightSummaryInteractor,
 	})
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -184,13 +185,13 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		protected.PATCH("/aircraft-models/:id/deactivate", handler.DeactivateAircraftModel())
 
-		protected.GET("/license-plates", handler.ListLicensePlates())
+		protected.GET("/tail-numbers", handler.ListTailNumbers())
 
-		protected.GET("/license-plates/:plate", handler.GetLicensePlateByPlate())
+		protected.GET("/tail-numbers/:plate", handler.GetTailNumberByPlate())
 
-		protected.POST("/license-plates", validator.WithValidateCreateLicensePlate(), handler.CreateLicensePlate())
+		protected.POST("/tail-numbers", validator.WithValidateCreateTailNumber(), handler.CreateTailNumber())
 
-		protected.PUT("/license-plates/:id", validator.WithValidateUpdateLicensePlate(), handler.UpdateLicensePlate())
+		protected.PUT("/tail-numbers/:id", validator.WithValidateUpdateTailNumber(), handler.UpdateTailNumber())
 
 		protected.GET("/daily-logbook-details/:id", handler.GetDailyLogbookDetail())
 
@@ -217,6 +218,12 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
 
 		protected.PATCH("/daily-logbooks/:id/deactivate", handler.DeactivateDailyLogbook())
+
+		protected.GET("/employees/flight-hours-summary", handler.GetFlightHoursSummary())
+
+		protected.GET("/employees/flight-alerts", handler.GetFlightAlerts())
+
+		protected.GET("/employees/recent-flights", handler.GetRecentFlights())
 
 	}
 	admin := app.Group("flighthours/api/v1/admin")

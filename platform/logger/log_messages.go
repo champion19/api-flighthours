@@ -697,27 +697,27 @@ const (
 // AIRCRAFT REGISTRATION INTERACTOR
 // ============================================
 const (
-	LogLicensePlateGet                  = "Obteniendo información de matrícula"
-	LogLicensePlateGetOK                = "Matrícula obtenida exitosamente"
-	LogLicensePlateGetError             = "Error obteniendo matrícula"
-	LogLicensePlateNotFound             = "Matrícula no encontrada"
-	LogLicensePlateCreate               = "Creando matrícula"
-	LogLicensePlateCreateOK             = "Matrícula creada exitosamente"
-	LogLicensePlateCreateError          = "Error creando matrícula"
-	LogLicensePlateUpdate               = "Actualizando matrícula"
-	LogLicensePlateUpdateOK             = "Matrícula actualizada exitosamente"
-	LogLicensePlateUpdateError          = "Error actualizando matrícula"
-	LogLicensePlateList                 = "Listando matrículas"
-	LogLicensePlateListOK               = "Matrículas listadas exitosamente"
-	LogLicensePlateListError            = "Error listando matrículas"
-	LogLicensePlateRepoInit             = "Inicializando repositorio de matrículas"
-	LogLicensePlateRepoInitOK           = "Repositorio de matrículas inicializado"
-	LogLicensePlateRepoInitError        = "Error inicializando repositorio de matrículas"
-	LogLicensePlateInvalidModelID       = "Formato inválido de aircraft_model_id"
-	LogLicensePlateInvalidAirlineID     = "Formato inválido de airline_id"
-	LogLicensePlateFetchAfterWriteError = "No se pudo obtener matrícula después de guardar"
-	LogLicensePlateRepoSaveError        = "SaveLicensePlate failed"
-	LogLicensePlateRepoUpdateError      = "UpdateLicensePlate failed"
+	LogTailNumberGet                  = "Obteniendo información de matrícula"
+	LogTailNumberGetOK                = "Matrícula obtenida exitosamente"
+	LogTailNumberGetError             = "Error obteniendo matrícula"
+	LogTailNumberNotFound             = "Matrícula no encontrada"
+	LogTailNumberCreate               = "Creando matrícula"
+	LogTailNumberCreateOK             = "Matrícula creada exitosamente"
+	LogTailNumberCreateError          = "Error creando matrícula"
+	LogTailNumberUpdate               = "Actualizando matrícula"
+	LogTailNumberUpdateOK             = "Matrícula actualizada exitosamente"
+	LogTailNumberUpdateError          = "Error actualizando matrícula"
+	LogTailNumberList                 = "Listando matrículas"
+	LogTailNumberListOK               = "Matrículas listadas exitosamente"
+	LogTailNumberListError            = "Error listando matrículas"
+	LogTailNumberRepoInit             = "Inicializando repositorio de matrículas"
+	LogTailNumberRepoInitOK           = "Repositorio de matrículas inicializado"
+	LogTailNumberRepoInitError        = "Error inicializando repositorio de matrículas"
+	LogTailNumberInvalidModelID       = "Formato inválido de aircraft_model_id"
+	LogTailNumberInvalidAirlineID     = "Formato inválido de airline_id"
+	LogTailNumberFetchAfterWriteError = "No se pudo obtener matrícula después de guardar"
+	LogTailNumberRepoSaveError        = "SaveTailNumber failed"
+	LogTailNumberRepoUpdateError      = "UpdateTailNumber failed"
 )
 
 // ============================================
@@ -965,4 +965,21 @@ const (
 	LogErrInvalidTransaction    = "invalid transaction type"
 	LogErrEmptyIDParam          = "empty id parameter"
 	LogErrEmployeeNoAirlineInfo = "employee has no airline info assigned"
+)
+
+// ============================================
+// FLIGHT SUMMARY (Dashboard)
+// ============================================
+const (
+	LogFlightSummaryGet           = "Consulting flight hours summary"
+	LogFlightSummaryGetOK         = "Flight hours summary obtained successfully"
+	LogFlightSummaryGetError      = "Error obtaining flight hours summary"
+	LogFlightSummaryRepoInit      = "Initializing flight summary repository"
+	LogFlightSummaryRepoInitOK    = "Flight summary repository initialized"
+	LogFlightSummaryRepoInitError = "Error initializing flight summary repository"
+	LogFlightSummaryAlerts        = "Evaluating flight alerts"
+	LogFlightSummaryAlertsOK      = "Flight alerts evaluated successfully"
+	LogFlightSummaryAlertsError   = "Error evaluating flight alerts"
+	LogFlightSummaryRecentFlights = "Fetching recent flights"
+	LogFlightSummaryPeriodCalc    = "Calculating period dates"
 )

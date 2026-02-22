@@ -19,7 +19,7 @@ type mockDailyLogbookDetailRepo struct {
 	saveFn              func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	updateFn            func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	beginTxFn           func(ctx context.Context) (output.Tx, error)
-	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
 	deleteFn            func(ctx context.Context, tx output.Tx, id string) error
 }
 
@@ -65,9 +65,9 @@ func (m *mockDailyLogbookDetailRepo) BeginTx(ctx context.Context) (output.Tx, er
 	return &mockTx{}, nil
 }
 
-func (m *mockDailyLogbookDetailRepo) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+func (m *mockDailyLogbookDetailRepo) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 	if m.existsByUniqueKeyFn != nil {
-		return m.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
+		return m.existsByUniqueKeyFn(ctx, employeeLogbookID, flightRealDate, flightNumber, tailNumberID)
 	}
 	return false, nil
 }
@@ -280,7 +280,7 @@ func TestDailyLogbookDetailService_UpdateTx(t *testing.T) {
 func TestDailyLogbookDetailService_ExistsByUniqueKey(t *testing.T) {
 	t.Run("exists returns true", func(t *testing.T) {
 		repo := &mockDailyLogbookDetailRepo{
-			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 				return true, nil
 			},
 		}
@@ -296,7 +296,7 @@ func TestDailyLogbookDetailService_ExistsByUniqueKey(t *testing.T) {
 
 	t.Run("not exists returns false", func(t *testing.T) {
 		repo := &mockDailyLogbookDetailRepo{
-			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 				return false, nil
 			},
 		}
@@ -312,7 +312,7 @@ func TestDailyLogbookDetailService_ExistsByUniqueKey(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		repo := &mockDailyLogbookDetailRepo{
-			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
+			existsByUniqueKeyFn: func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 				return false, errors.New("db error")
 			},
 		}

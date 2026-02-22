@@ -26,9 +26,10 @@ type handler struct {
 	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
-	LicensePlateInteractor       *interactor.LicensePlateInteractor
+	TailNumberInteractor       *interactor.TailNumberInteractor
 	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
+	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
 }
 
 type HandlerDeps struct {
@@ -48,7 +49,8 @@ type HandlerDeps struct {
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AirportInteractor            *interactor.AirportInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
-	LicensePlateInteractor       *interactor.LicensePlateInteractor
+	TailNumberInteractor       *interactor.TailNumberInteractor
+	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
 }
 
 func New(deps HandlerDeps) *handler {
@@ -69,7 +71,8 @@ func New(deps HandlerDeps) *handler {
 		ManufacturerInteractor:       deps.ManufacturerInteractor,
 		AirportInteractor:            deps.AirportInteractor,
 		AircraftModelInteractor:      deps.AircraftModelInteractor,
-		LicensePlateInteractor:       deps.LicensePlateInteractor,
+		TailNumberInteractor:       deps.TailNumberInteractor,
+		FlightSummaryInteractor:      deps.FlightSummaryInteractor,
 	}
 }
 

@@ -115,7 +115,7 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 
 	// Check for duplicate flight
 	if detail.EmployeeLogbookID != nil {
-		exists, err := i.service.ExistsByUniqueKey(ctx, *detail.EmployeeLogbookID, detail.FlightRealDate, detail.FlightNumber, detail.LicensePlateID)
+		exists, err := i.service.ExistsByUniqueKey(ctx, *detail.EmployeeLogbookID, detail.FlightRealDate, detail.FlightNumber, detail.TailNumberID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
 			return err
@@ -125,7 +125,7 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 				"employee_logbook_id", *detail.EmployeeLogbookID,
 				"flight_real_date", detail.FlightRealDate,
 				"flight_number", detail.FlightNumber,
-				"license_plate_id", detail.LicensePlateID)
+				"tail_number_id", detail.TailNumberID)
 			return domain.ErrFlightDuplicate
 		}
 	}
