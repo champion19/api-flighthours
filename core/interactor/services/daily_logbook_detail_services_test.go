@@ -171,13 +171,16 @@ func TestDailyLogbookDetailService_ValidateTimeSequence(t *testing.T) {
 	}{
 		{"valid HH:MM", "08:00", "08:15", "09:30", "09:45", false},
 		{"valid HH:MM:SS", "08:00:00", "08:15:00", "09:30:00", "09:45:00", false},
+		{"valid midnight crossing", "23:00", "23:15", "00:20", "00:30", false},
+		{"valid out equals takeoff", "08:00", "08:00", "09:30", "09:45", false},
+		{"valid landing equals in", "08:00", "08:15", "09:30", "09:30", false},
 		{"invalid out_time format", "bad", "08:15", "09:30", "09:45", true},
 		{"invalid takeoff_time format", "08:00", "bad", "09:30", "09:45", true},
 		{"invalid landing_time format", "08:00", "08:15", "bad", "09:45", true},
 		{"invalid in_time format", "08:00", "08:15", "09:30", "bad", true},
-		{"out not before takeoff", "09:00", "08:15", "09:30", "09:45", true},
-		{"takeoff not before landing", "08:00", "10:00", "09:30", "09:45", true},
-		{"landing not before in", "08:00", "08:15", "10:00", "09:45", true},
+		{"out after takeoff same day", "08:30", "08:15", "09:30", "09:45", true},
+		{"takeoff equals landing", "08:00", "09:30", "09:30", "09:45", true},
+		{"landing after in same day", "08:00", "08:15", "09:50", "09:45", true},
 	}
 
 	for _, tt := range tests {

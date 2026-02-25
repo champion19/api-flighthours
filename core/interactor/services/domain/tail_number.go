@@ -1,7 +1,7 @@
 package domain
 
 // TailNumber represents the aircraft registration domain model
-// It links a license plate (matrícula) with an aircraft model and an airline
+// It links a tail number (matrícula) with an aircraft model and an airline
 type TailNumber struct {
 	ID              string `json:"id"`
 	TailNumber    string `json:"tail_number"`

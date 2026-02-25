@@ -115,7 +115,7 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 
 		tailNumberUUID, _ := h.resolveID(req.TailNumberID)
 		if tailNumberUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid license plate ID")
+			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid tail number ID")
 			h.Response.Error(c, domain.MsgFlightInvalidTailNumber)
 			return
 		}
@@ -224,7 +224,7 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 
 		aircraftUUID, _ := h.resolveID(req.TailNumberID)
 		if aircraftUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid license plate ID")
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid tail number ID")
 			h.Response.Error(c, domain.MsgFlightInvalidTailNumber)
 			return
 		}

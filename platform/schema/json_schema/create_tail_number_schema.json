@@ -6,7 +6,7 @@
   "properties": {
     "tail_number": {
       "type": "string",
-      "description": "Aircraft license plate/registration number (e.g., HK-5432, CC-BFA)",
+      "description": "Aircraft registration number (e.g., HK-5432, CC-BFA)",
       "pattern": "^[A-Z0-9-]+$",
       "minLength": 1,
       "maxLength": 7

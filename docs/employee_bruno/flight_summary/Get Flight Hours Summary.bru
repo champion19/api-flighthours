@@ -5,37 +5,37 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/employees/flight-hours-summary?period=monthly
+  url: {{baseUrl}}/employees/flight-hours-summary?reference_date=2026-02-22
   body: none
   auth: bearer
+}
+
+params:query {
+  reference_date: 2026-02-22
+  ~period: monthly
+  ~start_date: 2026-01-01
+  ~end_date: 2026-01-31
 }
 
 auth:bearer {
   token: {{access-token}}
 }
 
-params:query {
-  period: monthly
-  ~start_date: 2026-01-01
-  ~end_date: 2026-01-31
-  ~reference_date: 2026-02-22
-}
-
 docs {
   # Get Flight Hours Summary
-
+  
   Returns total flight hours and breakdown by pilot role (PF, PM, PFTO, PFL),
   filtered by period.
-
+  
   ## Authentication
   Requires Bearer token (run Login first).
-
+  
   ## Query Parameters
   - `period` (required): `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual`, `custom`
   - `start_date` (optional): Start date (YYYY-MM-DD), **required if period=custom**
   - `end_date` (optional): End date (YYYY-MM-DD), **required if period=custom**
   - `reference_date` (optional): Reference date for period calculation (defaults to today)
-
+  
   ## Success Response (200)
   ```json
   {
@@ -53,7 +53,7 @@ docs {
     }
   }
   ```
-
+  
   ## Errors
   - 400: Invalid period or missing custom dates
   - 401: Not authenticated

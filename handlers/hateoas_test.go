@@ -194,21 +194,21 @@ func TestBuildAirportStatusLinks(t *testing.T) {
 func TestBuildTailNumberLinks(t *testing.T) {
 	links := BuildTailNumberLinks("http://localhost:8080/api/v1", "lp-1")
 	if len(links) == 0 {
-		t.Error("expected license plate links")
+		t.Error("expected tail number links")
 	}
 }
 
 func TestBuildTailNumberListLinks(t *testing.T) {
 	links := BuildTailNumberListLinks("http://localhost:8080/api/v1")
 	if len(links) == 0 {
-		t.Error("expected license plate list links")
+		t.Error("expected tail number list links")
 	}
 }
 
 func TestBuildTailNumberCreatedLinks(t *testing.T) {
 	links := BuildTailNumberCreatedLinks("http://localhost:8080/api/v1", "lp-1")
 	if len(links) == 0 {
-		t.Error("expected license plate created links")
+		t.Error("expected tail number created links")
 	}
 }
 

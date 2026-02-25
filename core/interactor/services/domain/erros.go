@@ -113,7 +113,7 @@ var (
 	ErrAirportNotFound = errors.New("ERR_AIRPORT_NOT_FOUND")
 )
 
-// License Plate Management Errors (MAT_*)
+// Tail Number Management Errors (MAT_*)
 var (
 	ErrTailNumberNotFound       = errors.New("ERR_TAIL_NUMBER_NOT_FOUND")
 	ErrTailNumberCannotSave     = errors.New("ERR_TAIL_NUMBER_CANNOT_SAVE")
@@ -366,7 +366,7 @@ const (
 	MsgAirportTypeGetErr   = "TAE_CON_ERR_04603" // Error - Error técnico al consultar
 )
 
-// Crew Member Type Module (TIN_*) - Tipo Integrante (HU44)
+// Crew Member Type Module (TIN_*) - Tipo Integrante
 const (
 	// ========================================
 	// Consultar  - TIN_CON_*
@@ -376,7 +376,7 @@ const (
 	MsgCrewMemberTypeGetErr   = "TIN_CON_ERR_04703" // Error - Error técnico al consultar
 )
 
-// License Plate Module (MAT_*) - Matrícula
+// Tail Number Module (MAT_*) - Matrícula
 const (
 	// ========================================
 	// Consultar - MAT_CON_*

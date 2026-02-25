@@ -12,12 +12,12 @@ const (
 	PilotRolePFL  PilotRole = "PFL"  // Pilot Flying Landing
 )
 
-// CrewRole represents the crew position (captain or copilot) in a flight segment
+// CrewRole represents the crew position (captain or first officer) in a flight segment
 type CrewRole string
 
 const (
-	CrewRoleCaptain CrewRole = "captain" // Capitán
-	CrewRoleCopilot CrewRole = "copilot" // Copiloto
+	CrewRoleCaptain      CrewRole = "captain"       // Capitán
+	CrewRoleFirstOfficer CrewRole = "first officer" // Primer Oficial
 )
 
 // ApproachType represents the type of approach during landing
@@ -32,7 +32,7 @@ const (
 var ValidPilotRoles = []PilotRole{PilotRolePF, PilotRolePM, PilotRolePFTO, PilotRolePFL}
 
 // ValidCrewRoles contains all valid crew roles
-var ValidCrewRoles = []CrewRole{CrewRoleCaptain, CrewRoleCopilot}
+var ValidCrewRoles = []CrewRole{CrewRoleCaptain, CrewRoleFirstOfficer}
 
 // ValidApproachTypes contains all valid approach types
 var ValidApproachTypes = []ApproachType{ApproachTypeAPV, ApproachTypeVisual}

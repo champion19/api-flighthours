@@ -12,9 +12,8 @@
     },
     "flight_number": {
       "type": "string",
-      "description": "Flight number (e.g., AV123)",
-      "minLength": 1,
-      "maxLength": 4
+      "description": "Flight number (numeric, up to 4 digits)",
+      "pattern": "^\\d{1,4}$"
     },
     "airline_route_id": {
       "type": "string",
@@ -65,15 +64,16 @@
     },
     "companion_name": {
       "type": "string",
-      "description": "Name of the companion pilot",
+      "description": "Name of the companion pilot (letters and spaces only)",
+      "pattern": "^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ ]+$",
       "maxLength": 100
     },
     "crew_role": {
       "type": "string",
-      "description": "Crew position: captain or copilot",
+      "description": "Crew position: captain or first officer",
       "enum": [
         "captain",
-        "copilot"
+        "first officer"
       ]
     },
     "air_time": {

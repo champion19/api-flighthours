@@ -89,9 +89,28 @@ func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, l
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	// Validate sequence: out < takeoff < landing < in
-	if !out.Before(takeoff) {
-		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "out_time must be before takeoff_time")
+	// Handle midnight-crossing flights:
+	// If a subsequent time is earlier than the previous AND the gap is large
+	// (more than 12 hours), it means the flight crossed midnight.
+	// Small backward gaps (e.g., 08:30 → 08:15) are real errors, not midnight.
+	day := 24 * time.Hour
+	halfDay := 12 * time.Hour
+
+	if takeoff.Before(out) && out.Sub(takeoff) > halfDay {
+		takeoff = takeoff.Add(day)
+	}
+
+	if landing.Before(takeoff) && takeoff.Sub(landing) > halfDay {
+		landing = landing.Add(day)
+	}
+
+	if in.Before(landing) && landing.Sub(in) > halfDay {
+		in = in.Add(day)
+	}
+
+	// Validate sequence: out <= takeoff < landing <= in
+	if !out.Before(takeoff) && !out.Equal(takeoff) {
+		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "out_time must be before or equal to takeoff_time")
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
@@ -100,8 +119,8 @@ func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, l
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	if !landing.Before(in) {
-		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "landing_time must be before in_time")
+	if !landing.Before(in) && !landing.Equal(in) {
+		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "landing_time must be before or equal to in_time")
 		return domain.ErrFlightInvalidTimeSequence
 	}
 

@@ -146,3 +146,10 @@ type FlightSummaryService interface {
 	CalculatePeriodDates(period, referenceDate string) (startDate, endDate string, err error)
 	BuildFlightAlerts(ctx context.Context, employeeID string) ([]domain.FlightAlert, error)
 }
+
+type EmployeeFlightSummaryService interface {
+	AccumulateFlightHours(ctx context.Context, tx output.Tx, employeeID string, detail domain.DailyLogbookDetail, isDeletion bool) error
+	GetSummariesByEmployee(ctx context.Context, employeeID, periodType string) ([]domain.EmployeeFlightSummary, error)
+	GetCurrentPeriodSummary(ctx context.Context, employeeID, periodType string, year, number int) (*domain.EmployeeFlightSummary, error)
+	GetAllSummaries(ctx context.Context, employeeID string) ([]domain.EmployeeFlightSummary, error)
+}

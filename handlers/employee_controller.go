@@ -572,7 +572,7 @@ func (h handler) UpdatePassword() gin.HandlerFunc {
 
 // GetCrewMemberTypes godoc
 // @Summary      Get crew member types
-// @Description  Returns the available crew member types (captain, copilot). Static catalog endpoint - no database query needed.
+// @Description  Returns the available crew member types (captain, first officer). Static catalog endpoint - no database query needed.
 // @Tags         Crew Member Types
 // @Produce      json
 // @Success      200  {object}  map[string]interface{}

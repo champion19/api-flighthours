@@ -86,7 +86,7 @@ func (f *fakeDailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.C
 func TestNewDailyLogbookDetailInteractor(t *testing.T) {
 	svc := &fakeDailyLogbookDetailService{}
 	logbookSvc := &fakeDailyLogbookService{}
-	inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+	inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 	if inter == nil {
 		t.Error("expected non-nil interactor")
 	}
@@ -100,7 +100,7 @@ func TestDailyLogbookDetailInteractor_GetByID(t *testing.T) {
 				return expected, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		result, err := inter.GetDailyLogbookDetailByID(context.Background(), "trace-1", "d-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -116,7 +116,7 @@ func TestDailyLogbookDetailInteractor_GetByID(t *testing.T) {
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		_, err := inter.GetDailyLogbookDetailByID(context.Background(), "trace-1", "d-1")
 		if err == nil {
 			t.Error("expected ErrFlightNotFound error")
@@ -129,7 +129,7 @@ func TestDailyLogbookDetailInteractor_GetByID(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		_, err := inter.GetDailyLogbookDetailByID(context.Background(), "trace-1", "d-1")
 		if err == nil {
 			t.Error("expected error")
@@ -149,7 +149,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 				return []domain.DailyLogbookDetail{{ID: "d-1"}, {ID: "d-2"}}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		result, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -166,7 +166,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 			},
 		}
 		svc := &fakeDailyLogbookDetailService{}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error for missing logbook")
@@ -180,7 +180,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 			},
 		}
 		svc := &fakeDailyLogbookDetailService{}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error")
@@ -194,7 +194,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 			},
 		}
 		svc := &fakeDailyLogbookDetailService{}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected unauthorized error")
@@ -212,7 +212,7 @@ func TestDailyLogbookDetailInteractor_ListByLogbook(t *testing.T) {
 				return nil, errors.New("list error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		_, err := inter.ListDailyLogbookDetailsByLogbook(context.Background(), "trace-1", "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected list error")
@@ -227,7 +227,7 @@ func TestDailyLogbookDetailInteractor_ListByEmployee(t *testing.T) {
 				return []domain.DailyLogbookDetail{{ID: "d-1"}}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		result, err := inter.ListDailyLogbookDetailsByEmployee(context.Background(), "trace-1", "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -243,7 +243,7 @@ func TestDailyLogbookDetailInteractor_ListByEmployee(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		_, err := inter.ListDailyLogbookDetailsByEmployee(context.Background(), "trace-1", "emp-1")
 		if err == nil {
 			t.Error("expected error")
@@ -263,7 +263,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1", DailyLogbookID: "lb-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
 		}, "emp-1")
@@ -283,7 +283,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			DailyLogbookID: "lb-1", OutTime: strPtr("10:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
 		}, "emp-1")
@@ -303,7 +303,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1", DailyLogbookID: "lb-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
 		}, "emp-1")
@@ -318,7 +318,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-other"}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			DailyLogbookID: "lb-1",
 		}, "emp-1")
@@ -339,7 +339,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			DailyLogbookID:    "lb-1",
 			EmployeeLogbookID: &empLbID,
@@ -364,7 +364,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			DailyLogbookID:    "lb-1",
 			EmployeeLogbookID: &empLbID,
@@ -392,7 +392,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			DailyLogbookID:    "lb-1",
 			EmployeeLogbookID: &empLbID,
@@ -416,7 +416,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1", DailyLogbookID: "lb-1",
 		}, "emp-1")
@@ -439,7 +439,7 @@ func TestDailyLogbookDetailInteractor_Create(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.CreateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			DailyLogbookID: "lb-1",
 		}, "emp-1")
@@ -464,7 +464,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
 		}, "emp-1")
@@ -479,7 +479,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1", OutTime: strPtr("08:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
 		}, "emp-1")
@@ -502,7 +502,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1", OutTime: strPtr("10:00"), TakeoffTime: strPtr("08:15"), LandingTime: strPtr("09:30"), InTime: strPtr("09:45"),
 		}, "emp-1")
@@ -522,7 +522,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-other"}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1",
 		}, "emp-1")
@@ -545,7 +545,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1",
 		}, "emp-1")
@@ -568,7 +568,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(svc, logbookSvc, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1",
 		}, "emp-1")
@@ -583,7 +583,7 @@ func TestDailyLogbookDetailInteractor_Update(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		err := inter.UpdateDailyLogbookDetail(context.Background(), "trace-1", domain.DailyLogbookDetail{
 			ID: "d-1",
 		}, "emp-1")
@@ -600,7 +600,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookOwnership(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookOwnership(context.Background(), "lb-1", "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -613,7 +613,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookOwnership(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookOwnership(context.Background(), "lb-1", "emp-other")
 		if err == nil {
 			t.Error("expected unauthorized error")
@@ -626,7 +626,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookOwnership(t *testing.T) {
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookOwnership(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error for missing logbook")
@@ -639,7 +639,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookOwnership(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookOwnership(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error")
@@ -654,7 +654,7 @@ func TestDailyLogbookDetailInteractor_GetLogbookOwner(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		owner, err := inter.GetLogbookOwner(context.Background(), "lb-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -670,7 +670,7 @@ func TestDailyLogbookDetailInteractor_GetLogbookOwner(t *testing.T) {
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		_, err := inter.GetLogbookOwner(context.Background(), "lb-1")
 		if err == nil {
 			t.Error("expected error")
@@ -683,7 +683,7 @@ func TestDailyLogbookDetailInteractor_GetLogbookOwner(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		_, err := inter.GetLogbookOwner(context.Background(), "lb-1")
 		if err == nil {
 			t.Error("expected error")
@@ -703,7 +703,7 @@ func TestDailyLogbookDetailInteractor_GetDetailLogbookOwner(t *testing.T) {
 				return &domain.DailyLogbook{ID: "lb-1", EmployeeID: "emp-1"}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(detailSvc, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(detailSvc, logbookSvc, nil)
 		owner, err := inter.GetDetailLogbookOwner(context.Background(), "d-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -719,7 +719,7 @@ func TestDailyLogbookDetailInteractor_GetDetailLogbookOwner(t *testing.T) {
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(detailSvc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(detailSvc, &fakeDailyLogbookService{}, nil)
 		_, err := inter.GetDetailLogbookOwner(context.Background(), "d-1")
 		if err == nil {
 			t.Error("expected error")
@@ -732,7 +732,7 @@ func TestDailyLogbookDetailInteractor_GetDetailLogbookOwner(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(detailSvc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(detailSvc, &fakeDailyLogbookService{}, nil)
 		_, err := inter.GetDetailLogbookOwner(context.Background(), "d-1")
 		if err == nil {
 			t.Error("expected error")
@@ -747,7 +747,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookActiveAndOwned(t *testing.T) 
 				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-1", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookActiveAndOwned(context.Background(), "lb-1", "emp-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -760,7 +760,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookActiveAndOwned(t *testing.T) 
 				return nil, errors.New("not found")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookActiveAndOwned(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error")
@@ -773,7 +773,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookActiveAndOwned(t *testing.T) 
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookActiveAndOwned(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected error for nil logbook")
@@ -786,7 +786,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookActiveAndOwned(t *testing.T) 
 				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-other", Status: true}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookActiveAndOwned(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected unauthorized error")
@@ -799,7 +799,7 @@ func TestDailyLogbookDetailInteractor_VerifyLogbookActiveAndOwned(t *testing.T) 
 				return &domain.DailyLogbook{ID: id, EmployeeID: "emp-1", Status: false}, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc)
+		inter := NewDailyLogbookDetailInteractor(&fakeDailyLogbookDetailService{}, logbookSvc, nil)
 		err := inter.VerifyLogbookActiveAndOwned(context.Background(), "lb-1", "emp-1")
 		if err == nil {
 			t.Error("expected inactive error")
@@ -817,7 +817,7 @@ func TestDailyLogbookDetailInteractor_Delete(t *testing.T) {
 				return nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -830,7 +830,7 @@ func TestDailyLogbookDetailInteractor_Delete(t *testing.T) {
 				return nil, nil
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
 		if err == nil {
 			t.Error("expected not found error")
@@ -843,7 +843,7 @@ func TestDailyLogbookDetailInteractor_Delete(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
 		if err == nil {
 			t.Error("expected error")
@@ -859,7 +859,7 @@ func TestDailyLogbookDetailInteractor_Delete(t *testing.T) {
 				return errors.New("delete error")
 			},
 		}
-		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{})
+		inter := NewDailyLogbookDetailInteractor(svc, &fakeDailyLogbookService{}, nil)
 		err := inter.DeleteDailyLogbookDetail(context.Background(), "trace-1", "d-1")
 		if err == nil {
 			t.Error("expected delete error")

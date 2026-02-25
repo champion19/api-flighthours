@@ -24,14 +24,15 @@ const (
 		  AND dld.flight_real_date <= ?
 		GROUP BY dld.pilot_role`
 
-	// Counts total landings (each flight detail = 1 landing) for a date range
+	// Counts landings (only PF and PFL roles count as landings) for a date range
 	QueryLandingCount = `
 		SELECT COUNT(*)
 		FROM daily_logbook_detail dld
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
 		WHERE dl.employee_id = ?
 		  AND dld.flight_real_date >= ?
-		  AND dld.flight_real_date <= ?`
+		  AND dld.flight_real_date <= ?
+		  AND dld.pilot_role IN ('PF', 'PFL')`
 
 	// Gets the sum of air_time (in seconds) for flights on a specific date to estimate consecutive hours
 	QueryDailyFlightSeconds = `

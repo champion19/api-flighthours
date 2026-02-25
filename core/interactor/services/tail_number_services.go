@@ -33,12 +33,12 @@ func (s *TailNumberService) ListTailNumbers(ctx context.Context, filters map[str
 	return s.repo.ListTailNumbers(ctx, filters)
 }
 
-// CreateTailNumberTx creates a license plate using an external transaction
+// CreateTailNumberTx creates a tail number using an external transaction
 func (s *TailNumberService) CreateTailNumberTx(ctx context.Context, tx output.Tx, registration domain.TailNumber) error {
 	return s.repo.SaveTailNumber(ctx, tx, registration)
 }
 
-// UpdateTailNumberTx updates a license plate using an external transaction
+// UpdateTailNumberTx updates a tail number using an external transaction
 func (s *TailNumberService) UpdateTailNumberTx(ctx context.Context, tx output.Tx, registration domain.TailNumber) error {
 	return s.repo.UpdateTailNumber(ctx, tx, registration)
 }

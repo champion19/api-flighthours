@@ -129,7 +129,7 @@ func newDailyLogbookDetailTestRouter(
 	errHandler *middleware.ErrorHandler,
 	authUser *domain.Employee,
 ) *gin.Engine {
-	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc)
+	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc, nil)
 	logbookInteractor := interactor.NewDailyLogbookInteractor(logbookSvc)
 	h := New(HandlerDeps{
 		EmployeeInteractor: &fakeEmployeeInteractor{},
@@ -687,7 +687,7 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		t.Logf("status: %d", w.Code)
 	})
 
-	t.Run("interactor invalid license plate error", func(t *testing.T) {
+	t.Run("interactor invalid tail number error", func(t *testing.T) {
 		logbookSvc := &fakeDailyLogbookService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
 				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
@@ -1311,7 +1311,7 @@ func TestFromDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 }
 
 func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
-	crewRole := "copilot"
+	crewRole := "first officer"
 	approachType := "VISUAL"
 	pilotRole := "PM"
 
@@ -1329,8 +1329,8 @@ func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
 
 	if detail.CrewRole == nil {
 		t.Error("expected CrewRole to be set")
-	} else if string(*detail.CrewRole) != "copilot" {
-		t.Errorf("expected CrewRole copilot, got %s", string(*detail.CrewRole))
+	} else if string(*detail.CrewRole) != "first officer" {
+		t.Errorf("expected CrewRole first officer, got %s", string(*detail.CrewRole))
 	}
 
 	if detail.ApproachType == nil {

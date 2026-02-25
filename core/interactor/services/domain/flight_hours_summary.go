@@ -29,23 +29,33 @@ type FlightAlert struct {
 	Threshold    int    `json:"threshold"`
 }
 
-// Alert types
+// Alert types — real regulatory rules
 const (
-	AlertTypeMaxConsecutiveHours = "MAX_CONSECUTIVE_HOURS"
-	AlertTypeMinMonthlyLandings  = "MIN_MONTHLY_LANDINGS"
+	AlertTypeHourLimit15Days  = "HOUR_LIMIT_15_DAYS"
+	AlertTypeHourLimitMonthly = "HOUR_LIMIT_MONTHLY"
+	AlertTypeHourLimitQuarter = "HOUR_LIMIT_QUARTERLY"
+	AlertTypeHourLimitAnnual  = "HOUR_LIMIT_ANNUAL"
+	AlertTypeMinLandings90D   = "MIN_LANDINGS_90_DAYS"
 )
 
 // Alert severities
 const (
 	AlertSeverityWarning = "WARNING"
 	AlertSeverityInfo    = "INFO"
+	AlertSeverityNotice  = "NOTICE" // Neutral/gray — informational, no stress
 )
 
-// Default thresholds (until flight_limitation table is populated)
+// Regulatory flight hour limits (in minutes)
 const (
-	DefaultMaxConsecutiveMinutes = 600 // 10 hours
-	DefaultMinMonthlyLandings    = 3
+	LimitHours15Days  = 50 * 60   // 3000 min = 50h max in a 15-day calendar period
+	LimitHoursMonthly = 90 * 60   // 5400 min = 90h max in a calendar month
+	LimitHoursQuarter = 270 * 60  // 16200 min = 270h max in a calendar quarter
+	LimitHoursAnnual  = 1000 * 60 // 60000 min = 1000h max in a calendar year
+	MinLandings90Days = 3         // 3 landings in 90 rolling days for PF/PFL
 )
+
+// AlertWarningPercent is the threshold percentage at which INFO alerts are triggered
+const AlertWarningPercent = 80
 
 // Valid period types for flight hours summary
 const (

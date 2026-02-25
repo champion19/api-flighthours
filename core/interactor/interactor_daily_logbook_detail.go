@@ -14,17 +14,20 @@ import (
 // This is the CORE interactor for flight segment tracking
 type DailyLogbookDetailInteractor struct {
 	service        input.DailyLogbookDetailService
-	logbookService input.DailyLogbookService // For ownership verification
+	logbookService input.DailyLogbookService          // For ownership verification
+	summaryService input.EmployeeFlightSummaryService // For hours accumulation
 }
 
 // NewDailyLogbookDetailInteractor creates a new DailyLogbookDetailInteractor
 func NewDailyLogbookDetailInteractor(
 	service input.DailyLogbookDetailService,
 	logbookService input.DailyLogbookService,
+	summaryService input.EmployeeFlightSummaryService,
 ) *DailyLogbookDetailInteractor {
 	return &DailyLogbookDetailInteractor{
 		service:        service,
 		logbookService: logbookService,
+		summaryService: summaryService,
 	}
 }
 
@@ -132,7 +135,17 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 
 	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailCreateError,
 		func(ctx context.Context, tx output.Tx) error {
-			return i.service.CreateDailyLogbookDetailTx(ctx, tx, detail)
+			if err := i.service.CreateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
+				return err
+			}
+			// Accumulate flight hours in the same transaction
+			if i.summaryService != nil {
+				if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, detail, false); err != nil {
+					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "accumulate_on_create", "error", err)
+					// Don't fail the create if accumulation fails — log and continue
+				}
+			}
+			return nil
 		})
 	if err != nil {
 		return err
@@ -176,7 +189,22 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 
 	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailUpdateError,
 		func(ctx context.Context, tx output.Tx) error {
-			return i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail)
+			// First, reverse the old detail's accumulation
+			if i.summaryService != nil {
+				if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, *existing, true); err != nil {
+					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "reverse_on_update", "error", err)
+				}
+			}
+			if err := i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
+				return err
+			}
+			// Then, accumulate the new detail
+			if i.summaryService != nil {
+				if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, detail, false); err != nil {
+					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "accumulate_on_update", "error", err)
+				}
+			}
+			return nil
 		})
 	if err != nil {
 		return err
@@ -203,7 +231,16 @@ func (i *DailyLogbookDetailInteractor) DeleteDailyLogbookDetail(ctx context.Cont
 
 	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailDeleteError,
 		func(ctx context.Context, tx output.Tx) error {
-			return i.service.DeleteDailyLogbookDetailTx(ctx, tx, id)
+			if err := i.service.DeleteDailyLogbookDetailTx(ctx, tx, id); err != nil {
+				return err
+			}
+			// Reverse the deleted detail's accumulation
+			if i.summaryService != nil {
+				if err := i.summaryService.AccumulateFlightHours(ctx, tx, "", *existing, true); err != nil {
+					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "reverse_on_delete", "error", err)
+				}
+			}
+			return nil
 		})
 	if err != nil {
 		return err

@@ -45,8 +45,8 @@ var fieldNameMapping = map[string]string{
 	"airline_id": "Airline",
 	"bp":         "BP Number",
 
-	// License Plate
-	"tail_number":     "License Plate",
+	// Tail Number
+	"tail_number":     "Tail Number",
 	"aircraft_model_id": "Aircraft Model",
 
 	// Daily Logbook
@@ -55,7 +55,7 @@ var fieldNameMapping = map[string]string{
 
 	// Daily Logbook Detail (Flight)
 	"airline_route_id": "Airline Route",
-	"tail_number_id": "Aircraft License Plate",
+	"tail_number_id": "Aircraft Tail Number",
 	"flight_number":    "Flight Number",
 	"flight_real_date": "Flight Date",
 	"flight_type":      "Flight Type",

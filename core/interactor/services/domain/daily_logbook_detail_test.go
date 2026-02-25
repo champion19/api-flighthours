@@ -108,7 +108,7 @@ func TestIsValidCrewRole(t *testing.T) {
 		want bool
 	}{
 		{"captain", "captain", true},
-		{"copilot", "copilot", true},
+		{"first officer", "first officer", true},
 		{"empty is valid", "", true},
 		{"invalid", "navigator", false},
 		{"case sensitive", "Captain", false},

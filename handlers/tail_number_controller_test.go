@@ -81,11 +81,11 @@ func newTestTailNumberMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 
 	repo := fakeMessageCacheRepo{messages: []cachetypes.CachedMessage{
-		{Code: domain.MsgTailNumberGetOK, Type: cachetypes.TypeSuccess, Content: "license plate found"},
-		{Code: domain.MsgTailNumberNotFound, Type: cachetypes.TypeError, Content: "license plate not found"},
-		{Code: domain.MsgTailNumberListOK, Type: cachetypes.TypeSuccess, Content: "license plates listed"},
-		{Code: domain.MsgTailNumberCreated, Type: cachetypes.TypeSuccess, Content: "license plate created"},
-		{Code: domain.MsgTailNumberUpdated, Type: cachetypes.TypeSuccess, Content: "license plate updated"},
+		{Code: domain.MsgTailNumberGetOK, Type: cachetypes.TypeSuccess, Content: "tail number found"},
+		{Code: domain.MsgTailNumberNotFound, Type: cachetypes.TypeError, Content: "tail number not found"},
+		{Code: domain.MsgTailNumberListOK, Type: cachetypes.TypeSuccess, Content: "tail numbers listed"},
+		{Code: domain.MsgTailNumberCreated, Type: cachetypes.TypeSuccess, Content: "tail number created"},
+		{Code: domain.MsgTailNumberUpdated, Type: cachetypes.TypeSuccess, Content: "tail number updated"},
 		{Code: domain.MsgServerError, Type: cachetypes.TypeError, Content: "internal server error"},
 		{Code: domain.MsgValIDInvalid, Type: cachetypes.TypeError, Content: "invalid id"},
 	}}
@@ -126,7 +126,7 @@ func TestHTTP_GetTailNumberByPlate(t *testing.T) {
 		t.Fatalf("failed to create encoder: %v", err)
 	}
 
-	t.Run("success - returns license plate by plate number", func(t *testing.T) {
+	t.Run("success - returns tail number by plate number", func(t *testing.T) {
 		testUUID := "550e8400-e29b-41d4-a716-446655440000"
 		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
 		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
@@ -296,7 +296,7 @@ func TestHTTP_CreateTailNumber(t *testing.T) {
 		t.Fatalf("failed to create encoder: %v", err)
 	}
 
-	t.Run("success - creates license plate", func(t *testing.T) {
+	t.Run("success - creates tail number", func(t *testing.T) {
 		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
 		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"
 		encodedModelID, _ := enc.Encode(modelUUID)
@@ -414,7 +414,7 @@ func TestHTTP_UpdateTailNumber(t *testing.T) {
 		t.Fatalf("failed to create encoder: %v", err)
 	}
 
-	t.Run("success - updates license plate", func(t *testing.T) {
+	t.Run("success - updates tail number", func(t *testing.T) {
 		testUUID := "550e8400-e29b-41d4-a716-446655440000"
 		modelUUID := "550e8400-e29b-41d4-a716-446655440001"
 		airlineUUID := "550e8400-e29b-41d4-a716-446655440002"

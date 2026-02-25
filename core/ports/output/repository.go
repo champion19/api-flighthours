@@ -123,3 +123,11 @@ type FlightSummaryRepository interface {
 	GetLandingCount(ctx context.Context, employeeID, startDate, endDate string) (int, error)
 	GetDailyFlightSeconds(ctx context.Context, employeeID, date string) (int, error)
 }
+
+type EmployeeFlightSummaryRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	UpsertSummary(ctx context.Context, tx Tx, employeeID string, period domain.PeriodInfo, airTimeDelta, blockTimeDelta, flightsDelta, landingsDelta int) error
+	GetSummariesByEmployee(ctx context.Context, employeeID, periodType string) ([]domain.EmployeeFlightSummary, error)
+	GetCurrentPeriodSummary(ctx context.Context, employeeID, periodType string, year, number int) (*domain.EmployeeFlightSummary, error)
+	GetAllSummaries(ctx context.Context, employeeID string) ([]domain.EmployeeFlightSummary, error)
+}

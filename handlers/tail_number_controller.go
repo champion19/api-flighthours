@@ -11,12 +11,12 @@ import (
 )
 
 // GetTailNumberByPlate godoc
-// @Summary      Get aircraft registration by license plate number
-// @Description  Returns aircraft registration information by its plate number (e.g. HK-5432)
-// @Tags         License Plates
+// @Summary      Get aircraft registration by tail number
+// @Description  Returns aircraft registration information by its tail number (e.g. HK-5432)
+// @Tags         Tail Numbers
 // @Accept       json
 // @Produce      json
-// @Param        plate   path      string  true  "License Plate number (e.g. HK-5432)"
+// @Param        plate   path      string  true  "Tail number (e.g. HK-5432)"
 // @Success      200  {object}  TailNumberResponse
 // @Failure      400  {object}  map[string]interface{}
 // @Failure      404  {object}  map[string]interface{}
@@ -62,10 +62,10 @@ func (h *handler) GetTailNumberByPlate() gin.HandlerFunc {
 // ListTailNumbers godoc
 // @Summary      List all aircraft registrations
 // @Description  Returns a list of all aircraft registrations with optional filters
-// @Tags         License Plates
+// @Tags         Tail Numbers
 // @Produce      json
 // @Param        airline_id    query string false "Filter by airline ID"
-// @Param        tail_number query string false "Filter by license plate"
+// @Param        tail_number query string false "Filter by tail number"
 // @Success      200  {object}  TailNumberListResponse
 // @Failure      500  {object}  map[string]interface{}
 // @Router       /tail-numbers [get]
@@ -103,11 +103,11 @@ func (h *handler) ListTailNumbers() gin.HandlerFunc {
 
 // CreateTailNumber godoc
 // @Summary      Create a new aircraft registration
-// @Description  Creates a new aircraft registration (license plate must be unique)
-// @Tags         License Plates
+// @Description  Creates a new aircraft registration (tail number must be unique)
+// @Tags         Tail Numbers
 // @Accept       json
 // @Produce      json
-// @Param        request body CreateTailNumberRequest true "License Plate data"
+// @Param        request body CreateTailNumberRequest true "Aircraft registration data"
 // @Success      201  {object}  TailNumberResponse
 // @Failure      400  {object}  map[string]interface{}
 // @Failure      409  {object}  map[string]interface{}
@@ -181,11 +181,11 @@ func (h *handler) CreateTailNumber() gin.HandlerFunc {
 // UpdateTailNumber godoc
 // @Summary      Update an existing aircraft registration
 // @Description  Updates an aircraft registration by ID (accepts both UUID and obfuscated ID)
-// @Tags         License Plates
+// @Tags         Tail Numbers
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "License Plate ID (obfuscated ID)"
-// @Param        request body UpdateTailNumberRequest true "License Plate data"
+// @Param        id   path      string  true  "Tail Number ID (obfuscated ID)"
+// @Param        request body UpdateTailNumberRequest true "Aircraft registration data"
 // @Success      200  {object}  TailNumberResponse
 // @Failure      400  {object}  map[string]interface{}
 // @Failure      404  {object}  map[string]interface{}

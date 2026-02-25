@@ -12,7 +12,7 @@ const (
 	pathDeactivate = "/deactivate"
 
 	resourceDailyLogbooks    = "daily-logbooks"
-	resourceTailNumbers    = "tail-numbers"
+	resourceTailNumbers      = "tail-numbers"
 	resourceAircraftModels   = "aircraft-models"
 	resourceAirlineRoutes    = "airline-routes"
 	resourceAirlineEmployees = "airline-employees"
@@ -530,7 +530,7 @@ func BuildDailyLogbookDeletedLinks(baseURL string) []Link {
 }
 
 // ============================================================================
-// LICENSE PLATE HATEOAS LINKS
+// TAIL NUMBER HATEOAS LINKS
 // ============================================================================
 
 // BuildTailNumberLinks construye links HATEOAS para una matrícula específica

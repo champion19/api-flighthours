@@ -1220,7 +1220,7 @@ const docTemplate = `{
         },
         "/crew-member-types": {
             "get": {
-                "description": "Returns the available crew member types (captain, copilot). Static catalog endpoint - no database query needed.",
+                "description": "Returns the available crew member types (captain, first officer). Static catalog endpoint - no database query needed.",
                 "produces": [
                     "application/json"
                 ],
@@ -1325,6 +1325,53 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a flight segment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DailyLogbookDetails"
+                ],
+                "summary": "Delete daily logbook detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Detail ID (obfuscated or UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
@@ -2330,6 +2377,113 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/flight-alerts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns active alerts (e.g., max consecutive hours, min landings)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flight Summary"
+                ],
+                "summary": "Get flight alerts for the authenticated employee",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.FlightAlertsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/flight-hours-summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns total flight hours and breakdown by pilot role, filtered by period",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flight Summary"
+                ],
+                "summary": "Get flight hours summary for the authenticated employee",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Period type: monthly, bimonthly, quarterly, semiannual, annual, custom",
+                        "name": "period",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD), required if period=custom",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD), required if period=custom",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Reference date for period calculation (defaults to today)",
+                        "name": "reference_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.FlightHoursSummaryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/flights": {
             "get": {
                 "security": [
@@ -2360,6 +2514,46 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/recent-flights": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the 5 most recent flights ordered by date descending",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flight Summary"
+                ],
+                "summary": "Get the last 5 flights for the authenticated employee",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.DailyLogbookDetailResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/middleware.APIResponse"
                         }
@@ -2422,215 +2616,6 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/license-plates": {
-            "get": {
-                "description": "Returns a list of all aircraft registrations with optional filters",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "License Plates"
-                ],
-                "summary": "List all aircraft registrations",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by airline ID",
-                        "name": "airline_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by license plate",
-                        "name": "license_plate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LicensePlateListResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Creates a new aircraft registration (license plate must be unique)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "License Plates"
-                ],
-                "summary": "Create a new aircraft registration",
-                "parameters": [
-                    {
-                        "description": "License Plate data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateLicensePlateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LicensePlateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/license-plates/{id}": {
-            "put": {
-                "description": "Updates an aircraft registration by ID (accepts both UUID and obfuscated ID)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "License Plates"
-                ],
-                "summary": "Update an existing aircraft registration",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "License Plate ID (obfuscated ID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "License Plate data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateLicensePlateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LicensePlateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/license-plates/{plate}": {
-            "get": {
-                "description": "Returns aircraft registration information by its plate number (e.g. HK-5432)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "License Plates"
-                ],
-                "summary": "Get aircraft registration by license plate number",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "License Plate number (e.g. HK-5432)",
-                        "name": "plate",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LicensePlateResponse"
                         }
                     },
                     "400": {
@@ -3273,6 +3258,215 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/tail-numbers": {
+            "get": {
+                "description": "Returns a list of all aircraft registrations with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tail Numbers"
+                ],
+                "summary": "List all aircraft registrations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by airline ID",
+                        "name": "airline_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by tail number",
+                        "name": "tail_number",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TailNumberListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new aircraft registration (tail number must be unique)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tail Numbers"
+                ],
+                "summary": "Create a new aircraft registration",
+                "parameters": [
+                    {
+                        "description": "Aircraft registration data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateTailNumberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TailNumberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/tail-numbers/{id}": {
+            "put": {
+                "description": "Updates an aircraft registration by ID (accepts both UUID and obfuscated ID)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tail Numbers"
+                ],
+                "summary": "Update an existing aircraft registration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tail Number ID (obfuscated ID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Aircraft registration data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTailNumberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TailNumberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/tail-numbers/{plate}": {
+            "get": {
+                "description": "Returns aircraft registration information by its tail number (e.g. HK-5432)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tail Numbers"
+                ],
+                "summary": "Get aircraft registration by tail number",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tail number (e.g. HK-5432)",
+                        "name": "plate",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.TailNumberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -3583,10 +3777,6 @@ const docTemplate = `{
                     "description": "nullable",
                     "type": "string"
                 },
-                "duty_time": {
-                    "description": "TIME format HH:MM (nullable)",
-                    "type": "string"
-                },
                 "flight_number": {
                     "type": "string"
                 },
@@ -3604,9 +3794,6 @@ const docTemplate = `{
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
-                "license_plate_id": {
-                    "type": "string"
-                },
                 "out_time": {
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
@@ -3616,6 +3803,9 @@ const docTemplate = `{
                 },
                 "pilot_role": {
                     "description": "nullable",
+                    "type": "string"
+                },
+                "tail_number_id": {
                     "type": "string"
                 },
                 "takeoff_time": {
@@ -3638,29 +3828,12 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UpdateDailyLogbookRequest": {
-            "type": "object",
-            "required": [
-                "log_date"
-            ],
-            "properties": {
-                "book_page": {
-                    "type": "integer"
-                },
-                "log_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "handlers.CreateLicensePlateRequest": {
+        "handlers.CreateTailNumberRequest": {
             "type": "object",
             "required": [
                 "aircraft_model_id",
                 "airline_id",
-                "license_plate"
+                "tail_number"
             ],
             "properties": {
                 "aircraft_model_id": {
@@ -3669,7 +3842,7 @@ const docTemplate = `{
                 "airline_id": {
                     "type": "string"
                 },
-                "license_plate": {
+                "tail_number": {
                     "type": "string"
                 }
             }
@@ -3727,9 +3900,6 @@ const docTemplate = `{
                 "destination_iata_code": {
                     "type": "string"
                 },
-                "duty_time": {
-                    "type": "string"
-                },
                 "flight_number": {
                     "type": "string"
                 },
@@ -3746,12 +3916,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "landing_time": {
-                    "type": "string"
-                },
-                "license_plate": {
-                    "type": "string"
-                },
-                "license_plate_id": {
                     "type": "string"
                 },
                 "log_date": {
@@ -3773,6 +3937,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "route_code": {
+                    "type": "string"
+                },
+                "tail_number": {
+                    "type": "string"
+                },
+                "tail_number_id": {
                     "type": "string"
                 },
                 "takeoff_time": {
@@ -3958,55 +4128,63 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.LicensePlateListResponse": {
+        "handlers.FlightAlertResponse": {
             "type": "object",
             "properties": {
-                "_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.Link"
-                    }
-                },
-                "registrations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.LicensePlateResponse"
-                    }
-                },
-                "total": {
+                "current_value": {
                     "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
-        "handlers.LicensePlateResponse": {
+        "handlers.FlightAlertsResponse": {
             "type": "object",
             "properties": {
-                "_links": {
+                "alerts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handlers.Link"
+                        "$ref": "#/definitions/handlers.FlightAlertResponse"
+                    }
+                }
+            }
+        },
+        "handlers.FlightHoursSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "breakdown": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
                     }
                 },
-                "aircraft_model_id": {
+                "end_date": {
                     "type": "string"
                 },
-                "airline_id": {
+                "period": {
                     "type": "string"
                 },
-                "airline_name": {
-                    "description": "Aerolínea (denormalized)",
+                "start_date": {
                     "type": "string"
                 },
-                "id": {
+                "total_flights": {
+                    "type": "integer"
+                },
+                "total_hours": {
                     "type": "string"
                 },
-                "license_plate": {
-                    "description": "Numero de Matrícula",
-                    "type": "string"
-                },
-                "model_name": {
-                    "description": "Modelo (denormalized)",
-                    "type": "string"
+                "total_landings": {
+                    "type": "integer"
                 }
             }
         },
@@ -4329,6 +4507,58 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.TailNumberListResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "registrations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.TailNumberResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.TailNumberResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.Link"
+                    }
+                },
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "airline_name": {
+                    "description": "Aerolínea (denormalized)",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "model_name": {
+                    "description": "Modelo (denormalized)",
+                    "type": "string"
+                },
+                "tail_number": {
+                    "description": "Numero de Matrícula",
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UpdateDailyLogbookDetailRequest": {
             "type": "object",
             "properties": {
@@ -4353,10 +4583,6 @@ const docTemplate = `{
                     "description": "nullable",
                     "type": "string"
                 },
-                "duty_time": {
-                    "description": "TIME format HH:MM (nullable)",
-                    "type": "string"
-                },
                 "flight_number": {
                     "type": "string"
                 },
@@ -4374,9 +4600,6 @@ const docTemplate = `{
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
-                "license_plate_id": {
-                    "type": "string"
-                },
                 "out_time": {
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
@@ -4388,9 +4611,29 @@ const docTemplate = `{
                     "description": "nullable",
                     "type": "string"
                 },
+                "tail_number_id": {
+                    "type": "string"
+                },
                 "takeoff_time": {
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateDailyLogbookRequest": {
+            "type": "object",
+            "required": [
+                "log_date"
+            ],
+            "properties": {
+                "book_page": {
+                    "type": "integer"
+                },
+                "log_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
                 }
             }
         },
@@ -4472,25 +4715,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UpdateLicensePlateRequest": {
-            "type": "object",
-            "required": [
-                "aircraft_model_id",
-                "airline_id",
-                "license_plate"
-            ],
-            "properties": {
-                "aircraft_model_id": {
-                    "type": "string"
-                },
-                "airline_id": {
-                    "type": "string"
-                },
-                "license_plate": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.UpdatePasswordRequest": {
             "type": "object",
             "required": [
@@ -4520,6 +4744,25 @@ const docTemplate = `{
                 },
                 "updated": {
                     "type": "boolean"
+                }
+            }
+        },
+        "handlers.UpdateTailNumberRequest": {
+            "type": "object",
+            "required": [
+                "aircraft_model_id",
+                "airline_id",
+                "tail_number"
+            ],
+            "properties": {
+                "aircraft_model_id": {
+                    "type": "string"
+                },
+                "airline_id": {
+                    "type": "string"
+                },
+                "tail_number": {
+                    "type": "string"
                 }
             }
         },
