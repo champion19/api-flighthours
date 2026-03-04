@@ -146,13 +146,15 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
 
+	// ── Authenticated endpoints (any role) ─(Employee)─────────────────────────────
+	protected.GET("/employees", handler.GetEmployee())
+
 	// ── Pilot-only endpoints (role: "pilot") ────────────────────────────
 	pilot := protected.Group("")
 	pilot.Use(middleware.RequireRole("pilot"))
 	{
 		// Employee management (HU17, HU18, HU20, HU22, HU23)
 		pilot.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
-		pilot.GET("/employees", handler.GetEmployee())
 		pilot.PUT("/employees", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
 		pilot.DELETE("/employees", handler.DeleteEmployee())
 
