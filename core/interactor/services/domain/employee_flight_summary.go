@@ -17,7 +17,6 @@ type EmployeeFlightSummary struct {
 	PeriodEnd       string `json:"period_end"`
 	TotalAirTime    int    `json:"total_air_time"`   // minutes
 	TotalBlockTime  int    `json:"total_block_time"` // minutes
-	TotalDutyTime   int    `json:"total_duty_time"`  // minutes
 	TotalFlights    int    `json:"total_flights"`
 	TotalLandings   int    `json:"total_landings"`
 	CatApproaches   int    `json:"cat_approaches"`

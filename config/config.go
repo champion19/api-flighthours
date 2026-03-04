@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/tools/utils"
@@ -20,6 +22,24 @@ type Config struct {
 	Verification Verification    `json:"verification"`
 	Keycloak     KeycloakConfig  `json:"keycloak"`
 	IDEncoder    IDEncoderConfig `json:"id_encoder"`
+	Cookie       CookieConfig    `json:"cookie"`
+}
+
+type CookieConfig struct {
+	Domain   string `json:"domain"`
+	Secure   bool   `json:"secure"`
+	SameSite string `json:"same_site"`
+}
+
+func (c *CookieConfig) GetSameSiteMode() http.SameSite {
+	switch strings.ToLower(c.SameSite) {
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
 
 type Verification struct {
@@ -73,7 +93,7 @@ func LoadConfig() (*Config, error) {
 	// Load .env file from project root (non-fatal if not found)
 	envPath := filepath.Join(root, ".env")
 	if err := godotenv.Load(envPath); err != nil {
-		slog.Warn("No .env file found, using system environment variables",
+		slog.Warn(logger.LogConfigEnvFileNotFound,
 			slog.String("path", envPath))
 	}
 
@@ -143,6 +163,14 @@ func LoadConfig() (*Config, error) {
 	// Override database password from env var
 	if dbPass := os.Getenv("DB_PASSWORD"); dbPass != "" {
 		config.Database.Password = dbPass
+	}
+
+	// Override cookie config from env vars
+	if cookieDomain := os.Getenv("COOKIE_DOMAIN"); cookieDomain != "" {
+		config.Cookie.Domain = cookieDomain
+	}
+	if cookieSecure := os.Getenv("COOKIE_SECURE"); cookieSecure == "true" {
+		config.Cookie.Secure = true
 	}
 
 	slog.Info(logger.LogAppConfigLoaded,

@@ -50,17 +50,22 @@ func RequireAuth(employeeService input.Service, msgCache *messaging.MessageCache
 }
 
 func extractBearerToken(c *gin.Context) (string, error) {
+	// 1. Try Authorization header first (mobile / API clients)
 	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			return parts[1], nil
+		}
 		return "", domain.ErrInvalidToken
 	}
 
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", domain.ErrInvalidToken
+	// 2. Fallback: try fh_access_token cookie (web clients)
+	if cookieToken, err := c.Cookie("fh_access_token"); err == nil && cookieToken != "" {
+		return cookieToken, nil
 	}
 
-	return parts[1], nil
+	return "", domain.ErrInvalidToken
 }
 
 func resolveTokenClaims(token string, jwtValidator output.TokenValidator, tokenParser *jwt.TokenParser) (map[string]interface{}, error) {

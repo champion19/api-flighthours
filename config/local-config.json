@@ -34,5 +34,10 @@
   "id_encoder": {
     "secret": "${ID_ENCODER_SECRET}",
     "min_length": 10
+  },
+  "cookie": {
+    "domain": "",
+    "secure": true,
+    "same_site": "none"
   }
 }

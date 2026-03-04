@@ -9,6 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// fallbackInternalErrorMessage is the message returned when no system_messages entry exists
+const fallbackInternalErrorMessage = "Internal server error"
+
 var errorToMessageCode = map[error]string{
 	domain.ErrDuplicateUser:             domain.MsgUserDuplicate,
 	domain.ErrUserCannotSave:            domain.MsgUserCannotSave,
@@ -171,7 +174,7 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Success: false,
 			Code:    domain.MsgServerError,
-			Message: "Error interno del servidor",
+			Message: fallbackInternalErrorMessage,
 		})
 	}
 

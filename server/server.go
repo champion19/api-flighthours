@@ -2,11 +2,13 @@ package server
 
 import (
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/champion19/api-flighthours/cmd/dependency"
 	"github.com/champion19/api-flighthours/handlers"
 	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/cookie"
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/platform/schema"
 	_ "github.com/champion19/api-flighthours/platform/swaggo"
@@ -23,15 +25,19 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	log.Info(logger.LogRouteConfiguring)
 
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:8081", "http://localhost:3001"},
+		AllowOriginFunc: func(origin string) bool {
+			// In development: allow any localhost port (Flutter Web, browser, etc.)
+			return strings.HasPrefix(origin, "http://localhost") ||
+				strings.HasPrefix(origin, "http://127.0.0.1")
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"},
-		ExposeHeaders:    []string{"Content-Length", "Location"},
+		ExposeHeaders:    []string{"Content-Length", "Location", "Set-Cookie"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
 	app.Use(cors.New(corsConfig))
-	log.Info("CORS middleware configured")
+	log.Info(logger.LogAppCORSConfigured)
 
 	app.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
@@ -44,11 +50,14 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	errorHandler := middleware.NewErrorHandler(dependencies.MessagingCache)
 	app.Use(errorHandler.Handle())
 
+	cookieManager := cookie.NewManager(dependencies.Config.Cookie)
+
 	handler := handlers.New(handlers.HandlerDeps{
 		Service:                      dependencies.EmployeeService,
 		EmployeeInteractor:           dependencies.Interactor,
 		IDEncoder:                    dependencies.IDEncoder,
 		Response:                     dependencies.ResponseHandler,
+		CookieManager:                cookieManager,
 		MessageInteractor:            dependencies.MessageInteractor,
 		MessagingCache:               dependencies.MessagingCache,
 		AirlineInteractor:            dependencies.AirlineInteractor,
@@ -61,7 +70,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		DailyLogbookDetailInteractor: dependencies.DailyLogbookDetailInteractor,
 		DailyLogbookInteractor:       dependencies.DailyLogbookInteractor,
 		AircraftModelInteractor:      dependencies.AircraftModelInteractor,
-		TailNumberInteractor:       dependencies.TailNumberInteractor,
+		TailNumberInteractor:         dependencies.TailNumberInteractor,
 		FlightSummaryInteractor:      dependencies.FlightSummaryInteractor,
 	})
 
@@ -136,95 +145,85 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	}
 	protected := app.Group("flighthours/api/v1")
 	protected.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
+
+	// ── Pilot-only endpoints (role: "pilot") ────────────────────────────
+	pilot := protected.Group("")
+	pilot.Use(middleware.RequireRole("pilot"))
 	{
-		protected.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
+		// Employee management (HU17, HU18, HU20, HU22, HU23)
+		pilot.POST("/auth/change-password", validator.WithValidateChangePassword(), handler.ChangePassword())
+		pilot.GET("/employees", handler.GetEmployee())
+		pilot.PUT("/employees", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
+		pilot.DELETE("/employees", handler.DeleteEmployee())
 
-		protected.GET("/employees", handler.GetEmployee())
+		// Airline-Employee management (HU24, HU25, HU26, HU27, HU28)
+		pilot.GET("/employees/airline", handler.GetEmployeeAirlineInfo())
+		pilot.PUT("/employees/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
+		pilot.PUT("/employees/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
+		pilot.PATCH("/employees/airline/activate", handler.ActivateEmployeeAirlineInfo())
+		pilot.PATCH("/employees/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
 
-		protected.PUT("/employees", validator.WithValidateUpdateEmployee(), handler.UpdateEmployee())
+		// Airline routes consulta (HU37)
+		pilot.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
 
-		protected.DELETE("/employees", handler.DeleteEmployee())
+		// Tail numbers consulta y creación (HU31, HU32)
+		pilot.GET("/tail-numbers", handler.ListTailNumbers())
+		pilot.GET("/tail-numbers/:plate", handler.GetTailNumberByPlate())
+		pilot.POST("/tail-numbers", validator.WithValidateCreateTailNumber(), handler.CreateTailNumber())
 
-		protected.GET("/employees/airline", handler.GetEmployeeAirlineInfo())
+		// Daily logbook (HU7, HU8, HU9, HU10, HU11, HU12)
+		pilot.GET("/daily-logbooks", handler.ListDailyLogbooks())
+		pilot.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
+		pilot.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
+		pilot.DELETE("/daily-logbooks/:id", handler.DeleteDailyLogbook())
+		pilot.PUT("/daily-logbooks/:id", validator.WithValidateUpdateDailyLogbook(), handler.UpdateDailyLogbook())
+		pilot.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
+		pilot.PATCH("/daily-logbooks/:id/deactivate", handler.DeactivateDailyLogbook())
 
-		protected.PUT("/employees/airline", validator.WithValidateAddAirlineEmployee(), handler.AddEmployeeAirlineInfo())
+		// Daily logbook details (HU13, HU14, HU15, HU16)
+		pilot.GET("/daily-logbook-details/:id", handler.GetDailyLogbookDetail())
+		pilot.PUT("/daily-logbook-details/:id", validator.WithValidateUpdateDailyLogbookDetail(), handler.UpdateDailyLogbookDetail())
+		pilot.DELETE("/daily-logbook-details/:id", handler.DeleteDailyLogbookDetail())
+		pilot.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
+		pilot.POST("/daily-logbooks/:id/details", validator.WithValidateCreateDailyLogbookDetail(), handler.CreateDailyLogbookDetail())
 
-		protected.PUT("/employees/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
+		// Flights (HU45, HU46, HU47)
+		pilot.GET("/employees/flights", handler.ListMyFlights())
+		pilot.GET("/employees/flight-hours-summary", handler.GetFlightHoursSummary())
+		pilot.GET("/employees/flight-alerts", handler.GetFlightAlerts())
+		pilot.GET("/employees/recent-flights", handler.GetRecentFlights())
+	}
 
-		protected.PATCH("/employees/airline/activate", handler.ActivateEmployeeAirlineInfo())
+	// ── Admin-only endpoints (role: "admin") ────────────────────────────
+	adminProtected := protected.Group("")
+	adminProtected.Use(middleware.RequireRole("admin"))
+	{
+		// Messages (admin only)
+		adminProtected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
+		adminProtected.PUT("/messages/:id", validator.WithValidateMessage(), handler.UpdateMessage())
+		adminProtected.DELETE("/messages/:id", handler.DeleteMessage())
+		adminProtected.GET("/messages/:id", handler.GetMessageByID())
+		adminProtected.GET("/messages", handler.ListMessages())
+		adminProtected.POST("/messages/cache/reload", handler.ReloadMessageCache())
 
-		protected.PATCH("/employees/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
+		// Airline state (HU2, HU3)
+		adminProtected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
+		adminProtected.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
 
-		protected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
+		// Airline route state (HU38, HU39)
+		adminProtected.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
+		adminProtected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
 
-		protected.PUT("/messages/:id", validator.WithValidateMessage(), handler.UpdateMessage())
+		// Airport state (HU5, HU6)
+		adminProtected.PATCH("/airports/:id/activate", handler.ActivateAirport())
+		adminProtected.PATCH("/airports/:id/deactivate", handler.DeactivateAirport())
 
-		protected.DELETE("/messages/:id", handler.DeleteMessage())
+		// Aircraft model state (HU41, HU42)
+		adminProtected.PATCH("/aircraft-models/:id/activate", handler.ActivateAircraftModel())
+		adminProtected.PATCH("/aircraft-models/:id/deactivate", handler.DeactivateAircraftModel())
 
-		protected.GET("/messages/:id", handler.GetMessageByID())
-
-		protected.GET("/messages", handler.ListMessages())
-
-		protected.POST("/messages/cache/reload", handler.ReloadMessageCache())
-
-		protected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
-
-		protected.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
-
-		protected.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
-
-		protected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
-
-		protected.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
-
-		protected.PATCH("/airports/:id/deactivate", handler.DeactivateAirport())
-
-		protected.PATCH("/airports/:id/activate", handler.ActivateAirport())
-
-		protected.PATCH("/aircraft-models/:id/activate", handler.ActivateAircraftModel())
-
-		protected.PATCH("/aircraft-models/:id/deactivate", handler.DeactivateAircraftModel())
-
-		protected.GET("/tail-numbers", handler.ListTailNumbers())
-
-		protected.GET("/tail-numbers/:plate", handler.GetTailNumberByPlate())
-
-		protected.POST("/tail-numbers", validator.WithValidateCreateTailNumber(), handler.CreateTailNumber())
-
-		protected.PUT("/tail-numbers/:id", validator.WithValidateUpdateTailNumber(), handler.UpdateTailNumber())
-
-		protected.GET("/daily-logbook-details/:id", handler.GetDailyLogbookDetail())
-
-		protected.PUT("/daily-logbook-details/:id", validator.WithValidateUpdateDailyLogbookDetail(), handler.UpdateDailyLogbookDetail())
-
-		protected.DELETE("/daily-logbook-details/:id", handler.DeleteDailyLogbookDetail())
-
-		protected.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
-
-		protected.POST("/daily-logbooks/:id/details", validator.WithValidateCreateDailyLogbookDetail(), handler.CreateDailyLogbookDetail())
-
-		protected.GET("/employees/flights", handler.ListMyFlights())
-
-		protected.GET("/daily-logbooks", handler.ListDailyLogbooks())
-
-		protected.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
-
-		protected.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
-
-		protected.DELETE("/daily-logbooks/:id", handler.DeleteDailyLogbook())
-
-		protected.PUT("/daily-logbooks/:id", validator.WithValidateUpdateDailyLogbook(), handler.UpdateDailyLogbook())
-
-		protected.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
-
-		protected.PATCH("/daily-logbooks/:id/deactivate", handler.DeactivateDailyLogbook())
-
-		protected.GET("/employees/flight-hours-summary", handler.GetFlightHoursSummary())
-
-		protected.GET("/employees/flight-alerts", handler.GetFlightAlerts())
-
-		protected.GET("/employees/recent-flights", handler.GetRecentFlights())
-
+		// Tail number update (HU33)
+		adminProtected.PUT("/tail-numbers/:id", validator.WithValidateUpdateTailNumber(), handler.UpdateTailNumber())
 	}
 	admin := app.Group("flighthours/api/v1/admin")
 	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))

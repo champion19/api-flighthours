@@ -31,9 +31,9 @@ script:post-response {
 
 docs {
   # Login - Get Access Token
-
+  
   Authenticate to obtain the access_token required for Flight Summary protected endpoints.
-
+  
   ## Flow
   1. Run this Login first
   2. The token is auto-saved to `{{access-token}}`
@@ -41,11 +41,11 @@ docs {
      - GET /employees/flight-hours-summary
      - GET /employees/flight-alerts
      - GET /employees/recent-flights
-
+  
   ## Request Body
   - **email**: Registered employee email
   - **password**: Employee password
-
+  
   ## Responses
   - 200: Login successful - Returns access_token and refresh_token
   - 401: Invalid credentials

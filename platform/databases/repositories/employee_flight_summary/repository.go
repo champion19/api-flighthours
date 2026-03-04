@@ -28,7 +28,7 @@ const (
 	QueryGetSummaries = `
 		SELECT id, employee_id, period_type, period_year, period_number,
 		       period_start, period_end, total_air_time, total_block_time,
-		       total_duty_time, total_flights, total_landings, last_updated
+		       total_flights, total_landings, last_updated
 		FROM employee_flight_summary
 		WHERE employee_id = ? AND period_type = ?
 		ORDER BY period_year DESC, period_number DESC`
@@ -37,7 +37,7 @@ const (
 	QueryGetCurrentPeriod = `
 		SELECT id, employee_id, period_type, period_year, period_number,
 		       period_start, period_end, total_air_time, total_block_time,
-		       total_duty_time, total_flights, total_landings, last_updated
+		       total_flights, total_landings, last_updated
 		FROM employee_flight_summary
 		WHERE employee_id = ? AND period_type = ? AND period_year = ? AND period_number = ?`
 
@@ -45,7 +45,7 @@ const (
 	QueryGetAllCurrentSummaries = `
 		SELECT id, employee_id, period_type, period_year, period_number,
 		       period_start, period_end, total_air_time, total_block_time,
-		       total_duty_time, total_flights, total_landings, last_updated
+		       total_flights, total_landings, last_updated
 		FROM employee_flight_summary
 		WHERE employee_id = ?
 		ORDER BY period_type, period_year DESC, period_number DESC`
@@ -194,7 +194,7 @@ func scanSummaryRow(scanner interface {
 		&s.ID, &s.EmployeeID, &s.PeriodType,
 		&s.PeriodYear, &s.PeriodNumber,
 		&s.PeriodStart, &s.PeriodEnd,
-		&s.TotalAirTime, &s.TotalBlockTime, &s.TotalDutyTime,
+		&s.TotalAirTime, &s.TotalBlockTime,
 		&s.TotalFlights, &s.TotalLandings,
 		&lastUpdated,
 	)
@@ -217,7 +217,7 @@ func scanSingleSummary(row *sql.Row) (*domain.EmployeeFlightSummary, error) {
 		&s.ID, &s.EmployeeID, &s.PeriodType,
 		&s.PeriodYear, &s.PeriodNumber,
 		&s.PeriodStart, &s.PeriodEnd,
-		&s.TotalAirTime, &s.TotalBlockTime, &s.TotalDutyTime,
+		&s.TotalAirTime, &s.TotalBlockTime,
 		&s.TotalFlights, &s.TotalLandings,
 		&lastUpdated,
 	)

@@ -325,6 +325,7 @@ const (
 	// JWKS Validator
 	LogJWKSValidatorInitFailed = "JWKS validator initialization failed, using fallback validation"
 	LogJWKSValidatorInitOK     = "JWKS validator initialized"
+	LogJWKSRefreshError        = "JWKS refresh error"
 )
 
 // ============================================
@@ -417,6 +418,7 @@ const (
 	LogConfigEnvOverride     = "Sobreescribiendo configuración con variables de entorno"
 	LogConfigValidating      = "Validando configuración"
 	LogConfigValidationError = "Error validando configuración"
+	LogConfigEnvFileNotFound = "No .env file found, using system environment variables"
 )
 
 // ============================================

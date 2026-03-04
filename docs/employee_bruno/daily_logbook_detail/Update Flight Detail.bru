@@ -24,11 +24,11 @@ auth:bearer {
 
 body:json {
   {
-    "flight_real_date": "2026-02-23",
-    "flight_number": "4430",
-    "airline_route_id": "GLxycpG8fNDDuEQXhpo9iLyhW6xiYBK",
-    "tail_number_id": "DjzjUvjjhXE3cdr6uxwPs14gHDZ6HNVA",
-    "passengers": 110,
+    "flight_real_date": "2026-02-27",
+    "flight_number": "4455",
+    "airline_route_id": "WZEvcvW3HpdzSYZVsQKXuwM6SJx6hr1L",
+    "tail_number_id": "WZEvcvW3HpdzSYZVsQKXuwM6SJx6hr1L",
+    "passengers": 120,
     "out_time": "21:00",
     "takeoff_time": "21:20",
     "landing_time": "22:00",
@@ -45,20 +45,20 @@ body:json {
 
 docs {
   # Actualizar Vuelo (Update Flight Detail)
-
+  
   Actualiza un vuelo existente en una bitácora diaria.
   El vuelo debe pertenecer al empleado autenticado.
-
+  
   ## Autenticación
   Requiere token Bearer (ejecutar Login primero).
-
+  
   ## Path Parameters
   - `id`: ID del vuelo (detail encoded ID)
-
+  
   ## Headers requeridos
   - Authorization: Bearer <access_token>
   - Content-Type: application/json
-
+  
   ## Request Body
   - **flight_real_date** (required): Fecha real del vuelo (YYYY-MM-DD)
   - **flight_number** (required): Número de vuelo (ej: "4451")
@@ -69,20 +69,20 @@ docs {
   - **takeoff_time** (optional): Hora de despegue (HH:MM)
   - **landing_time** (optional): Hora de aterrizaje (HH:MM)
   - **in_time** (optional): Hora de llegada a puerta (HH:MM)
-  - **pilot_role** (optional): Rol del piloto ("captain", "first officer")
-  - **crew_role** (optional): Rol de tripulación ("captain", "first officer")
+  - **pilot_role** (optional): Rol del piloto ("captain", "copilot")
+  - **crew_role** (optional): Rol de tripulación ("captain", "copilot")
   - **companion_name** (optional): Nombre del acompañante
   - **air_time** (optional): Tiempo en aire (HH:MM)
   - **block_time** (optional): Tiempo de bloque (HH:MM)
   - **approach_type** (optional): Tipo de aproximación (ej: "ILS", "VOR", "VISUAL")
   - **flight_type** (optional): Tipo de vuelo (ej: "COMERCIAL", "ENTRENAMIENTO")
-
+  
   ## Secuencia de tiempos
   Los tiempos deben respetar: out < takeoff < landing < in
-
+  
   ## Respuesta exitosa (200)
   Retorna el vuelo actualizado con datos denormalizados (route_code, iata_codes, etc).
-
+  
   ## Errores
   - 400: JSON inválido / Datos faltantes / Secuencia de tiempos inválida
   - 400: Ruta de aerolínea inválida

@@ -6,6 +6,7 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/input"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/cache/messaging"
+	"github.com/champion19/api-flighthours/platform/cookie"
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/tools/idencoder"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type handler struct {
 	Interactor                   input.EmployeeInteractor
 	IDEncoder                    *idencoder.HashidsEncoder
 	Response                     *middleware.ResponseHandler
+	CookieManager                *cookie.Manager
 	MessageInteractor            *interactor.MessageInteractor
 	MessagingCache               *messaging.MessageCache
 	AirlineInteractor            *interactor.AirlineInteractor
@@ -26,7 +28,7 @@ type handler struct {
 	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
-	TailNumberInteractor       *interactor.TailNumberInteractor
+	TailNumberInteractor         *interactor.TailNumberInteractor
 	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
 	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
@@ -37,6 +39,7 @@ type HandlerDeps struct {
 	EmployeeInteractor           input.EmployeeInteractor
 	IDEncoder                    *idencoder.HashidsEncoder
 	Response                     *middleware.ResponseHandler
+	CookieManager                *cookie.Manager
 	MessageInteractor            *interactor.MessageInteractor
 	MessagingCache               *messaging.MessageCache
 	AirlineInteractor            *interactor.AirlineInteractor
@@ -49,7 +52,7 @@ type HandlerDeps struct {
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AirportInteractor            *interactor.AirportInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
-	TailNumberInteractor       *interactor.TailNumberInteractor
+	TailNumberInteractor         *interactor.TailNumberInteractor
 	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
 }
 
@@ -59,6 +62,7 @@ func New(deps HandlerDeps) *handler {
 		Interactor:                   deps.EmployeeInteractor,
 		IDEncoder:                    deps.IDEncoder,
 		Response:                     deps.Response,
+		CookieManager:                deps.CookieManager,
 		MessageInteractor:            deps.MessageInteractor,
 		MessagingCache:               deps.MessagingCache,
 		AirlineInteractor:            deps.AirlineInteractor,
@@ -71,7 +75,7 @@ func New(deps HandlerDeps) *handler {
 		ManufacturerInteractor:       deps.ManufacturerInteractor,
 		AirportInteractor:            deps.AirportInteractor,
 		AircraftModelInteractor:      deps.AircraftModelInteractor,
-		TailNumberInteractor:       deps.TailNumberInteractor,
+		TailNumberInteractor:         deps.TailNumberInteractor,
 		FlightSummaryInteractor:      deps.FlightSummaryInteractor,
 	}
 }

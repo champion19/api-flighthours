@@ -7,6 +7,7 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/databases/common"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 func (r *repository) SaveTailNumber(ctx context.Context, tx output.Tx, registration domain.TailNumber) error {
@@ -22,7 +23,7 @@ func (r *repository) SaveTailNumber(ctx context.Context, tx output.Tx, registrat
 		registration.AirlineID,
 	)
 	if err != nil {
-		log.Error("SaveTailNumber failed",
+		log.Error(logger.LogTailNumberRepoSaveError,
 			"id", registration.ID,
 			"tail_number", registration.TailNumber,
 			"aircraft_model_id", registration.AircraftModelID,
