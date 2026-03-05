@@ -55,8 +55,10 @@ func (s *EmployeeFlightSummaryServiceImpl) AccumulateFlightHours(ctx context.Con
 
 	// Upsert each period row within the same transaction
 	for _, period := range periods {
-		if err := s.repo.UpsertSummary(ctx, tx, employeeID, period,
-			airTimeMinutes, blockTimeMinutes, flightsDelta, landingsDelta); err != nil {
+		if err := s.repo.UpsertSummary(ctx, tx, employeeID, period, domain.SummaryDelta{
+			AirTime: airTimeMinutes, BlockTime: blockTimeMinutes,
+			Flights: flightsDelta, Landings: landingsDelta,
+		}); err != nil {
 			log.Error(logger.LogFlightSummaryGetError, "action", "accumulate",
 				"period_type", period.PeriodType, "error", err)
 			return err

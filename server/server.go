@@ -21,6 +21,13 @@ import (
 
 var log = logger.NewSlogLogger()
 
+// Route path constants to avoid duplication
+const (
+	routeDailyLogbookByID       = "/daily-logbooks/:id"
+	routeDailyLogbookDetailByID = "/daily-logbook-details/:id"
+	routeMessageByID            = "/messages/:id"
+)
+
 func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	log.Info(logger.LogRouteConfiguring)
 
@@ -176,18 +183,18 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		// Daily logbook (HU7, HU8, HU9, HU10, HU11, HU12)
 		pilot.GET("/daily-logbooks", handler.ListDailyLogbooks())
 		pilot.POST("/daily-logbooks", validator.WithValidateCreateDailyLogbook(), handler.CreateDailyLogbook())
-		pilot.GET("/daily-logbooks/:id", handler.GetDailyLogbookByID())
-		pilot.DELETE("/daily-logbooks/:id", handler.DeleteDailyLogbook())
-		pilot.PUT("/daily-logbooks/:id", validator.WithValidateUpdateDailyLogbook(), handler.UpdateDailyLogbook())
-		pilot.PATCH("/daily-logbooks/:id/activate", handler.ActivateDailyLogbook())
-		pilot.PATCH("/daily-logbooks/:id/deactivate", handler.DeactivateDailyLogbook())
+		pilot.GET(routeDailyLogbookByID, handler.GetDailyLogbookByID())
+		pilot.DELETE(routeDailyLogbookByID, handler.DeleteDailyLogbook())
+		pilot.PUT(routeDailyLogbookByID, validator.WithValidateUpdateDailyLogbook(), handler.UpdateDailyLogbook())
+		pilot.PATCH(routeDailyLogbookByID+"/activate", handler.ActivateDailyLogbook())
+		pilot.PATCH(routeDailyLogbookByID+"/deactivate", handler.DeactivateDailyLogbook())
 
 		// Daily logbook details (HU13, HU14, HU15, HU16)
-		pilot.GET("/daily-logbook-details/:id", handler.GetDailyLogbookDetail())
-		pilot.PUT("/daily-logbook-details/:id", validator.WithValidateUpdateDailyLogbookDetail(), handler.UpdateDailyLogbookDetail())
-		pilot.DELETE("/daily-logbook-details/:id", handler.DeleteDailyLogbookDetail())
-		pilot.GET("/daily-logbooks/:id/details", handler.ListDailyLogbookDetails())
-		pilot.POST("/daily-logbooks/:id/details", validator.WithValidateCreateDailyLogbookDetail(), handler.CreateDailyLogbookDetail())
+		pilot.GET(routeDailyLogbookDetailByID, handler.GetDailyLogbookDetail())
+		pilot.PUT(routeDailyLogbookDetailByID, validator.WithValidateUpdateDailyLogbookDetail(), handler.UpdateDailyLogbookDetail())
+		pilot.DELETE(routeDailyLogbookDetailByID, handler.DeleteDailyLogbookDetail())
+		pilot.GET(routeDailyLogbookByID+"/details", handler.ListDailyLogbookDetails())
+		pilot.POST(routeDailyLogbookByID+"/details", validator.WithValidateCreateDailyLogbookDetail(), handler.CreateDailyLogbookDetail())
 
 		// Flights (HU45, HU46, HU47)
 		pilot.GET("/employees/flights", handler.ListMyFlights())
@@ -202,9 +209,9 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	{
 		// Messages (admin only)
 		adminProtected.POST("/messages", validator.WithValidateMessage(), handler.CreateMessage())
-		adminProtected.PUT("/messages/:id", validator.WithValidateMessage(), handler.UpdateMessage())
-		adminProtected.DELETE("/messages/:id", handler.DeleteMessage())
-		adminProtected.GET("/messages/:id", handler.GetMessageByID())
+		adminProtected.PUT(routeMessageByID, validator.WithValidateMessage(), handler.UpdateMessage())
+		adminProtected.DELETE(routeMessageByID, handler.DeleteMessage())
+		adminProtected.GET(routeMessageByID, handler.GetMessageByID())
 		adminProtected.GET("/messages", handler.ListMessages())
 		adminProtected.POST("/messages/cache/reload", handler.ReloadMessageCache())
 

@@ -126,7 +126,7 @@ type FlightSummaryRepository interface {
 
 type EmployeeFlightSummaryRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
-	UpsertSummary(ctx context.Context, tx Tx, employeeID string, period domain.PeriodInfo, airTimeDelta, blockTimeDelta, flightsDelta, landingsDelta int) error
+	UpsertSummary(ctx context.Context, tx Tx, employeeID string, period domain.PeriodInfo, delta domain.SummaryDelta) error
 	GetSummariesByEmployee(ctx context.Context, employeeID, periodType string) ([]domain.EmployeeFlightSummary, error)
 	GetCurrentPeriodSummary(ctx context.Context, employeeID, periodType string, year, number int) (*domain.EmployeeFlightSummary, error)
 	GetAllSummaries(ctx context.Context, employeeID string) ([]domain.EmployeeFlightSummary, error)

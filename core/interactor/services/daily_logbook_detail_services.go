@@ -54,59 +54,34 @@ func (s *DailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.Conte
 }
 
 func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
-	// Parse time with flexible format (HH:MM or HH:MM:SS)
-	parseTime := func(timeStr string) (time.Time, error) {
-		// Try HH:MM:SS first
-		t, err := time.Parse("15:04:05", timeStr)
-		if err == nil {
-			return t, nil
-		}
-		// Fallback to HH:MM
-		return time.Parse("15:04", timeStr)
-	}
-
-	out, err := parseTime(outTime)
+	out, err := parseFlightTime(outTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid out_time format", "value", outTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	takeoff, err := parseTime(takeoffTime)
+	takeoff, err := parseFlightTime(takeoffTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid takeoff_time format", "value", takeoffTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	landing, err := parseTime(landingTime)
+	landing, err := parseFlightTime(landingTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid landing_time format", "value", landingTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	in, err := parseTime(inTime)
+	in, err := parseFlightTime(inTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid in_time format", "value", inTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	// Handle midnight-crossing flights:
-	// If a subsequent time is earlier than the previous AND the gap is large
-	// (more than 12 hours), it means the flight crossed midnight.
-	// Small backward gaps (e.g., 08:30 → 08:15) are real errors, not midnight.
-	day := 24 * time.Hour
-	halfDay := 12 * time.Hour
-
-	if takeoff.Before(out) && out.Sub(takeoff) > halfDay {
-		takeoff = takeoff.Add(day)
-	}
-
-	if landing.Before(takeoff) && takeoff.Sub(landing) > halfDay {
-		landing = landing.Add(day)
-	}
-
-	if in.Before(landing) && landing.Sub(in) > halfDay {
-		in = in.Add(day)
-	}
+	// Adjust for midnight-crossing flights
+	takeoff = adjustForMidnight(takeoff, out)
+	landing = adjustForMidnight(landing, takeoff)
+	in = adjustForMidnight(in, landing)
 
 	// Validate sequence: out <= takeoff < landing <= in
 	if !out.Before(takeoff) && !out.Equal(takeoff) {
@@ -125,6 +100,25 @@ func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, l
 	}
 
 	return nil
+}
+
+// parseFlightTime parses a time string with flexible format (HH:MM or HH:MM:SS)
+func parseFlightTime(timeStr string) (time.Time, error) {
+	t, err := time.Parse("15:04:05", timeStr)
+	if err == nil {
+		return t, nil
+	}
+	return time.Parse("15:04", timeStr)
+}
+
+// adjustForMidnight handles midnight-crossing: if current is earlier than previous
+// and the gap is large (>12h), add 24h to indicate next-day crossing.
+func adjustForMidnight(current, previous time.Time) time.Time {
+	halfDay := 12 * time.Hour
+	if current.Before(previous) && previous.Sub(current) > halfDay {
+		return current.Add(24 * time.Hour)
+	}
+	return current
 }
 
 // ExistsByUniqueKey delegates duplicate check to the repository

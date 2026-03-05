@@ -6,6 +6,31 @@ import (
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
+// nullableString returns the string value if valid, or empty string.
+func nullableString(ns sql.NullString) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
+}
+
+// nullableStringPtr returns a pointer to the string if valid, or nil.
+func nullableStringPtr(ns sql.NullString) *string {
+	if ns.Valid {
+		return &ns.String
+	}
+	return nil
+}
+
+// nullableIntPtr returns a pointer to int if valid, or nil.
+func nullableIntPtr(ni sql.NullInt64) *int {
+	if ni.Valid {
+		v := int(ni.Int64)
+		return &v
+	}
+	return nil
+}
+
 // scanDetail scans a full daily_logbook_detail row with all JOINed fields.
 // This matches the same column order as the shared selectDetailColumns + detailJoins.
 func scanDetail(rows interface {
@@ -17,7 +42,7 @@ func scanDetail(rows interface {
 		flightRealDate      string
 		flightNumber        string
 		airlineRouteID      string
-		tailNumberID      string
+		tailNumberID        string
 		passengers          sql.NullInt64
 		outTime             sql.NullString
 		takeoffTime         sql.NullString
@@ -32,7 +57,7 @@ func scanDetail(rows interface {
 		flightType          sql.NullString
 		employeeLogbookID   sql.NullString
 		logDate             sql.NullString
-		tailNumber        sql.NullString
+		tailNumber          sql.NullString
 		modelName           sql.NullString
 		routeCode           sql.NullString
 		originIataCode      sql.NullString
@@ -55,78 +80,45 @@ func scanDetail(rows interface {
 	}
 
 	detail := &domain.DailyLogbookDetail{
-		ID:             id,
-		DailyLogbookID: dailyLogbookID,
-		FlightRealDate: flightRealDate,
-		FlightNumber:   flightNumber,
-		AirlineRouteID: airlineRouteID,
-		TailNumberID: tailNumberID,
+		ID:                  id,
+		DailyLogbookID:      dailyLogbookID,
+		FlightRealDate:      flightRealDate,
+		FlightNumber:        flightNumber,
+		AirlineRouteID:      airlineRouteID,
+		TailNumberID:        tailNumberID,
+		Passengers:          nullableIntPtr(passengers),
+		OutTime:             nullableStringPtr(outTime),
+		TakeoffTime:         nullableStringPtr(takeoffTime),
+		LandingTime:         nullableStringPtr(landingTime),
+		InTime:              nullableStringPtr(inTime),
+		CompanionName:       nullableStringPtr(companionName),
+		AirTime:             nullableStringPtr(airTime),
+		BlockTime:           nullableStringPtr(blockTime),
+		FlightType:          nullableStringPtr(flightType),
+		LogDate:             nullableString(logDate),
+		TailNumber:          nullableString(tailNumber),
+		ModelName:           nullableString(modelName),
+		RouteCode:           nullableString(routeCode),
+		OriginIataCode:      nullableString(originIataCode),
+		DestinationIataCode: nullableString(destinationIataCode),
+		AirlineCode:         nullableString(airlineCode),
 	}
 
-	// Map nullable fields
-	if passengers.Valid {
-		p := int(passengers.Int64)
-		detail.Passengers = &p
-	}
-	if outTime.Valid {
-		detail.OutTime = &outTime.String
-	}
-	if takeoffTime.Valid {
-		detail.TakeoffTime = &takeoffTime.String
-	}
-	if landingTime.Valid {
-		detail.LandingTime = &landingTime.String
-	}
-	if inTime.Valid {
-		detail.InTime = &inTime.String
-	}
+	// Map typed nullable fields (PilotRole, CrewRole, ApproachType)
 	if pilotRole.Valid {
 		pr := domain.PilotRole(pilotRole.String)
 		detail.PilotRole = &pr
-	}
-	if companionName.Valid {
-		detail.CompanionName = &companionName.String
 	}
 	if crewRole.Valid {
 		cr := domain.CrewRole(crewRole.String)
 		detail.CrewRole = &cr
 	}
-	if airTime.Valid {
-		detail.AirTime = &airTime.String
-	}
-	if blockTime.Valid {
-		detail.BlockTime = &blockTime.String
-	}
 	if approachType.Valid {
 		at := domain.ApproachType(approachType.String)
 		detail.ApproachType = &at
 	}
-	if flightType.Valid {
-		detail.FlightType = &flightType.String
-	}
 	if employeeLogbookID.Valid {
 		detail.EmployeeLogbookID = &employeeLogbookID.String
-	}
-	if logDate.Valid {
-		detail.LogDate = logDate.String
-	}
-	if tailNumber.Valid {
-		detail.TailNumber = tailNumber.String
-	}
-	if modelName.Valid {
-		detail.ModelName = modelName.String
-	}
-	if routeCode.Valid {
-		detail.RouteCode = routeCode.String
-	}
-	if originIataCode.Valid {
-		detail.OriginIataCode = originIataCode.String
-	}
-	if destinationIataCode.Valid {
-		detail.DestinationIataCode = destinationIataCode.String
-	}
-	if airlineCode.Valid {
-		detail.AirlineCode = airlineCode.String
 	}
 
 	return detail, nil

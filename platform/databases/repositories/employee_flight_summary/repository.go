@@ -112,7 +112,7 @@ func (r *repository) BeginTx(ctx context.Context) (output.Tx, error) {
 
 // UpsertSummary atomically inserts or updates a period summary row.
 // delta values can be positive (create) or negative (delete).
-func (r *repository) UpsertSummary(ctx context.Context, tx output.Tx, employeeID string, period domain.PeriodInfo, airTimeDelta, blockTimeDelta, flightsDelta, landingsDelta int) error {
+func (r *repository) UpsertSummary(ctx context.Context, tx output.Tx, employeeID string, period domain.PeriodInfo, delta domain.SummaryDelta) error {
 	log.Info(logger.LogFlightSummaryGet, "action", "upsert_summary",
 		"employee_id", employeeID,
 		"period_type", period.PeriodType,
@@ -131,7 +131,7 @@ func (r *repository) UpsertSummary(ctx context.Context, tx output.Tx, employeeID
 		newID, employeeID,
 		period.PeriodType, period.PeriodYear, period.PeriodNumber,
 		period.PeriodStart, period.PeriodEnd,
-		airTimeDelta, blockTimeDelta, flightsDelta, landingsDelta,
+		delta.AirTime, delta.BlockTime, delta.Flights, delta.Landings,
 	)
 	if err != nil {
 		log.Error(logger.LogFlightSummaryGetError, "action", "upsert_summary", "error", err)

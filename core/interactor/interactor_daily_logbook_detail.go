@@ -103,12 +103,9 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 		return err
 	}
 
-	// Validate time sequence only if all 4 time fields are provided
-	if detail.OutTime != nil && detail.TakeoffTime != nil && detail.LandingTime != nil && detail.InTime != nil {
-		if err = i.service.ValidateTimeSequence(*detail.OutTime, *detail.TakeoffTime, *detail.LandingTime, *detail.InTime); err != nil {
-			log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", "invalid time sequence")
-			return err
-		}
+	if err = i.validateTimeFields(detail); err != nil {
+		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", "invalid time sequence")
+		return err
 	}
 
 	// Generate ID if not set
@@ -116,21 +113,8 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 		detail.SetID()
 	}
 
-	// Check for duplicate flight
-	if detail.EmployeeLogbookID != nil {
-		exists, err := i.service.ExistsByUniqueKey(ctx, *detail.EmployeeLogbookID, detail.FlightRealDate, detail.FlightNumber, detail.TailNumberID)
-		if err != nil {
-			log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
-			return err
-		}
-		if exists {
-			log.Warn(logger.LogDailyLogbookDetailDuplicate, "trace_id", traceID,
-				"employee_logbook_id", *detail.EmployeeLogbookID,
-				"flight_real_date", detail.FlightRealDate,
-				"flight_number", detail.FlightNumber,
-				"tail_number_id", detail.TailNumberID)
-			return domain.ErrFlightDuplicate
-		}
+	if err = i.checkDuplicateFlight(ctx, traceID, detail); err != nil {
+		return err
 	}
 
 	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailCreateError,
@@ -138,13 +122,7 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 			if err := i.service.CreateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
 				return err
 			}
-			// Accumulate flight hours in the same transaction
-			if i.summaryService != nil {
-				if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, detail, false); err != nil {
-					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "accumulate_on_create", "error", err)
-					// Don't fail the create if accumulation fails — log and continue
-				}
-			}
+			i.accumulateHours(ctx, tx, traceID, employeeID, detail, false, "accumulate_on_create")
 			return nil
 		})
 	if err != nil {
@@ -159,15 +137,9 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Context, traceID string, detail domain.DailyLogbookDetail, employeeID string) (err error) {
 	log.Info(logger.LogDailyLogbookDetailUpdate, "trace_id", traceID, "data", detail.ToLogger())
 
-	// Verify detail exists
-	existing, err := i.service.GetDailyLogbookDetailByID(ctx, detail.ID)
+	existing, err := i.fetchExistingDetail(ctx, traceID, detail.ID)
 	if err != nil {
-		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
 		return err
-	}
-	if existing == nil {
-		log.Warn(logger.LogDailyLogbookDetailNotFound, "trace_id", traceID, "id", detail.ID)
-		return domain.ErrFlightNotFound
 	}
 
 	// Verify ownership and active status via detail's logbook
@@ -176,12 +148,9 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 		return err
 	}
 
-	// Validate time sequence only if all 4 time fields are provided
-	if detail.OutTime != nil && detail.TakeoffTime != nil && detail.LandingTime != nil && detail.InTime != nil {
-		if err = i.service.ValidateTimeSequence(*detail.OutTime, *detail.TakeoffTime, *detail.LandingTime, *detail.InTime); err != nil {
-			log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", "invalid time sequence")
-			return err
-		}
+	if err = i.validateTimeFields(detail); err != nil {
+		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", "invalid time sequence")
+		return err
 	}
 
 	// Preserve the daily_logbook_id from existing record (cannot change parent)
@@ -190,20 +159,12 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 	err = helpers.RunWithTx(ctx, i.service, log, logger.LogDailyLogbookDetailUpdateError,
 		func(ctx context.Context, tx output.Tx) error {
 			// First, reverse the old detail's accumulation
-			if i.summaryService != nil {
-				if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, *existing, true); err != nil {
-					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "reverse_on_update", "error", err)
-				}
-			}
+			i.accumulateHours(ctx, tx, traceID, employeeID, *existing, true, "reverse_on_update")
 			if err := i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
 				return err
 			}
 			// Then, accumulate the new detail
-			if i.summaryService != nil {
-				if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, detail, false); err != nil {
-					log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", "accumulate_on_update", "error", err)
-				}
-			}
+			i.accumulateHours(ctx, tx, traceID, employeeID, detail, false, "accumulate_on_update")
 			return nil
 		})
 	if err != nil {
@@ -248,6 +209,63 @@ func (i *DailyLogbookDetailInteractor) DeleteDailyLogbookDetail(ctx context.Cont
 
 	log.Info(logger.LogDailyLogbookDetailDeleteOK, "trace_id", traceID, "id", id)
 	return nil
+}
+
+// ────────────────────────────────────────────────────
+// Private helpers (extracted to reduce cognitive complexity)
+// ────────────────────────────────────────────────────
+
+// validateTimeFields validates the time sequence if all 4 time fields are provided.
+func (i *DailyLogbookDetailInteractor) validateTimeFields(detail domain.DailyLogbookDetail) error {
+	if detail.OutTime == nil || detail.TakeoffTime == nil || detail.LandingTime == nil || detail.InTime == nil {
+		return nil
+	}
+	return i.service.ValidateTimeSequence(*detail.OutTime, *detail.TakeoffTime, *detail.LandingTime, *detail.InTime)
+}
+
+// checkDuplicateFlight checks for duplicate flights when EmployeeLogbookID is set.
+func (i *DailyLogbookDetailInteractor) checkDuplicateFlight(ctx context.Context, traceID string, detail domain.DailyLogbookDetail) error {
+	if detail.EmployeeLogbookID == nil {
+		return nil
+	}
+	exists, err := i.service.ExistsByUniqueKey(ctx, *detail.EmployeeLogbookID, detail.FlightRealDate, detail.FlightNumber, detail.TailNumberID)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDetailCreateError, "trace_id", traceID, "error", err)
+		return err
+	}
+	if exists {
+		log.Warn(logger.LogDailyLogbookDetailDuplicate, "trace_id", traceID,
+			"employee_logbook_id", *detail.EmployeeLogbookID,
+			"flight_real_date", detail.FlightRealDate,
+			"flight_number", detail.FlightNumber,
+			"tail_number_id", detail.TailNumberID)
+		return domain.ErrFlightDuplicate
+	}
+	return nil
+}
+
+// accumulateHours safely accumulates or reverses flight hours via summaryService.
+func (i *DailyLogbookDetailInteractor) accumulateHours(ctx context.Context, tx output.Tx, traceID, employeeID string, detail domain.DailyLogbookDetail, isDelete bool, action string) {
+	if i.summaryService == nil {
+		return
+	}
+	if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, detail, isDelete); err != nil {
+		log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", action, "error", err)
+	}
+}
+
+// fetchExistingDetail fetches and validates the existence of a detail record.
+func (i *DailyLogbookDetailInteractor) fetchExistingDetail(ctx context.Context, traceID, detailID string) (*domain.DailyLogbookDetail, error) {
+	existing, err := i.service.GetDailyLogbookDetailByID(ctx, detailID)
+	if err != nil {
+		log.Error(logger.LogDailyLogbookDetailUpdateError, "trace_id", traceID, "error", err)
+		return nil, err
+	}
+	if existing == nil {
+		log.Warn(logger.LogDailyLogbookDetailNotFound, "trace_id", traceID, "id", detailID)
+		return nil, domain.ErrFlightNotFound
+	}
+	return existing, nil
 }
 
 // VerifyLogbookOwnership verifies that a logbook belongs to the specified employee

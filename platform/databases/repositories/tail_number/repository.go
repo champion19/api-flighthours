@@ -75,13 +75,13 @@ var log logger.Logger = logger.NewSlogLogger()
 const errPreparingStatement = "error preparing statement"
 
 type repository struct {
-	stmtGetByID           *sql.Stmt
-	stmtGetAll            *sql.Stmt
-	stmtGetByAirline      *sql.Stmt
+	stmtGetByID         *sql.Stmt
+	stmtGetAll          *sql.Stmt
+	stmtGetByAirline    *sql.Stmt
 	stmtGetByTailNumber *sql.Stmt
-	stmtInsert            *sql.Stmt
-	stmtUpdate            *sql.Stmt
-	db                    *sql.DB
+	stmtInsert          *sql.Stmt
+	stmtUpdate          *sql.Stmt
+	db                  *sql.DB
 }
 
 // NewTailNumberRepository creates a new aircraft registration repository with prepared statements
@@ -127,13 +127,13 @@ func NewTailNumberRepository(db *sql.DB) (*repository, error) {
 	}
 
 	return &repository{
-		db:                    db,
-		stmtGetByID:           stmtGetByID,
-		stmtGetAll:            stmtGetAll,
-		stmtGetByAirline:      stmtGetByAirline,
+		db:                  db,
+		stmtGetByID:         stmtGetByID,
+		stmtGetAll:          stmtGetAll,
+		stmtGetByAirline:    stmtGetByAirline,
 		stmtGetByTailNumber: stmtGetByTailNumber,
-		stmtInsert:            stmtInsert,
-		stmtUpdate:            stmtUpdate,
+		stmtInsert:          stmtInsert,
+		stmtUpdate:          stmtUpdate,
 	}, nil
 }
 

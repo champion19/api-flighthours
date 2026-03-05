@@ -14,6 +14,8 @@ type flightSummaryService struct {
 	repo output.FlightSummaryRepository
 }
 
+const dateFormat = "2006-01-02"
+
 func NewFlightSummaryService(repo output.FlightSummaryRepository) *flightSummaryService {
 	return &flightSummaryService{repo: repo}
 }
@@ -81,7 +83,7 @@ func (s *flightSummaryService) CalculatePeriodDates(period, referenceDate string
 	var err error
 
 	if referenceDate != "" {
-		ref, err = time.Parse("2006-01-02", referenceDate)
+		ref, err = time.Parse(dateFormat, referenceDate)
 		if err != nil {
 			return "", "", domain.ErrInvalidDateFormat
 		}
@@ -124,7 +126,7 @@ func (s *flightSummaryService) CalculatePeriodDates(period, referenceDate string
 		return "", "", fmt.Errorf("custom period requires explicit start_date and end_date")
 	}
 
-	return start.Format("2006-01-02"), end.Format("2006-01-02"), nil
+	return start.Format(dateFormat), end.Format(dateFormat), nil
 }
 
 // BuildFlightAlerts evaluates all regulatory alert conditions.
@@ -198,23 +200,28 @@ func (s *flightSummaryService) BuildFlightAlerts(ctx context.Context, employeeID
 		}
 	}
 
-	// ═══════════════════════════════════════════════════════════════════
-	// Alert: Minimum landings in 90 rolling days — 3-phase progressive
-	// Phase 1 (days 0-50):  NOTICE (gray)  — gentle reminder, no stress
-	// Phase 2 (days 60-80): INFO   (orange) — approaching, take action
-	// Phase 3 (day 90+):   WARNING (red)   — expired, simulator required
-	// Alert disappears when ≥ 3 landings in all windows.
-	// ═══════════════════════════════════════════════════════════════════
-	todayStr := now.Format("2006-01-02")
+	// Check landing currency (multiple rolling windows)
+	landingAlert := s.buildLandingCurrencyAlert(ctx, employeeID, now)
+	if landingAlert != nil {
+		alerts = append(alerts, *landingAlert)
+	}
 
-	// Check all windows: 50, 60, 70, 80, 90 days
+	log.Info(logger.LogFlightSummaryAlertsOK, "alert_count", len(alerts))
+	return alerts, nil
+}
+
+// buildLandingCurrencyAlert evaluates the 90-day rolling landing currency with
+// 3-phase progressive alerts. Returns nil if the pilot has enough landings.
+func (s *flightSummaryService) buildLandingCurrencyAlert(ctx context.Context, employeeID string, now time.Time) *domain.FlightAlert {
+	todayStr := now.Format(dateFormat)
+
 	windows := []int{50, 60, 70, 80, 90}
 	landingCounts := make(map[int]int)
 	for _, w := range windows {
-		start := now.AddDate(0, 0, -w).Format("2006-01-02")
-		count, errW := s.repo.GetLandingCount(ctx, employeeID, start, todayStr)
-		if errW != nil {
-			log.Error(logger.LogFlightSummaryAlertsError, "action", fmt.Sprintf("landing_count_%dd", w), "error", errW)
+		start := now.AddDate(0, 0, -w).Format(dateFormat)
+		count, err := s.repo.GetLandingCount(ctx, employeeID, start, todayStr)
+		if err != nil {
+			log.Error(logger.LogFlightSummaryAlertsError, "action", fmt.Sprintf("landing_count_%dd", w), "error", err)
 			continue
 		}
 		landingCounts[w] = count
@@ -226,55 +233,54 @@ func (s *flightSummaryService) BuildFlightAlerts(ctx context.Context, employeeID
 	count60 := landingCounts[60]
 	count50 := landingCounts[50]
 
+	// All windows pass — no alert
 	if count90 >= domain.MinLandings90Days &&
 		count80 >= domain.MinLandings90Days &&
 		count70 >= domain.MinLandings90Days &&
 		count60 >= domain.MinLandings90Days &&
 		count50 >= domain.MinLandings90Days {
-		// All good — no alert needed
-	} else if count90 < domain.MinLandings90Days {
-		// Phase 3: 90-day window failed → WARNING (simulator required)
-		alerts = append(alerts, domain.FlightAlert{
+		return nil
+	}
+
+	// Phase 3: 90-day window failed → WARNING (simulator required)
+	if count90 < domain.MinLandings90Days {
+		return &domain.FlightAlert{
 			Type:         domain.AlertTypeMinLandings90D,
 			Severity:     domain.AlertSeverityWarning,
 			Message:      fmt.Sprintf("You have %d PF/PFL landings in the last 90 days (minimum: %d). Simulator recurrency training may be required.", count90, domain.MinLandings90Days),
 			CurrentValue: count90,
 			Threshold:    domain.MinLandings90Days,
-		})
-	} else if count80 < domain.MinLandings90Days || count70 < domain.MinLandings90Days || count60 < domain.MinLandings90Days {
-		// Phase 2: 60-80 day windows failing → INFO (approaching expiry)
-		// Pick the most urgent (shortest window that fails)
-		windowDays := 60
-		daysRemaining := 30
-		countUsed := count60
+		}
+	}
+
+	// Phase 2: 60-80 day windows failing → INFO (approaching expiry)
+	if count80 < domain.MinLandings90Days || count70 < domain.MinLandings90Days || count60 < domain.MinLandings90Days {
+		windowDays, daysRemaining, countUsed := 60, 30, count60
 		if count70 < domain.MinLandings90Days {
-			windowDays = 70
-			daysRemaining = 20
-			countUsed = count70
+			windowDays, daysRemaining, countUsed = 70, 20, count70
 		}
 		if count80 < domain.MinLandings90Days {
-			windowDays = 80
-			daysRemaining = 10
-			countUsed = count80
+			windowDays, daysRemaining, countUsed = 80, 10, count80
 		}
-		alerts = append(alerts, domain.FlightAlert{
+		return &domain.FlightAlert{
 			Type:         domain.AlertTypeMinLandings90D,
 			Severity:     domain.AlertSeverityInfo,
 			Message:      fmt.Sprintf("You have %d PF/PFL landings in the last %d days. Some landings will expire in ~%d days — complete %d landings to stay current.", countUsed, windowDays, daysRemaining, domain.MinLandings90Days),
 			CurrentValue: countUsed,
 			Threshold:    domain.MinLandings90Days,
-		})
-	} else if count50 < domain.MinLandings90Days {
-		// Phase 1: 50-day window failing → NOTICE (gentle, no stress)
-		alerts = append(alerts, domain.FlightAlert{
+		}
+	}
+
+	// Phase 1: 50-day window failing → NOTICE (gentle, no stress)
+	if count50 < domain.MinLandings90Days {
+		return &domain.FlightAlert{
 			Type:         domain.AlertTypeMinLandings90D,
 			Severity:     domain.AlertSeverityNotice,
 			Message:      fmt.Sprintf("You have %d PF/PFL landings in the last 50 days. Aim for %d to maintain landing currency.", count50, domain.MinLandings90Days),
 			CurrentValue: count50,
 			Threshold:    domain.MinLandings90Days,
-		})
+		}
 	}
 
-	log.Info(logger.LogFlightSummaryAlertsOK, "alert_count", len(alerts))
-	return alerts, nil
+	return nil
 }

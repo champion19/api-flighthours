@@ -56,6 +56,17 @@ type PeriodInfo struct {
 	PeriodEnd    string // YYYY-MM-DD
 }
 
+// SummaryDelta holds the delta values for a flight summary upsert
+type SummaryDelta struct {
+	AirTime   int
+	BlockTime int
+	Flights   int
+	Landings  int
+}
+
+// dateFormatISO is the standard ISO date format used for period boundaries
+const dateFormatISO = "2006-01-02"
+
 // GetAffectedPeriods returns all period rows that contain a given flight date.
 // For example, 2026-01-10 affects: PERIOD_1_15 (Jan #1), MONTHLY (Jan), QUARTERLY (Q1), ANNUAL (2026).
 func GetAffectedPeriods(flightDate time.Time) []PeriodInfo {
@@ -73,8 +84,8 @@ func GetAffectedPeriods(flightDate time.Time) []PeriodInfo {
 			PeriodType:   SummaryPeriodFirst15,
 			PeriodYear:   year,
 			PeriodNumber: int(month)*2 - 1, // Jan→1, Feb→3, Mar→5 ...
-			PeriodStart:  start.Format("2006-01-02"),
-			PeriodEnd:    end.Format("2006-01-02"),
+			PeriodStart:  start.Format(dateFormatISO),
+			PeriodEnd:    end.Format(dateFormatISO),
 		})
 	} else {
 		start := time.Date(year, month, 16, 0, 0, 0, 0, flightDate.Location())
@@ -83,8 +94,8 @@ func GetAffectedPeriods(flightDate time.Time) []PeriodInfo {
 			PeriodType:   SummaryPeriodSecondHalf,
 			PeriodYear:   year,
 			PeriodNumber: int(month) * 2, // Jan→2, Feb→4, Mar→6 ...
-			PeriodStart:  start.Format("2006-01-02"),
-			PeriodEnd:    end.Format("2006-01-02"),
+			PeriodStart:  start.Format(dateFormatISO),
+			PeriodEnd:    end.Format(dateFormatISO),
 		})
 	}
 
@@ -95,8 +106,8 @@ func GetAffectedPeriods(flightDate time.Time) []PeriodInfo {
 		PeriodType:   SummaryPeriodMonthly,
 		PeriodYear:   year,
 		PeriodNumber: int(month),
-		PeriodStart:  monthStart.Format("2006-01-02"),
-		PeriodEnd:    monthEnd.Format("2006-01-02"),
+		PeriodStart:  monthStart.Format(dateFormatISO),
+		PeriodEnd:    monthEnd.Format(dateFormatISO),
 	})
 
 	// 3. QUARTERLY (Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec)
@@ -108,8 +119,8 @@ func GetAffectedPeriods(flightDate time.Time) []PeriodInfo {
 		PeriodType:   SummaryPeriodQuarterly,
 		PeriodYear:   year,
 		PeriodNumber: quarterNumber,
-		PeriodStart:  qStart.Format("2006-01-02"),
-		PeriodEnd:    qEnd.Format("2006-01-02"),
+		PeriodStart:  qStart.Format(dateFormatISO),
+		PeriodEnd:    qEnd.Format(dateFormatISO),
 	})
 
 	// 4. ANNUAL
@@ -117,8 +128,8 @@ func GetAffectedPeriods(flightDate time.Time) []PeriodInfo {
 		PeriodType:   SummaryPeriodAnnual,
 		PeriodYear:   year,
 		PeriodNumber: 1,
-		PeriodStart:  time.Date(year, 1, 1, 0, 0, 0, 0, flightDate.Location()).Format("2006-01-02"),
-		PeriodEnd:    time.Date(year, 12, 31, 0, 0, 0, 0, flightDate.Location()).Format("2006-01-02"),
+		PeriodStart:  time.Date(year, 1, 1, 0, 0, 0, 0, flightDate.Location()).Format(dateFormatISO),
+		PeriodEnd:    time.Date(year, 12, 31, 0, 0, 0, 0, flightDate.Location()).Format(dateFormatISO),
 	})
 
 	return periods

@@ -218,20 +218,11 @@ func (h *handler) UpdateTailNumber() gin.HandlerFunc {
 
 		req.Sanitize()
 
-		resolvedModelID, _ := h.resolveID(req.AircraftModelID)
-		if resolvedModelID == "" {
-			log.Warn(logger.LogTailNumberInvalidModelID, "id", req.AircraftModelID, "client_ip", c.ClientIP())
-			_ = c.Error(domain.ErrTailNumberInvalidModel)
+		resolvedModelID, resolvedAirlineID, ok := h.resolveModelAndAirline(c, req.AircraftModelID, req.AirlineID)
+		if !ok {
 			return
 		}
 		req.AircraftModelID = resolvedModelID
-
-		resolvedAirlineID, _ := h.resolveID(req.AirlineID)
-		if resolvedAirlineID == "" {
-			log.Warn(logger.LogTailNumberInvalidAirlineID, "id", req.AirlineID, "client_ip", c.ClientIP())
-			_ = c.Error(domain.ErrTailNumberInvalidAirline)
-			return
-		}
 		req.AirlineID = resolvedAirlineID
 
 		if h.isDuplicateData(ctx, registrationUUID, req) {
@@ -265,6 +256,24 @@ func (h *handler) UpdateTailNumber() gin.HandlerFunc {
 		log.Success(logger.LogTailNumberUpdateOK, updatedRegistration.ToLogger())
 		c.JSON(http.StatusOK, response)
 	}
+}
+
+// resolveModelAndAirline resolves and validates the aircraft model and airline IDs.
+// Returns the resolved IDs and true if both are valid, or writes an error and returns false.
+func (h *handler) resolveModelAndAirline(c *gin.Context, modelID, airlineID string) (string, string, bool) {
+	resolvedModelID, _ := h.resolveID(modelID)
+	if resolvedModelID == "" {
+		_ = c.Error(domain.ErrTailNumberInvalidModel)
+		return "", "", false
+	}
+
+	resolvedAirlineID, _ := h.resolveID(airlineID)
+	if resolvedAirlineID == "" {
+		_ = c.Error(domain.ErrTailNumberInvalidAirline)
+		return "", "", false
+	}
+
+	return resolvedModelID, resolvedAirlineID, true
 }
 
 func (h *handler) checkDuplicateOnInvalidID(c *gin.Context, ctx context.Context, inputID string, log logger.Logger) {
