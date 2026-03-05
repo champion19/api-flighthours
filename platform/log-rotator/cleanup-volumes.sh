@@ -98,6 +98,7 @@ cleanup_grafana() {
     else
         log "Directorio /grafana no encontrado (volumen no montado)"
     fi
+    return 0
 }
 
 # Función para mostrar espacio liberado
@@ -118,6 +119,7 @@ show_disk_usage() {
         local size=$(du -sh /grafana 2>/dev/null | cut -f1)
         log "Grafana: $size"
     fi
+    return 0
 }
 
 # Mostrar uso antes de la limpieza

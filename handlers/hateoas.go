@@ -429,7 +429,7 @@ func BuildDailyLogbookLinks(baseURL, logbookID string) []Link {
 
 // BuildDailyLogbookListLinks construye links para la lista de bitácoras diarias
 func BuildDailyLogbookListLinks(baseURL string) []Link {
-	collectionURL := BuildCollectionURL(baseURL, "daily-logbooks")
+	collectionURL := BuildCollectionURL(baseURL, resourceDailyLogbooks)
 
 	return []Link{
 		{
@@ -792,39 +792,7 @@ func BuildAirlineRouteListLinks(baseURL string) []Link {
 
 // BuildAirlineRouteStatusLinks construye links para respuesta de cambio de status
 func BuildAirlineRouteStatusLinks(baseURL, airlineRouteID string, isActive bool) []Link {
-	resourceURL := BuildResourceURL(baseURL, resourceAirlineRoutes, airlineRouteID)
-	collectionURL := BuildCollectionURL(baseURL, resourceAirlineRoutes)
-
-	links := []Link{
-		{
-			Href:   resourceURL,
-			Rel:    "self",
-			Method: "GET",
-		},
-	}
-
-	// Si está activo, mostrar link para desactivar y viceversa
-	if isActive {
-		links = append(links, Link{
-			Href:   resourceURL + pathDeactivate,
-			Rel:    "deactivate",
-			Method: "PATCH",
-		})
-	} else {
-		links = append(links, Link{
-			Href:   resourceURL + pathActivate,
-			Rel:    "activate",
-			Method: "PATCH",
-		})
-	}
-
-	links = append(links, Link{
-		Href:   collectionURL,
-		Rel:    "collection",
-		Method: "GET",
-	})
-
-	return links
+	return BuildAirlineRouteLinks(baseURL, airlineRouteID, isActive)
 }
 
 // ============================================================================

@@ -10,7 +10,7 @@ import (
 )
 
 type Validators struct {
-	FileReader                        FileReaderInterface
+	FileReader                        SchemaReader
 	RegisterValidator                 *jsonschema.Schema
 	LoginValidator                    *jsonschema.Schema
 	MessageValidator                  *jsonschema.Schema
@@ -22,8 +22,8 @@ type Validators struct {
 	VerifyEmailValidator              *jsonschema.Schema
 	AddAirlineEmployeeValidator       *jsonschema.Schema
 	UpdateAirlineEmployeeValidator    *jsonschema.Schema
-	CreateTailNumberValidator       *jsonschema.Schema
-	UpdateTailNumberValidator       *jsonschema.Schema
+	CreateTailNumberValidator         *jsonschema.Schema
+	UpdateTailNumberValidator         *jsonschema.Schema
 	CreateDailyLogbookDetailValidator *jsonschema.Schema
 	UpdateDailyLogbookDetailValidator *jsonschema.Schema
 	CreateDailyLogbookValidator       *jsonschema.Schema
@@ -31,7 +31,8 @@ type Validators struct {
 	RefreshTokenValidator             *jsonschema.Schema
 }
 
-type FileReaderInterface interface {
+// SchemaReader reads JSON schema files from the filesystem.
+type SchemaReader interface {
 	ReadJsonSchema(resourcePath string) ([]byte, error)
 }
 
@@ -55,107 +56,44 @@ func (f *DefaultFileReader) ReadJsonSchema(resourcePath string) ([]byte, error) 
 
 }
 
-func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
-	validator := &Validators{
-		FileReader: fileReader,
+func NewValidator(fileReader SchemaReader) (*Validators, error) {
+	v := &Validators{FileReader: fileReader}
+
+	type schemaEntry struct {
+		file   string
+		target **jsonschema.Schema
 	}
 
-	register, err := validator.createSchema("register_person_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	login, err := validator.createSchema("login_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	message, err := validator.createSchema("message_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	resendVerificationEmail, err := validator.createSchema("resend_verification_email_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	passwordResetRequest, err := validator.createSchema("password_reset_request_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	updatePassword, err := validator.createSchema("update_password_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	updateEmployee, err := validator.createSchema("update_employee_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	changePassword, err := validator.createSchema("change_password_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	verifyEmail, err := validator.createSchema("verify_email_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	addAirlineEmployee, err := validator.createSchema("add_airline_employee_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	updateAirlineEmployee, err := validator.createSchema("update_airline_employee_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	createTailNumber, err := validator.createSchema("create_tail_number_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	updateTailNumber, err := validator.createSchema("update_tail_number_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	createDailyLogbookDetail, err := validator.createSchema("create_daily_logbook_detail_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	updateDailyLogbookDetail, err := validator.createSchema("update_daily_logbook_detail_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	createDailyLogbook, err := validator.createSchema("create_daily_logbook_schema.json")
-	if err != nil {
-		return nil, err
+	entries := []schemaEntry{
+		{"register_person_schema.json", &v.RegisterValidator},
+		{"login_schema.json", &v.LoginValidator},
+		{"message_schema.json", &v.MessageValidator},
+		{"resend_verification_email_schema.json", &v.ResendVerificationEmailValidator},
+		{"password_reset_request_schema.json", &v.PasswordResetRequestValidator},
+		{"update_password_schema.json", &v.UpdatePasswordValidator},
+		{"update_employee_schema.json", &v.UpdateEmployeeValidator},
+		{"change_password_schema.json", &v.ChangePasswordValidator},
+		{"verify_email_schema.json", &v.VerifyEmailValidator},
+		{"add_airline_employee_schema.json", &v.AddAirlineEmployeeValidator},
+		{"update_airline_employee_schema.json", &v.UpdateAirlineEmployeeValidator},
+		{"create_tail_number_schema.json", &v.CreateTailNumberValidator},
+		{"update_tail_number_schema.json", &v.UpdateTailNumberValidator},
+		{"create_daily_logbook_detail_schema.json", &v.CreateDailyLogbookDetailValidator},
+		{"update_daily_logbook_detail_schema.json", &v.UpdateDailyLogbookDetailValidator},
+		{"create_daily_logbook_schema.json", &v.CreateDailyLogbookValidator},
+		{"update_daily_logbook_schema.json", &v.UpdateDailyLogbookValidator},
+		{"refresh_token_schema.json", &v.RefreshTokenValidator},
 	}
 
-	validator.RegisterValidator = register
-	validator.LoginValidator = login
-	validator.MessageValidator = message
-	validator.ResendVerificationEmailValidator = resendVerificationEmail
-	validator.PasswordResetRequestValidator = passwordResetRequest
-	validator.UpdatePasswordValidator = updatePassword
-	validator.UpdateEmployeeValidator = updateEmployee
-	validator.ChangePasswordValidator = changePassword
-	validator.VerifyEmailValidator = verifyEmail
-	validator.AddAirlineEmployeeValidator = addAirlineEmployee
-	validator.UpdateAirlineEmployeeValidator = updateAirlineEmployee
-	validator.CreateTailNumberValidator = createTailNumber
-	validator.UpdateTailNumberValidator = updateTailNumber
-	validator.CreateDailyLogbookDetailValidator = createDailyLogbookDetail
-	validator.UpdateDailyLogbookDetailValidator = updateDailyLogbookDetail
-	validator.CreateDailyLogbookValidator = createDailyLogbook
-
-	updateDailyLogbook, err := validator.createSchema("update_daily_logbook_schema.json")
-	if err != nil {
-		return nil, err
+	for _, e := range entries {
+		s, err := v.createSchema(e.file)
+		if err != nil {
+			return nil, err
+		}
+		*e.target = s
 	}
-	validator.UpdateDailyLogbookValidator = updateDailyLogbook
 
-	refreshToken, err := validator.createSchema("refresh_token_schema.json")
-	if err != nil {
-		return nil, err
-	}
-	validator.RefreshTokenValidator = refreshToken
-
-	return validator, nil
-
+	return v, nil
 }
 
 func (v *Validators) createSchema(resourcePath string) (*jsonschema.Schema, error) {

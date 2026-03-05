@@ -544,8 +544,8 @@ const (
 	LogEmployeeInteractorStep6_OK             = "[PASO 6/8] Rol asignado"
 	LogEmployeeInteractorStep7_Error          = "[PASO 7/8] Error actualizando Keycloak ID en BD"
 	LogEmployeeInteractorStep7_OK             = "[PASO 7/8] Keycloak_user_id actualizado en BD"
-	LogEmployeeInteractorCommit_Error         = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogEmployeeInteractorCommit_OK            = "Transacción confirmada exitosamente"
+	LogEmployeeInteractorCommit_Error         = LogMessageInteractorCreateCommitErr
+	LogEmployeeInteractorCommit_OK            = LogMessageTxCommitOK
 	LogEmployeeInteractorRegComplete          = "Registro completado exitosamente"
 	LogEmployeeInteractorRollbackDB_Error     = "ROLLBACK BD FALLÓ - ALERTA CRÍTICA"
 	LogEmployeeInteractorRollbackDB_OK        = "Rollback BD ejecutado correctamente"
@@ -574,8 +574,8 @@ const (
 	LogMessageInteractorCreateStep3Error = "[PASO 3/3] Error guardando mensaje"
 	LogMessageInteractorCreateStep3OK    = "[PASO 3/3] Mensaje guardado en BD"
 	LogMessageInteractorCreateCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogMessageInteractorCreateCommitOK   = "Transacción confirmada exitosamente"
-	LogMessageInteractorCreateComplete   = "Mensaje creado exitosamente"
+	LogMessageInteractorCreateCommitOK   = LogMessageTxCommitOK
+	LogMessageInteractorCreateComplete   = LogMessageCreateOK
 
 	// UPDATE flow
 	LogMessageInteractorUpdateStep1Error = "[PASO 1/4] Mensaje no encontrado"
@@ -586,9 +586,9 @@ const (
 	LogMessageInteractorUpdateStep3OK    = "[PASO 3/4] Transacción iniciada"
 	LogMessageInteractorUpdateStep4Error = "[PASO 4/4] Error actualizando mensaje"
 	LogMessageInteractorUpdateStep4OK    = "[PASO 4/4] Mensaje actualizado en BD"
-	LogMessageInteractorUpdateCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogMessageInteractorUpdateCommitOK   = "Transacción confirmada exitosamente"
-	LogMessageInteractorUpdateComplete   = "Mensaje actualizado exitosamente"
+	LogMessageInteractorUpdateCommitErr  = LogMessageInteractorCreateCommitErr
+	LogMessageInteractorUpdateCommitOK   = LogMessageTxCommitOK
+	LogMessageInteractorUpdateComplete   = LogMessageUpdateOK
 
 	// DELETE flow
 	LogMessageInteractorDeleteStep1Error = "[PASO 1/3] Mensaje no encontrado"
@@ -597,18 +597,18 @@ const (
 	LogMessageInteractorDeleteStep2OK    = "[PASO 2/3] Transacción iniciada"
 	LogMessageInteractorDeleteStep3Error = "[PASO 3/3] Error eliminando mensaje"
 	LogMessageInteractorDeleteStep3OK    = "[PASO 3/3] Mensaje eliminado de BD"
-	LogMessageInteractorDeleteCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogMessageInteractorDeleteCommitOK   = "Transacción confirmada exitosamente"
-	LogMessageInteractorDeleteComplete   = "Mensaje eliminado exitosamente"
+	LogMessageInteractorDeleteCommitErr  = LogMessageInteractorCreateCommitErr
+	LogMessageInteractorDeleteCommitOK   = LogMessageTxCommitOK
+	LogMessageInteractorDeleteComplete   = LogMessageDeleteOK
 
 	// Common rollback
 	LogMessageInteractorRollbackError = "ROLLBACK BD FALLÓ - ALERTA CRÍTICA"
 	LogMessageInteractorRollbackOK    = "Rollback BD ejecutado correctamente"
 
 	// Controller success logs
-	LogMessageCreatedSuccess = "Mensaje creado exitosamente"
-	LogMessageUpdatedSuccess = "Mensaje actualizado exitosamente"
-	LogMessageDeletedSuccess = "Mensaje eliminado exitosamente"
+	LogMessageCreatedSuccess = LogMessageCreateOK
+	LogMessageUpdatedSuccess = LogMessageUpdateOK
+	LogMessageDeletedSuccess = LogMessageDeleteOK
 
 	// Cache reload logs
 	LogMessageCacheReloading     = "Recargando caché de mensajes"

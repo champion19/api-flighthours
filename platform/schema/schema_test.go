@@ -295,7 +295,7 @@ func TestValidators_ValidateUpdateEmployee_WithData(t *testing.T) {
 
 func TestDefaultFileReader_Interface(t *testing.T) {
 	t.Run("implements FileReaderInterface", func(t *testing.T) {
-		var _ FileReaderInterface = (*DefaultFileReader)(nil)
+		var _ SchemaReader = (*DefaultFileReader)(nil)
 	})
 }
 

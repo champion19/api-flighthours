@@ -92,7 +92,7 @@ func LoadConfig() (*Config, error) {
 
 	// Load .env file from project root (non-fatal if not found)
 	envPath := filepath.Join(root, ".env")
-	if err := godotenv.Load(envPath); err != nil { //nolint:errcheck // non-fatal
+	if godotenv.Load(envPath) != nil {
 		slog.Warn(logger.LogConfigEnvFileNotFound,
 			slog.String("path", envPath))
 	}

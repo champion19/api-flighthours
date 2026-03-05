@@ -5,6 +5,9 @@
 
 set -e
 
+# Date format constant
+DATE_FMT='+%Y-%m-%d %H:%M:%S'
+
 echo "=== Log Rotator Container Started ==="
 echo "Timezone: $(date)"
 echo "Retention: 3 días"
@@ -24,14 +27,16 @@ echo ""
 
 # Función para ejecutar logrotate
 run_logrotate() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando logrotate..."
+    echo "[$(date "$DATE_FMT")] Ejecutando logrotate..."
     /usr/sbin/logrotate -v /etc/logrotate.conf 2>&1 | tee -a /var/log/logrotate.log
+    return 0
 }
 
 # Función para ejecutar limpieza de volúmenes
 run_volume_cleanup() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando limpieza de volúmenes..."
+    echo "[$(date "$DATE_FMT")] Ejecutando limpieza de volúmenes..."
     /usr/local/bin/cleanup-volumes.sh
+    return 0
 }
 
 # Ejecutar logrotate inmediatamente al inicio (solo para verificar configuración)
@@ -56,7 +61,7 @@ echo ""
 (
   while true; do
     sleep 3600  # 1 hora
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando logrotate programado..." >> /var/log/logrotate.log
+    echo "[$(date "$DATE_FMT")] Ejecutando logrotate programado..." >> /var/log/logrotate.log
     /usr/sbin/logrotate /etc/logrotate.conf >> /var/log/logrotate.log 2>&1
   done
 ) &
@@ -82,7 +87,7 @@ echo ""
 (
   while true; do
     sleep 21600  # 6 horas
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log rotator is alive" >> /var/log/logrotate.log
+    echo "[$(date "$DATE_FMT")] Log rotator is alive" >> /var/log/logrotate.log
   done
 ) &
 

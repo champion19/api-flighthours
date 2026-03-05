@@ -58,7 +58,7 @@ func StartMySQL(ctx context.Context) (*MySQLContainer, error) {
 
 	// Wait for connection
 	for i := 0; i < 30; i++ {
-		if pingErr := db.Ping(); pingErr == nil {
+		if db.Ping() == nil {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
