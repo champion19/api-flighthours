@@ -6,6 +6,7 @@ import (
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
+	"github.com/champion19/api-flighthours/platform/databases/common"
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
@@ -14,7 +15,7 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 
 	entity := FromDomain(&detail)
 
-	sqlTx, err := castDetailTx(tx)
+	sqlTx, err := common.CastTx(tx)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailUpdateError, "error", "invalid transaction type")
 		return err
@@ -26,7 +27,7 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 		entity.FlightRealDate,
 		entity.FlightNumber,
 		entity.AirlineRouteID,
-		entity.LicensePlateID,
+		entity.TailNumberID,
 		entity.Passengers,
 		entity.OutTime,
 		entity.TakeoffTime,
@@ -37,7 +38,6 @@ func (r *repository) UpdateDailyLogbookDetail(ctx context.Context, tx output.Tx,
 		entity.CrewRole,
 		entity.AirTime,
 		entity.BlockTime,
-		entity.DutyTime,
 		entity.ApproachType,
 		entity.FlightType,
 		entity.ID,

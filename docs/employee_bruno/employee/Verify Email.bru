@@ -1,0 +1,49 @@
+meta {
+  name: Verify Email
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/auth/verify-email
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+
+docs {
+  # Verificar Email con Token (Proxy)
+  
+  Verifica el email de un usuario usando un token JWT.
+  Este endpoint actúa como proxy para no exponer Keycloak directamente.
+  
+  ## Token
+  El token es un JWT que se recibe por email cuando el usuario se registra
+  y contiene el campo "eml" con el email a verificar.
+  
+  ## Respuestas
+  - 200: Email verificado exitosamente
+    ```json
+    {
+      "success": true,
+      "message": "Email verified successfully",
+      "data": {
+        "verified": true,
+        "email": "usuario@ejemplo.com"
+      }
+    }
+    ```
+  - 400: Token inválido o expirado
+  - 404: Usuario no encontrado
+  - 409: Email ya estaba verificado (warning)
+  - 500: Error interno del servidor
+}

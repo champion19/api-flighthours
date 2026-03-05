@@ -124,7 +124,11 @@ func TestHTTP_GetAirportByID(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -234,7 +238,11 @@ func TestHTTP_DeactivateAirport(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -372,7 +380,11 @@ func TestHTTP_ListAirports(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -581,7 +593,11 @@ func TestHTTP_GetAirportsByType(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -671,7 +687,11 @@ func TestHTTP_GetAirportsByType(t *testing.T) {
 		svc := &fakeAirportService{}
 
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -710,7 +730,11 @@ func TestHTTP_GetAirportByID_EdgeCases(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -769,7 +793,11 @@ func TestHTTP_ActivateAirport(t *testing.T) {
 
 	newRouter := func(svc input.AirportService) *gin.Engine {
 		airportInteractor := interactor.NewAirportInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, nil, nil, nil, airportInteractor, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirportInteractor: airportInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -845,6 +873,47 @@ func TestHTTP_ActivateAirport(t *testing.T) {
 
 		if response["success"] != false {
 			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+
+	t.Run("service error", func(t *testing.T) {
+		airportUUID := "550e8400-e29b-41d4-a716-446655440000"
+		encodedID, _ := enc.Encode(airportUUID)
+
+		svc := &fakeAirportService{
+			activateFn: func(ctx context.Context, id string) error {
+				return errors.New("activation failed")
+			},
+		}
+
+		router := newRouter(svc)
+
+		req := httptest.NewRequest(http.MethodPatch, "/airports/"+encodedID+"/activate", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if response["success"] != false {
+			t.Errorf("expected success=false, got %v", response["success"])
+		}
+	})
+
+	t.Run("invalid ID => 400", func(t *testing.T) {
+		svc := &fakeAirportService{}
+		router := newRouter(svc)
+
+		req := httptest.NewRequest(http.MethodPatch, "/airports/invalid-id!!!/activate", nil)
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
 		}
 	})
 }

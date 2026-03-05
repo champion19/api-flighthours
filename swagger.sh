@@ -36,6 +36,7 @@ show_help() {
     echo -e "  ${GREEN}open${NC}            Abrir Swagger UI en el navegador"
     echo -e "  ${GREEN}help${NC}            Mostrar esta ayuda"
     echo ""
+    return 0
 }
 
 # Función para generar documentación
@@ -47,7 +48,7 @@ generate_docs() {
         swag init -g "$MAIN_FILE" -o "$SWAGGER_DIR" --parseDependency --parseInternal
     else
         echo -e "${YELLOW}swag CLI no encontrado. Usando Docker...${NC}"
-        if [ ! "$(docker images -q flighthours-swag 2> /dev/null)" ]; then
+        if [[ ! "$(docker images -q flighthours-swag 2> /dev/null)" ]]; then
             echo -e "${YELLOW}Construyendo imagen Docker...${NC}"
             docker build -f "$SWAGGER_DIR/Dockerfile.swag" -t flighthours-swag .
         fi
@@ -58,6 +59,7 @@ generate_docs() {
     echo -e "${GREEN}✓ Documentación generada en $SWAGGER_DIR/${NC}"
     echo -e "${BLUE}Archivos generados:${NC}"
     ls -lh "$SWAGGER_DIR"/{docs.go,swagger.json,swagger.yaml} 2>/dev/null || true
+    return 0
 }
 
 # Función para iniciar Swagger UI
@@ -66,6 +68,7 @@ start_ui() {
     docker compose -f "$DOCKER_COMPOSE_FILE" up -d swagger-ui
     echo -e "${GREEN}✓ Swagger UI disponible en: http://localhost:8082${NC}"
     echo -e "${YELLOW}💡 Tip: Usa './swagger.sh open' para abrir en el navegador${NC}"
+    return 0
 }
 
 # Función para detener Swagger UI
@@ -73,6 +76,7 @@ stop_ui() {
     echo -e "${BLUE}🛑 Deteniendo Swagger UI...${NC}"
     docker compose -f "$DOCKER_COMPOSE_FILE" down
     echo -e "${GREEN}✓ Swagger UI detenido${NC}"
+    return 0
 }
 
 # Función para iniciar la API
@@ -81,14 +85,15 @@ serve_api() {
     echo -e "${YELLOW}Asegúrate de haber generado la documentación primero${NC}"
     echo ""
     go run "$MAIN_FILE"
+    return 0
 }
 
 # Función para validar documentación
 validate_docs() {
     echo -e "${BLUE}🔍 Validando documentación Swagger...${NC}"
 
-    if [ ! -f "$SWAGGER_DIR/swagger.json" ]; then
-        echo -e "${RED}✗ Error: swagger.json no existe. Ejecuta './swagger.sh generate' primero${NC}"
+    if [[ ! -f "$SWAGGER_DIR/swagger.json" ]]; then
+        echo -e "${RED}✗ Error: swagger.json no existe. Ejecuta './swagger.sh generate' primero${NC}" >&2
         exit 1
     fi
 
@@ -105,7 +110,7 @@ validate_docs() {
     fi
 
     # Verificar que docs.go existe
-    if [ -f "$SWAGGER_DIR/docs.go" ]; then
+    if [[ -f "$SWAGGER_DIR/docs.go" ]]; then
         echo -e "${GREEN}✓ docs.go existe${NC}"
     else
         echo -e "${RED}✗ docs.go no existe${NC}"
@@ -113,6 +118,7 @@ validate_docs() {
     fi
 
     echo -e "${GREEN}✓ Documentación válida${NC}"
+    return 0
 }
 
 # Función para formatear anotaciones
@@ -126,6 +132,7 @@ format_annotations() {
         echo -e "${YELLOW}⚠ swag CLI no encontrado. Instálalo con './swagger.sh install'${NC}"
         exit 1
     fi
+    return 0
 }
 
 # Función para limpiar archivos generados
@@ -142,6 +149,7 @@ clean_docs() {
     else
         echo -e "${YELLOW}Operación cancelada${NC}"
     fi
+    return 0
 }
 
 # Función para instalar swag CLI
@@ -151,6 +159,7 @@ install_swag() {
     echo -e "${GREEN}✓ swag CLI instalado${NC}"
     echo -e "${BLUE}Versión:${NC}"
     swag --version
+    return 0
 }
 
 # Función para construir imagen Docker
@@ -158,6 +167,7 @@ build_docker() {
     echo -e "${BLUE}🐳 Construyendo imagen Docker del generador...${NC}"
     docker build -f "$SWAGGER_DIR/Dockerfile.swag" -t flighthours-swag .
     echo -e "${GREEN}✓ Imagen Docker construida: flighthours-swag${NC}"
+    return 0
 }
 
 # Función para abrir en navegador
@@ -175,6 +185,7 @@ open_browser() {
         echo -e "${YELLOW}⚠ No se pudo detectar el sistema operativo${NC}"
         echo -e "${BLUE}Abre manualmente: http://localhost:8082${NC}"
     fi
+    return 0
 }
 
 # Procesar comandos

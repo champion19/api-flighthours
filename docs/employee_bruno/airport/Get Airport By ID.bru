@@ -1,0 +1,51 @@
+meta {
+  name: Get Airport By ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/airports/{{airport-id}}
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  airport-id: BvMPinAQHy9nF86NfX41upB8cnRPHMdD
+}
+
+docs {
+  # Get Airport By ID (HU4 - Consultar la Información del Aeropuerto)
+  
+  Obtiene la información detallada de un aeropuerto por su ID.
+  Este endpoint NO requiere autenticación (público).
+  
+  ## Path Parameters
+  - `id`: ID del aeropuerto (encoded)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_APT_GET_EXI_00001",
+    "data": {
+      "id": "encoded_airport_id",
+      "name": "El Dorado International Airport",
+      "city": "Bogotá",
+      "country": "Colombia",
+      "iata_code": "BOG",
+      "airport_type": "INTERNACIONAL",
+      "active": true,
+      "_links": [
+        {"rel": "self", "href": "/airports/:id", "method": "GET"},
+        {"rel": "collection", "href": "/airports", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido (MOD_V_ID_ERR_00013)
+  - 404: Aeropuerto no encontrado (MOD_APT_NOT_FOUND_ERR_00001)
+  - 500: Error interno del servidor (GEN_SRV_ERR_00001)
+}

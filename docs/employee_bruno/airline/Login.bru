@@ -1,0 +1,53 @@
+meta {
+  name: Login
+  type: http
+  seq: 0
+}
+
+post {
+  url: {{baseUrl}}/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "emman7@yopmail.com",
+    "password": "12345678"
+  }
+}
+
+script:post-response {
+  // Guardar el access_token en la variable de ambiente
+  if (res.body && res.body.data && res.body.data.access_token) {
+    bru.setEnvVar("access-token", res.body.data.access_token);
+    bru.setEnvVar("refresh-token", res.body.data.refresh_token);
+    console.log("✅ Token guardado exitosamente en el ambiente");
+  }
+}
+
+docs {
+  # Login - Autenticación para Airline
+
+  Autentica a un usuario administrador y guarda automáticamente el token en el environment.
+  Solo necesario para endpoints protegidos de gestión de aerolíneas.
+
+  ## Flujo
+  1. Ejecuta este Login primero
+  2. El token se guarda automáticamente en `{{access-token}}`
+  3. Luego usa los endpoints protegidos:
+     - PATCH /airlines/:id/activate
+     - PATCH /airlines/:id/deactivate
+
+  ## Request Body
+  - **email**: Email del usuario con rol admin
+  - **password**: Contraseña del usuario
+
+  ## Nota
+  Esta colección solo maneja el estado (activo/inactivo) de las aerolíneas.
+  NO incluye funcionalidades de rutas aerolínea ni otros módulos.
+}

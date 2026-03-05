@@ -211,7 +211,11 @@ func TestHTTP_RegisterEmployee(t *testing.T) {
 
 	newRouter := func(svc input.Service) *gin.Engine {
 		inter := interactor.NewInteractor(svc)
-		h := New(nil, inter, enc, resp, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		EmployeeInteractor: inter,
+		IDEncoder: enc,
+		Response: resp,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

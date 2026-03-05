@@ -1,17 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RefreshTokenRequest",
-  "description": "Schema for token refresh request",
+  "description": "Schema for token refresh request. refresh_token is optional when sent via HttpOnly cookie.",
   "type": "object",
   "properties": {
     "refresh_token": {
       "type": "string",
       "minLength": 1,
-      "description": "The refresh token obtained from a previous login or refresh"
+      "description": "The refresh token obtained from a previous login or refresh. Optional if sent via HttpOnly cookie."
     }
   },
-  "required": [
-    "refresh_token"
-  ],
   "additionalProperties": false
 }

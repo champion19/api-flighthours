@@ -98,7 +98,7 @@ fi
 # Verificar que Grafana puede resolver 'loki'
 echo -e "${BLUE}   → Verificando Grafana → Loki...${NC}"
 loki_check=$(docker exec motogo-grafana cat /etc/grafana/provisioning/datasources/loki.yml 2>/dev/null | grep -q "http://loki:3100" && echo "ok" || echo "fail")
-if [ "$loki_check" == "ok" ]; then
+if [[ "$loki_check" == "ok" ]]; then
     echo -e "     ${GREEN}✅ Configuración correcta${NC}"
 else
     echo -e "     ${YELLOW}⚠️  Datasource no encontrado (puede ser normal si no está configurado)${NC}"
@@ -113,7 +113,7 @@ docker ps --filter "name=flighthours-" --format "table {{.Names}}\t{{.Status}}\t
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-if [ "$all_ok" = true ]; then
+if [[ "$all_ok" = true ]]; then
     echo -e "${GREEN}✅ Stack de monitoreo reparado exitosamente${NC}"
     echo ""
     echo -e "Accesos:"

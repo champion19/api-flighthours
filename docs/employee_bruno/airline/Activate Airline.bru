@@ -1,0 +1,60 @@
+meta {
+  name: Activate Airline
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/airlines/:id/activate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: zVL6fRnRcd8McYrNhXD8u2okijnnSReo
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Activate Airline (HU3 - Activar Aerolínea)
+
+  Activa una aerolínea por su ID.
+  Este endpoint requiere autenticación con JWT.
+
+  ## Flujo
+  1. POST /login → Obtener token (desde airline_employee/Login)
+  2. PATCH /airlines/:id/activate → Activar aerolínea ✅
+
+  ## Path Parameters
+  - `id`: ID de la aerolínea (encoded o UUID)
+
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "AIR_ACT_EXI_00303",
+    "message": "...",
+    "data": {
+      "success": true,
+      "active": true,
+      "_links": [
+        {"rel": "self", "href": "/airlines/:id", "method": "GET"},
+        {"rel": "deactivate", "href": "/airlines/:id/deactivate", "method": "PATCH"},
+        {"rel": "list", "href": "/airlines", "method": "GET"}
+      ]
+    }
+  }
+  ```
+
+  ## Errores
+  - 400: ID inválido
+  - 401: No autenticado
+  - 404: Aerolínea no encontrada
+  - 500: Error interno del servidor
+}

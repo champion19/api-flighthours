@@ -1,0 +1,50 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refresh_token": "{{refresh-token}}"
+  }
+}
+
+script:post-response {
+  // Actualizar tokens automáticamente después del refresh
+  if (res.body && res.body.data && res.body.data.access_token) {
+    bru.setEnvVar("access-token", res.body.data.access_token);
+    bru.setEnvVar("refresh-token", res.body.data.refresh_token);
+    console.log("✅ Tokens actualizados exitosamente después del refresh");
+  }
+}
+
+docs {
+  # Refresh Token - Renovar Access Token
+
+  Renueva el access token usando el refresh token obtenido en el Login.
+
+  ## Flujo
+  1. Ejecuta **Login** primero (guarda automáticamente el refresh-token)
+  2. Ejecuta este request para obtener nuevos tokens
+  3. Los tokens se actualizan automáticamente en el environment
+
+  ## Request Body
+  - **refresh_token**: Token de refresco obtenido en el login (se usa `{{refresh-token}}` del environment)
+
+  ## Respuestas
+  - 200: Refresh exitoso - Devuelve nuevo access_token y refresh_token
+  - 400: Body inválido o campo faltante
+  - 401: Refresh token inválido o expirado
+  - 429: Rate limit excedido (máx 5 requests inmediatos, luego 1 cada 5s)
+}

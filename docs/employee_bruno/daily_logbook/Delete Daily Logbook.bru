@@ -1,0 +1,60 @@
+meta {
+  name: Delete Daily Logbook
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/daily-logbooks/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{logbook-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Eliminar Bitácora Diaria (HU10)
+
+  Elimina permanentemente una bitácora diaria del empleado autenticado.
+  Solo el dueño de la bitácora puede eliminarla.
+
+  ## Flujo
+  1. POST /login → Obtener token (ejecutar Login.bru primero)
+  2. DELETE /daily-logbooks/:id → Eliminar bitácora ✅
+
+  ## Path Parameters
+  - `id`: ID de la bitácora (encoded ID)
+
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+
+  ## Respuesta exitosa (200) - `BIT_DEL_EXI_01601`
+  ```json
+  {
+    "success": true,
+    "code": "BIT_DEL_EXI_01601",
+    "message": "...",
+    "data": {
+      "id": "encoded-id",
+      "deleted": true,
+      "_links": [
+        {"rel": "collection", "href": "/daily-logbooks", "method": "GET"},
+        {"rel": "create", "href": "/daily-logbooks", "method": "POST"}
+      ]
+    }
+  }
+  ```
+
+  ## Errores
+  - 400: ID inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Bitácora no pertenece al empleado (`BIT_AUTH_ERR_00001`)
+  - 404: Bitácora no encontrada (`BIT_CON_ERR_01903`)
+  - 500: Error interno (`BIT_DEL_ERR_01604`)
+}

@@ -12,7 +12,7 @@ export const options = {
 
 const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1';
 
-export default function () {
+export default function smokeTest() {
   const messagesRes = http.get(`${BASE_URL}/messages`);
 
   check(messagesRes, {

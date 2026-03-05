@@ -6,6 +6,7 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/input"
 	"github.com/champion19/api-flighthours/middleware"
 	"github.com/champion19/api-flighthours/platform/cache/messaging"
+	"github.com/champion19/api-flighthours/platform/cookie"
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/tools/idencoder"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type handler struct {
 	Interactor                   input.EmployeeInteractor
 	IDEncoder                    *idencoder.HashidsEncoder
 	Response                     *middleware.ResponseHandler
+	CookieManager                *cookie.Manager
 	MessageInteractor            *interactor.MessageInteractor
 	MessagingCache               *messaging.MessageCache
 	AirlineInteractor            *interactor.AirlineInteractor
@@ -26,47 +28,55 @@ type handler struct {
 	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
-	LicensePlateInteractor       *interactor.LicensePlateInteractor
+	TailNumberInteractor         *interactor.TailNumberInteractor
 	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
+	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
 }
 
-func New(
-	service input.Service,
-	employeeInteractor input.EmployeeInteractor,
-	idEncoder *idencoder.HashidsEncoder,
-	response *middleware.ResponseHandler,
-	messageInteractor *interactor.MessageInteractor,
-	messagingCache *messaging.MessageCache,
-	airlineInteractor *interactor.AirlineInteractor,
-	airlineEmployeeInteractor *interactor.AirlineEmployeeInteractor,
-	engineInteractor *interactor.EngineInteractor,
-	routeInteractor *interactor.RouteInteractor,
-	manufacturerInteractor *interactor.ManufacturerInteractor,
-	airportInteractor *interactor.AirportInteractor,
-	airlineRouteInteractor *interactor.AirlineRouteInteractor,
-	dailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor,
-	dailyLogbookInteractor *interactor.DailyLogbookInteractor,
-	aircraftModelInteractor *interactor.AircraftModelInteractor,
-	aircraftRegistrationInteractor *interactor.LicensePlateInteractor) *handler {
+type HandlerDeps struct {
+	Service                      input.Service
+	EmployeeInteractor           input.EmployeeInteractor
+	IDEncoder                    *idencoder.HashidsEncoder
+	Response                     *middleware.ResponseHandler
+	CookieManager                *cookie.Manager
+	MessageInteractor            *interactor.MessageInteractor
+	MessagingCache               *messaging.MessageCache
+	AirlineInteractor            *interactor.AirlineInteractor
+	AirlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
+	EngineInteractor             *interactor.EngineInteractor
+	RouteInteractor              *interactor.RouteInteractor
+	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
+	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
+	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
+	ManufacturerInteractor       *interactor.ManufacturerInteractor
+	AirportInteractor            *interactor.AirportInteractor
+	AircraftModelInteractor      *interactor.AircraftModelInteractor
+	TailNumberInteractor         *interactor.TailNumberInteractor
+	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
+}
+
+func New(deps HandlerDeps) *handler {
 	return &handler{
-		EmployeeService:           service,
-		Interactor:                employeeInteractor,
-		IDEncoder:                 idEncoder,
-		Response:                  response,
-		MessageInteractor:         messageInteractor,
-		MessagingCache:            messagingCache,
-		AirlineInteractor:         airlineInteractor,
-		AirlineEmployeeInteractor: airlineEmployeeInteractor,
-		EngineInteractor:          engineInteractor,
-		RouteInteractor:           routeInteractor,
-		AirlineRouteInteractor:    airlineRouteInteractor,
-		DailyLogbookDetailInteractor:    dailyLogbookDetailInteractor,
-		DailyLogbookInteractor:    dailyLogbookInteractor,
-		ManufacturerInteractor:    manufacturerInteractor,
-		AirportInteractor:         airportInteractor,
-		AircraftModelInteractor:   aircraftModelInteractor,
-		LicensePlateInteractor:    aircraftRegistrationInteractor,
+		EmployeeService:              deps.Service,
+		Interactor:                   deps.EmployeeInteractor,
+		IDEncoder:                    deps.IDEncoder,
+		Response:                     deps.Response,
+		CookieManager:                deps.CookieManager,
+		MessageInteractor:            deps.MessageInteractor,
+		MessagingCache:               deps.MessagingCache,
+		AirlineInteractor:            deps.AirlineInteractor,
+		AirlineEmployeeInteractor:    deps.AirlineEmployeeInteractor,
+		EngineInteractor:             deps.EngineInteractor,
+		RouteInteractor:              deps.RouteInteractor,
+		AirlineRouteInteractor:       deps.AirlineRouteInteractor,
+		DailyLogbookDetailInteractor: deps.DailyLogbookDetailInteractor,
+		DailyLogbookInteractor:       deps.DailyLogbookInteractor,
+		ManufacturerInteractor:       deps.ManufacturerInteractor,
+		AirportInteractor:            deps.AirportInteractor,
+		AircraftModelInteractor:      deps.AircraftModelInteractor,
+		TailNumberInteractor:         deps.TailNumberInteractor,
+		FlightSummaryInteractor:      deps.FlightSummaryInteractor,
 	}
 }
 

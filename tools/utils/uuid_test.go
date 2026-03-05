@@ -80,7 +80,7 @@ func TestMustParse(t *testing.T) {
 
 	t.Run("invalid UUID panics", func(t *testing.T) {
 		defer func() {
-			if r := recover(); r == nil {
+			if recover() == nil {
 				t.Error("expected panic for invalid UUID")
 			}
 		}()

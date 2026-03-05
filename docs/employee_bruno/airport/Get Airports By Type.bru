@@ -1,0 +1,53 @@
+meta {
+  name: Get Airports By Type
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/airport-types/{{airport-type}}
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  airport-type: NACIONAL
+}
+
+docs {
+  # Get Airports By Type (HU43 - Consultar Aeropuertos por Tipo)
+  
+  Obtiene los aeropuertos filtrados por tipo.
+  Este endpoint NO requiere autenticación (público).
+  
+  ## Path Parameters
+  - `airport_type`: Tipo de aeropuerto (ej: INTERNACIONAL, NACIONAL, REGIONAL, PRIVADO)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "TAE_CON_EXI_04601",
+    "data": {
+      "airport_type": "INTERNACIONAL",
+      "airports": [
+        {
+          "id": "encoded_airport_id",
+          "name": "El Dorado International Airport",
+          "city": "Bogotá",
+          "country": "Colombia",
+          "iata_code": "BOG"
+        }
+      ],
+      "_links": [
+        {"rel": "collection", "href": "/airports", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: Tipo inválido (MOD_V_ID_ERR_00013)
+  - 404: Tipo no encontrado o sin aeropuertos (TAE_CON_ERR_04602)
+  - 500: Error interno (TAE_CON_ERR_04603)
+}

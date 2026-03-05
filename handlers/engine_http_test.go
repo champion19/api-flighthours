@@ -70,7 +70,11 @@ func TestHTTP_GetEngineByID(t *testing.T) {
 
 	newRouter := func(svc input.EngineService) *gin.Engine {
 		engineInteractor := interactor.NewEngineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, engineInteractor, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		EngineInteractor: engineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -185,7 +189,11 @@ func TestHTTP_ListEngines(t *testing.T) {
 
 	newRouter := func(svc input.EngineService) *gin.Engine {
 		engineInteractor := interactor.NewEngineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, nil, nil, engineInteractor, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		EngineInteractor: engineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

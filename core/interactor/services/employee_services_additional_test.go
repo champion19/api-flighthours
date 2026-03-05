@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"testing"
 
@@ -329,7 +330,7 @@ func TestEmployeeService_UpdateEmployee(t *testing.T) {
 		mockTx := new(mocks.MockTx)
 		employee := domain.Employee{ID: "123", Email: "updated@example.com"}
 
-		mockRepo.On("UpdateEmployee", mock.Anything, mockTx, employee).Return(nil)
+		mockRepo.On("UpdateEmployee", mock.Anything, mock.Anything, mockTx, employee).Return(nil)
 
 		svc := NewService(mockRepo, nil)
 		err := svc.UpdateEmployee(context.Background(), mockTx, employee)
@@ -345,7 +346,7 @@ func TestEmployeeService_UpdateEmployee(t *testing.T) {
 		mockTx := new(mocks.MockTx)
 		employee := domain.Employee{ID: "123", Email: "updated@example.com"}
 
-		mockRepo.On("UpdateEmployee", mock.Anything, mockTx, employee).Return(errors.New("db error"))
+		mockRepo.On("UpdateEmployee", mock.Anything, mock.Anything, mockTx, employee).Return(errors.New("db error"))
 
 		svc := NewService(mockRepo, nil)
 		err := svc.UpdateEmployee(context.Background(), mockTx, employee)
@@ -694,7 +695,7 @@ func TestEmployeeService_Login(t *testing.T) {
 			EmailVerified: boolPtr(false),
 		}
 		mockAuth.On("GetUserByEmail", mock.Anything, "unverified@example.com").Return(kcUser, nil)
-		mockAuth.On("SendVerificationEmail", mock.Anything, "kc-123").Return(nil)
+		mockAuth.On("SendVerificationEmail", mock.Anything, mock.Anything, "kc-123").Return(nil)
 
 		svc := NewService(nil, mockAuth)
 		_, err := svc.Login(context.Background(), "unverified@example.com", "password123")
@@ -728,7 +729,7 @@ func TestEmployeeService_Login(t *testing.T) {
 func TestEmployeeService_SendVerificationEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockAuth := new(mocks.MockAuthClient)
-		mockAuth.On("SendVerificationEmail", mock.Anything, "kc-123").Return(nil)
+		mockAuth.On("SendVerificationEmail", mock.Anything, mock.Anything, "kc-123").Return(nil)
 
 		svc := NewService(nil, mockAuth)
 		err := svc.SendVerificationEmail(context.Background(), "kc-123")
@@ -741,7 +742,7 @@ func TestEmployeeService_SendVerificationEmail(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		mockAuth := new(mocks.MockAuthClient)
-		mockAuth.On("SendVerificationEmail", mock.Anything, "kc-fail").Return(errors.New("email error"))
+		mockAuth.On("SendVerificationEmail", mock.Anything, mock.Anything, "kc-fail").Return(errors.New("email error"))
 
 		svc := NewService(nil, mockAuth)
 		err := svc.SendVerificationEmail(context.Background(), "kc-fail")
@@ -756,7 +757,7 @@ func TestEmployeeService_SendVerificationEmail(t *testing.T) {
 func TestEmployeeService_SendPasswordResetEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockAuth := new(mocks.MockAuthClient)
-		mockAuth.On("SendPasswordResetEmail", mock.Anything, "test@example.com").Return(nil)
+		mockAuth.On("SendPasswordResetEmail", mock.Anything, mock.Anything, "test@example.com").Return(nil)
 
 		svc := NewService(nil, mockAuth)
 		err := svc.SendPasswordResetEmail(context.Background(), "test@example.com")
@@ -769,7 +770,7 @@ func TestEmployeeService_SendPasswordResetEmail(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		mockAuth := new(mocks.MockAuthClient)
-		mockAuth.On("SendPasswordResetEmail", mock.Anything, "fail@example.com").Return(errors.New("reset error"))
+		mockAuth.On("SendPasswordResetEmail", mock.Anything, mock.Anything, "fail@example.com").Return(errors.New("reset error"))
 
 		svc := NewService(nil, mockAuth)
 		err := svc.SendPasswordResetEmail(context.Background(), "fail@example.com")
@@ -892,6 +893,99 @@ func TestEmployeeService_ChangePassword(t *testing.T) {
 
 		if err != domain.ErrPasswordUpdateFailed {
 			t.Fatalf("expected ErrPasswordUpdateFailed, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestEmployeeService_VerifyEmailByToken(t *testing.T) {
+	// Helper: build a fake JWT with 3 dots-separated base64 segments
+	mkToken := func(email string) string {
+		header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256"}`))
+		payload := base64.RawURLEncoding.EncodeToString([]byte(`{"email":"` + email + `"}`))
+		sig := base64.RawURLEncoding.EncodeToString([]byte("sig"))
+		return header + "." + payload + "." + sig
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		email := "test@example.com"
+		notVerified := false
+		kcUser := &gocloak.User{ID: strPtr("kc-123"), Email: strPtr(email), EmailVerified: &notVerified}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, email).Return(kcUser, nil)
+		mockAuth.On("VerifyEmail", mock.Anything, mock.Anything, "kc-123").Return(nil)
+
+		svc := NewService(nil, mockAuth)
+		result, err := svc.VerifyEmailByToken(context.Background(), mkToken(email))
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if result != email {
+			t.Fatalf("expected %s, got %s", email, result)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("invalid token format", func(t *testing.T) {
+		svc := NewService(nil, nil)
+		_, err := svc.VerifyEmailByToken(context.Background(), "not-a-jwt")
+
+		if err != domain.ErrInvalidToken {
+			t.Fatalf("expected ErrInvalidToken, got %v", err)
+		}
+	})
+
+	t.Run("user not found in keycloak", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		email := "unknown@example.com"
+
+		mockAuth.On("GetUserByEmail", mock.Anything, email).Return(nil, errors.New("not found"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.VerifyEmailByToken(context.Background(), mkToken(email))
+
+		if err != domain.ErrUserNotFound {
+			t.Fatalf("expected ErrUserNotFound, got %v", err)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("email already verified", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		email := "verified@example.com"
+		verified := true
+		kcUser := &gocloak.User{ID: strPtr("kc-456"), Email: strPtr(email), EmailVerified: &verified}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, email).Return(kcUser, nil)
+
+		svc := NewService(nil, mockAuth)
+		result, err := svc.VerifyEmailByToken(context.Background(), mkToken(email))
+
+		if err != domain.ErrEmailAlreadyVerified {
+			t.Fatalf("expected ErrEmailAlreadyVerified, got %v", err)
+		}
+		if result != email {
+			t.Fatalf("expected %s, got %s", email, result)
+		}
+		mockAuth.AssertExpectations(t)
+	})
+
+	t.Run("VerifyEmail fails", func(t *testing.T) {
+		mockAuth := new(mocks.MockAuthClient)
+		email := "test@example.com"
+		notVerified := false
+		kcUser := &gocloak.User{ID: strPtr("kc-789"), Email: strPtr(email), EmailVerified: &notVerified}
+
+		mockAuth.On("GetUserByEmail", mock.Anything, email).Return(kcUser, nil)
+		mockAuth.On("VerifyEmail", mock.Anything, mock.Anything, "kc-789").Return(errors.New("kc error"))
+
+		svc := NewService(nil, mockAuth)
+		_, err := svc.VerifyEmailByToken(context.Background(), mkToken(email))
+
+		if err == nil {
+			t.Fatal("expected error")
 		}
 		mockAuth.AssertExpectations(t)
 	})

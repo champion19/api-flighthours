@@ -1,0 +1,44 @@
+meta {
+  name: Get My  Employee Airline Info
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/employees/airline
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Get My Airline Info (HU24 - Consultar la Información del Empleado de la Aerolínea)
+  
+  Obtiene la información de aerolínea del empleado autenticado.
+  Este endpoint requiere autenticación con JWT.
+  
+  ## Flujo
+  1. POST /login → Obtener token
+  2. GET /employee/me/airline → Consultar info de aerolínea ✅
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "EMP_AIR_GET_EXI_02601",
+    "data": {
+      "airline_id": "zVL6fRnRcd8McYrNhXD8u2okijnnSReo",
+      "airline_name": "Avianca",
+      "airline_code": "AV",
+      "bp": "CP003",
+      "_links": [...]
+    }
+  }
+  ```
+}

@@ -12,9 +12,8 @@
     },
     "flight_number": {
       "type": "string",
-      "description": "Flight number (e.g., AV123)",
-      "minLength": 1,
-      "maxLength": 4
+      "description": "Flight number (numeric, up to 4 digits)",
+      "pattern": "^\\d{1,4}$"
     },
     "airline_route_id": {
       "type": "string",
@@ -22,9 +21,9 @@
       "minLength": 1,
       "maxLength": 50
     },
-    "license_plate_id": {
+    "tail_number_id": {
       "type": "string",
-      "description": "Aircraft registration ID (obfuscated ID)",
+      "description": "Tail number ID (obfuscated ID)",
       "minLength": 1,
       "maxLength": 50
     },
@@ -65,15 +64,16 @@
     },
     "companion_name": {
       "type": "string",
-      "description": "Name of the companion pilot",
+      "description": "Name of the companion pilot (letters and spaces only)",
+      "pattern": "^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ ]+$",
       "maxLength": 100
     },
     "crew_role": {
       "type": "string",
-      "description": "Crew position: captain or copilot",
+      "description": "Crew position: captain or first officer",
       "enum": [
         "captain",
-        "copilot"
+        "first officer"
       ]
     },
     "air_time": {
@@ -86,17 +86,10 @@
       "description": "Block time (HH:MM)",
       "pattern": "^\\d{2}:\\d{2}$"
     },
-    "duty_time": {
-      "type": "string",
-      "description": "Duty time (HH:MM)",
-      "pattern": "^\\d{2}:\\d{2}$"
-    },
     "approach_type": {
       "type": "string",
-      "description": "Approach type: NPA, PA, APV, or VISUAL",
+      "description": "Approach type: APV, VISUAL",
       "enum": [
-        "NPA",
-        "PA",
         "APV",
         "VISUAL"
       ]
@@ -117,7 +110,7 @@
     "flight_real_date",
     "flight_number",
     "airline_route_id",
-    "license_plate_id"
+    "tail_number_id"
   ],
   "additionalProperties": false
 }

@@ -20,8 +20,6 @@ func NewTokenParser() *TokenParser {
 	return &TokenParser{}
 }
 
-
-
 func (tp *TokenParser) ExtractEmailFromToken(token string) (string, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
@@ -38,16 +36,13 @@ func (tp *TokenParser) ExtractEmailFromToken(token string) (string, error) {
 		return "", ErrClaimsParse
 	}
 
-
 	if email, ok := claims["eml"].(string); ok && email != "" {
 		return email, nil
 	}
 
-
 	if email, ok := claims["email"].(string); ok && email != "" {
 		return email, nil
 	}
-
 
 	if sub, ok := claims["sub"].(string); ok && sub != "" {
 		if isValidEmail(sub) {
@@ -84,10 +79,8 @@ func base64URLDecode(s string) ([]byte, error) {
 		s += "="
 	}
 
-
 	return base64.URLEncoding.DecodeString(s)
 }
-
 
 func isValidEmail(s string) bool {
 	atIndex := strings.Index(s, "@")

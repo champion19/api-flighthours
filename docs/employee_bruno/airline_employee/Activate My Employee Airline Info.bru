@@ -1,0 +1,53 @@
+meta {
+  name: Activate My Employee Airline Info
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/employees/airline/activate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Activate My Airline Info (HU27 - Activar Empleado Aerolínea)
+  
+  Activa la información de aerolínea del empleado autenticado.
+  El empleado debe tener información de aerolínea asignada previamente.
+  Este endpoint requiere autenticación con JWT.
+  
+  ## Flujo
+  1. POST /login → Obtener token
+  2. PATCH /employee/me/airline/activate → Activar info de aerolínea ✅
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "EMP_AIR_ACT_EXI_02704",
+    "message": "...",
+    "data": {
+      "success": true,
+      "active": true,
+      "_links": [
+        {"rel": "self", "href": "/employee/me/airline", "method": "GET"},
+        {"rel": "deactivate", "href": "/employee/me/airline/deactivate", "method": "PATCH"},
+        {"rel": "profile", "href": "/employee/me", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores
+  - 401: No autenticado
+  - 404: El empleado no tiene información de aerolínea asignada
+  - 500: Error interno del servidor
+}

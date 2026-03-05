@@ -1,0 +1,44 @@
+meta {
+  name: Get Airline By ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/airlines/{{airline-id}}
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  airline-id: vyY2TPnPHQRguoepinx5irokud88CeEW
+}
+
+docs {
+  # Get Airline By ID (HU - Consultar Información de Aerolínea)
+  
+  Obtiene la información detallada de una aerolínea por su ID.
+  Este endpoint NO requiere autenticación.
+  
+  ## Path Parameters
+  - `id`: ID de la aerolínea (puede ser encoded o UUID)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_AIR_GET_EXI_00001",
+    "data": {
+      "id": "encoded_airline_id",
+      "airline_name": "Avianca",
+      "airline_code": "AV",
+      "status": "active"
+    }
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido
+  - 404: Aerolínea no encontrada
+  - 500: Error interno del servidor
+}

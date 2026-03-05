@@ -1,0 +1,53 @@
+meta {
+  name: Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "josedalogo@yopmail.com",
+    "password": "Jose2026!"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.data && res.body.data.access_token) {
+    bru.setEnvVar("access-token", res.body.data.access_token);
+    bru.setEnvVar("refresh-token", res.body.data.refresh_token);
+    console.log("✅ Token saved successfully");
+  }
+}
+
+docs {
+  # Login - Get Access Token
+  
+  Authenticate to obtain the access_token required for Flight Summary protected endpoints.
+  
+  ## Flow
+  1. Run this Login first
+  2. The token is auto-saved to `{{access-token}}`
+  3. Then use the protected endpoints:
+     - GET /employees/flight-hours-summary
+     - GET /employees/flight-alerts
+     - GET /employees/recent-flights
+  
+  ## Request Body
+  - **email**: Registered employee email
+  - **password**: Employee password
+  
+  ## Responses
+  - 200: Login successful - Returns access_token and refresh_token
+  - 401: Invalid credentials
+  - 403: Email not verified
+}

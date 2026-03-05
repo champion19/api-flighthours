@@ -91,7 +91,7 @@ func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 		// Resolve ID (accepts both UUID and obfuscated ID)
 		logbookUUID, responseID := h.resolveID(inputID)
 		if logbookUUID == "" {
-			log.Warn(logger.LogDailyLogbookGetError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookGetError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -224,7 +224,7 @@ func (h *handler) UpdateDailyLogbook() gin.HandlerFunc {
 		// Resolve ID (accepts both UUID and obfuscated ID)
 		logbookUUID, responseID := h.resolveID(inputID)
 		if logbookUUID == "" {
-			log.Warn(logger.LogDailyLogbookUpdateError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookUpdateError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -302,7 +302,7 @@ func (h *handler) DeleteDailyLogbook() gin.HandlerFunc {
 		// Resolve ID (accepts both UUID and obfuscated ID)
 		logbookUUID, responseID := h.resolveID(inputID)
 		if logbookUUID == "" {
-			log.Warn(logger.LogDailyLogbookDeleteError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookDeleteError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -371,7 +371,7 @@ func (h *handler) ActivateDailyLogbook() gin.HandlerFunc {
 		// Resolve ID (accepts both UUID and obfuscated ID)
 		logbookUUID, responseID := h.resolveID(inputID)
 		if logbookUUID == "" {
-			log.Warn(logger.LogDailyLogbookActivateError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookActivateError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -441,7 +441,7 @@ func (h *handler) DeactivateDailyLogbook() gin.HandlerFunc {
 		// Resolve ID (accepts both UUID and obfuscated ID)
 		logbookUUID, responseID := h.resolveID(inputID)
 		if logbookUUID == "" {
-			log.Warn(logger.LogDailyLogbookDeactivateError, "error", "invalid ID")
+			log.Warn(logger.LogDailyLogbookDeactivateError, "error", errInvalidID)
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}

@@ -1,0 +1,52 @@
+meta {
+  name: List Airline Routes admin
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/airline-routes
+  body: none
+  auth: none
+}
+
+params:query {
+  ~airline_code: AV
+  ~status: true
+}
+
+docs {
+  # List Airline Routes (HU37 - Consultar la Información de la Ruta Aerolínea)
+  
+  Obtiene la lista de rutas de aerolíneas disponibles.
+  Este endpoint es público (no requiere autenticación).
+  
+  ## Query Parameters (opcionales)
+  - `airline_code`: Filtrar por código de aerolínea (ej: AV, LA)
+  - `status`: Filtrar por estado (true = activa, false = inactiva)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "airline_routes": [
+      {
+        "id": "encoded_airline_route_id",
+        "airline_id": "encoded_airline_id",
+        "airline_code": "AV",
+        "airline_name": "Avianca",
+        "route_id": "encoded_route_id",
+        "route_code": "BOG-MDE",
+        "status": true,
+        "_links": [...]
+      }
+    ],
+    "total": 5,
+    "_links": [
+      {"rel": "self", "href": "/airline-routes", "method": "GET"}
+    ]
+  }
+  ```
+  
+  ## Errores
+  - 500: Error interno del servidor
+}

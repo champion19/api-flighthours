@@ -66,7 +66,7 @@ build/
 bin/
 
 # Documentation (as requested)
-docs/
+documents/
 
 # Config files with sensitive data
 #.config/local-config.json

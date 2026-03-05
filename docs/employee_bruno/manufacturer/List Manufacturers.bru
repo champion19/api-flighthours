@@ -1,0 +1,42 @@
+meta {
+  name: List Manufacturers
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/manufacturers
+  body: none
+  auth: none
+}
+
+docs {
+  # List Manufacturers (HU29 - Consultar Fabricantes)
+
+  Lista todos los fabricantes del sistema.
+  Este endpoint NO requiere autenticación (público).
+
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "FAB_LIST_EXI_03104",
+    "data": {
+      "manufacturers": [
+        {
+          "id": "encoded_manufacturer_id",
+          "name": "Boeing"
+        },
+        {
+          "id": "encoded_manufacturer_id",
+          "name": "Airbus"
+        }
+      ],
+      "_links": [...]
+    }
+  }
+  ```
+
+  ## Errores
+  - 500: Error interno del servidor (FAB_LIST_ERR_03105)
+}

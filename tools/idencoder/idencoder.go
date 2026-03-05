@@ -1,6 +1,5 @@
 package idencoder
 
-
 import (
 	"errors"
 	"fmt"
@@ -11,18 +10,15 @@ import (
 	hashids "github.com/speps/go-hashids/v2"
 )
 
-
 type HashidsEncoder struct {
 	hashData *hashids.HashIDData
 	logger   logger.Logger
 }
 
-
 type Config struct {
 	Secret    string
 	MinLength int
 }
-
 
 func NewHashidsEncoder(cfg Config, log logger.Logger) (*HashidsEncoder, error) {
 	if cfg.Secret == "" {
@@ -44,7 +40,6 @@ func NewHashidsEncoder(cfg Config, log logger.Logger) (*HashidsEncoder, error) {
 		logger:   log,
 	}, nil
 }
-
 
 func (e *HashidsEncoder) Encode(uuidStr string) (string, error) {
 
@@ -86,33 +81,25 @@ func (e *HashidsEncoder) Encode(uuidStr string) (string, error) {
 func (e *HashidsEncoder) Decode(encoded string) (string, error) {
 	if encoded == "" {
 		err := errors.New("ID ofuscado no puede estar vacío")
-		if e.logger != nil {
-			e.logger.Error(logger.LogIDEncoderEmptyID, "error", err)
-		}
+		e.logError(logger.LogIDEncoderEmptyID, err, "")
 		return "", err
 	}
 
 	h, err := hashids.NewWithData(e.hashData)
 	if err != nil {
-		if e.logger != nil {
-			e.logger.Error(logger.LogIDEncoderHashidsCreate, "error", err)
-		}
+		e.logError(logger.LogIDEncoderHashidsCreate, err, "")
 		return "", err
 	}
 
 	numbers, err := h.DecodeWithError(encoded)
 	if err != nil {
-		if e.logger != nil {
-			e.logger.Error(logger.LogIDEncoderDecodingError, "error", err, "encoded", encoded)
-		}
+		e.logError(logger.LogIDEncoderDecodingError, err, encoded)
 		return "", err
 	}
 
 	if len(numbers) != 8 {
 		err := errors.New("ID ofuscado tiene formato incorrecto")
-		if e.logger != nil {
-			e.logger.Error(logger.LogIDEncoderInvalidFormat, "error", err, "encoded", encoded, "numbers_length", len(numbers))
-		}
+		e.logError(logger.LogIDEncoderInvalidFormat, err, encoded)
 		return "", err
 	}
 
@@ -124,13 +111,23 @@ func (e *HashidsEncoder) Decode(encoded string) (string, error) {
 
 	parsedUUID, err := uuid.FromBytes(uuidBytes)
 	if err != nil {
-		if e.logger != nil {
-			e.logger.Error(logger.LogIDEncoderUUIDError, "error", err, "encoded", encoded)
-		}
+		e.logError(logger.LogIDEncoderUUIDError, err, encoded)
 		return "", err
 	}
 
 	return parsedUUID.String(), nil
+}
+
+// logError logs an error if the logger is available.
+func (e *HashidsEncoder) logError(msg string, err error, encoded string) {
+	if e.logger == nil {
+		return
+	}
+	if encoded != "" {
+		e.logger.Error(msg, "error", err, "encoded", encoded)
+	} else {
+		e.logger.Error(msg, "error", err)
+	}
 }
 
 func (e *HashidsEncoder) MustEncode(uuidStr string) string {

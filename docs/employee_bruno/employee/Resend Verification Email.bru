@@ -1,0 +1,46 @@
+meta {
+  name: Resend Verification Email
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/auth/resend-verification
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "usuario@ejemplo.com"
+  }
+}
+
+docs {
+  # Reenviar Email de Verificación
+  
+  Reenvía el email de verificación a un usuario registrado
+  que no ha verificado su cuenta todavía.
+  
+  ## Validaciones
+  - Email debe ser válido y estar registrado en el sistema
+  - El email NO debe estar ya verificado
+  
+  ## Respuestas
+  - 200: Email de verificación reenviado exitosamente
+    ```json
+    {
+      "success": true,
+      "message": "Verification email resent successfully",
+      "data": "usuario@ejemplo.com"
+    }
+    ```
+  - 400: Error de validación - Email inválido
+  - 404: Usuario no encontrado
+  - 409: Email ya estaba verificado (warning)
+  - 500: Error interno del servidor
+}

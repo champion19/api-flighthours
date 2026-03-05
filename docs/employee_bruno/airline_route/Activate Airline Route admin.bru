@@ -1,0 +1,56 @@
+meta {
+  name: Activate Airline Route admin
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/airline-routes/:id/activate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: oey3cwA4tj3ziQpkUGGnca2LU1jyCJwn
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+vars:pre-request {
+  id: k2aBhGrDS1XxUNr
+}
+
+docs {
+  # Activate Airline Route (HU39 - Activar la Información de la Ruta Aerolínea)
+  
+  Activa una ruta de aerolínea por su ID.
+  Este endpoint REQUIERE autenticación con JWT.
+  
+  ## Flujo
+  1. POST /login → Obtener token (usando Login.bru)
+  2. PATCH /airline-routes/:id/activate → Activar ruta aerolínea ✅
+  
+  ## Path Parameters
+  - `id`: ID de la ruta aerolínea (encoded o UUID)
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "RUT_AIR_ACT_EXI_04201",
+    "message": "Ruta aerolínea activada exitosamente"
+  }
+  ```
+  
+  ## Errores
+  - 400: ID inválido
+  - 401: No autenticado
+  - 404: Ruta aerolínea no encontrada (RUT_AIR_CON_ERR_04002)
+  - 409: La ruta aerolínea ya está activa (RUT_AIR_ACT_ERR_04203)
+  - 500: Error interno del servidor
+}

@@ -45,8 +45,8 @@ var fieldNameMapping = map[string]string{
 	"airline_id": "Airline",
 	"bp":         "BP Number",
 
-	// License Plate
-	"license_plate":     "License Plate",
+	// Tail Number
+	"tail_number":     "Tail Number",
 	"aircraft_model_id": "Aircraft Model",
 
 	// Daily Logbook
@@ -55,7 +55,7 @@ var fieldNameMapping = map[string]string{
 
 	// Daily Logbook Detail (Flight)
 	"airline_route_id": "Airline Route",
-	"license_plate_id": "Aircraft License Plate",
+	"tail_number_id": "Aircraft Tail Number",
 	"flight_number":    "Flight Number",
 	"flight_real_date": "Flight Date",
 	"flight_type":      "Flight Type",
@@ -70,7 +70,6 @@ var fieldNameMapping = map[string]string{
 	"in_time":          "In Time",
 	"block_time":       "Block Time",
 	"air_time":         "Air Time",
-	"duty_time":        "Duty Time",
 
 	// Message Management
 	"code":     "Code",
@@ -129,11 +128,11 @@ func (b *Builder) WithValidateAddAirlineEmployee() gin.HandlerFunc {
 func (b *Builder) WithValidateUpdateAirlineEmployee() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.UpdateAirlineEmployeeValidator)
 }
-func (b *Builder) WithValidateCreateLicensePlate() gin.HandlerFunc {
-	return b.jsonValidator(b.Validators.CreateLicensePlateValidator)
+func (b *Builder) WithValidateCreateTailNumber() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.CreateTailNumberValidator)
 }
-func (b *Builder) WithValidateUpdateLicensePlate() gin.HandlerFunc {
-	return b.jsonValidator(b.Validators.UpdateLicensePlateValidator)
+func (b *Builder) WithValidateUpdateTailNumber() gin.HandlerFunc {
+	return b.jsonValidator(b.Validators.UpdateTailNumberValidator)
 }
 func (b *Builder) WithValidateCreateDailyLogbookDetail() gin.HandlerFunc {
 	return b.jsonValidator(b.Validators.CreateDailyLogbookDetailValidator)
@@ -153,60 +152,56 @@ func (b *Builder) WithValidateRefreshToken() gin.HandlerFunc {
 
 func (b *Builder) jsonValidator(schema *jsonschema.Schema) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get request ID for trace correlation
 		traceId := GetRequestID(c)
 		log := log.WithTraceID(traceId)
 
-		bodyBytes, err := io.ReadAll(c.Request.Body)
+		data, err := readAndParseBody(c, log)
 		if err != nil {
-			if log != nil {
-				log.Error(logger.LogMiddlewareBodyReadError, "error", err, "path", c.Request.URL.Path)
-			}
-			c.Error(json_schema.ErrBodyReadFailed)
-			c.Abort()
-			return
-		}
-
-		c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-
-		var data map[string]interface{}
-		if err := json.Unmarshal(bodyBytes, &data); err != nil {
-			if log != nil {
-				log.Error(logger.LogMiddlewareJSONParseError, "error", err, "path", c.Request.URL.Path)
-			}
-			c.Error(json_schema.ErrBadRequest)
+			c.Error(err)
 			c.Abort()
 			return
 		}
 
 		result := schema.Validate(data)
 		if !result.IsValid() {
-			// Extract field names from validation errors
-			fieldNames := extractFieldNames(result.Errors)
-
-			// Classify the validation error
-			validationError := classifyValidationError(fieldNames, result.Errors)
-
-			// Store field names in context for error_handler to use in message parameters
-			// Translate technical names to English labels
-			if len(fieldNames) > 0 {
-				c.Set("validation_fields", translateFieldNames(fieldNames))
-			}
-
-			if log != nil {
-				log.Warn(logger.LogMiddlewareValidationFailed, "path", c.Request.URL.Path, "fields", fieldNames)
-			}
-			c.Error(validationError)
-			c.Abort()
+			handleValidationFailure(c, log, result)
 			return
 		}
 
-		if log != nil {
-			log.Debug(logger.LogMiddlewareValidationOK, "path", c.Request.URL.Path)
-		}
-
+		log.Debug(logger.LogMiddlewareValidationOK, "path", c.Request.URL.Path)
 		c.Next()
 	}
+}
+
+func readAndParseBody(c *gin.Context, log logger.Logger) (map[string]interface{}, error) {
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Error(logger.LogMiddlewareBodyReadError, "error", err, "path", c.Request.URL.Path)
+		return nil, json_schema.ErrBodyReadFailed
+	}
+
+	c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		log.Error(logger.LogMiddlewareJSONParseError, "error", err, "path", c.Request.URL.Path)
+		return nil, json_schema.ErrBadRequest
+	}
+
+	return data, nil
+}
+
+func handleValidationFailure(c *gin.Context, log logger.Logger, result *jsonschema.EvaluationResult) {
+	fieldNames := extractFieldNames(result.Errors)
+	validationError := classifyValidationError(fieldNames, result.Errors)
+
+	if len(fieldNames) > 0 {
+		c.Set("validation_fields", translateFieldNames(fieldNames))
+	}
+
+	log.Warn(logger.LogMiddlewareValidationFailed, "path", c.Request.URL.Path, "fields", fieldNames)
+	c.Error(validationError)
+	c.Abort()
 }
 
 // ============================================

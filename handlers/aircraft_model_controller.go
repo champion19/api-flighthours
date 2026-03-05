@@ -26,7 +26,7 @@ func (h *handler) GetAircraftModelByID() gin.HandlerFunc {
 
 		inputID := c.Param("id")
 		if inputID == "" {
-			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			log.Error(logger.LogMessageIDDecodeError, "error", errEmptyIDParam, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -177,7 +177,7 @@ func (h *handler) ActivateAircraftModel() gin.HandlerFunc {
 
 		inputID := c.Param("id")
 		if inputID == "" {
-			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			log.Error(logger.LogMessageIDDecodeError, "error", errEmptyIDParam, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}
@@ -236,7 +236,7 @@ func (h *handler) DeactivateAircraftModel() gin.HandlerFunc {
 
 		inputID := c.Param("id")
 		if inputID == "" {
-			log.Error(logger.LogMessageIDDecodeError, "error", "empty id parameter", "client_ip", c.ClientIP())
+			log.Error(logger.LogMessageIDDecodeError, "error", errEmptyIDParam, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgValIDInvalid)
 			return
 		}

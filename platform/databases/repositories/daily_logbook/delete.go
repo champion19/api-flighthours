@@ -10,7 +10,10 @@ import (
 
 // DeleteDailyLogbook removes a daily logbook and its associated details (cascade)
 func (r *repository) DeleteDailyLogbook(ctx context.Context, tx output.Tx, id string) error {
-	sqlTx := tx.(*common.SQLTX)
+	sqlTx, err := common.CastTx(tx)
+	if err != nil {
+		return err
+	}
 
 	// 1. Cascade: delete associated daily_logbook_detail records first
 	if _, err := sqlTx.ExecContext(ctx, QueryDeleteDetails, id); err != nil {

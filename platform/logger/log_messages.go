@@ -325,6 +325,7 @@ const (
 	// JWKS Validator
 	LogJWKSValidatorInitFailed = "JWKS validator initialization failed, using fallback validation"
 	LogJWKSValidatorInitOK     = "JWKS validator initialized"
+	LogJWKSRefreshError        = "JWKS refresh error"
 )
 
 // ============================================
@@ -417,6 +418,7 @@ const (
 	LogConfigEnvOverride     = "Sobreescribiendo configuración con variables de entorno"
 	LogConfigValidating      = "Validando configuración"
 	LogConfigValidationError = "Error validando configuración"
+	LogConfigEnvFileNotFound = "No .env file found, using system environment variables"
 )
 
 // ============================================
@@ -542,8 +544,8 @@ const (
 	LogEmployeeInteractorStep6_OK             = "[PASO 6/8] Rol asignado"
 	LogEmployeeInteractorStep7_Error          = "[PASO 7/8] Error actualizando Keycloak ID en BD"
 	LogEmployeeInteractorStep7_OK             = "[PASO 7/8] Keycloak_user_id actualizado en BD"
-	LogEmployeeInteractorCommit_Error         = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogEmployeeInteractorCommit_OK            = "Transacción confirmada exitosamente"
+	LogEmployeeInteractorCommit_Error         = LogMessageInteractorCreateCommitErr
+	LogEmployeeInteractorCommit_OK            = LogMessageTxCommitOK
 	LogEmployeeInteractorRegComplete          = "Registro completado exitosamente"
 	LogEmployeeInteractorRollbackDB_Error     = "ROLLBACK BD FALLÓ - ALERTA CRÍTICA"
 	LogEmployeeInteractorRollbackDB_OK        = "Rollback BD ejecutado correctamente"
@@ -572,8 +574,8 @@ const (
 	LogMessageInteractorCreateStep3Error = "[PASO 3/3] Error guardando mensaje"
 	LogMessageInteractorCreateStep3OK    = "[PASO 3/3] Mensaje guardado en BD"
 	LogMessageInteractorCreateCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogMessageInteractorCreateCommitOK   = "Transacción confirmada exitosamente"
-	LogMessageInteractorCreateComplete   = "Mensaje creado exitosamente"
+	LogMessageInteractorCreateCommitOK   = LogMessageTxCommitOK
+	LogMessageInteractorCreateComplete   = LogMessageCreateOK
 
 	// UPDATE flow
 	LogMessageInteractorUpdateStep1Error = "[PASO 1/4] Mensaje no encontrado"
@@ -584,9 +586,9 @@ const (
 	LogMessageInteractorUpdateStep3OK    = "[PASO 3/4] Transacción iniciada"
 	LogMessageInteractorUpdateStep4Error = "[PASO 4/4] Error actualizando mensaje"
 	LogMessageInteractorUpdateStep4OK    = "[PASO 4/4] Mensaje actualizado en BD"
-	LogMessageInteractorUpdateCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogMessageInteractorUpdateCommitOK   = "Transacción confirmada exitosamente"
-	LogMessageInteractorUpdateComplete   = "Mensaje actualizado exitosamente"
+	LogMessageInteractorUpdateCommitErr  = LogMessageInteractorCreateCommitErr
+	LogMessageInteractorUpdateCommitOK   = LogMessageTxCommitOK
+	LogMessageInteractorUpdateComplete   = LogMessageUpdateOK
 
 	// DELETE flow
 	LogMessageInteractorDeleteStep1Error = "[PASO 1/3] Mensaje no encontrado"
@@ -595,18 +597,18 @@ const (
 	LogMessageInteractorDeleteStep2OK    = "[PASO 2/3] Transacción iniciada"
 	LogMessageInteractorDeleteStep3Error = "[PASO 3/3] Error eliminando mensaje"
 	LogMessageInteractorDeleteStep3OK    = "[PASO 3/3] Mensaje eliminado de BD"
-	LogMessageInteractorDeleteCommitErr  = "COMMIT FALLÓ - ALERTA CRÍTICA"
-	LogMessageInteractorDeleteCommitOK   = "Transacción confirmada exitosamente"
-	LogMessageInteractorDeleteComplete   = "Mensaje eliminado exitosamente"
+	LogMessageInteractorDeleteCommitErr  = LogMessageInteractorCreateCommitErr
+	LogMessageInteractorDeleteCommitOK   = LogMessageTxCommitOK
+	LogMessageInteractorDeleteComplete   = LogMessageDeleteOK
 
 	// Common rollback
 	LogMessageInteractorRollbackError = "ROLLBACK BD FALLÓ - ALERTA CRÍTICA"
 	LogMessageInteractorRollbackOK    = "Rollback BD ejecutado correctamente"
 
 	// Controller success logs
-	LogMessageCreatedSuccess = "Mensaje creado exitosamente"
-	LogMessageUpdatedSuccess = "Mensaje actualizado exitosamente"
-	LogMessageDeletedSuccess = "Mensaje eliminado exitosamente"
+	LogMessageCreatedSuccess = LogMessageCreateOK
+	LogMessageUpdatedSuccess = LogMessageUpdateOK
+	LogMessageDeletedSuccess = LogMessageDeleteOK
 
 	// Cache reload logs
 	LogMessageCacheReloading     = "Recargando caché de mensajes"
@@ -697,27 +699,27 @@ const (
 // AIRCRAFT REGISTRATION INTERACTOR
 // ============================================
 const (
-	LogLicensePlateGet                  = "Obteniendo información de matrícula"
-	LogLicensePlateGetOK                = "Matrícula obtenida exitosamente"
-	LogLicensePlateGetError             = "Error obteniendo matrícula"
-	LogLicensePlateNotFound             = "Matrícula no encontrada"
-	LogLicensePlateCreate               = "Creando matrícula"
-	LogLicensePlateCreateOK             = "Matrícula creada exitosamente"
-	LogLicensePlateCreateError          = "Error creando matrícula"
-	LogLicensePlateUpdate               = "Actualizando matrícula"
-	LogLicensePlateUpdateOK             = "Matrícula actualizada exitosamente"
-	LogLicensePlateUpdateError          = "Error actualizando matrícula"
-	LogLicensePlateList                 = "Listando matrículas"
-	LogLicensePlateListOK               = "Matrículas listadas exitosamente"
-	LogLicensePlateListError            = "Error listando matrículas"
-	LogLicensePlateRepoInit             = "Inicializando repositorio de matrículas"
-	LogLicensePlateRepoInitOK           = "Repositorio de matrículas inicializado"
-	LogLicensePlateRepoInitError        = "Error inicializando repositorio de matrículas"
-	LogLicensePlateInvalidModelID       = "Formato inválido de aircraft_model_id"
-	LogLicensePlateInvalidAirlineID     = "Formato inválido de airline_id"
-	LogLicensePlateFetchAfterWriteError = "No se pudo obtener matrícula después de guardar"
-	LogLicensePlateRepoSaveError        = "SaveLicensePlate failed"
-	LogLicensePlateRepoUpdateError      = "UpdateLicensePlate failed"
+	LogTailNumberGet                  = "Obteniendo información de matrícula"
+	LogTailNumberGetOK                = "Matrícula obtenida exitosamente"
+	LogTailNumberGetError             = "Error obteniendo matrícula"
+	LogTailNumberNotFound             = "Matrícula no encontrada"
+	LogTailNumberCreate               = "Creando matrícula"
+	LogTailNumberCreateOK             = "Matrícula creada exitosamente"
+	LogTailNumberCreateError          = "Error creando matrícula"
+	LogTailNumberUpdate               = "Actualizando matrícula"
+	LogTailNumberUpdateOK             = "Matrícula actualizada exitosamente"
+	LogTailNumberUpdateError          = "Error actualizando matrícula"
+	LogTailNumberList                 = "Listando matrículas"
+	LogTailNumberListOK               = "Matrículas listadas exitosamente"
+	LogTailNumberListError            = "Error listando matrículas"
+	LogTailNumberRepoInit             = "Inicializando repositorio de matrículas"
+	LogTailNumberRepoInitOK           = "Repositorio de matrículas inicializado"
+	LogTailNumberRepoInitError        = "Error inicializando repositorio de matrículas"
+	LogTailNumberInvalidModelID       = "Formato inválido de aircraft_model_id"
+	LogTailNumberInvalidAirlineID     = "Formato inválido de airline_id"
+	LogTailNumberFetchAfterWriteError = "No se pudo obtener matrícula después de guardar"
+	LogTailNumberRepoSaveError        = "SaveTailNumber failed"
+	LogTailNumberRepoUpdateError      = "UpdateTailNumber failed"
 )
 
 // ============================================
@@ -965,4 +967,21 @@ const (
 	LogErrInvalidTransaction    = "invalid transaction type"
 	LogErrEmptyIDParam          = "empty id parameter"
 	LogErrEmployeeNoAirlineInfo = "employee has no airline info assigned"
+)
+
+// ============================================
+// FLIGHT SUMMARY (Dashboard)
+// ============================================
+const (
+	LogFlightSummaryGet           = "Consulting flight hours summary"
+	LogFlightSummaryGetOK         = "Flight hours summary obtained successfully"
+	LogFlightSummaryGetError      = "Error obtaining flight hours summary"
+	LogFlightSummaryRepoInit      = "Initializing flight summary repository"
+	LogFlightSummaryRepoInitOK    = "Flight summary repository initialized"
+	LogFlightSummaryRepoInitError = "Error initializing flight summary repository"
+	LogFlightSummaryAlerts        = "Evaluating flight alerts"
+	LogFlightSummaryAlertsOK      = "Flight alerts evaluated successfully"
+	LogFlightSummaryAlertsError   = "Error evaluating flight alerts"
+	LogFlightSummaryRecentFlights = "Fetching recent flights"
+	LogFlightSummaryPeriodCalc    = "Calculating period dates"
 )

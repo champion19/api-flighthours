@@ -5,6 +5,9 @@
 
 set -e
 
+# Date format constant
+DATE_FMT='+%Y-%m-%d %H:%M:%S'
+
 echo "=== Log Rotator Container Started ==="
 echo "Timezone: $(date)"
 echo "Retention: 3 días"
@@ -16,22 +19,24 @@ touch /var/log/volume-cleanup.log
 
 # Verificar que los directorios estén montados
 echo "Verificando volúmenes montados:"
-[ -d "/var/log/flighthours-backend" ] && echo "  ✓ Logs del backend: /var/log/flighthours-backend" || echo "  ✗ Logs no montados"
-[ -d "/prometheus" ] && echo "  ✓ Prometheus data: /prometheus" || echo "  ✗ Prometheus no montado"
-[ -d "/loki" ] && echo "  ✓ Loki data: /loki" || echo "  ✗ Loki no montado"
-[ -d "/grafana" ] && echo "  ✓ Grafana data: /grafana" || echo "  ✗ Grafana no montado"
+[[ -d "/var/log/flighthours-backend" ]] && echo "  ✓ Logs del backend: /var/log/flighthours-backend" || echo "  ✗ Logs no montados"
+[[ -d "/prometheus" ]] && echo "  ✓ Prometheus data: /prometheus" || echo "  ✗ Prometheus no montado"
+[[ -d "/loki" ]] && echo "  ✓ Loki data: /loki" || echo "  ✗ Loki no montado"
+[[ -d "/grafana" ]] && echo "  ✓ Grafana data: /grafana" || echo "  ✗ Grafana no montado"
 echo ""
 
 # Función para ejecutar logrotate
 run_logrotate() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando logrotate..."
+    echo "[$(date "$DATE_FMT")] Ejecutando logrotate..."
     /usr/sbin/logrotate -v /etc/logrotate.conf 2>&1 | tee -a /var/log/logrotate.log
+    return 0
 }
 
 # Función para ejecutar limpieza de volúmenes
 run_volume_cleanup() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando limpieza de volúmenes..."
+    echo "[$(date "$DATE_FMT")] Ejecutando limpieza de volúmenes..."
     /usr/local/bin/cleanup-volumes.sh
+    return 0
 }
 
 # Ejecutar logrotate inmediatamente al inicio (solo para verificar configuración)
@@ -56,7 +61,7 @@ echo ""
 (
   while true; do
     sleep 3600  # 1 hora
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando logrotate programado..." >> /var/log/logrotate.log
+    echo "[$(date "$DATE_FMT")] Ejecutando logrotate programado..." >> /var/log/logrotate.log
     /usr/sbin/logrotate /etc/logrotate.conf >> /var/log/logrotate.log 2>&1
   done
 ) &
@@ -68,7 +73,7 @@ echo ""
     current_hour=$(date +%H)
     current_min=$(date +%M)
 
-    if [ "$current_hour" -eq 2 ] && [ "$current_min" -lt 10 ]; then
+    if [[ "$current_hour" -eq 2 ]] && [[ "$current_min" -lt 10 ]]; then
       # Estamos entre 2:00 y 2:10 AM, ejecutar limpieza
       /usr/local/bin/cleanup-volumes.sh
       sleep 600  # Esperar 10 minutos para evitar ejecuciones múltiples
@@ -82,7 +87,7 @@ echo ""
 (
   while true; do
     sleep 21600  # 6 horas
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log rotator is alive" >> /var/log/logrotate.log
+    echo "[$(date "$DATE_FMT")] Log rotator is alive" >> /var/log/logrotate.log
   done
 ) &
 

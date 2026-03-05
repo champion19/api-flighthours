@@ -5,11 +5,11 @@ LABEL description="Log rotation and volume cleanup service for Flighthours Backe
 LABEL version="1.0"
 
 RUN apk add --no-cache \
-    logrotate \
     bash \
-    tzdata \
     coreutils \
     findutils \
+    logrotate \
+    tzdata \
     && rm -rf /var/cache/apk/*
 
 ENV TZ=America/Bogota
@@ -25,9 +25,8 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY cleanup-volumes.sh /usr/local/bin/cleanup-volumes.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && chmod +x /usr/local/bin/cleanup-volumes.sh
-
-RUN touch /var/log/logrotate.log \
+    && chmod +x /usr/local/bin/cleanup-volumes.sh \
+    && touch /var/log/logrotate.log \
     && touch /var/log/volume-cleanup.log
 
 VOLUME ["/var/log/flighthours-backend"]

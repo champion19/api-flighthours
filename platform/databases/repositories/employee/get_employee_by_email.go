@@ -10,7 +10,7 @@ import (
 func (r *repository) GetEmployeeByEmail(ctx context.Context, email string) (*domain.Employee, error) {
 
 	var e Employee
-	err := r.db.QueryRowContext(context.Background(), QueryByEmail, email).Scan(
+	err := r.db.QueryRowContext(ctx, QueryByEmail, email).Scan(
 		&e.ID,
 		&e.Name,
 		&e.Airline,

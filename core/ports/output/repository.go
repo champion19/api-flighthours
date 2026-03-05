@@ -49,13 +49,13 @@ type AirportRepository interface {
 	UpdateAirportStatus(ctx context.Context, tx Tx, id string, status bool) error
 }
 
-type LicensePlateRepository interface {
+type TailNumberRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
-	GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error)
-	GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error)
-	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
-	SaveLicensePlate(ctx context.Context, tx Tx, registration domain.LicensePlate) error
-	UpdateLicensePlate(ctx context.Context, tx Tx, registration domain.LicensePlate) error
+	GetTailNumberByID(ctx context.Context, id string) (*domain.TailNumber, error)
+	GetTailNumberByPlate(ctx context.Context, plate string) (*domain.TailNumber, error)
+	ListTailNumbers(ctx context.Context, filters map[string]interface{}) ([]domain.TailNumber, error)
+	SaveTailNumber(ctx context.Context, tx Tx, registration domain.TailNumber) error
+	UpdateTailNumber(ctx context.Context, tx Tx, registration domain.TailNumber) error
 }
 
 type AircraftModelRepository interface {
@@ -103,7 +103,8 @@ type DailyLogbookDetailRepository interface {
 	ListDailyLogbookDetailsByEmployee(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
 	SaveDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
-	ExistsByUniqueKey(ctx context.Context, employeeID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	ExistsByUniqueKey(ctx context.Context, employeeID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
+	DeleteDailyLogbookDetail(ctx context.Context, tx Tx, id string) error
 }
 
 type DailyLogbookRepository interface {
@@ -114,4 +115,19 @@ type DailyLogbookRepository interface {
 	UpdateDailyLogbook(ctx context.Context, tx Tx, logbook domain.DailyLogbook) error
 	UpdateDailyLogbookStatus(ctx context.Context, tx Tx, id string, status bool) error
 	DeleteDailyLogbook(ctx context.Context, tx Tx, id string) error
+}
+
+type FlightSummaryRepository interface {
+	GetFlightHoursSummary(ctx context.Context, employeeID, startDate, endDate string) ([]domain.PilotRoleBreakdown, error)
+	GetRecentFlights(ctx context.Context, employeeID string, limit int) ([]domain.DailyLogbookDetail, error)
+	GetLandingCount(ctx context.Context, employeeID, startDate, endDate string) (int, error)
+	GetDailyFlightSeconds(ctx context.Context, employeeID, date string) (int, error)
+}
+
+type EmployeeFlightSummaryRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	UpsertSummary(ctx context.Context, tx Tx, employeeID string, period domain.PeriodInfo, delta domain.SummaryDelta) error
+	GetSummariesByEmployee(ctx context.Context, employeeID, periodType string) ([]domain.EmployeeFlightSummary, error)
+	GetCurrentPeriodSummary(ctx context.Context, employeeID, periodType string, year, number int) (*domain.EmployeeFlightSummary, error)
+	GetAllSummaries(ctx context.Context, employeeID string) ([]domain.EmployeeFlightSummary, error)
 }

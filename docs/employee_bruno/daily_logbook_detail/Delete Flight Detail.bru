@@ -1,0 +1,61 @@
+meta {
+  name: Delete Flight Detail
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/daily-logbook-details/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{detail-id}}
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Eliminar Vuelo (HU16)
+
+  Elimina permanentemente un segmento de vuelo (daily_logbook_detail) del empleado autenticado.
+  Solo el dueño del vuelo puede eliminarlo. La bitácora diaria padre permanece intacta.
+
+  ## ¿Qué se elimina?
+  Un registro individual de vuelo: número de vuelo, ruta, tiempos (out/takeoff/landing/in),
+  rol de piloto, tipo de tripulación, pasajeros, etc. La bitácora diaria (`daily_logbook`)
+  que lo contiene NO se elimina.
+
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+
+  ## Path Parameters
+  - `id`: ID del detalle de vuelo (encoded ID)
+
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+
+  ## Flujo
+  1. POST /login → Obtener token (ejecutar Login.bru primero)
+  2. GET /daily-logbooks/:id/details → Obtener el ID del vuelo a eliminar
+  3. DELETE /daily-logbook-details/:id → Eliminar vuelo ✅
+
+  ## Respuesta exitosa (200) - `VUE_DEL_EXI_01801`
+  ```json
+  {
+    "success": true,
+    "code": "VUE_DEL_EXI_01801",
+    "message": "Vuelo eliminado exitosamente"
+  }
+  ```
+
+  ## Errores
+  - 400: ID inválido (`MOD_V_ID_ERR_00013`)
+  - 401: No autenticado
+  - 403: Vuelo no pertenece al empleado (`VUE_AUTH_ERR_00001`)
+  - 404: Vuelo no encontrado (`VUE_CON_ERR_04803`)
+  - 500: Error interno (`VUE_DEL_ERR_01804`)
+}

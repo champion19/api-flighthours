@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
-	"github.com/champion19/api-flighthours/core/ports/output"
-	"github.com/champion19/api-flighthours/platform/databases/common"
 )
 
 type DailyLogbookDetail struct {
@@ -15,7 +13,7 @@ type DailyLogbookDetail struct {
 	FlightRealDate      string // DATE stored as string
 	FlightNumber        string
 	AirlineRouteID      string
-	LicensePlateID      string
+	TailNumberID      string
 	Passengers          sql.NullInt64
 	OutTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	TakeoffTime         sql.NullString // nullable
@@ -26,12 +24,11 @@ type DailyLogbookDetail struct {
 	CompanionName       sql.NullString
 	AirTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	BlockTime           sql.NullString // TIME stored as string HH:MM:SS (nullable)
-	DutyTime            sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	ApproachType        sql.NullString
 	FlightType          sql.NullString
 	EmployeeLogbookID   sql.NullString
 	LogDate             sql.NullString
-	LicensePlate        sql.NullString
+	TailNumber        sql.NullString
 	ModelName           sql.NullString
 	RouteCode           sql.NullString
 	OriginIataCode      sql.NullString
@@ -46,9 +43,18 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightRealDate: d.FlightRealDate,
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
-		LicensePlateID: d.LicensePlateID,
+		TailNumberID: d.TailNumberID,
 	}
 
+	d.mapTimeFields(detail)
+	d.mapRoleFields(detail)
+	d.mapOptionalFields(detail)
+	d.mapDenormalizedFields(detail)
+
+	return detail
+}
+
+func (d *DailyLogbookDetail) mapTimeFields(detail *domain.DailyLogbookDetail) {
 	if d.OutTime.Valid {
 		detail.OutTime = &d.OutTime.String
 	}
@@ -61,6 +67,15 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	if d.InTime.Valid {
 		detail.InTime = &d.InTime.String
 	}
+	if d.AirTime.Valid {
+		detail.AirTime = &d.AirTime.String
+	}
+	if d.BlockTime.Valid {
+		detail.BlockTime = &d.BlockTime.String
+	}
+}
+
+func (d *DailyLogbookDetail) mapRoleFields(detail *domain.DailyLogbookDetail) {
 	if d.PilotRole.Valid {
 		pilotRole := domain.PilotRole(d.PilotRole.String)
 		detail.PilotRole = &pilotRole
@@ -69,44 +84,34 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		crewRole := domain.CrewRole(d.CrewRole.String)
 		detail.CrewRole = &crewRole
 	}
-	if d.AirTime.Valid {
-		detail.AirTime = &d.AirTime.String
-	}
-	if d.BlockTime.Valid {
-		detail.BlockTime = &d.BlockTime.String
-	}
+}
 
+func (d *DailyLogbookDetail) mapOptionalFields(detail *domain.DailyLogbookDetail) {
 	if d.Passengers.Valid {
 		passengers := int(d.Passengers.Int64)
 		detail.Passengers = &passengers
 	}
-
 	if d.CompanionName.Valid {
 		detail.CompanionName = &d.CompanionName.String
 	}
-
-	if d.DutyTime.Valid {
-		detail.DutyTime = &d.DutyTime.String
-	}
-
 	if d.ApproachType.Valid {
 		approachType := domain.ApproachType(d.ApproachType.String)
 		detail.ApproachType = &approachType
 	}
-
 	if d.FlightType.Valid {
 		detail.FlightType = &d.FlightType.String
 	}
-
 	if d.EmployeeLogbookID.Valid {
 		detail.EmployeeLogbookID = &d.EmployeeLogbookID.String
 	}
+}
 
+func (d *DailyLogbookDetail) mapDenormalizedFields(detail *domain.DailyLogbookDetail) {
 	if d.LogDate.Valid {
 		detail.LogDate = d.LogDate.String
 	}
-	if d.LicensePlate.Valid {
-		detail.LicensePlate = d.LicensePlate.String
+	if d.TailNumber.Valid {
+		detail.TailNumber = d.TailNumber.String
 	}
 	if d.ModelName.Valid {
 		detail.ModelName = d.ModelName.String
@@ -123,8 +128,6 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 	if d.AirlineCode.Valid {
 		detail.AirlineCode = d.AirlineCode.String
 	}
-
-	return detail
 }
 
 func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
@@ -134,7 +137,7 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		FlightRealDate: d.FlightRealDate,
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
-		LicensePlateID: d.LicensePlateID,
+		TailNumberID: d.TailNumberID,
 	}
 
 	if d.OutTime != nil {
@@ -170,10 +173,6 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		entity.CompanionName = sql.NullString{String: *d.CompanionName, Valid: true}
 	}
 
-	if d.DutyTime != nil {
-		entity.DutyTime = sql.NullString{String: *d.DutyTime, Valid: true}
-	}
-
 	if d.ApproachType != nil {
 		entity.ApproachType = sql.NullString{String: string(*d.ApproachType), Valid: true}
 	}
@@ -201,7 +200,7 @@ func scanDetail(rows interface {
 		&entity.FlightRealDate,
 		&entity.FlightNumber,
 		&entity.AirlineRouteID,
-		&entity.LicensePlateID,
+		&entity.TailNumberID,
 		&entity.Passengers,
 		&entity.OutTime,
 		&entity.TakeoffTime,
@@ -212,12 +211,11 @@ func scanDetail(rows interface {
 		&entity.CrewRole,
 		&entity.AirTime,
 		&entity.BlockTime,
-		&entity.DutyTime,
 		&entity.ApproachType,
 		&entity.FlightType,
 		&entity.EmployeeLogbookID,
 		&entity.LogDate,
-		&entity.LicensePlate,
+		&entity.TailNumber,
 		&entity.ModelName,
 		&entity.RouteCode,
 		&entity.OriginIataCode,
@@ -230,16 +228,6 @@ func scanDetail(rows interface {
 	return &entity, nil
 }
 
-// castDetailTx casts an output.Tx to the concrete *common.SQLTX type.
-// Shared by SaveDailyLogbookDetail and UpdateDailyLogbookDetail.
-func castDetailTx(tx output.Tx) (*common.SQLTX, error) {
-	sqlTx, ok := tx.(*common.SQLTX)
-	if !ok {
-		return nil, domain.ErrInvalidTransaction
-	}
-	return sqlTx, nil
-}
-
 // handleDetailFKError inspects a foreign-key error string and returns the appropriate domain error.
 // Shared by SaveDailyLogbookDetail and UpdateDailyLogbookDetail.
 func handleDetailFKError(errStr string) error {
@@ -249,8 +237,8 @@ func handleDetailFKError(errStr string) error {
 	if strings.Contains(errStr, "airline_route") {
 		return domain.ErrFlightInvalidRoute
 	}
-	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "license_plate") {
-		return domain.ErrFlightInvalidLicensePlate
+	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "tail_number") {
+		return domain.ErrFlightInvalidTailNumber
 	}
 	return nil
 }

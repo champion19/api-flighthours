@@ -22,15 +22,15 @@ func (r *repository) UpdateAirlineStatus(ctx context.Context, tx output.Tx, id s
 		"active", active)
 
 	// Cast the transaction to the concrete type
-	dbTx, ok := tx.(*common.SQLTX)
-	if !ok {
+	dbTx, err := common.CastTx(tx)
+	if err != nil {
 		log.Error(logger.LogDatabaseUnavailable, "error", logger.LogErrInvalidTransaction)
-		return domain.ErrInvalidTransaction
+		return err
 	}
 
 	// First, check if the airline exists
 	var exists bool
-	err := dbTx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM airline WHERE id = ?)", id).Scan(&exists)
+	err = dbTx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM airline WHERE id = ?)", id).Scan(&exists)
 	if err != nil {
 		log.Error(logger.LogDatabaseUnavailable, "airline_id", id, "error", err)
 		if err == sql.ErrNoRows {

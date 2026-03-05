@@ -165,7 +165,7 @@ func TestHandler_resolveID(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	t.Run("creates handler with all dependencies", func(t *testing.T) {
-		h := New(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{})
 
 		if h == nil {
 			t.Error("expected non-nil handler")

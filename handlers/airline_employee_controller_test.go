@@ -128,7 +128,13 @@ func newAirlineEmployeeTestRouter(
 ) *gin.Engine {
 	aeInteractor := interactor.NewAirlineEmployeeInteractor(aeService)
 	airlineInteractor := interactor.NewAirlineInteractor(airlineSvc)
-	h := New(nil, &fakeEmployeeInteractor{}, enc, resp, nil, nil, airlineInteractor, aeInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	h := New(HandlerDeps{
+		EmployeeInteractor: &fakeEmployeeInteractor{},
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		AirlineEmployeeInteractor: aeInteractor,
+		})
 
 	r := gin.New()
 	r.Use(middleware.RequestID())

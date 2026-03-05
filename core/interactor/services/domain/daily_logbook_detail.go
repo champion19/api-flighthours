@@ -12,20 +12,18 @@ const (
 	PilotRolePFL  PilotRole = "PFL"  // Pilot Flying Landing
 )
 
-// CrewRole represents the crew position (captain or copilot) in a flight segment
+// CrewRole represents the crew position (captain or first officer) in a flight segment
 type CrewRole string
 
 const (
-	CrewRoleCaptain CrewRole = "captain" // Capitán
-	CrewRoleCopilot CrewRole = "copilot" // Copiloto
+	CrewRoleCaptain      CrewRole = "captain"       // Capitán
+	CrewRoleFirstOfficer CrewRole = "first officer" // Primer Oficial
 )
 
 // ApproachType represents the type of approach during landing
 type ApproachType string
 
 const (
-	ApproachTypeNPA    ApproachType = "NPA"    // Non-Precision Approach
-	ApproachTypePA     ApproachType = "PA"     // Precision Approach
 	ApproachTypeAPV    ApproachType = "APV"    // Approach with Vertical Guidance
 	ApproachTypeVisual ApproachType = "VISUAL" // Visual Approach
 )
@@ -34,10 +32,10 @@ const (
 var ValidPilotRoles = []PilotRole{PilotRolePF, PilotRolePM, PilotRolePFTO, PilotRolePFL}
 
 // ValidCrewRoles contains all valid crew roles
-var ValidCrewRoles = []CrewRole{CrewRoleCaptain, CrewRoleCopilot}
+var ValidCrewRoles = []CrewRole{CrewRoleCaptain, CrewRoleFirstOfficer}
 
 // ValidApproachTypes contains all valid approach types
-var ValidApproachTypes = []ApproachType{ApproachTypeNPA, ApproachTypePA, ApproachTypeAPV, ApproachTypeVisual}
+var ValidApproachTypes = []ApproachType{ApproachTypeAPV, ApproachTypeVisual}
 
 // IsValidPilotRole checks if a string is a valid pilot role
 func IsValidPilotRole(role string) bool {
@@ -83,7 +81,7 @@ type DailyLogbookDetail struct {
 	FlightRealDate      string        `json:"flight_real_date"` // DATE format: YYYY-MM-DD
 	FlightNumber        string        `json:"flight_number"`
 	AirlineRouteID      string        `json:"airline_route_id"`
-	LicensePlateID      string        `json:"license_plate_id"`
+	TailNumberID        string        `json:"tail_number_id"`
 	Passengers          *int          `json:"passengers,omitempty"`
 	OutTime             *string       `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
 	TakeoffTime         *string       `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
@@ -94,7 +92,6 @@ type DailyLogbookDetail struct {
 	CompanionName       *string       `json:"companion_name,omitempty"`
 	AirTime             *string       `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
 	BlockTime           *string       `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
-	DutyTime            *string       `json:"duty_time,omitempty"`  // Tiempo de servicio (DUTY)
 	ApproachType        *ApproachType `json:"approach_type,omitempty"`
 	FlightType          *string       `json:"flight_type,omitempty"` // 'COMMERCIAL', 'TRAINING', 'FERRY', 'CHECK', 'POSITIONING'
 	EmployeeLogbookID   *string       `json:"employee_logbook_id,omitempty"`
@@ -103,7 +100,7 @@ type DailyLogbookDetail struct {
 	OriginIataCode      string        `json:"origin_iata_code,omitempty"`      // Origin airport IATA
 	DestinationIataCode string        `json:"destination_iata_code,omitempty"` // Destination airport IATA
 	AirlineCode         string        `json:"airline_code,omitempty"`          // Airline IATA code
-	LicensePlate        string        `json:"license_plate,omitempty"`         // Aircraft registration
+	TailNumber          string        `json:"tail_number,omitempty"`           // Aircraft registration
 	ModelName           string        `json:"model_name,omitempty"`            // Aircraft model name
 }
 
@@ -128,7 +125,7 @@ func (d *DailyLogbookDetail) ToLogger() []string {
 		"flight_number:" + d.FlightNumber,
 		"flight_real_date:" + d.FlightRealDate,
 		"route_code:" + d.RouteCode,
-		"license_plate:" + d.LicensePlate,
+		"tail_number:" + d.TailNumber,
 		"pilot_role:" + pilotRole,
 		"crew_role:" + crewRole,
 	}

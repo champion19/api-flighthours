@@ -230,7 +230,7 @@ func TestJsonValidator_RestoresBody(t *testing.T) {
 		r.Use(builder.jsonValidator(schema))
 		r.POST("/test", func(c *gin.Context) {
 			var data map[string]interface{}
-			if err := c.ShouldBindJSON(&data); err == nil {
+			if c.ShouldBindJSON(&data) == nil {
 				bodyReadable = true
 			}
 			c.JSON(http.StatusOK, gin.H{"ok": true})
@@ -301,8 +301,8 @@ func TestWithValidateMethods(t *testing.T) {
 		ChangePasswordValidator:          schema,
 		AddAirlineEmployeeValidator:      schema,
 		UpdateAirlineEmployeeValidator:   schema,
-		CreateLicensePlateValidator:      schema,
-		UpdateLicensePlateValidator:      schema,
+		CreateTailNumberValidator:      schema,
+		UpdateTailNumberValidator:      schema,
 	}
 
 	builder := NewMiddlewareValidator(validators)
@@ -370,15 +370,15 @@ func TestWithValidateMethods(t *testing.T) {
 		}
 	})
 
-	t.Run("WithValidateCreateLicensePlate returns handler", func(t *testing.T) {
-		handler := builder.WithValidateCreateLicensePlate()
+	t.Run("WithValidateCreateTailNumber returns handler", func(t *testing.T) {
+		handler := builder.WithValidateCreateTailNumber()
 		if handler == nil {
 			t.Error("expected non-nil handler")
 		}
 	})
 
-	t.Run("WithValidateUpdateLicensePlate returns handler", func(t *testing.T) {
-		handler := builder.WithValidateUpdateLicensePlate()
+	t.Run("WithValidateUpdateTailNumber returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdateTailNumber()
 		if handler == nil {
 			t.Error("expected non-nil handler")
 		}
@@ -402,6 +402,90 @@ func TestWithValidateMethods(t *testing.T) {
 		handler := builder.WithValidateCreateDailyLogbook()
 		if handler == nil {
 			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateLogin returns handler", func(t *testing.T) {
+		handler := builder.WithValidateLogin()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateVerifyEmail returns handler", func(t *testing.T) {
+		handler := builder.WithValidateVerifyEmail()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateUpdateDailyLogbook returns handler", func(t *testing.T) {
+		handler := builder.WithValidateUpdateDailyLogbook()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+
+	t.Run("WithValidateRefreshToken returns handler", func(t *testing.T) {
+		handler := builder.WithValidateRefreshToken()
+		if handler == nil {
+			t.Error("expected non-nil handler")
+		}
+	})
+}
+
+func TestClassifyValidationError(t *testing.T) {
+	t.Run("multiple fields => ErrMultipleFields", func(t *testing.T) {
+		fieldNames := []string{"email", "password"}
+		errors := map[string]*jsonschema.EvaluationError{
+			"email":    {Code: "required"},
+			"password": {Code: "type"},
+		}
+		err := classifyValidationError(fieldNames, errors)
+		if err != json_schema.ErrMultipleFields {
+			t.Errorf("expected ErrMultipleFields, got %v", err)
+		}
+	})
+
+	t.Run("single field - property_mismatch", func(t *testing.T) {
+		fieldNames := []string{"email"}
+		errors := map[string]*jsonschema.EvaluationError{
+			"email": {Code: "property_mismatch"},
+		}
+		err := classifyValidationError(fieldNames, errors)
+		if err != json_schema.ErrFieldPropertyMismatch {
+			t.Errorf("expected ErrFieldPropertyMismatch, got %v", err)
+		}
+	})
+
+	t.Run("single field - required", func(t *testing.T) {
+		fieldNames := []string{"name"}
+		errors := map[string]*jsonschema.EvaluationError{
+			"name": {Code: "required"},
+		}
+		err := classifyValidationError(fieldNames, errors)
+		if err != json_schema.ErrFieldRequired {
+			t.Errorf("expected ErrFieldRequired, got %v", err)
+		}
+	})
+
+	t.Run("single field - type", func(t *testing.T) {
+		fieldNames := []string{"age"}
+		errors := map[string]*jsonschema.EvaluationError{
+			"age": {Code: "type"},
+		}
+		err := classifyValidationError(fieldNames, errors)
+		if err != json_schema.ErrFieldTypeInvalid {
+			t.Errorf("expected ErrFieldTypeInvalid, got %v", err)
+		}
+	})
+
+	t.Run("empty errors map => ErrValidationFailed", func(t *testing.T) {
+		fieldNames := []string{"email"}
+		errors := map[string]*jsonschema.EvaluationError{}
+		err := classifyValidationError(fieldNames, errors)
+		if err != json_schema.ErrValidationFailed {
+			t.Errorf("expected ErrValidationFailed, got %v", err)
 		}
 	})
 }

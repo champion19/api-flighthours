@@ -17,7 +17,7 @@ const (
 		dld.flight_real_date,
 		dld.flight_number,
 		dld.airline_route_id,
-		dld.actual_license_plate_id,
+		dld.actual_tail_number_id,
 		dld.passengers,
 		dld.out_time,
 		dld.takeoff_time,
@@ -28,12 +28,11 @@ const (
 		dld.crew_role,
 		dld.air_time,
 		dld.block_time,
-		dld.duty_time,
 		dld.approach_type,
 		dld.flight_type,
 		dld.employee_logbook_id,
 		dl.log_date,
-		lp.license_plate,
+		tn.tail_number,
 		am.model_name,
 		CONCAT(orig.iata_code, '-', dest.iata_code) as route_code,
 		orig.iata_code as origin_iata_code,
@@ -44,8 +43,8 @@ const (
 	detailJoins = `
 		FROM daily_logbook_detail dld
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
-		INNER JOIN license_plate lp ON dld.actual_license_plate_id = lp.id
-		INNER JOIN aircraft_model am ON lp.aircraft_model_id = am.id
+		INNER JOIN tail_number tn ON dld.actual_tail_number_id = tn.id
+		INNER JOIN aircraft_model am ON tn.aircraft_model_id = am.id
 		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
 		INNER JOIN route r ON alr.route_id = r.id
 		INNER JOIN airport orig ON r.origin_airport_id = orig.id
@@ -60,7 +59,7 @@ const (
 			dld.flight_real_date,
 			dld.flight_number,
 			dld.airline_route_id,
-			dld.actual_license_plate_id,
+			dld.actual_tail_number_id,
 			dld.passengers,
 			dld.out_time,
 			dld.takeoff_time,
@@ -71,12 +70,11 @@ const (
 			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
-			dld.duty_time,
 			dld.approach_type,
 			dld.flight_type,
 			dld.employee_logbook_id,
 			dl.log_date,
-			lp.license_plate,
+			tn.tail_number,
 			am.model_name,
 			CONCAT(orig.iata_code, '-', dest.iata_code) as route_code,
 			orig.iata_code as origin_iata_code,
@@ -84,8 +82,8 @@ const (
 			airl.airline_code
 		FROM daily_logbook_detail dld
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
-		INNER JOIN license_plate lp ON dld.actual_license_plate_id = lp.id
-		INNER JOIN aircraft_model am ON lp.aircraft_model_id = am.id
+		INNER JOIN tail_number tn ON dld.actual_tail_number_id = tn.id
+		INNER JOIN aircraft_model am ON tn.aircraft_model_id = am.id
 		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
 		INNER JOIN route r ON alr.route_id = r.id
 		INNER JOIN airport orig ON r.origin_airport_id = orig.id
@@ -103,7 +101,7 @@ const (
 			dld.flight_real_date,
 			dld.flight_number,
 			dld.airline_route_id,
-			dld.actual_license_plate_id,
+			dld.actual_tail_number_id,
 			dld.passengers,
 			dld.out_time,
 			dld.takeoff_time,
@@ -114,12 +112,11 @@ const (
 			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
-			dld.duty_time,
 			dld.approach_type,
 			dld.flight_type,
 			dld.employee_logbook_id,
 			dl.log_date,
-			lp.license_plate,
+			tn.tail_number,
 			am.model_name,
 			CONCAT(orig.iata_code, '-', dest.iata_code) as route_code,
 			orig.iata_code as origin_iata_code,
@@ -127,8 +124,8 @@ const (
 			airl.airline_code
 		FROM daily_logbook_detail dld
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
-		INNER JOIN license_plate lp ON dld.actual_license_plate_id = lp.id
-		INNER JOIN aircraft_model am ON lp.aircraft_model_id = am.id
+		INNER JOIN tail_number tn ON dld.actual_tail_number_id = tn.id
+		INNER JOIN aircraft_model am ON tn.aircraft_model_id = am.id
 		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
 		INNER JOIN route r ON alr.route_id = r.id
 		INNER JOIN airport orig ON r.origin_airport_id = orig.id
@@ -147,12 +144,12 @@ const (
 	QueryInsert = `
 		INSERT INTO daily_logbook_detail (
 			id, daily_logbook_id, flight_real_date, flight_number,
-			airline_route_id, actual_license_plate_id, passengers,
+			airline_route_id, actual_tail_number_id, passengers,
 			out_time, takeoff_time, landing_time, in_time,
 			pilot_role, companion_name, crew_role,
-			air_time, block_time, duty_time,
+			air_time, block_time,
 			approach_type, flight_type, employee_logbook_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Update query
 	QueryUpdate = `
@@ -160,7 +157,7 @@ const (
 			flight_real_date = ?,
 			flight_number = ?,
 			airline_route_id = ?,
-			actual_license_plate_id = ?,
+			actual_tail_number_id = ?,
 			passengers = ?,
 			out_time = ?,
 			takeoff_time = ?,
@@ -171,7 +168,6 @@ const (
 			crew_role = ?,
 			air_time = ?,
 			block_time = ?,
-			duty_time = ?,
 			approach_type = ?,
 			flight_type = ?
 		WHERE id = ?`
@@ -185,7 +181,7 @@ const (
 		WHERE employee_logbook_id = ?
 		  AND flight_real_date = ?
 		  AND flight_number = ?
-		  AND actual_license_plate_id = ?`
+		  AND actual_tail_number_id = ?`
 )
 
 var log logger.Logger = logger.NewSlogLogger()
@@ -197,6 +193,7 @@ type repository struct {
 	stmtInsert            *sql.Stmt
 	stmtUpdate            *sql.Stmt
 	stmtExistsByUniqueKey *sql.Stmt
+	stmtDelete            *sql.Stmt
 	db                    *sql.DB
 }
 
@@ -237,6 +234,10 @@ func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
 	if err != nil {
 		return nil, err
 	}
+	stmtDelete, err := prepare(QueryDelete)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Info(logger.LogDailyLogbookDetailRepoInitOK)
 
@@ -248,6 +249,7 @@ func NewDailyLogbookDetailRepository(db *sql.DB) (*repository, error) {
 		stmtInsert:            stmtInsert,
 		stmtUpdate:            stmtUpdate,
 		stmtExistsByUniqueKey: stmtExistsByUniqueKey,
+		stmtDelete:            stmtDelete,
 	}, nil
 }
 

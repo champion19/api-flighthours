@@ -1,0 +1,53 @@
+meta {
+  name: Get Aircraft By Family
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/aircraft-families/:family
+  body: none
+  auth: none
+}
+
+params:path {
+  family: AIRBUS A320
+}
+
+vars:pre-request {
+  family: AIRBUS A320
+}
+
+docs {
+  # Get Aircraft Models By Family (HU30 - Consultar Familia Aeronave)
+  
+  Obtiene todos los modelos de aeronave de una familia específica.
+  Este endpoint es público, no requiere autenticación.
+  
+  ## Path Parameters
+  - `family`: Nombre de la familia de aeronave (ej: "AIRBUS A320", "BOEING 737")
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOD_ACM_LIST_EXI_00001",
+    "message": "...",
+    "data": [
+      {
+        "id": "encoded-id",
+        "model_name": "Airbus A320neo",
+        "aircraft_type_name": "Narrow Body",
+        "engine_type_name": "Turbofan",
+        "family": "AIRBUS A320",
+        "status": true,
+        "_links": [...]
+      }
+    ]
+  }
+  ```
+  
+  ## Errores
+  - 400: Familia requerida (MOD_V_AIRCRAFT_FAMILY_REQ_ERR_XXXXX)
+  - 500: Error interno (MOD_ACM_LIST_ERR_00001)
+}

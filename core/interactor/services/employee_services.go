@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/champion19/api-flighthours/core/interactor/dto"
@@ -65,29 +66,15 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 	log.Debug(logger.LogDualSystemCheck, "email", employee.Email)
 
 	existingEmployee, errDB := s.repository.GetEmployeeByEmail(ctx, employee.Email)
-	if errDB != nil {
-		if isConnectionError(errDB) || isTimeoutError(errDB) {
-			log.Error(logger.LogDatabaseUnavailable,
-				"email", employee.Email,
-				"error", errDB,
-				"error_type", "connection")
-			return nil, domain.ErrDatabaseUnavailable
-		}
-
+	if err := checkSystemAvailability(errDB, employee.Email, logger.LogDatabaseUnavailable); err != nil {
+		return nil, err
 	}
 
 	dbExists := errDB == nil && existingEmployee != nil
 
 	keycloakUser, errKC := s.keycloak.GetUserByEmail(ctx, employee.Email)
-
-	if errKC != nil {
-		if isConnectionError(errKC) || isTimeoutError(errKC) {
-			log.Error(logger.LogKeycloakUnavailable,
-				"email", employee.Email,
-				"error", errKC,
-				"error_type", "connection")
-			return nil, domain.ErrKeycloakUnavailable
-		}
+	if err := checkSystemAvailability(errKC, employee.Email, logger.LogKeycloakUnavailable); err != nil {
+		return nil, err
 	}
 
 	kcExists := errKC == nil && keycloakUser != nil
@@ -119,6 +106,21 @@ func (s service) RegisterEmployee(ctx context.Context, employee domain.Employee)
 		Employee: employee,
 		Message:  "Validaciones exitosas",
 	}, nil
+}
+
+// checkSystemAvailability returns a domain error if the given error is a connection or timeout error.
+func checkSystemAvailability(err error, email, logMsg string) error {
+	if err == nil {
+		return nil
+	}
+	if isConnectionError(err) || isTimeoutError(err) {
+		log.Error(logMsg, "email", email, "error", err, "error_type", "connection")
+		if logMsg == logger.LogDatabaseUnavailable {
+			return domain.ErrDatabaseUnavailable
+		}
+		return domain.ErrKeycloakUnavailable
+	}
+	return nil
 }
 
 func (s service) SaveEmployeeToDB(ctx context.Context, tx output.Tx, employee domain.Employee) error {
@@ -226,8 +228,8 @@ func (s service) CheckAndCleanInconsistentState(ctx context.Context, email strin
 	keycloakUser, errKC := s.keycloak.GetUserByEmail(ctx, email)
 	kcExists := errKC == nil && keycloakUser != nil
 
-	if (dbExists && kcExists) || (!dbExists && !kcExists) {
-		if dbExists && kcExists {
+	if dbExists == kcExists {
+		if dbExists {
 			log.Debug(logger.LogUserExistsInBoth, "email", email)
 		} else {
 			log.Debug(logger.LogUserNotFoundInEither, "email", email)
@@ -239,65 +241,66 @@ func (s service) CheckAndCleanInconsistentState(ctx context.Context, email strin
 		"email", email,
 		"in_database", dbExists,
 		"in_keycloak", kcExists,
-		"db_person_id", func() string {
-			if dbExists {
-				return employeeInDB.ID
-			}
-			return "N/A"
-		}(),
-		"kc_user_id", func() string {
-			if kcExists {
-				return *keycloakUser.ID
-			}
-			return "N/A"
-		}())
+		"db_person_id", getIDOrNA(dbExists, func() string { return employeeInDB.ID }),
+		"kc_user_id", getIDOrNA(kcExists, func() string { return *keycloakUser.ID }))
 
 	if !dbExists && kcExists {
-		log.Info(logger.LogEmployeeServiceCleaningOrphan,
-			"email", email,
-			"source", "keycloak",
-			"keycloak_user_id", *keycloakUser.ID,
-			"reason", "missing in business database")
-
-		if err := s.keycloak.DeleteUser(ctx, *keycloakUser.ID); err != nil {
-			log.Error(logger.LogEmployeeServiceOrphanCleanError,
-				"email", email,
-				"source", "keycloak",
-				"keycloak_user_id", *keycloakUser.ID,
-				"error", err)
-			return domain.ErrKeycloakCleanupFailed
-		}
-
-		log.Success(logger.LogEmployeeServiceOrphanCleaned,
-			"email", email,
-			"source", "keycloak",
-			"action", "deleted from Keycloak")
-		return nil
+		return s.cleanOrphanKeycloak(ctx, email, *keycloakUser.ID)
 	}
 
-	if dbExists && !kcExists {
-		log.Info(logger.LogEmployeeServiceCleaningOrphan,
-			"email", email,
-			"source", "database",
-			"employee_id", employeeInDB.ID,
-			"reason", "missing in Keycloak")
+	return s.cleanOrphanDB(ctx, email, employeeInDB.ID)
+}
 
-		if err := s.repository.DeleteEmployee(ctx, nil, employeeInDB.ID); err != nil {
-			log.Error(logger.LogEmployeeServiceOrphanCleanError,
-				"email", email,
-				"source", "database",
-				"employee_id", employeeInDB.ID,
-				"error", err)
-			return domain.ErrKeycloakCleanupFailed
-		}
+func getIDOrNA(exists bool, idFunc func() string) string {
+	if exists {
+		return idFunc()
+	}
+	return "N/A"
+}
 
-		log.Success(logger.LogEmployeeServiceOrphanCleaned,
+func (s service) cleanOrphanKeycloak(ctx context.Context, email, keycloakUserID string) error {
+	log.Info(logger.LogEmployeeServiceCleaningOrphan,
+		"email", email,
+		"source", "keycloak",
+		"keycloak_user_id", keycloakUserID,
+		"reason", "missing in business database")
+
+	if err := s.keycloak.DeleteUser(ctx, keycloakUserID); err != nil {
+		log.Error(logger.LogEmployeeServiceOrphanCleanError,
 			"email", email,
-			"source", "database",
-			"action", "deleted from business database")
-		return nil
+			"source", "keycloak",
+			"keycloak_user_id", keycloakUserID,
+			"error", err)
+		return domain.ErrKeycloakCleanupFailed
 	}
 
+	log.Success(logger.LogEmployeeServiceOrphanCleaned,
+		"email", email,
+		"source", "keycloak",
+		"action", "deleted from Keycloak")
+	return nil
+}
+
+func (s service) cleanOrphanDB(ctx context.Context, email, employeeID string) error {
+	log.Info(logger.LogEmployeeServiceCleaningOrphan,
+		"email", email,
+		"source", "database",
+		"employee_id", employeeID,
+		"reason", "missing in Keycloak")
+
+	if err := s.repository.DeleteEmployee(ctx, nil, employeeID); err != nil {
+		log.Error(logger.LogEmployeeServiceOrphanCleanError,
+			"email", email,
+			"source", "database",
+			"employee_id", employeeID,
+			"error", err)
+		return domain.ErrKeycloakCleanupFailed
+	}
+
+	log.Success(logger.LogEmployeeServiceOrphanCleaned,
+		"email", email,
+		"source", "database",
+		"action", "deleted from business database")
 	return nil
 }
 func isConnectionError(err error) bool {
@@ -323,27 +326,7 @@ func isTimeoutError(err error) bool {
 }
 
 func contains(s, substr string) bool {
-	for i := 0; i+len(substr) <= len(s); i++ {
-		match := true
-		for j := 0; j < len(substr); j++ {
-			c1 := s[i+j]
-			c2 := substr[j]
-			if c1 >= 'A' && c1 <= 'Z' {
-				c1 += 32
-			}
-			if c2 >= 'A' && c2 <= 'Z' {
-				c2 += 32
-			}
-			if c1 != c2 {
-				match = false
-				break
-			}
-		}
-		if match {
-			return true
-		}
-	}
-	return false
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
 func (s service) GetUserByEmail(ctx context.Context, email string) (*gocloak.User, error) {

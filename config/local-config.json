@@ -17,7 +17,7 @@
     "host": "0.0.0.0"
   },
   "resend": {
-    "api_key": "re_6w3aQQUe_EQaL4h4X3QpUizqcxbG725a8",
+    "api_key": "${RESEND_API_KEY}",
     "from_email": "flighthours@rbsuport.com"
   },
   "verification": {
@@ -27,12 +27,17 @@
     "server_url": "http://localhost:8080",
     "realm": "flighthours",
     "client_id": "emma",
-    "client_secret": "M9HfWmIWf6huAnpKPXIGNdDeTfrwcNMt",
+    "client_secret": "${KEYCLOAK_CLIENT_SECRET}",
     "admin_user": "admin",
-    "admin_pass": "Emma2026!"
+    "admin_pass": "${KEYCLOAK_ADMIN_PASSWORD}"
   },
   "id_encoder": {
-    "secret": "flighthours-secret-key-2024",
+    "secret": "${ID_ENCODER_SECRET}",
     "min_length": 10
+  },
+  "cookie": {
+    "domain": "",
+    "secure": true,
+    "same_site": "none"
   }
 }

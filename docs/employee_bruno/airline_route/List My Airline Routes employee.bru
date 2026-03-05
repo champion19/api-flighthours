@@ -1,0 +1,31 @@
+meta {
+  name: List My Airline Routes employee
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/employees/airline-routes
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # List My Airline Routes
+  
+  Obtiene las rutas de la aerolínea del usuario autenticado.
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Respuesta exitosa (200)
+  Retorna lista de rutas de la aerolínea asociada al empleado.
+  
+  ## Errores
+  - 401: Token inválido o expirado
+  - 404: El empleado no tiene aerolínea asignada
+}

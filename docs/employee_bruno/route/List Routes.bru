@@ -1,0 +1,52 @@
+meta {
+  name: List Routes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/routes
+  body: none
+  auth: none
+}
+
+params:query {
+  ~airport_type: Nacional
+  ~origin_country: Colombia
+}
+
+docs {
+  # List Routes (HU36 - Consultar Información Ruta)
+
+  Obtiene la lista de todas las rutas disponibles.
+  Este endpoint NO requiere autenticación.
+
+  ## Query Parameters (opcionales)
+  - `airport_type`: Filtrar por tipo de aeropuerto (Nacional, Internacional)
+  - `origin_country`: Filtrar por país de origen
+
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "routes": [
+      {
+        "id": "encoded_route_id",
+        "origin_iata_code": "BOG",
+        "origin_airport_name": "El Dorado International Airport",
+        "destination_iata_code": "MDE",
+        "destination_airport_name": "José María Córdova",
+        "airport_type": "Nacional",
+        "route_code": "BOG-MDE",
+        "_links": [...]
+      }
+    ],
+    "total": 10,
+    "_links": [
+      {"rel": "self", "href": "/routes", "method": "GET"}
+    ]
+  }
+  ```
+
+  ## Errores
+  - 500: Error interno del servidor
+}

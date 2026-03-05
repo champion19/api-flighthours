@@ -1,0 +1,56 @@
+meta {
+  name: List Engines
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/engines
+  body: none
+  auth: none
+}
+
+query {
+  ~status: active
+}
+
+docs {
+  # List Engines (HU35 - Consultar Lista de Motores)
+
+  Obtiene la lista de todos los motores registrados en el sistema.
+  Este endpoint es PÚBLICO - NO requiere autenticación.
+
+  ## Query Parameters (opcionales)
+  - `status`: Filtrar por estado
+    - `active` o `true` o `1`: Solo motores activos
+    - `inactive` o `false` o `0`: Solo motores inactivos
+
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MOT_LIST_EXI_03704",
+    "message": "...",
+    "data": {
+      "engines": [
+        {
+          "id": "encoded_engine_id",
+          "engine_name": "CFM56-5B4",
+          "engine_code": "CFM56",
+          "status": "active",
+          "_links": [
+            {"rel": "self", "href": "/engines/encoded_id", "method": "GET"}
+          ]
+        }
+      ],
+      "total": 1,
+      "_links": [
+        {"rel": "self", "href": "/engines", "method": "GET"}
+      ]
+    }
+  }
+  ```
+
+  ## Errores
+  - 500: Error interno del servidor
+}

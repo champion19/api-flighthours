@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "crew_member_type",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

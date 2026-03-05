@@ -116,7 +116,11 @@ func TestHTTP_GetAirlineByID(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -277,7 +281,11 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -367,6 +375,18 @@ func TestHTTP_ActivateAirline(t *testing.T) {
 			t.Fatalf("expected status %d, got %d. body=%s", http.StatusInternalServerError, w.Code, w.Body.String())
 		}
 	})
+
+	t.Run("invalid ID format => 400", func(t *testing.T) {
+		svc := &fakeAirlineService{}
+		r := newRouter(svc)
+		req := httptest.NewRequest(http.MethodPatch, "/airlines/invalid-id!!!/activate", nil)
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d, got %d. body=%s", http.StatusBadRequest, w.Code, w.Body.String())
+		}
+	})
 }
 
 func TestHTTP_DeactivateAirline(t *testing.T) {
@@ -383,7 +403,11 @@ func TestHTTP_DeactivateAirline(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
@@ -502,7 +526,11 @@ func TestHTTP_ListAirlines(t *testing.T) {
 
 	newRouter := func(svc input.AirlineService) *gin.Engine {
 		airlineInteractor := interactor.NewAirlineInteractor(svc)
-		h := New(nil, nil, enc, resp, nil, nil, airlineInteractor, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+		h := New(HandlerDeps{
+		IDEncoder: enc,
+		Response: resp,
+		AirlineInteractor: airlineInteractor,
+		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())

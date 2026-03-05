@@ -1,0 +1,83 @@
+meta {
+  name: Edit My  Employee Airline Info
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/employees/airline-info
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "airline_id": "vyY2TPnPHQRguoepinx5irokud88CeEW",
+    "bp": "4472024",
+    "start_date": "2025-01-01",
+    "end_date": "2026-12-31"
+  }
+}
+
+docs {
+  # Edit My Airline Info (HU25 - Editar el Empleado de la Aerolínea)
+  
+  Edita la información de aerolínea para el empleado autenticado.
+  **IMPORTANTE:** El empleado debe tener información de aerolínea previa (usando PUT /employee/me/airline primero).
+  
+  **NOTA:** El campo `active` NO se edita en esta HU. Para activar/desactivar, usar endpoints específicos en futuras HUs.
+  
+  ## Flujo
+  1. POST /login → Obtener token
+  2. PUT /employee/me/airline → Agregar info inicial (HU26)
+  3. PUT /employee/me/airline-info → Editar info existente (HU25) ✅
+  4. GET /employee/me/airline → Verificar cambios
+  
+  ## Body (campos editables)
+  | Campo | Tipo | Requerido | Validación | Descripción |
+  |-------|------|-----------|------------|-------------|
+  | airline_id | string | ✅ | ID válido codificado | ID ofuscado de la aerolínea |
+  | bp | string | ❌ | max 50 chars | Código Business Partner |
+  | start_date | string | ✅ | YYYY-MM-DD | Fecha inicio |
+  | end_date | string | ❌ | YYYY-MM-DD | Fecha fin |
+  
+  ## Validaciones del JSON Schema
+  - **airline_id**: Requerido, minLength 1
+  - **start_date**: Requerido, formato date (YYYY-MM-DD)
+  - **bp**: Opcional, max 50 caracteres
+  - **end_date**: Opcional, formato date (YYYY-MM-DD)
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "EMP_AIR_EDI_EXI_02701",
+    "message": "Empleado aerolínea actualizado exitosamente",
+    "data": {
+      "updated": true,
+      "airline_id": "zVL6fRnRcd8McYrNhXD8u2okijnnSReo",
+      "airline_name": "Avianca",
+      "bp": "CP004-EDITED",
+      "start_date": "2025-02-01",
+      "end_date": "2031-12-31",
+      "_links": [
+        {"href": ".../employee/me/airline", "rel": "self", "method": "GET"},
+        {"href": ".../employee/me", "rel": "profile", "method": "GET"}
+      ]
+    }
+  }
+  ```
+  
+  ## Errores posibles
+  | Código | HTTP | Descripción |
+  |--------|------|-------------|
+  | GEN_AUTH_ERR_00002 | 401 | No autenticado |
+  | EMP_AIR_CON_ERR_02602 | 404 | Sin info de aerolínea previa |
+  | EMP_AIR_VAL_ERR_02604 | 422 | Aerolínea inválida |
+  | MOD_V_DATE_ERR_00018 | 400 | Formato fecha inválido |
+  | EMP_AIR_EDI_ERR_02702 | 500 | Error técnico |
+}

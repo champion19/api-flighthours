@@ -206,9 +206,6 @@ definitions:
       crew_role:
         description: nullable
         type: string
-      duty_time:
-        description: TIME format HH:MM (nullable)
-        type: string
       flight_number:
         type: string
       flight_real_date:
@@ -221,8 +218,6 @@ definitions:
       landing_time:
         description: TIME format HH:MM (nullable)
         type: string
-      license_plate_id:
-        type: string
       out_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -230,6 +225,8 @@ definitions:
         type: integer
       pilot_role:
         description: nullable
+        type: string
+      tail_number_id:
         type: string
       takeoff_time:
         description: TIME format HH:MM (nullable)
@@ -244,29 +241,18 @@ definitions:
     required:
     - log_date
     type: object
-  handlers.UpdateDailyLogbookRequest:
-    properties:
-      book_page:
-        type: integer
-      log_date:
-        type: string
-      status:
-        type: boolean
-    required:
-    - log_date
-    type: object
-  handlers.CreateLicensePlateRequest:
+  handlers.CreateTailNumberRequest:
     properties:
       aircraft_model_id:
         type: string
       airline_id:
         type: string
-      license_plate:
+      tail_number:
         type: string
     required:
     - aircraft_model_id
     - airline_id
-    - license_plate
+    - tail_number
     type: object
   handlers.DailyLogbookDeleteResponse:
     properties:
@@ -303,8 +289,6 @@ definitions:
         type: string
       destination_iata_code:
         type: string
-      duty_time:
-        type: string
       flight_number:
         type: string
       flight_real_date:
@@ -316,10 +300,6 @@ definitions:
       in_time:
         type: string
       landing_time:
-        type: string
-      license_plate:
-        type: string
-      license_plate_id:
         type: string
       log_date:
         type: string
@@ -334,6 +314,10 @@ definitions:
       pilot_role:
         type: string
       route_code:
+        type: string
+      tail_number:
+        type: string
+      tail_number_id:
         type: string
       takeoff_time:
         type: string
@@ -454,40 +438,44 @@ definitions:
       name:
         type: string
     type: object
-  handlers.LicensePlateListResponse:
+  handlers.FlightAlertResponse:
     properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      registrations:
-        items:
-          $ref: '#/definitions/handlers.LicensePlateResponse'
-        type: array
-      total:
+      current_value:
         type: integer
+      message:
+        type: string
+      severity:
+        type: string
+      threshold:
+        type: integer
+      type:
+        type: string
     type: object
-  handlers.LicensePlateResponse:
+  handlers.FlightAlertsResponse:
     properties:
-      _links:
+      alerts:
         items:
-          $ref: '#/definitions/handlers.Link'
+          $ref: '#/definitions/handlers.FlightAlertResponse'
         type: array
-      aircraft_model_id:
+    type: object
+  handlers.FlightHoursSummaryResponse:
+    properties:
+      breakdown:
+        additionalProperties:
+          type: string
+        type: object
+      end_date:
         type: string
-      airline_id:
+      period:
         type: string
-      airline_name:
-        description: Aerolínea (denormalized)
+      start_date:
         type: string
-      id:
+      total_flights:
+        type: integer
+      total_hours:
         type: string
-      license_plate:
-        description: Numero de Matrícula
-        type: string
-      model_name:
-        description: Modelo (denormalized)
-        type: string
+      total_landings:
+        type: integer
     type: object
   handlers.Link:
     properties:
@@ -696,6 +684,41 @@ definitions:
       success:
         type: boolean
     type: object
+  handlers.TailNumberListResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      registrations:
+        items:
+          $ref: '#/definitions/handlers.TailNumberResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  handlers.TailNumberResponse:
+    properties:
+      _links:
+        items:
+          $ref: '#/definitions/handlers.Link'
+        type: array
+      aircraft_model_id:
+        type: string
+      airline_id:
+        type: string
+      airline_name:
+        description: Aerolínea (denormalized)
+        type: string
+      id:
+        type: string
+      model_name:
+        description: Modelo (denormalized)
+        type: string
+      tail_number:
+        description: Numero de Matrícula
+        type: string
+    type: object
   handlers.UpdateDailyLogbookDetailRequest:
     properties:
       air_time:
@@ -713,9 +736,6 @@ definitions:
       crew_role:
         description: nullable
         type: string
-      duty_time:
-        description: TIME format HH:MM (nullable)
-        type: string
       flight_number:
         type: string
       flight_real_date:
@@ -728,8 +748,6 @@ definitions:
       landing_time:
         description: TIME format HH:MM (nullable)
         type: string
-      license_plate_id:
-        type: string
       out_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -738,9 +756,22 @@ definitions:
       pilot_role:
         description: nullable
         type: string
+      tail_number_id:
+        type: string
       takeoff_time:
         description: TIME format HH:MM (nullable)
         type: string
+    type: object
+  handlers.UpdateDailyLogbookRequest:
+    properties:
+      book_page:
+        type: integer
+      log_date:
+        type: string
+      status:
+        type: boolean
+    required:
+    - log_date
     type: object
   handlers.UpdateEmployeeAirlineRequest:
     properties:
@@ -793,19 +824,6 @@ definitions:
       updated:
         type: boolean
     type: object
-  handlers.UpdateLicensePlateRequest:
-    properties:
-      aircraft_model_id:
-        type: string
-      airline_id:
-        type: string
-      license_plate:
-        type: string
-    required:
-    - aircraft_model_id
-    - airline_id
-    - license_plate
-    type: object
   handlers.UpdatePasswordRequest:
     properties:
       confirm_password:
@@ -827,6 +845,19 @@ definitions:
         type: string
       updated:
         type: boolean
+    type: object
+  handlers.UpdateTailNumberRequest:
+    properties:
+      aircraft_model_id:
+        type: string
+      airline_id:
+        type: string
+      tail_number:
+        type: string
+    required:
+    - aircraft_model_id
+    - airline_id
+    - tail_number
     type: object
   handlers.VerifyEmailRequest:
     properties:
@@ -1699,8 +1730,8 @@ paths:
       - Authentication
   /crew-member-types:
     get:
-      description: Returns the available crew member types (captain, copilot). Static
-        catalog endpoint - no database query needed.
+      description: Returns the available crew member types (captain, first officer).
+        Static catalog endpoint - no database query needed.
       produces:
       - application/json
       responses:
@@ -1713,6 +1744,36 @@ paths:
       tags:
       - Crew Member Types
   /daily-logbook-details/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a flight segment
+      parameters:
+      - description: Detail ID (obfuscated or UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete daily logbook detail
+      tags:
+      - DailyLogbookDetails
     get:
       consumes:
       - application/json
@@ -2425,6 +2486,76 @@ paths:
       summary: Deactivate airline information for authenticated employee
       tags:
       - AirlineEmployees
+  /employees/flight-alerts:
+    get:
+      description: Returns active alerts (e.g., max consecutive hours, min landings)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.FlightAlertsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get flight alerts for the authenticated employee
+      tags:
+      - Flight Summary
+  /employees/flight-hours-summary:
+    get:
+      description: Returns total flight hours and breakdown by pilot role, filtered
+        by period
+      parameters:
+      - description: 'Period type: monthly, bimonthly, quarterly, semiannual, annual,
+          custom'
+        in: query
+        name: period
+        required: true
+        type: string
+      - description: Start date (YYYY-MM-DD), required if period=custom
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD), required if period=custom
+        in: query
+        name: end_date
+        type: string
+      - description: Reference date for period calculation (defaults to today)
+        in: query
+        name: reference_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.FlightHoursSummaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get flight hours summary for the authenticated employee
+      tags:
+      - Flight Summary
   /employees/flights:
     get:
       consumes:
@@ -2449,6 +2580,31 @@ paths:
       summary: List my flights
       tags:
       - DailyLogbookDetails
+  /employees/recent-flights:
+    get:
+      description: Returns the 5 most recent flights ordered by date descending
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.DailyLogbookDetailResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get the last 5 flights for the authenticated employee
+      tags:
+      - Flight Summary
   /engines:
     get:
       description: Returns a list of all engine types
@@ -2505,149 +2661,6 @@ paths:
       summary: Get engine by ID
       tags:
       - Engines
-  /license-plates:
-    get:
-      description: Returns a list of all aircraft registrations with optional filters
-      parameters:
-      - description: Filter by airline ID
-        in: query
-        name: airline_id
-        type: string
-      - description: Filter by license plate
-        in: query
-        name: license_plate
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.LicensePlateListResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: List all aircraft registrations
-      tags:
-      - License Plates
-    post:
-      consumes:
-      - application/json
-      description: Creates a new aircraft registration (license plate must be unique)
-      parameters:
-      - description: License Plate data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateLicensePlateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/handlers.LicensePlateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "409":
-          description: Conflict
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Create a new aircraft registration
-      tags:
-      - License Plates
-  /license-plates/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Updates an aircraft registration by ID (accepts both UUID and obfuscated
-        ID)
-      parameters:
-      - description: License Plate ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: License Plate data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateLicensePlateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.LicensePlateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Update an existing aircraft registration
-      tags:
-      - License Plates
-  /license-plates/{plate}:
-    get:
-      consumes:
-      - application/json
-      description: Returns aircraft registration information by its plate number (e.g.
-        HK-5432)
-      parameters:
-      - description: License Plate number (e.g. HK-5432)
-        in: path
-        name: plate
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.LicensePlateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get aircraft registration by license plate number
-      tags:
-      - License Plates
   /login:
     post:
       consumes:
@@ -3053,6 +3066,149 @@ paths:
       summary: Get route by ID
       tags:
       - Routes
+  /tail-numbers:
+    get:
+      description: Returns a list of all aircraft registrations with optional filters
+      parameters:
+      - description: Filter by airline ID
+        in: query
+        name: airline_id
+        type: string
+      - description: Filter by tail number
+        in: query
+        name: tail_number
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TailNumberListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all aircraft registrations
+      tags:
+      - Tail Numbers
+    post:
+      consumes:
+      - application/json
+      description: Creates a new aircraft registration (tail number must be unique)
+      parameters:
+      - description: Aircraft registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTailNumberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.TailNumberResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new aircraft registration
+      tags:
+      - Tail Numbers
+  /tail-numbers/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Updates an aircraft registration by ID (accepts both UUID and obfuscated
+        ID)
+      parameters:
+      - description: Tail Number ID (obfuscated ID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Aircraft registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateTailNumberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TailNumberResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update an existing aircraft registration
+      tags:
+      - Tail Numbers
+  /tail-numbers/{plate}:
+    get:
+      consumes:
+      - application/json
+      description: Returns aircraft registration information by its tail number (e.g.
+        HK-5432)
+      parameters:
+      - description: Tail number (e.g. HK-5432)
+        in: path
+        name: plate
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.TailNumberResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get aircraft registration by tail number
+      tags:
+      - Tail Numbers
 securityDefinitions:
   BearerAuth:
     description: 'JWT Bearer token (format: "Bearer {token}")'

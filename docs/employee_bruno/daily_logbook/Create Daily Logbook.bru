@@ -1,0 +1,68 @@
+meta {
+  name: Create Daily Logbook
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/daily-logbooks
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+body:json {
+  {
+    "log_date": "2026-02-18",
+    "book_page": 1988551484844844848
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("logbook-id", res.body.id);
+    console.log("✅ Logbook ID guardado: " + res.body.id);
+  }
+}
+
+docs {
+  # Crear Bitácora Diaria
+  
+  Crea una nueva bitácora diaria para el empleado autenticado.
+  La bitácora es prerequisito para registrar vuelos (daily_logbook_detail).
+  
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  - Content-Type: application/json
+  
+  ## Request Body
+  - **log_date** (required): Fecha de la bitácora (YYYY-MM-DD)
+  - **book_page** (optional): Número de página del libro físico
+  
+  ## Respuesta exitosa (201) - `BIT_AGR_EXI_01801`
+  ```json
+  {
+    "id": "encoded-id",
+    "log_date": "2026-02-10",
+    "employee_id": "encoded-employee-id",
+    "book_page": 1,
+    "status": "active",
+    "_links": [...]
+  }
+  ```
+  
+  ## Errores
+  - 400: JSON inválido / Fecha con formato incorrecto
+  - 401: No autenticado
+  - 500: Error interno (`BIT_AGR_ERR_01804`)
+}

@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"github.com/champion19/api-flighthours/config"
-	 "github.com/champion19/api-flighthours/platform/logger"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/champion19/api-flighthours/platform/logger"
+	_ "github.com/go-sql-driver/mysql" // Register MySQL driver for database/sql
 )
 
 var log logger.Logger = logger.NewSlogLogger()
-
 
 func GetDB(dbConfig config.Database) (*sql.DB, error) {
 	log.Info(logger.LogDBConnecting,

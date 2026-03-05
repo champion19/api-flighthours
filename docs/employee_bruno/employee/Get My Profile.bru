@@ -1,0 +1,39 @@
+meta {
+  name: Get My Profile
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/employees
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Get My Profile
+  
+  Obtiene los datos del usuario autenticado.
+  
+  ## Headers requeridos
+  - Authorization: Bearer <access_token>
+  
+  ## Respuesta exitosa (200)
+  ```json
+  {
+    "success": true,
+    "code": "MsgUserFound",
+    "data": {
+      "id": "obfuscated_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "PILOT",
+      ...
+    }
+  }
+  ```
+}

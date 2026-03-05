@@ -1,0 +1,51 @@
+meta {
+  name: List My Daily Logbooks
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/daily-logbooks
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access-token}}
+}
+
+docs {
+  # Listar Mis Bitácoras Diarias
+
+  Lista todas las bitácoras diarias del empleado autenticado.
+  Permite filtrar por estado activo/inactivo mediante query parameter.
+
+  ## Autenticación
+  Requiere token Bearer (ejecutar Login primero).
+
+  ## Query Parameters (opcionales)
+  - `status=true` - Solo bitácoras activas
+  - `status=false` - Solo bitácoras inactivas
+
+  ## Respuesta exitosa (200) - `BIT_LIST_EXI_01001`
+  ```json
+  {
+    "daily_logbooks": [
+      {
+        "id": "encoded-id",
+        "log_date": "2026-02-10",
+        "employee_id": "encoded-employee-id",
+        "book_page": 1,
+        "status": "active",
+        "_links": [...]
+      }
+    ],
+    "total": 1,
+    "_links": [...]
+  }
+  ```
+
+  ## Errores
+  - 401: No autenticado
+  - 500: Error al listar (`BIT_LIST_ERR_01002`)
+}
