@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "flight_summary",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

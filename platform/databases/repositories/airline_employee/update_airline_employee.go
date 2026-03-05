@@ -6,6 +6,7 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/core/ports/output"
 	"github.com/champion19/api-flighthours/platform/databases/common"
+	"github.com/champion19/api-flighthours/platform/logger"
 )
 
 // UpdateAirlineEmployee updates airline-specific fields for an existing employee (HU25)
@@ -13,7 +14,7 @@ import (
 func (r *repository) UpdateAirlineEmployee(ctx context.Context, tx output.Tx, employee domain.AirlineEmployee) error {
 	employeeToUpdate := FromDomain(&employee)
 
-	log.Debug("UpdateAirlineEmployee: Starting update",
+	log.Debug(logger.LogAirlineEmployeeRepoUpdateStart,
 		"employee_id", employeeToUpdate.ID,
 		"airline_id", employeeToUpdate.AirlineID,
 		"active", employeeToUpdate.Active)
@@ -36,7 +37,7 @@ func (r *repository) UpdateAirlineEmployee(ctx context.Context, tx output.Tx, em
 		return handleMySQLError(err, employee.ID)
 	}
 
-	log.Debug("UpdateAirlineEmployee: Query executed successfully",
+	log.Debug(logger.LogAirlineEmployeeRepoUpdateQueryOK,
 		"employee_id", employeeToUpdate.ID,
 		"rows_affected", func() int64 { r, _ := result.RowsAffected(); return r }())
 

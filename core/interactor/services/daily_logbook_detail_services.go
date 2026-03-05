@@ -54,44 +54,38 @@ func (s *DailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.Conte
 }
 
 func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error {
-	// Parse time with flexible format (HH:MM or HH:MM:SS)
-	parseTime := func(timeStr string) (time.Time, error) {
-		// Try HH:MM:SS first
-		t, err := time.Parse("15:04:05", timeStr)
-		if err == nil {
-			return t, nil
-		}
-		// Fallback to HH:MM
-		return time.Parse("15:04", timeStr)
-	}
-
-	out, err := parseTime(outTime)
+	out, err := parseFlightTime(outTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid out_time format", "value", outTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	takeoff, err := parseTime(takeoffTime)
+	takeoff, err := parseFlightTime(takeoffTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid takeoff_time format", "value", takeoffTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	landing, err := parseTime(landingTime)
+	landing, err := parseFlightTime(landingTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid landing_time format", "value", landingTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	in, err := parseTime(inTime)
+	in, err := parseFlightTime(inTime)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailCreateError, "error", "invalid in_time format", "value", inTime)
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	// Validate sequence: out < takeoff < landing < in
-	if !out.Before(takeoff) {
-		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "out_time must be before takeoff_time")
+	// Adjust for midnight-crossing flights
+	takeoff = adjustForMidnight(takeoff, out)
+	landing = adjustForMidnight(landing, takeoff)
+	in = adjustForMidnight(in, landing)
+
+	// Validate sequence: out <= takeoff < landing <= in
+	if !out.Before(takeoff) && !out.Equal(takeoff) {
+		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "out_time must be before or equal to takeoff_time")
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
@@ -100,15 +94,34 @@ func (s *DailyLogbookDetailService) ValidateTimeSequence(outTime, takeoffTime, l
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
-	if !landing.Before(in) {
-		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "landing_time must be before in_time")
+	if !landing.Before(in) && !landing.Equal(in) {
+		log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "landing_time must be before or equal to in_time")
 		return domain.ErrFlightInvalidTimeSequence
 	}
 
 	return nil
 }
 
+// parseFlightTime parses a time string with flexible format (HH:MM or HH:MM:SS)
+func parseFlightTime(timeStr string) (time.Time, error) {
+	t, err := time.Parse("15:04:05", timeStr)
+	if err == nil {
+		return t, nil
+	}
+	return time.Parse("15:04", timeStr)
+}
+
+// adjustForMidnight handles midnight-crossing: if current is earlier than previous
+// and the gap is large (>12h), add 24h to indicate next-day crossing.
+func adjustForMidnight(current, previous time.Time) time.Time {
+	halfDay := 12 * time.Hour
+	if current.Before(previous) && previous.Sub(current) > halfDay {
+		return current.Add(24 * time.Hour)
+	}
+	return current
+}
+
 // ExistsByUniqueKey delegates duplicate check to the repository
-func (s *DailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error) {
-	return s.repo.ExistsByUniqueKey(ctx, employeeLogbookID, flightRealDate, flightNumber, licensePlateID)
+func (s *DailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
+	return s.repo.ExistsByUniqueKey(ctx, employeeLogbookID, flightRealDate, flightNumber, tailNumberID)
 }

@@ -51,7 +51,7 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 		// Encode related IDs
 		encodedLogbookID, _ := h.EncodeID(detail.DailyLogbookID)
 		encodedRouteID, _ := h.EncodeID(detail.AirlineRouteID)
-		encodedAircraftID, _ := h.EncodeID(detail.LicensePlateID)
+		encodedAircraftID, _ := h.EncodeID(detail.TailNumberID)
 
 		// Build response
 		response := FromDomainDailyLogbookDetail(detail, responseID, encodedLogbookID, encodedRouteID, encodedAircraftID)
@@ -113,13 +113,13 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		licensePlateUUID, _ := h.resolveID(req.LicensePlateID)
-		if licensePlateUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid license plate ID")
-			h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
+		tailNumberUUID, _ := h.resolveID(req.TailNumberID)
+		if tailNumberUUID == "" {
+			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid tail number ID")
+			h.Response.Error(c, domain.MsgFlightInvalidTailNumber)
 			return
 		}
-		req.LicensePlateID = licensePlateUUID
+		req.TailNumberID = tailNumberUUID
 
 		detail := ToDomainDailyLogbookDetail(logbookUUID, req)
 		detail.SetID()
@@ -141,7 +141,7 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		encodedID, _ := h.EncodeID(detail.ID)
 		encodedLogbookID, _ := h.EncodeID(logbookUUID)
 		encodedRouteID, _ := h.EncodeID(req.AirlineRouteID)
-		encodedAircraftID, _ := h.EncodeID(req.LicensePlateID)
+		encodedAircraftID, _ := h.EncodeID(req.TailNumberID)
 
 		response := FromDomainDailyLogbookDetail(createdDetail, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
@@ -159,8 +159,8 @@ func mapCreateError(err error) string {
 		return domain.MsgFlightInvalidLogbook
 	case domain.ErrFlightInvalidRoute:
 		return domain.MsgFlightInvalidRoute
-	case domain.ErrFlightInvalidLicensePlate:
-		return domain.MsgFlightInvalidLicensePlate
+	case domain.ErrFlightInvalidTailNumber:
+		return domain.MsgFlightInvalidTailNumber
 	case domain.ErrFlightInvalidTimeSequence:
 		return domain.MsgFlightInvalidTimeSequence
 	case domain.ErrFlightDuplicate:
@@ -222,13 +222,13 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		aircraftUUID, _ := h.resolveID(req.LicensePlateID)
+		aircraftUUID, _ := h.resolveID(req.TailNumberID)
 		if aircraftUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid license plate ID")
-			h.Response.Error(c, domain.MsgFlightInvalidLicensePlate)
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid tail number ID")
+			h.Response.Error(c, domain.MsgFlightInvalidTailNumber)
 			return
 		}
-		req.LicensePlateID = aircraftUUID
+		req.TailNumberID = aircraftUUID
 
 		detail := ToDomainDailyLogbookDetailUpdate(detailUUID, req)
 
@@ -247,7 +247,7 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 
 		encodedLogbookID, _ := h.EncodeID(updatedDetail.DailyLogbookID)
 		encodedRouteID, _ := h.EncodeID(updatedDetail.AirlineRouteID)
-		encodedAircraftID, _ := h.EncodeID(updatedDetail.LicensePlateID)
+		encodedAircraftID, _ := h.EncodeID(updatedDetail.TailNumberID)
 
 		response := FromDomainDailyLogbookDetail(updatedDetail, responseID, encodedLogbookID, encodedRouteID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, responseID)
@@ -391,7 +391,7 @@ func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 			encodedID, _ := h.EncodeID(d.ID)
 			encodedLogbookID, _ := h.EncodeID(d.DailyLogbookID)
 			encodedRouteID, _ := h.EncodeID(d.AirlineRouteID)
-			encodedAircraftID, _ := h.EncodeID(d.LicensePlateID)
+			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
 			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
 			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
@@ -442,7 +442,7 @@ func (h *handler) ListMyFlights() gin.HandlerFunc {
 			encodedID, _ := h.EncodeID(d.ID)
 			encodedLogbookID, _ := h.EncodeID(d.DailyLogbookID)
 			encodedRouteID, _ := h.EncodeID(d.AirlineRouteID)
-			encodedAircraftID, _ := h.EncodeID(d.LicensePlateID)
+			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
 			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
 			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)

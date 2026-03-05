@@ -22,8 +22,8 @@ type Validators struct {
 	VerifyEmailValidator              *jsonschema.Schema
 	AddAirlineEmployeeValidator       *jsonschema.Schema
 	UpdateAirlineEmployeeValidator    *jsonschema.Schema
-	CreateLicensePlateValidator       *jsonschema.Schema
-	UpdateLicensePlateValidator       *jsonschema.Schema
+	CreateTailNumberValidator       *jsonschema.Schema
+	UpdateTailNumberValidator       *jsonschema.Schema
 	CreateDailyLogbookDetailValidator *jsonschema.Schema
 	UpdateDailyLogbookDetailValidator *jsonschema.Schema
 	CreateDailyLogbookValidator       *jsonschema.Schema
@@ -104,11 +104,11 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	if err != nil {
 		return nil, err
 	}
-	createLicensePlate, err := validator.createSchema("create_license_plate_schema.json")
+	createTailNumber, err := validator.createSchema("create_tail_number_schema.json")
 	if err != nil {
 		return nil, err
 	}
-	updateLicensePlate, err := validator.createSchema("update_license_plate_schema.json")
+	updateTailNumber, err := validator.createSchema("update_tail_number_schema.json")
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +136,8 @@ func NewValidator(fileReader FileReaderInterface) (*Validators, error) {
 	validator.VerifyEmailValidator = verifyEmail
 	validator.AddAirlineEmployeeValidator = addAirlineEmployee
 	validator.UpdateAirlineEmployeeValidator = updateAirlineEmployee
-	validator.CreateLicensePlateValidator = createLicensePlate
-	validator.UpdateLicensePlateValidator = updateLicensePlate
+	validator.CreateTailNumberValidator = createTailNumber
+	validator.UpdateTailNumberValidator = updateTailNumber
 	validator.CreateDailyLogbookDetailValidator = createDailyLogbookDetail
 	validator.UpdateDailyLogbookDetailValidator = updateDailyLogbookDetail
 	validator.CreateDailyLogbookValidator = createDailyLogbook

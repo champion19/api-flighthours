@@ -3,6 +3,7 @@ package handlers
 import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 	"github.com/champion19/api-flighthours/middleware"
+	"github.com/champion19/api-flighthours/platform/cookie"
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -162,6 +163,12 @@ func (h handler) Login() gin.HandlerFunc {
 			return
 		}
 
+		// Set HttpOnly cookies for web clients
+		if h.CookieManager != nil {
+			const refreshTokenMaxAge = 30 * 24 * 3600 // 30 days
+			h.CookieManager.SetTokens(c, token.AccessToken, token.ExpiresIn, token.RefreshToken, refreshTokenMaxAge)
+		}
+
 		response := LoginResponse{
 			AccessToken:  token.AccessToken,
 			RefreshToken: token.RefreshToken,
@@ -192,20 +199,33 @@ func (h handler) RefreshToken() gin.HandlerFunc {
 		traceID := middleware.GetRequestID(c)
 		log := log.WithTraceID(traceID)
 
-		var req RefreshTokenRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			log.Error(logger.LogRegJSONParseError, "error", err)
-			h.Response.Error(c, domain.MsgValBadFormat)
-			return
+		// Try to get refresh token from cookie first (web), then body (mobile)
+		var refreshToken string
+		if cookieToken, err := cookie.GetRefreshToken(c); err == nil && cookieToken != "" {
+			refreshToken = cookieToken
+		} else {
+			var req RefreshTokenRequest
+			if err := c.ShouldBindJSON(&req); err != nil || req.RefreshToken == "" {
+				log.Error(logger.LogRegJSONParseError, "error", "no refresh token in cookie or body")
+				h.Response.Error(c, domain.MsgValBadFormat)
+				return
+			}
+			refreshToken = req.RefreshToken
 		}
 
 		log.Info(logger.LogKeycloakUserTokenRefresh, "client_ip", c.ClientIP())
 
-		token, err := h.Interactor.RefreshToken(c, req.RefreshToken)
+		token, err := h.Interactor.RefreshToken(c, refreshToken)
 		if err != nil {
 			log.Error(logger.LogKeycloakUserTokenRefreshErr, "error", err, "client_ip", c.ClientIP())
 			h.Response.Error(c, domain.MsgKCRefreshTokenFailed)
 			return
+		}
+
+		// Rotate HttpOnly cookies with new tokens
+		if h.CookieManager != nil {
+			const refreshTokenMaxAge = 30 * 24 * 3600
+			h.CookieManager.SetTokens(c, token.AccessToken, token.ExpiresIn, token.RefreshToken, refreshTokenMaxAge)
 		}
 
 		response := LoginResponse{
@@ -572,7 +592,7 @@ func (h handler) UpdatePassword() gin.HandlerFunc {
 
 // GetCrewMemberTypes godoc
 // @Summary      Get crew member types
-// @Description  Returns the available crew member types (captain, copilot). Static catalog endpoint - no database query needed.
+// @Description  Returns the available crew member types (captain, first officer). Static catalog endpoint - no database query needed.
 // @Tags         Crew Member Types
 // @Produce      json
 // @Success      200  {object}  map[string]interface{}

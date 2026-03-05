@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/MicahParks/keyfunc"
+	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -30,7 +32,6 @@ type JWKSConfig struct {
 	RefreshInterval time.Duration
 }
 
-
 func NewJWKSValidator(ctx context.Context, config JWKSConfig) (*JWKSValidator, error) {
 	if config.JWKSURL == "" {
 		return nil, errors.New("JWKS URL cannot be empty")
@@ -40,12 +41,11 @@ func NewJWKSValidator(ctx context.Context, config JWKSConfig) (*JWKSValidator, e
 		config.RefreshInterval = time.Hour
 	}
 
-
 	options := keyfunc.Options{
 		Ctx: ctx,
 		RefreshErrorHandler: func(err error) {
 
-			fmt.Printf("JWKS refresh error: %v\n", err)
+			slog.Error(logger.LogJWKSRefreshError, slog.String("error", err.Error()))
 		},
 		RefreshInterval:   config.RefreshInterval,
 		RefreshRateLimit:  time.Minute * 5,
@@ -63,7 +63,6 @@ func NewJWKSValidator(ctx context.Context, config JWKSConfig) (*JWKSValidator, e
 		expectedIssuer: config.Issuer,
 	}, nil
 }
-
 
 func (v *JWKSValidator) ValidateToken(tokenString string) (map[string]interface{}, error) {
 	token, err := jwt.Parse(tokenString, v.jwks.Keyfunc)

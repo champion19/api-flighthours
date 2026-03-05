@@ -24,22 +24,21 @@ auth:bearer {
 
 body:json {
   {
-    "flight_real_date": "2026-02-18",
-    "flight_number": "4456",
-    "airline_route_id": "MrDvcDpohYndSvrpT4JWh4Q9up6ESdrX",
-    "license_plate_id": "DjzjUvjjhXE3cdr6uxwPs14gHDZ6HNVA",
-    "passengers": 140,
-    "out_time": "07:00",
-    "takeoff_time": "07:15",
-    "landing_time": "07:40",
-    "in_time": "08:00",
+    "flight_real_date": "2026-02-27",
+    "flight_number": "4455",
+    "airline_route_id": "WZEvcvW3HpdzSYZVsQKXuwM6SJx6hr1L",
+    "tail_number_id": "WZEvcvW3HpdzSYZVsQKXuwM6SJx6hr1L",
+    "passengers": 120,
+    "out_time": "21:00",
+    "takeoff_time": "21:20",
+    "landing_time": "22:00",
+    "in_time": "22:30",
     "pilot_role": "PF",
     "crew_role": "captain",
     "companion_name": "Juan Pérez",
-    "air_time": "01:45",
+    "air_time": "18:00",
     "block_time": "02:10",
-    "duty_time": "03:00",
-    "approach_type": "PA",
+    "approach_type": "VISUAL",
     "flight_type": "COMMERCIAL"
   }
 }
@@ -64,7 +63,7 @@ docs {
   - **flight_real_date** (required): Fecha real del vuelo (YYYY-MM-DD)
   - **flight_number** (required): Número de vuelo (ej: "4451")
   - **airline_route_id** (required): ID de la ruta de aerolínea (encoded ID)
-  - **license_plate_id** (required): ID de la matrícula de aeronave (encoded ID)
+  - **tail_number_id** (required): ID de la matrícula de aeronave (encoded ID)
   - **passengers** (optional): Número de pasajeros
   - **out_time** (optional): Hora de salida de puerta (HH:MM)
   - **takeoff_time** (optional): Hora de despegue (HH:MM)
@@ -75,7 +74,6 @@ docs {
   - **companion_name** (optional): Nombre del acompañante
   - **air_time** (optional): Tiempo en aire (HH:MM)
   - **block_time** (optional): Tiempo de bloque (HH:MM)
-  - **duty_time** (optional): Tiempo de servicio (HH:MM)
   - **approach_type** (optional): Tipo de aproximación (ej: "ILS", "VOR", "VISUAL")
   - **flight_type** (optional): Tipo de vuelo (ej: "COMERCIAL", "ENTRENAMIENTO")
   

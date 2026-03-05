@@ -11,7 +11,8 @@
     },
     "bp": {
       "type": "string",
-      "description": "Business partner code (optional)",
+      "description": "Business partner code (optional, numeric)",
+      "pattern": "^[0-9]+$",
       "maxLength": 16
     },
     "start_date": {

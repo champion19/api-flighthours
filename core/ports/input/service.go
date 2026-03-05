@@ -73,13 +73,13 @@ type AirlineEmployeeService interface {
 	DeactivateAirlineEmployeeTx(ctx context.Context, tx output.Tx, id string) error
 }
 
-type LicensePlateService interface {
+type TailNumberService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
-	GetLicensePlateByID(ctx context.Context, id string) (*domain.LicensePlate, error)
-	GetLicensePlateByPlate(ctx context.Context, plate string) (*domain.LicensePlate, error)
-	ListLicensePlates(ctx context.Context, filters map[string]interface{}) ([]domain.LicensePlate, error)
-	CreateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
-	UpdateLicensePlateTx(ctx context.Context, tx output.Tx, registration domain.LicensePlate) error
+	GetTailNumberByID(ctx context.Context, id string) (*domain.TailNumber, error)
+	GetTailNumberByPlate(ctx context.Context, plate string) (*domain.TailNumber, error)
+	ListTailNumbers(ctx context.Context, filters map[string]interface{}) ([]domain.TailNumber, error)
+	CreateTailNumberTx(ctx context.Context, tx output.Tx, registration domain.TailNumber) error
+	UpdateTailNumberTx(ctx context.Context, tx output.Tx, registration domain.TailNumber) error
 }
 
 type AircraftModelService interface {
@@ -113,7 +113,7 @@ type DailyLogbookDetailService interface {
 	CreateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	UpdateDailyLogbookDetailTx(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
 	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error
-	ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, licensePlateID string) (bool, error)
+	ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
 	DeleteDailyLogbookDetailTx(ctx context.Context, tx output.Tx, id string) error
 }
 
@@ -136,4 +136,20 @@ type EngineService interface {
 type ManufacturerService interface {
 	GetManufacturerByID(ctx context.Context, id string) (*domain.Manufacturer, error)
 	ListManufacturers(ctx context.Context) ([]domain.Manufacturer, error)
+}
+
+type FlightSummaryService interface {
+	GetFlightHoursSummary(ctx context.Context, employeeID, startDate, endDate string) (*domain.FlightHoursSummary, error)
+	GetRecentFlights(ctx context.Context, employeeID string, limit int) ([]domain.DailyLogbookDetail, error)
+	GetLandingCount(ctx context.Context, employeeID, startDate, endDate string) (int, error)
+	GetDailyFlightSeconds(ctx context.Context, employeeID, date string) (int, error)
+	CalculatePeriodDates(period, referenceDate string) (startDate, endDate string, err error)
+	BuildFlightAlerts(ctx context.Context, employeeID string) ([]domain.FlightAlert, error)
+}
+
+type EmployeeFlightSummaryService interface {
+	AccumulateFlightHours(ctx context.Context, tx output.Tx, employeeID string, detail domain.DailyLogbookDetail, isDeletion bool) error
+	GetSummariesByEmployee(ctx context.Context, employeeID, periodType string) ([]domain.EmployeeFlightSummary, error)
+	GetCurrentPeriodSummary(ctx context.Context, employeeID, periodType string, year, number int) (*domain.EmployeeFlightSummary, error)
+	GetAllSummaries(ctx context.Context, employeeID string) ([]domain.EmployeeFlightSummary, error)
 }

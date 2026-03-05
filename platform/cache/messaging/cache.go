@@ -392,7 +392,7 @@ var messageCodeToHTTPStatus = map[string]int{
 	"BIT_AUTH_ERR_00001": http.StatusForbidden, // 403 - No autorizado para esta bitácora
 
 	// ========================================
-	// License Plate Module (MAT_*) - Matrícula
+	// Tail Number Module (MAT_*) - Matrícula
 	// ========================================
 	// Consultar
 	"MAT_CON_EXI_03301": http.StatusOK,                  // 200 - Matrícula consultada exitosamente

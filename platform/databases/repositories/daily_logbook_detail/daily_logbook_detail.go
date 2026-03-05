@@ -13,7 +13,7 @@ type DailyLogbookDetail struct {
 	FlightRealDate      string // DATE stored as string
 	FlightNumber        string
 	AirlineRouteID      string
-	LicensePlateID      string
+	TailNumberID      string
 	Passengers          sql.NullInt64
 	OutTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	TakeoffTime         sql.NullString // nullable
@@ -24,12 +24,11 @@ type DailyLogbookDetail struct {
 	CompanionName       sql.NullString
 	AirTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	BlockTime           sql.NullString // TIME stored as string HH:MM:SS (nullable)
-	DutyTime            sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	ApproachType        sql.NullString
 	FlightType          sql.NullString
 	EmployeeLogbookID   sql.NullString
 	LogDate             sql.NullString
-	LicensePlate        sql.NullString
+	TailNumber        sql.NullString
 	ModelName           sql.NullString
 	RouteCode           sql.NullString
 	OriginIataCode      sql.NullString
@@ -44,7 +43,7 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightRealDate: d.FlightRealDate,
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
-		LicensePlateID: d.LicensePlateID,
+		TailNumberID: d.TailNumberID,
 	}
 
 	d.mapTimeFields(detail)
@@ -73,9 +72,6 @@ func (d *DailyLogbookDetail) mapTimeFields(detail *domain.DailyLogbookDetail) {
 	}
 	if d.BlockTime.Valid {
 		detail.BlockTime = &d.BlockTime.String
-	}
-	if d.DutyTime.Valid {
-		detail.DutyTime = &d.DutyTime.String
 	}
 }
 
@@ -114,8 +110,8 @@ func (d *DailyLogbookDetail) mapDenormalizedFields(detail *domain.DailyLogbookDe
 	if d.LogDate.Valid {
 		detail.LogDate = d.LogDate.String
 	}
-	if d.LicensePlate.Valid {
-		detail.LicensePlate = d.LicensePlate.String
+	if d.TailNumber.Valid {
+		detail.TailNumber = d.TailNumber.String
 	}
 	if d.ModelName.Valid {
 		detail.ModelName = d.ModelName.String
@@ -141,7 +137,7 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		FlightRealDate: d.FlightRealDate,
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
-		LicensePlateID: d.LicensePlateID,
+		TailNumberID: d.TailNumberID,
 	}
 
 	if d.OutTime != nil {
@@ -177,10 +173,6 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		entity.CompanionName = sql.NullString{String: *d.CompanionName, Valid: true}
 	}
 
-	if d.DutyTime != nil {
-		entity.DutyTime = sql.NullString{String: *d.DutyTime, Valid: true}
-	}
-
 	if d.ApproachType != nil {
 		entity.ApproachType = sql.NullString{String: string(*d.ApproachType), Valid: true}
 	}
@@ -208,7 +200,7 @@ func scanDetail(rows interface {
 		&entity.FlightRealDate,
 		&entity.FlightNumber,
 		&entity.AirlineRouteID,
-		&entity.LicensePlateID,
+		&entity.TailNumberID,
 		&entity.Passengers,
 		&entity.OutTime,
 		&entity.TakeoffTime,
@@ -219,12 +211,11 @@ func scanDetail(rows interface {
 		&entity.CrewRole,
 		&entity.AirTime,
 		&entity.BlockTime,
-		&entity.DutyTime,
 		&entity.ApproachType,
 		&entity.FlightType,
 		&entity.EmployeeLogbookID,
 		&entity.LogDate,
-		&entity.LicensePlate,
+		&entity.TailNumber,
 		&entity.ModelName,
 		&entity.RouteCode,
 		&entity.OriginIataCode,
@@ -246,8 +237,8 @@ func handleDetailFKError(errStr string) error {
 	if strings.Contains(errStr, "airline_route") {
 		return domain.ErrFlightInvalidRoute
 	}
-	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "license_plate") {
-		return domain.ErrFlightInvalidLicensePlate
+	if strings.Contains(errStr, "aircraft_registration") || strings.Contains(errStr, "tail_number") {
+		return domain.ErrFlightInvalidTailNumber
 	}
 	return nil
 }

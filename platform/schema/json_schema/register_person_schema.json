@@ -56,7 +56,7 @@
       "enum": [
         "pilot"
       ],
-      "errorMessage": "El cargo es inválido. Debe ser captain o copilot"
+      "errorMessage": "El cargo es inválido. Debe ser captain o first officer"
     }
   },
   "required": [

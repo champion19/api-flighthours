@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/champion19/api-flighthours/platform/logger"
 	"github.com/champion19/api-flighthours/tools/utils"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -19,6 +22,24 @@ type Config struct {
 	Verification Verification    `json:"verification"`
 	Keycloak     KeycloakConfig  `json:"keycloak"`
 	IDEncoder    IDEncoderConfig `json:"id_encoder"`
+	Cookie       CookieConfig    `json:"cookie"`
+}
+
+type CookieConfig struct {
+	Domain   string `json:"domain"`
+	Secure   bool   `json:"secure"`
+	SameSite string `json:"same_site"`
+}
+
+func (c *CookieConfig) GetSameSiteMode() http.SameSite {
+	switch strings.ToLower(c.SameSite) {
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
 
 type Verification struct {
@@ -69,6 +90,13 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("error finding module root: %w", err)
 	}
 
+	// Load .env file from project root (non-fatal if not found)
+	envPath := filepath.Join(root, ".env")
+	if err := godotenv.Load(envPath); err != nil { //nolint:errcheck // non-fatal
+		slog.Warn(logger.LogConfigEnvFileNotFound,
+			slog.String("path", envPath))
+	}
+
 	env := os.Getenv("APP_ENV")
 	if env == "" {
 		env = "local"
@@ -103,39 +131,18 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("error parsing JSON configuration: %w", err)
 	}
 
-	if serverURL := os.Getenv("KEYCLOAK_SERVER_URL"); serverURL != "" {
-		config.Keycloak.ServerURL = serverURL
-	}
-	if realm := os.Getenv("KEYCLOAK_REALM"); realm != "" {
-		config.Keycloak.Realm = realm
-	}
-	if clientID := os.Getenv("KEYCLOAK_CLIENT_ID"); clientID != "" {
-		config.Keycloak.ClientID = clientID
-	}
-	if clientSecret := os.Getenv("KEYCLOAK_CLIENT_SECRET"); clientSecret != "" {
-		config.Keycloak.ClientSecret = clientSecret
-	}
-	if adminUser := os.Getenv("KEYCLOAK_ADMIN"); adminUser != "" {
-		config.Keycloak.AdminUser = adminUser
-	}
-	if adminPass := os.Getenv("KEYCLOAK_ADMIN_PASSWORD"); adminPass != "" {
-		config.Keycloak.AdminPass = adminPass
-	}
-
-	// Override Resend config from env vars
-	if resendKey := os.Getenv("RESEND_API_KEY"); resendKey != "" {
-		config.Resend.APIKey = resendKey
-	}
-
-	// Override ID encoder config from env vars
-	if idSecret := os.Getenv("ID_ENCODER_SECRET"); idSecret != "" {
-		config.IDEncoder.Secret = idSecret
-	}
-
-	// Override database password from env var
-	if dbPass := os.Getenv("DB_PASSWORD"); dbPass != "" {
-		config.Database.Password = dbPass
-	}
+	// Override sensitive config from environment variables
+	overrideFromEnv(&config.Keycloak.ServerURL, "KEYCLOAK_SERVER_URL")
+	overrideFromEnv(&config.Keycloak.Realm, "KEYCLOAK_REALM")
+	overrideFromEnv(&config.Keycloak.ClientID, "KEYCLOAK_CLIENT_ID")
+	overrideFromEnv(&config.Keycloak.ClientSecret, "KEYCLOAK_CLIENT_SECRET")
+	overrideFromEnv(&config.Keycloak.AdminUser, "KEYCLOAK_ADMIN")
+	overrideFromEnv(&config.Keycloak.AdminPass, "KEYCLOAK_ADMIN_PASSWORD")
+	overrideFromEnv(&config.Resend.APIKey, "RESEND_API_KEY")
+	overrideFromEnv(&config.IDEncoder.Secret, "ID_ENCODER_SECRET")
+	overrideFromEnv(&config.Database.Password, "DB_PASSWORD")
+	overrideFromEnv(&config.Cookie.Domain, "COOKIE_DOMAIN")
+	config.Cookie.Secure = os.Getenv("COOKIE_SECURE") == "true"
 
 	slog.Info(logger.LogAppConfigLoaded,
 		slog.String("config_file", configFile),
@@ -193,4 +200,11 @@ func (c *Config) GetKeycloakIssuerURL() string {
 	return fmt.Sprintf("%s/realms/%s",
 		c.Keycloak.ServerURL,
 		c.Keycloak.Realm)
+}
+
+// overrideFromEnv sets the target value from the named environment variable if it is non-empty.
+func overrideFromEnv(target *string, envKey string) {
+	if v := os.Getenv(envKey); v != "" {
+		*target = v
+	}
 }

@@ -138,15 +138,14 @@ func TestToDailyLogbookListResponse(t *testing.T) {
 func TestToDomainDailyLogbookDetail(t *testing.T) {
 	passengers := 150
 	companion := "Co-Pilot Smith"
-	dutyTime := "10:00"
-	approachType := "PA"
+	approachType := "APV"
 	flightType := "COMMERCIAL"
 
 	req := CreateDailyLogbookDetailRequest{
 		FlightRealDate: "2025-01-15",
 		FlightNumber:   "AV123",
 		AirlineRouteID: "route-1",
-		LicensePlateID: "lp-1",
+		TailNumberID: "lp-1",
 		Passengers:     &passengers,
 		OutTime:        strPtrH("08:00"),
 		TakeoffTime:    strPtrH("08:15"),
@@ -156,7 +155,6 @@ func TestToDomainDailyLogbookDetail(t *testing.T) {
 		CompanionName:  &companion,
 		AirTime:        strPtrH("01:15"),
 		BlockTime:      strPtrH("01:45"),
-		DutyTime:       &dutyTime,
 		ApproachType:   &approachType,
 		FlightType:     &flightType,
 	}
@@ -172,8 +170,8 @@ func TestToDomainDailyLogbookDetail(t *testing.T) {
 	if detail.PilotRole == nil || *detail.PilotRole != domain.PilotRolePF {
 		t.Errorf("expected PilotRole PF, got %v", detail.PilotRole)
 	}
-	if detail.ApproachType == nil || *detail.ApproachType != domain.ApproachTypePA {
-		t.Error("expected ApproachType PA")
+	if detail.ApproachType == nil || *detail.ApproachType != domain.ApproachTypeAPV {
+		t.Error("expected ApproachType APV")
 	}
 
 	t.Run("without approach type", func(t *testing.T) {
@@ -194,7 +192,7 @@ func TestToDomainDailyLogbookDetailUpdate(t *testing.T) {
 		FlightRealDate: "2025-01-16",
 		FlightNumber:   "AV789",
 		AirlineRouteID: "route-2",
-		LicensePlateID: "lp-2",
+		TailNumberID: "lp-2",
 		OutTime:        strPtrH("10:00"),
 		TakeoffTime:    strPtrH("10:15"),
 		LandingTime:    strPtrH("11:30"),
@@ -231,7 +229,6 @@ func TestToDomainDailyLogbookDetailUpdate(t *testing.T) {
 
 func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 	companion := "  Co-Pilot  "
-	dutyTime := "  10:00  "
 	approachType := "  ILS  "
 	flightType := "  COMMERCIAL  "
 
@@ -239,7 +236,7 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 		FlightRealDate: "  2025-01-15  ",
 		FlightNumber:   "  AV123  ",
 		AirlineRouteID: "  route-1  ",
-		LicensePlateID: "  lp-1  ",
+		TailNumberID: "  lp-1  ",
 		OutTime:        strPtrH("  08:00  "),
 		TakeoffTime:    strPtrH("  08:15  "),
 		LandingTime:    strPtrH("  09:30  "),
@@ -248,7 +245,6 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 		CompanionName:  &companion,
 		AirTime:        strPtrH("  01:15  "),
 		BlockTime:      strPtrH("  01:45  "),
-		DutyTime:       &dutyTime,
 		ApproachType:   &approachType,
 		FlightType:     &flightType,
 	}
@@ -269,7 +265,7 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 }
 
 func TestFromDomainDailyLogbookDetail(t *testing.T) {
-	approachType := domain.ApproachTypePA
+	approachType := domain.ApproachTypeAPV
 	flightType := "COMMERCIAL"
 
 	detail := &domain.DailyLogbookDetail{
@@ -278,7 +274,7 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 		FlightRealDate:      "2025-01-15",
 		FlightNumber:        "AV123",
 		AirlineRouteID:      "route-1",
-		LicensePlateID:      "lp-1",
+		TailNumberID:      "lp-1",
 		OutTime:             strPtrH("08:00"),
 		TakeoffTime:         strPtrH("08:15"),
 		LandingTime:         strPtrH("09:30"),
@@ -293,7 +289,7 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 		DestinationIataCode: "CLO",
 		AirlineCode:         "AV",
 		LogDate:             "2025-01-15",
-		LicensePlate:        "HK-4567",
+		TailNumber:        "HK-4567",
 		ModelName:           "A320",
 	}
 
@@ -305,7 +301,7 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 	if resp.FlightNumber != "AV123" {
 		t.Errorf("expected FlightNumber 'AV123', got %s", resp.FlightNumber)
 	}
-	if resp.ApproachType == nil || *resp.ApproachType != "PA" {
+	if resp.ApproachType == nil || *resp.ApproachType != "APV" {
 		t.Error("expected ApproachType 'ILS'")
 	}
 	if resp.FlightType == nil || *resp.FlightType != "COMMERCIAL" {

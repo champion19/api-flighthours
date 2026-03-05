@@ -9,6 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// fallbackInternalErrorMessage is the message returned when no system_messages entry exists
+const fallbackInternalErrorMessage = "Internal server error"
+
 var errorToMessageCode = map[error]string{
 	domain.ErrDuplicateUser:             domain.MsgUserDuplicate,
 	domain.ErrUserCannotSave:            domain.MsgUserCannotSave,
@@ -74,12 +77,12 @@ var errorToMessageCode = map[error]string{
 	domain.ErrDailyLogbookCannotDelete:   domain.MsgDailyLogbookDeleteError,
 	domain.ErrDailyLogbookUnauthorized:   domain.MsgDailyLogbookUnauthorized,
 	domain.ErrDailyLogbookInactive:       domain.MsgDailyLogbookInactive,
-	domain.ErrLicensePlateNotFound:       domain.MsgLicensePlateNotFound,
-	domain.ErrLicensePlateCannotSave:     domain.MsgLicensePlateSaveError,
-	domain.ErrLicensePlateCannotUpdate:   domain.MsgLicensePlateUpdateError,
-	domain.ErrLicensePlateDuplicatePlate: domain.MsgLicensePlateDuplicate,
-	domain.ErrLicensePlateInvalidModel:   domain.MsgLicensePlateInvalidModel,
-	domain.ErrLicensePlateInvalidAirline: domain.MsgLicensePlateInvalidAirline,
+	domain.ErrTailNumberNotFound:         domain.MsgTailNumberNotFound,
+	domain.ErrTailNumberCannotSave:       domain.MsgTailNumberSaveError,
+	domain.ErrTailNumberCannotUpdate:     domain.MsgTailNumberUpdateError,
+	domain.ErrTailNumberDuplicatePlate:   domain.MsgTailNumberDuplicate,
+	domain.ErrTailNumberInvalidModel:     domain.MsgTailNumberInvalidModel,
+	domain.ErrTailNumberInvalidAirline:   domain.MsgTailNumberInvalidAirline,
 	domain.ErrAirlineRouteNotFound:       domain.MsgAirlineRouteNotFound,
 	domain.ErrAirlineRouteCannotSave:     domain.MsgAirlineRouteGetErr,
 	domain.ErrAirlineRouteCannotUpdate:   domain.MsgAirlineRouteDeactivateErr,
@@ -92,7 +95,7 @@ var errorToMessageCode = map[error]string{
 	domain.ErrFlightUnauthorized:         domain.MsgFlightUnauthorized,
 	domain.ErrFlightInvalidRoute:         domain.MsgFlightInvalidRoute,
 	domain.ErrFlightInvalidLogbook:       domain.MsgFlightInvalidLogbook,
-	domain.ErrFlightInvalidLicensePlate:  domain.MsgFlightInvalidLicensePlate,
+	domain.ErrFlightInvalidTailNumber:    domain.MsgFlightInvalidTailNumber,
 	domain.ErrFlightInvalidTimeSequence:  domain.MsgFlightInvalidTimeSequence,
 	domain.ErrFlightDuplicate:            domain.MsgFlightDuplicate,
 	domain.ErrEngineNotFound:             domain.MsgEngineNotFound,
@@ -106,16 +109,10 @@ var errorToMessageCode = map[error]string{
 	domain.ErrRefreshTokenFailed:         domain.MsgKCRefreshTokenFailed,
 }
 
-type ValidationFieldError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
-
 type ErrorResponse struct {
-	Success bool                   `json:"success"`
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Fields  []ValidationFieldError `json:"fields,omitempty"`
+	Success bool   `json:"success"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 type ErrorHandler struct {
@@ -143,7 +140,7 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 		traceID := GetRequestID(c)
 		log := log.WithTraceID(traceID)
 
-		params, fieldErrors := buildValidationFields(c)
+		params := buildValidationParams(c)
 
 		if messageCode, ok := errorToMessageCode[err]; ok {
 			msg := h.cache.GetMessageResponse(messageCode, params...)
@@ -163,7 +160,6 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 					Success: false,
 					Code:    msg.Code,
 					Message: msg.Content,
-					Fields:  fieldErrors,
 				})
 				return
 			}
@@ -178,35 +174,23 @@ func (h *ErrorHandler) Handle() gin.HandlerFunc {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Success: false,
 			Code:    domain.MsgServerError,
-			Message: "Error interno del servidor",
+			Message: fallbackInternalErrorMessage,
 		})
 	}
 
 }
 
-func buildValidationFields(c *gin.Context) ([]string, []ValidationFieldError) {
+func buildValidationParams(c *gin.Context) []string {
 	validationFields, exists := c.Get("validation_fields")
 	if !exists {
-		return nil, nil
+		return nil
 	}
 
 	fields, ok := validationFields.([]string)
 	if !ok {
-		return nil, nil
+		return nil
 	}
 
-	fieldErrors := make([]ValidationFieldError, len(fields))
-	for i, field := range fields {
-		fieldErrors[i] = ValidationFieldError{
-			Field:   field,
-			Message: "This field is not valid",
-		}
-	}
-
-	return buildFieldParams(fields), fieldErrors
-}
-
-func buildFieldParams(fields []string) []string {
 	if len(fields) <= 1 {
 		return fields
 	}

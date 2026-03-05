@@ -8,7 +8,7 @@ type CreateDailyLogbookDetailRequest struct {
 	FlightRealDate string  `json:"flight_real_date"`
 	FlightNumber   string  `json:"flight_number"`
 	AirlineRouteID string  `json:"airline_route_id"`
-	LicensePlateID string  `json:"license_plate_id"`
+	TailNumberID   string  `json:"tail_number_id"`
 	Passengers     *int    `json:"passengers,omitempty"`
 	OutTime        *string `json:"out_time,omitempty"`     // TIME format HH:MM (nullable)
 	TakeoffTime    *string `json:"takeoff_time,omitempty"` // TIME format HH:MM (nullable)
@@ -19,7 +19,6 @@ type CreateDailyLogbookDetailRequest struct {
 	CompanionName  *string `json:"companion_name,omitempty"`
 	AirTime        *string `json:"air_time,omitempty"`   // TIME format HH:MM (nullable)
 	BlockTime      *string `json:"block_time,omitempty"` // TIME format HH:MM (nullable)
-	DutyTime       *string `json:"duty_time,omitempty"`  // TIME format HH:MM (nullable)
 	ApproachType   *string `json:"approach_type,omitempty"`
 	FlightType     *string `json:"flight_type,omitempty"`
 }
@@ -28,7 +27,7 @@ func (r *CreateDailyLogbookDetailRequest) Sanitize() {
 	r.FlightRealDate = TrimString(r.FlightRealDate)
 	r.FlightNumber = TrimString(r.FlightNumber)
 	r.AirlineRouteID = TrimString(r.AirlineRouteID)
-	r.LicensePlateID = TrimString(r.LicensePlateID)
+	r.TailNumberID = TrimString(r.TailNumberID)
 	r.OutTime = TrimStringPtr(r.OutTime)
 	r.TakeoffTime = TrimStringPtr(r.TakeoffTime)
 	r.LandingTime = TrimStringPtr(r.LandingTime)
@@ -38,7 +37,6 @@ func (r *CreateDailyLogbookDetailRequest) Sanitize() {
 	r.CompanionName = TrimStringPtr(r.CompanionName)
 	r.AirTime = TrimStringPtr(r.AirTime)
 	r.BlockTime = TrimStringPtr(r.BlockTime)
-	r.DutyTime = TrimStringPtr(r.DutyTime)
 	r.ApproachType = TrimStringPtr(r.ApproachType)
 	r.FlightType = TrimStringPtr(r.FlightType)
 }
@@ -47,7 +45,7 @@ type UpdateDailyLogbookDetailRequest struct {
 	FlightRealDate string  `json:"flight_real_date"`
 	FlightNumber   string  `json:"flight_number"`
 	AirlineRouteID string  `json:"airline_route_id"`
-	LicensePlateID string  `json:"license_plate_id"`
+	TailNumberID   string  `json:"tail_number_id"`
 	Passengers     *int    `json:"passengers,omitempty"`
 	OutTime        *string `json:"out_time,omitempty"`     // TIME format HH:MM (nullable)
 	TakeoffTime    *string `json:"takeoff_time,omitempty"` // TIME format HH:MM (nullable)
@@ -58,7 +56,6 @@ type UpdateDailyLogbookDetailRequest struct {
 	CompanionName  *string `json:"companion_name,omitempty"`
 	AirTime        *string `json:"air_time,omitempty"`   // TIME format HH:MM (nullable)
 	BlockTime      *string `json:"block_time,omitempty"` // TIME format HH:MM (nullable)
-	DutyTime       *string `json:"duty_time,omitempty"`  // TIME format HH:MM (nullable)
 	ApproachType   *string `json:"approach_type,omitempty"`
 	FlightType     *string `json:"flight_type,omitempty"`
 }
@@ -67,7 +64,7 @@ func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
 	r.FlightRealDate = TrimString(r.FlightRealDate)
 	r.FlightNumber = TrimString(r.FlightNumber)
 	r.AirlineRouteID = TrimString(r.AirlineRouteID)
-	r.LicensePlateID = TrimString(r.LicensePlateID)
+	r.TailNumberID = TrimString(r.TailNumberID)
 	r.OutTime = TrimStringPtr(r.OutTime)
 	r.TakeoffTime = TrimStringPtr(r.TakeoffTime)
 	r.LandingTime = TrimStringPtr(r.LandingTime)
@@ -77,7 +74,6 @@ func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
 	r.CompanionName = TrimStringPtr(r.CompanionName)
 	r.AirTime = TrimStringPtr(r.AirTime)
 	r.BlockTime = TrimStringPtr(r.BlockTime)
-	r.DutyTime = TrimStringPtr(r.DutyTime)
 	r.ApproachType = TrimStringPtr(r.ApproachType)
 	r.FlightType = TrimStringPtr(r.FlightType)
 }
@@ -93,7 +89,7 @@ type DailyLogbookDetailResponse struct {
 	FlightRealDate      string  `json:"flight_real_date"`
 	FlightNumber        string  `json:"flight_number"`
 	AirlineRouteID      string  `json:"airline_route_id"`
-	LicensePlateID      string  `json:"license_plate_id"`
+	TailNumberID        string  `json:"tail_number_id"`
 	Passengers          *int    `json:"passengers,omitempty"`
 	OutTime             *string `json:"out_time,omitempty"`
 	TakeoffTime         *string `json:"takeoff_time,omitempty"`
@@ -104,7 +100,6 @@ type DailyLogbookDetailResponse struct {
 	CompanionName       *string `json:"companion_name,omitempty"`
 	AirTime             *string `json:"air_time,omitempty"`
 	BlockTime           *string `json:"block_time,omitempty"`
-	DutyTime            *string `json:"duty_time,omitempty"`
 	ApproachType        *string `json:"approach_type,omitempty"`
 	FlightType          *string `json:"flight_type,omitempty"`
 	LogDate             string  `json:"log_date,omitempty"`
@@ -112,7 +107,7 @@ type DailyLogbookDetailResponse struct {
 	OriginIataCode      string  `json:"origin_iata_code,omitempty"`
 	DestinationIataCode string  `json:"destination_iata_code,omitempty"`
 	AirlineCode         string  `json:"airline_code,omitempty"`
-	LicensePlate        string  `json:"license_plate,omitempty"`
+	TailNumber          string  `json:"tail_number,omitempty"`
 	ModelName           string  `json:"model_name,omitempty"`
 	Links               []Link  `json:"_links,omitempty"`
 }
@@ -128,7 +123,7 @@ func ToDomainDailyLogbookDetail(logbookID string, req CreateDailyLogbookDetailRe
 		FlightRealDate: req.FlightRealDate,
 		FlightNumber:   req.FlightNumber,
 		AirlineRouteID: req.AirlineRouteID,
-		LicensePlateID: req.LicensePlateID,
+		TailNumberID:   req.TailNumberID,
 		Passengers:     req.Passengers,
 		OutTime:        req.OutTime,
 		TakeoffTime:    req.TakeoffTime,
@@ -137,7 +132,6 @@ func ToDomainDailyLogbookDetail(logbookID string, req CreateDailyLogbookDetailRe
 		CompanionName:  req.CompanionName,
 		AirTime:        req.AirTime,
 		BlockTime:      req.BlockTime,
-		DutyTime:       req.DutyTime,
 		FlightType:     req.FlightType,
 	}
 
@@ -166,7 +160,7 @@ func ToDomainDailyLogbookDetailUpdate(id string, req UpdateDailyLogbookDetailReq
 		FlightRealDate: req.FlightRealDate,
 		FlightNumber:   req.FlightNumber,
 		AirlineRouteID: req.AirlineRouteID,
-		LicensePlateID: req.LicensePlateID,
+		TailNumberID:   req.TailNumberID,
 		Passengers:     req.Passengers,
 		OutTime:        req.OutTime,
 		TakeoffTime:    req.TakeoffTime,
@@ -175,7 +169,6 @@ func ToDomainDailyLogbookDetailUpdate(id string, req UpdateDailyLogbookDetailReq
 		CompanionName:  req.CompanionName,
 		AirTime:        req.AirTime,
 		BlockTime:      req.BlockTime,
-		DutyTime:       req.DutyTime,
 		FlightType:     req.FlightType,
 	}
 
@@ -205,7 +198,7 @@ func FromDomainDailyLogbookDetail(d *domain.DailyLogbookDetail, encodedID, encod
 		FlightRealDate:      d.FlightRealDate,
 		FlightNumber:        d.FlightNumber,
 		AirlineRouteID:      encodedRouteID,
-		LicensePlateID:      encodedAircraftID,
+		TailNumberID:        encodedAircraftID,
 		Passengers:          d.Passengers,
 		OutTime:             d.OutTime,
 		TakeoffTime:         d.TakeoffTime,
@@ -214,13 +207,12 @@ func FromDomainDailyLogbookDetail(d *domain.DailyLogbookDetail, encodedID, encod
 		CompanionName:       d.CompanionName,
 		AirTime:             d.AirTime,
 		BlockTime:           d.BlockTime,
-		DutyTime:            d.DutyTime,
 		LogDate:             d.LogDate,
 		RouteCode:           d.RouteCode,
 		OriginIataCode:      d.OriginIataCode,
 		DestinationIataCode: d.DestinationIataCode,
 		AirlineCode:         d.AirlineCode,
-		LicensePlate:        d.LicensePlate,
+		TailNumber:          d.TailNumber,
 		ModelName:           d.ModelName,
 	}
 
