@@ -2,7 +2,7 @@
 
 # Script para limpiar datos antiguos de volúmenes Docker
 # Ejecuta limpieza cada 7 días
-# Autor: Motogo Team
+# Autor: FlightHours Team
 # Fecha: 2025-12-13
 
 set -e
