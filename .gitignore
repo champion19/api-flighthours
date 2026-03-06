@@ -88,3 +88,7 @@ documents/
 local/
 
 
+
+# Production secrets
+.env.production
+deploy/.env.production

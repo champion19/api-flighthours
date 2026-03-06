@@ -1,0 +1,105 @@
+# ============================================
+# FlightHours — Docker Compose Production
+# ============================================
+# Servicios: MySQL (App) + MySQL (Keycloak) + Keycloak
+# La API Go se despliega via Dokploy (no está aquí)
+# ============================================
+
+services:
+  # ── MySQL para la API FlightHours ──────────
+  flighthours-mysql-app:
+    image: mysql:8.0
+    container_name: flighthours-mysql-app
+    restart: unless-stopped
+    ports:
+      - "3319:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: flightDb
+    volumes:
+      - flighthours-mysql-app-data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── MySQL para Keycloak ────────────────────
+  flighthours-mysql-keycloak:
+    image: mysql:8.0
+    container_name: flighthours-mysql-keycloak
+    restart: unless-stopped
+    ports:
+      - "3320:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_KC_ROOT_PASSWORD}
+      MYSQL_DATABASE: keycloakDb
+    volumes:
+      - flighthours-mysql-kc-data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_KC_ROOT_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Keycloak ───────────────────────────────
+  flighthours-keycloak:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: flighthours-keycloak:latest
+    container_name: flighthours-keycloak
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://flighthours-mysql-keycloak:3306/keycloakDb
+      KC_DB_USERNAME: root
+      KC_DB_PASSWORD: ${MYSQL_KC_ROOT_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      KC_HOSTNAME_STRICT: "false"
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      flighthours-mysql-keycloak:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  flighthours-mysql-app-data:
+  flighthours-mysql-kc-data:
