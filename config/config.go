@@ -142,6 +142,8 @@ func LoadConfig() (*Config, error) {
 	overrideFromEnv(&config.Keycloak.AdminPass, "KEYCLOAK_ADMIN_PASSWORD")
 	overrideFromEnv(&config.Resend.APIKey, "RESEND_API_KEY")
 	overrideFromEnv(&config.IDEncoder.Secret, "ID_ENCODER_SECRET")
+	overrideFromEnv(&config.Database.Host, "DB_HOST")
+	overrideFromEnv(&config.Database.Username, "DB_USER")
 	overrideFromEnv(&config.Database.Password, "DB_PASSWORD")
 	overrideFromEnv(&config.Cookie.Domain, "COOKIE_DOMAIN")
 	config.Cookie.Secure = os.Getenv("COOKIE_SECURE") == "true"
