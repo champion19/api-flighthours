@@ -108,6 +108,8 @@ func LoadConfig() (*Config, error) {
 	switch env {
 	case "railway":
 		configFile = "railway-config.json"
+	case "dokploy":
+		configFile = "dokploy-config.json"
 	default:
 		configFile = localConfigFile
 	}
@@ -175,7 +177,7 @@ func (c *Config) GetServerAddress() string {
 }
 
 func (c *Config) IsProduction() bool {
-	return c.Environment == "production" || c.Environment == "railway"
+	return c.Environment == "production" || c.Environment == "railway" || c.Environment == "dokploy"
 }
 
 func (c *Config) GetKeycloakAuthURL() string {
