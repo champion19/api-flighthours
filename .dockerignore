@@ -41,3 +41,21 @@ config/local-config.json
 # Temporal
 tmp/
 temp/
+
+# Contenedores existentes (Keycloak)
+Containerfile
+docker-compose*.yml
+
+# Cobertura y testing
+cover_*.out
+coverage/
+
+# Documentación extra
+documents/
+
+# Herramientas de desarrollo
+scripts/
+sonar-project.properties
+
+# Gemini/AI
+.gemini/
