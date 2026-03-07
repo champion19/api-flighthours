@@ -37,8 +37,10 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	corsConfig := cors.Config{
 		AllowOriginFunc: func(origin string) bool {
 			// In development: allow any localhost port (Flutter Web, browser, etc.)
+			// In production: allow the deployed Flutter frontend
 			return strings.HasPrefix(origin, "http://localhost") ||
-				strings.HasPrefix(origin, "http://127.0.0.1")
+				strings.HasPrefix(origin, "http://127.0.0.1") ||
+				origin == "https://flighthours.rbsuport.com"
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"},
