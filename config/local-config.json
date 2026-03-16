@@ -7,10 +7,10 @@
     "username": "root",
     "password": "1997",
     "name": "flightDb",
-    "max_connections": 20,
+    "max_connections": 25,
     "max_idle_connections": 10,
-    "max_lifetime": 2700,
-    "max_idle_time": 2600
+    "max_lifetime": 300,
+    "max_idle_time": 60
   },
   "server": {
     "port": "8081",
