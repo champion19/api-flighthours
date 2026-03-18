@@ -258,10 +258,5 @@ func (r *repository) BeginTx(ctx context.Context) (output.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
 	return common.NewSQLTx(tx), nil
 }
