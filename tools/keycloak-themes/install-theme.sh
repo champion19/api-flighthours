@@ -17,8 +17,8 @@ KEYCLOAK_THEMES_PATH="/opt/keycloak/themes"
 
 # Verificar que el contenedor esté corriendo
 if ! docker ps | grep -q "$CONTAINER_NAME"; then
-    echo "❌ Error: El contenedor $CONTAINER_NAME no está corriendo."
-    echo "   Ejecuta: docker-compose -f docker-compose.keycloak.yml up -d"
+    echo "❌ Error: El contenedor $CONTAINER_NAME no está corriendo." >&2
+    echo "   Ejecuta: docker-compose -f docker-compose.keycloak.yml up -d" >&2
     exit 1
 fi
 
@@ -26,8 +26,8 @@ echo "✓ Contenedor de Keycloak encontrado"
 echo ""
 
 # Verificar que exista la carpeta local del theme
-if [ ! -d "$LOCAL_THEME_PATH" ]; then
-    echo "❌ Error: No se encontró el theme en $LOCAL_THEME_PATH"
+if [[ ! -d "$LOCAL_THEME_PATH" ]]; then
+    echo "❌ Error: No se encontró el theme en $LOCAL_THEME_PATH" >&2
     exit 1
 fi
 
@@ -45,11 +45,11 @@ echo "📦 Copiando theme al contenedor..."
 # Copiar el contenido de flighthours/ directamente (incluyendo el .)
 docker cp "$LOCAL_THEME_PATH/." "$CONTAINER_NAME:$KEYCLOAK_THEMES_PATH/$THEME_NAME/"
 
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
     echo "✓ Theme copiado exitosamente"
     echo ""
 else
-    echo "❌ Error copiando el theme"
+    echo "❌ Error copiando el theme" >&2
     exit 1
 fi
 

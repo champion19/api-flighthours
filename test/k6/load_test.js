@@ -356,23 +356,13 @@ function ensureFreshToken(data) {
     }
   }
 
-  // Si todo falla, usar el token que tengamos
+  // Fallback: devolver el último token disponible en caso de fallo de refresh y re-login
   return vuToken || data.token;
 }
 
-// ── MAIN TEST FUNCTION ─────────────────────────────────
-export default function mainTest(data) {
-  // ⭐ Obtener token fresco ANTES de hacer requests
-  const activeToken = data.loginSuccess ? ensureFreshToken(data) : null;
-  const authHeaders = activeToken
-    ? { headers: { Authorization: `Bearer ${activeToken}` } }
-    : {};
+// ── HELPER FUNCTIONS (extracted to reduce cognitive complexity) ──
 
-  throughput.add(1);
-
-  // ==========================================
-  // 1. HEALTH CHECK CON ABORT AUTOMÁTICO
-  // ==========================================
+function runHealthCheck() {
   group('01_Health', () => {
     const res = http.get(`${BASE_URL}/health`, {
       timeout: '5s',
@@ -385,281 +375,199 @@ export default function mainTest(data) {
 
     if (ok) {
       consecutiveHealthFailures = 0;
-    } else {
-      consecutiveHealthFailures++;
-      console.warn(
-        `💔 Health check falló (${consecutiveHealthFailures}/${MAX_HEALTH_FAILURES}): ` +
-        `status=${res.status} (${res.timings.duration}ms)`
-      );
-      categorizeError(res.status);
+      return;
+    }
 
-      if (consecutiveHealthFailures >= MAX_HEALTH_FAILURES) {
-        console.error(
-          `🚨🚨🚨 ABORT: El servidor no responde después de ${MAX_HEALTH_FAILURES} intentos consecutivos. ` +
-          `Abortando test para evitar miles de errores innecesarios.`
-        );
-        exec.test.abort(
-          `Server health check failed ${MAX_HEALTH_FAILURES} consecutive times — server likely crashed`
-        );
-      }
+    consecutiveHealthFailures++;
+    console.warn(
+      `💔 Health check falló (${consecutiveHealthFailures}/${MAX_HEALTH_FAILURES}): ` +
+      `status=${res.status} (${res.timings.duration}ms)`
+    );
+    categorizeError(res.status);
+
+    if (consecutiveHealthFailures >= MAX_HEALTH_FAILURES) {
+      console.error(
+        `🚨🚨🚨 ABORT: El servidor no responde después de ${MAX_HEALTH_FAILURES} intentos consecutivos. ` +
+        `Abortando test para evitar miles de errores innecesarios.`
+      );
+      exec.test.abort(
+        `Server health check failed ${MAX_HEALTH_FAILURES} consecutive times — server likely crashed`
+      );
     }
   });
+}
 
-  sleep(Math.random() * 0.5 + 0.2);
+function runCatalogQueries() {
+  group('02_Catalogs', () => {
+    const endpoints = [
+      { path: '/airlines', tag: 'catalog_airlines' },
+      { path: '/airports', tag: 'catalog_airports' },
+      { path: '/engines', tag: 'catalog_engines' },
+      { path: '/routes', tag: 'catalog_routes' },
+      { path: '/manufacturers', tag: 'catalog_manufacturers' },
+      { path: '/aircraft-models', tag: 'catalog_aircraft_models' },
+      { path: '/crew-member-types', tag: 'catalog_crew_types' },
+      { path: '/airline-routes', tag: 'catalog_airline_routes' },
+    ];
 
-  // ==========================================
-  // 2. CATÁLOGOS PÚBLICOS (70% de los usuarios)
-  // Endpoints sin autenticación del dominio aeronáutico
-  // ==========================================
-  if (Math.random() < 0.7) {
-    group('02_Catalogs', () => {
-      const endpoints = [
-        { path: '/airlines', tag: 'catalog_airlines' },
-        { path: '/airports', tag: 'catalog_airports' },
-        { path: '/engines', tag: 'catalog_engines' },
-        { path: '/routes', tag: 'catalog_routes' },
-        { path: '/manufacturers', tag: 'catalog_manufacturers' },
-        { path: '/aircraft-models', tag: 'catalog_aircraft_models' },
-        { path: '/crew-member-types', tag: 'catalog_crew_types' },
-        { path: '/airline-routes', tag: 'catalog_airline_routes' },
-      ];
+    const count = randomIntBetween(3, 4);
+    endpoints.sort(() => Math.random() - 0.5);
+    const shuffled = endpoints.slice(0, count);
 
-      // Consultar solo 3-4 catálogos aleatorios por iteración (realista)
-      const count = randomIntBetween(3, 4);
-      const shuffled = endpoints.sort(() => Math.random() - 0.5).slice(0, count);
+    for (const ep of shuffled) {
+      const res = http.get(`${API}${ep.path}`, {
+        timeout: '10s',
+        tags: { name: ep.tag },
+      });
+      catalogTime.add(res.timings.duration);
 
-      for (const ep of shuffled) {
-        const res = http.get(`${API}${ep.path}`, {
-          timeout: '10s',
-          tags: { name: ep.tag },
-        });
-        catalogTime.add(res.timings.duration);
+      const ok = check(res, {
+        [`${ep.path} status 200`]: (r) => r.status === 200,
+        [`${ep.path} response < 1s`]: (r) => r.timings.duration < 1000,
+      });
 
-        const ok = check(res, {
-          [`${ep.path} status 200`]: (r) => r.status === 200,
-          [`${ep.path} response < 1s`]: (r) => r.timings.duration < 1000,
-        });
+      if (!ok) {
+        console.warn(`📚 Catalog ${ep.path} falló: ${res.status} (${res.timings.duration}ms)`);
+        categorizeError(res.status);
+      }
 
-        if (!ok) {
-          console.warn(`📚 Catalog ${ep.path} falló: ${res.status} (${res.timings.duration}ms)`);
-          categorizeError(res.status);
-        }
+      sleep(Math.random() * 0.3 + 0.1);
+    }
+  });
+}
 
-        sleep(Math.random() * 0.3 + 0.1);
+function checkEndpoint(groupName, url, authHeaders, metricFn, label, checks, timeoutVal) {
+  group(groupName, () => {
+    const res = http.get(url, {
+      ...authHeaders,
+      timeout: timeoutVal || '5s',
+      tags: { name: label },
+    });
+    metricFn.add(res.timings.duration);
+
+    const ok = check(res, checks);
+    if (!ok) {
+      console.warn(`${label} falló: ${res.status} (${res.timings.duration}ms)`);
+      categorizeError(res.status);
+    }
+    return res;
+  });
+}
+
+function runAuthenticatedEndpoints(authHeaders) {
+  if (Math.random() < 0.3) {
+    checkEndpoint('03_Profile', `${API}/employees`, authHeaders, authTime, 'profile_get', {
+      'employees 200': (r) => r.status === 200,
+      'profile < 800ms': (r) => r.timings.duration < 800,
+    });
+    sleep(Math.random() * 0.5 + 0.2);
+  }
+
+  if (Math.random() < 0.4) {
+    checkEndpoint('04_AirlineInfo', `${API}/employees/airline`, authHeaders, authTime, 'airline_info_get', {
+      'airline info 200/204': (r) => r.status === 200 || r.status === 204,
+      'airline info < 800ms': (r) => r.timings.duration < 800,
+    });
+    sleep(Math.random() * 0.5 + 0.3);
+  }
+
+  if (Math.random() < 0.5) {
+    checkEndpoint('05_DailyLogbooks', `${API}/daily-logbooks`, authHeaders, flightQueryTime, 'daily_logbooks_list', {
+      'daily-logbooks 200/204': (r) => r.status === 200 || r.status === 204,
+      'daily-logbooks < 1.5s': (r) => r.timings.duration < 1500,
+    }, '10s');
+    sleep(Math.random() * 0.5 + 0.2);
+  }
+
+  if (Math.random() < 0.4) {
+    checkEndpoint('06_MyAirlineRoutes', `${API}/employees/airline-routes`, authHeaders, flightQueryTime, 'my_airline_routes', {
+      'my airline-routes 200/204': (r) => r.status === 200 || r.status === 204,
+      'my airline-routes < 1s': (r) => r.timings.duration < 1000,
+    }, '10s');
+    sleep(Math.random() * 0.3 + 0.2);
+  }
+
+  if (Math.random() < 0.3) {
+    checkEndpoint('07_TailNumbers', `${API}/tail-numbers`, authHeaders, authTime, 'tail_numbers_list', {
+      'tail-numbers 200/204': (r) => r.status === 200 || r.status === 204,
+      'tail-numbers < 800ms': (r) => r.timings.duration < 800,
+    });
+    sleep(Math.random() * 0.3 + 0.2);
+  }
+
+  // ⭐ Endpoint principal del negocio de FlightHours (80% usuarios)
+  if (Math.random() < 0.8) {
+    group('08_FlightSummary', () => {
+      const res = http.get(`${API}/employees/flight-hours-summary`, {
+        ...authHeaders,
+        timeout: '15s',
+        tags: { name: 'flight_hours_summary' },
+      });
+      flightQueryTime.add(res.timings.duration);
+
+      const ok = check(res, {
+        'flight-summary 200/204': (r) => r.status === 200 || r.status === 204,
+        'flight-summary < 2s': (r) => r.timings.duration < 2000,
+      });
+
+      if (!ok) {
+        console.warn(`⏱️ Flight summary falló: ${res.status} (${res.timings.duration}ms)`);
+        categorizeError(res.status);
+      } else if (res.timings.duration > 1000) {
+        console.log(`🐌 Query de horas de vuelo lenta: ${res.timings.duration}ms`);
       }
     });
   }
 
+  if (Math.random() < 0.6) {
+    checkEndpoint('09_FlightAlerts', `${API}/employees/flight-alerts`, authHeaders, flightQueryTime, 'flight_alerts', {
+      'flight-alerts 200/204': (r) => r.status === 200 || r.status === 204,
+      'flight-alerts < 1s': (r) => r.timings.duration < 1000,
+    }, '10s');
+    sleep(Math.random() * 0.3 + 0.2);
+  }
+
+  if (Math.random() < 0.5) {
+    checkEndpoint('10_RecentFlights', `${API}/employees/recent-flights`, authHeaders, flightQueryTime, 'recent_flights', {
+      'recent-flights 200/204': (r) => r.status === 200 || r.status === 204,
+      'recent-flights < 1.5s': (r) => r.timings.duration < 1500,
+    }, '10s');
+  }
+}
+
+function getThinkTime() {
+  const rand = Math.random();
+  if (rand < 0.6) return Math.random() * 2 + 1;
+  if (rand < 0.9) return Math.random() * 2 + 3;
+  return Math.random() * 5 + 5;
+}
+
+// ── MAIN TEST FUNCTION ─────────────────────────────────
+export default function mainTest(data) {
+  const activeToken = data.loginSuccess ? ensureFreshToken(data) : null;
+  const authHeaders = activeToken
+    ? { headers: { Authorization: `Bearer ${activeToken}` } }
+    : {};
+
+  throughput.add(1);
+
+  runHealthCheck();
+  sleep(Math.random() * 0.5 + 0.2);
+
+  if (Math.random() < 0.7) {
+    runCatalogQueries();
+  }
+
   sleep(Math.random() * 0.5 + 0.3);
 
-  // ==========================================
-  // 3. ENDPOINTS AUTENTICADOS (solo si hay token)
-  // ==========================================
   if (activeToken && data.loginSuccess) {
-
-    // 3.1 Perfil del piloto (30% de los usuarios)
-    if (Math.random() < 0.3) {
-      group('03_Profile', () => {
-        const res = http.get(`${API}/employees`, {
-          ...authHeaders,
-          timeout: '5s',
-          tags: { name: 'profile_get' },
-        });
-        authTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'employees 200': (r) => r.status === 200,
-          'profile < 800ms': (r) => r.timings.duration < 800,
-        });
-
-        if (!ok) {
-          console.warn(`👤 Profile falló: ${res.status}`);
-          categorizeError(res.status);
-        }
-      });
-      sleep(Math.random() * 0.5 + 0.2);
-    }
-
-    // 3.2 Info aerolínea del empleado (40% de los usuarios)
-    if (Math.random() < 0.4) {
-      group('04_AirlineInfo', () => {
-        const res = http.get(`${API}/employees/airline`, {
-          ...authHeaders,
-          timeout: '5s',
-          tags: { name: 'airline_info_get' },
-        });
-        authTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'airline info 200/204': (r) => r.status === 200 || r.status === 204,
-          'airline info < 800ms': (r) => r.timings.duration < 800,
-        });
-
-        if (!ok) {
-          console.warn(`✈️ Airline info falló: ${res.status}`);
-          categorizeError(res.status);
-        }
-      });
-      sleep(Math.random() * 0.5 + 0.3);
-    }
-
-    // 3.3 Bitácoras diarias del piloto (50% de los usuarios)
-    if (Math.random() < 0.5) {
-      group('05_DailyLogbooks', () => {
-        const res = http.get(`${API}/daily-logbooks`, {
-          ...authHeaders,
-          timeout: '10s',
-          tags: { name: 'daily_logbooks_list' },
-        });
-        flightQueryTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'daily-logbooks 200/204': (r) => r.status === 200 || r.status === 204,
-          'daily-logbooks < 1.5s': (r) => r.timings.duration < 1500,
-        });
-
-        if (!ok) {
-          console.warn(`📒 Daily logbooks falló: ${res.status} (${res.timings.duration}ms)`);
-          categorizeError(res.status);
-        }
-      });
-      sleep(Math.random() * 0.5 + 0.2);
-    }
-
-    // 3.4 Rutas de la aerolínea del piloto (40% de los usuarios)
-    if (Math.random() < 0.4) {
-      group('06_MyAirlineRoutes', () => {
-        const res = http.get(`${API}/employees/airline-routes`, {
-          ...authHeaders,
-          timeout: '10s',
-          tags: { name: 'my_airline_routes' },
-        });
-        flightQueryTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'my airline-routes 200/204': (r) => r.status === 200 || r.status === 204,
-          'my airline-routes < 1s': (r) => r.timings.duration < 1000,
-        });
-
-        if (!ok) {
-          console.warn(`🛫 My airline routes falló: ${res.status}`);
-          categorizeError(res.status);
-        }
-      });
-      sleep(Math.random() * 0.3 + 0.2);
-    }
-
-    // 3.5 Tail numbers (30% de los usuarios)
-    if (Math.random() < 0.3) {
-      group('07_TailNumbers', () => {
-        const res = http.get(`${API}/tail-numbers`, {
-          ...authHeaders,
-          timeout: '5s',
-          tags: { name: 'tail_numbers_list' },
-        });
-        authTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'tail-numbers 200/204': (r) => r.status === 200 || r.status === 204,
-          'tail-numbers < 800ms': (r) => r.timings.duration < 800,
-        });
-
-        if (!ok) {
-          console.warn(`🔢 Tail numbers falló: ${res.status}`);
-          categorizeError(res.status);
-        }
-      });
-      sleep(Math.random() * 0.3 + 0.2);
-    }
-
-    // 3.6 RESUMEN DE HORAS DE VUELO (el más importante — 80% usuarios)
-    // ⭐ Endpoint principal del negocio de FlightHours
-    if (Math.random() < 0.8) {
-      group('08_FlightSummary', () => {
-        const res = http.get(`${API}/employees/flight-hours-summary`, {
-          ...authHeaders,
-          timeout: '15s',
-          tags: { name: 'flight_hours_summary' },
-        });
-        flightQueryTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'flight-summary 200/204': (r) => r.status === 200 || r.status === 204,
-          'flight-summary < 2s': (r) => r.timings.duration < 2000,
-        });
-
-        if (!ok) {
-          console.warn(
-            `⏱️ Flight summary falló: ${res.status} (${res.timings.duration}ms)`
-          );
-          categorizeError(res.status);
-        } else if (res.timings.duration > 1000) {
-          console.log(`🐌 Query de horas de vuelo lenta: ${res.timings.duration}ms`);
-        }
-      });
-    }
-
-    // 3.7 Alertas de vuelo (60% de los usuarios)
-    if (Math.random() < 0.6) {
-      group('09_FlightAlerts', () => {
-        const res = http.get(`${API}/employees/flight-alerts`, {
-          ...authHeaders,
-          timeout: '10s',
-          tags: { name: 'flight_alerts' },
-        });
-        flightQueryTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'flight-alerts 200/204': (r) => r.status === 200 || r.status === 204,
-          'flight-alerts < 1s': (r) => r.timings.duration < 1000,
-        });
-
-        if (!ok) {
-          console.warn(`🚨 Flight alerts falló: ${res.status}`);
-          categorizeError(res.status);
-        }
-      });
-      sleep(Math.random() * 0.3 + 0.2);
-    }
-
-    // 3.8 Vuelos recientes (50% de los usuarios)
-    if (Math.random() < 0.5) {
-      group('10_RecentFlights', () => {
-        const res = http.get(`${API}/employees/recent-flights`, {
-          ...authHeaders,
-          timeout: '10s',
-          tags: { name: 'recent_flights' },
-        });
-        flightQueryTime.add(res.timings.duration);
-
-        const ok = check(res, {
-          'recent-flights 200/204': (r) => r.status === 200 || r.status === 204,
-          'recent-flights < 1.5s': (r) => r.timings.duration < 1500,
-        });
-
-        if (!ok) {
-          console.warn(`🛩️ Recent flights falló: ${res.status}`);
-          categorizeError(res.status);
-        }
-      });
-    }
-
+    runAuthenticatedEndpoints(authHeaders);
   } else {
     loginErrors.add(1);
     sleep(1);
   }
 
-  // ⭐ THINK TIME REALISTA (tiempo entre acciones del usuario)
-  const rand = Math.random();
-  let thinkTime;
-  if (rand < 0.6) {
-    thinkTime = Math.random() * 2 + 1;
-  } else if (rand < 0.9) {
-    thinkTime = Math.random() * 2 + 3;
-  } else {
-    thinkTime = Math.random() * 5 + 5;
-  }
-  sleep(thinkTime);
+  sleep(getThinkTime());
 }
 
 // ── TEARDOWN ───────────────────────────────────────────

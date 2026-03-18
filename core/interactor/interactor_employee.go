@@ -48,6 +48,7 @@ func (i *Interactor) RegisterEmployee(ctx context.Context, employee domain.Emplo
 		log.Error(logger.LogEmployeeInteractorStep2_Error, "error", err)
 		return
 	}
+	defer tx.Rollback()
 	log.Success(logger.LogEmployeeInteractorStep2_OK)
 
 	keycloakUserID, keycloakCreated, stepErr := i.executeRegistrationSteps(ctx, log, tx, &employee)
