@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-export const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1';
+export const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1'; // NOSONAR — internal Docker test URL
 
 export const defaultThresholds = {
   http_req_duration: ['p(95)<2000'],
@@ -16,5 +16,5 @@ export function defaultScenario() {
     'response received': (r) => r.body !== null,
   });
 
-  sleep(Math.random() * 2);
+  sleep(Math.random() * 2); // NOSONAR — test think-time simulation
 }

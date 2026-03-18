@@ -18,7 +18,7 @@ func NewSQLTx(tx *sql.Tx) *SQLTX {
 
 func (t *SQLTX) Commit() error {
 	if t.closed {
-		panic("sqlTx: commit on closed transaction")
+		return sql.ErrTxDone
 	}
 	t.closed = true
 	return t.Tx.Commit()
@@ -26,7 +26,7 @@ func (t *SQLTX) Commit() error {
 
 func (t *SQLTX) Rollback() error {
 	if t.closed {
-		panic("sqlTx: rollback on closed transaction")
+		return sql.ErrTxDone
 	}
 	t.closed = true
 	return t.Tx.Rollback()

@@ -79,7 +79,7 @@ echo ""
 
 # Verificar que Promtail puede resolver 'loki'
 echo -e "${BLUE}   → Verificando Promtail → Loki...${NC}"
-if docker exec flighthours-promtail cat /etc/promtail/config.yml | grep -q "http://loki:3100"; then
+if docker exec flighthours-promtail cat /etc/promtail/config.yml | grep -q "http://loki:3100"; then # NOSONAR — internal Docker network URL
     echo -e "     ${GREEN}✅ Configuración correcta${NC}"
 else
     echo -e "     ${RED}❌ Configuración incorrecta${NC}"
@@ -88,7 +88,7 @@ fi
 
 # Verificar que Grafana puede resolver 'prometheus'
 echo -e "${BLUE}   → Verificando Grafana → Prometheus...${NC}"
-if docker exec flighthours-grafana cat /etc/grafana/provisioning/datasources/prometheus.yml | grep -q "http://prometheus:9090"; then
+if docker exec flighthours-grafana cat /etc/grafana/provisioning/datasources/prometheus.yml | grep -q "http://prometheus:9090"; then # NOSONAR — internal Docker network URL
     echo -e "     ${GREEN}✅ Configuración correcta${NC}"
 else
     echo -e "     ${RED}❌ Configuración incorrecta${NC}"
@@ -97,7 +97,7 @@ fi
 
 # Verificar que Grafana puede resolver 'loki'
 echo -e "${BLUE}   → Verificando Grafana → Loki...${NC}"
-loki_check=$(docker exec flighthours-grafana cat /etc/grafana/provisioning/datasources/loki.yml 2>/dev/null | grep -q "http://loki:3100" && echo "ok" || echo "fail")
+loki_check=$(docker exec flighthours-grafana cat /etc/grafana/provisioning/datasources/loki.yml 2>/dev/null | grep -q "http://loki:3100" && echo "ok" || echo "fail") # NOSONAR — internal Docker network URL
 if [[ "$loki_check" == "ok" ]]; then
     echo -e "     ${GREEN}✅ Configuración correcta${NC}"
 else
