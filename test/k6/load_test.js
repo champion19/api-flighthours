@@ -411,7 +411,7 @@ function runCatalogQueries() {
     ];
 
     const count = randomIntBetween(3, 4);
-    endpoints.sort(() => Math.random() - 0.5);
+    endpoints.sort(() => Math.random() - 0.5); // NOSONAR — test shuffle, not security
     const shuffled = endpoints.slice(0, count);
 
     for (const ep of shuffled) {
@@ -431,7 +431,7 @@ function runCatalogQueries() {
         categorizeError(res.status);
       }
 
-      sleep(Math.random() * 0.3 + 0.1);
+      sleep(Math.random() * 0.3 + 0.1); // NOSONAR
     }
   });
 }
@@ -455,48 +455,48 @@ function checkEndpoint(groupName, url, authHeaders, metricFn, label, checks, tim
 }
 
 function runAuthenticatedEndpoints(authHeaders) {
-  if (Math.random() < 0.3) {
+  if (Math.random() < 0.3) { // NOSONAR — test randomization, not security
     checkEndpoint('03_Profile', `${API}/employees`, authHeaders, authTime, 'profile_get', {
       'employees 200': (r) => r.status === 200,
       'profile < 800ms': (r) => r.timings.duration < 800,
     });
-    sleep(Math.random() * 0.5 + 0.2);
+    sleep(Math.random() * 0.5 + 0.2); // NOSONAR
   }
 
-  if (Math.random() < 0.4) {
+  if (Math.random() < 0.4) { // NOSONAR
     checkEndpoint('04_AirlineInfo', `${API}/employees/airline`, authHeaders, authTime, 'airline_info_get', {
       'airline info 200/204': (r) => r.status === 200 || r.status === 204,
       'airline info < 800ms': (r) => r.timings.duration < 800,
     });
-    sleep(Math.random() * 0.5 + 0.3);
+    sleep(Math.random() * 0.5 + 0.3); // NOSONAR
   }
 
-  if (Math.random() < 0.5) {
+  if (Math.random() < 0.5) { // NOSONAR
     checkEndpoint('05_DailyLogbooks', `${API}/daily-logbooks`, authHeaders, flightQueryTime, 'daily_logbooks_list', {
       'daily-logbooks 200/204': (r) => r.status === 200 || r.status === 204,
       'daily-logbooks < 1.5s': (r) => r.timings.duration < 1500,
     }, '10s');
-    sleep(Math.random() * 0.5 + 0.2);
+    sleep(Math.random() * 0.5 + 0.2); // NOSONAR
   }
 
-  if (Math.random() < 0.4) {
+  if (Math.random() < 0.4) { // NOSONAR
     checkEndpoint('06_MyAirlineRoutes', `${API}/employees/airline-routes`, authHeaders, flightQueryTime, 'my_airline_routes', {
       'my airline-routes 200/204': (r) => r.status === 200 || r.status === 204,
       'my airline-routes < 1s': (r) => r.timings.duration < 1000,
     }, '10s');
-    sleep(Math.random() * 0.3 + 0.2);
+    sleep(Math.random() * 0.3 + 0.2); // NOSONAR
   }
 
-  if (Math.random() < 0.3) {
+  if (Math.random() < 0.3) { // NOSONAR
     checkEndpoint('07_TailNumbers', `${API}/tail-numbers`, authHeaders, authTime, 'tail_numbers_list', {
       'tail-numbers 200/204': (r) => r.status === 200 || r.status === 204,
       'tail-numbers < 800ms': (r) => r.timings.duration < 800,
     });
-    sleep(Math.random() * 0.3 + 0.2);
+    sleep(Math.random() * 0.3 + 0.2); // NOSONAR
   }
 
   // ⭐ Endpoint principal del negocio de FlightHours (80% usuarios)
-  if (Math.random() < 0.8) {
+  if (Math.random() < 0.8) { // NOSONAR
     group('08_FlightSummary', () => {
       const res = http.get(`${API}/employees/flight-hours-summary`, {
         ...authHeaders,
@@ -519,15 +519,15 @@ function runAuthenticatedEndpoints(authHeaders) {
     });
   }
 
-  if (Math.random() < 0.6) {
+  if (Math.random() < 0.6) { // NOSONAR
     checkEndpoint('09_FlightAlerts', `${API}/employees/flight-alerts`, authHeaders, flightQueryTime, 'flight_alerts', {
       'flight-alerts 200/204': (r) => r.status === 200 || r.status === 204,
       'flight-alerts < 1s': (r) => r.timings.duration < 1000,
     }, '10s');
-    sleep(Math.random() * 0.3 + 0.2);
+    sleep(Math.random() * 0.3 + 0.2); // NOSONAR
   }
 
-  if (Math.random() < 0.5) {
+  if (Math.random() < 0.5) { // NOSONAR
     checkEndpoint('10_RecentFlights', `${API}/employees/recent-flights`, authHeaders, flightQueryTime, 'recent_flights', {
       'recent-flights 200/204': (r) => r.status === 200 || r.status === 204,
       'recent-flights < 1.5s': (r) => r.timings.duration < 1500,
@@ -536,10 +536,10 @@ function runAuthenticatedEndpoints(authHeaders) {
 }
 
 function getThinkTime() {
-  const rand = Math.random();
-  if (rand < 0.6) return Math.random() * 2 + 1;
-  if (rand < 0.9) return Math.random() * 2 + 3;
-  return Math.random() * 5 + 5;
+  const rand = Math.random(); // NOSONAR — test think-time simulation
+  if (rand < 0.6) return Math.random() * 2 + 1; // NOSONAR
+  if (rand < 0.9) return Math.random() * 2 + 3; // NOSONAR
+  return Math.random() * 5 + 5; // NOSONAR
 }
 
 // ── MAIN TEST FUNCTION ─────────────────────────────────
@@ -552,13 +552,13 @@ export default function mainTest(data) {
   throughput.add(1);
 
   runHealthCheck();
-  sleep(Math.random() * 0.5 + 0.2);
+  sleep(Math.random() * 0.5 + 0.2); // NOSONAR
 
-  if (Math.random() < 0.7) {
+  if (Math.random() < 0.7) { // NOSONAR
     runCatalogQueries();
   }
 
-  sleep(Math.random() * 0.5 + 0.3);
+  sleep(Math.random() * 0.5 + 0.3); // NOSONAR
 
   if (activeToken && data.loginSuccess) {
     runAuthenticatedEndpoints(authHeaders);

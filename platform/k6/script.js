@@ -15,7 +15,7 @@ export const options = {
   },
 };
 
-const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1';
+const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1'; // NOSONAR — internal Docker test URL
 
 export default function loadTest() {
 
@@ -69,7 +69,7 @@ export default function loadTest() {
   });
 
   group('Prometheus Metrics', function () {
-    const metricsRes = http.get('http://host.docker.internal:8085/metrics');
+    const metricsRes = http.get('http://host.docker.internal:8085/metrics'); // NOSONAR — internal Docker test URL
 
     check(metricsRes, {
       'GET /metrics status is 200': (r) => r.status === 200,
