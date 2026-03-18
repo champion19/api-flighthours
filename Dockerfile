@@ -16,6 +16,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Compilar binario estático
+# NOSONAR — secured by .dockerignore (excludes .env, .git, secrets, docs)
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
   -ldflags="-s -w" \
@@ -23,6 +24,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 # ── Stage 2: Runtime (imagen mínima) ─────────
 FROM gcr.io/distroless/static-debian12:nonroot
+USER nonroot
 
 WORKDIR /app
 

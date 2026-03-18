@@ -10,7 +10,7 @@ export const options = {
   },
 };
 
-const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1';
+const BASE_URL = 'http://host.docker.internal:8085/flighthours/api/v1'; // NOSONAR — internal Docker test URL
 
 export default function smokeTest() {
   const messagesRes = http.get(`${BASE_URL}/messages`);
@@ -20,7 +20,7 @@ export default function smokeTest() {
     'response time < 500ms': (r) => r.timings.duration < 500,
   });
 
-  const metricsRes = http.get('http://host.docker.internal:8085/metrics');
+  const metricsRes = http.get('http://host.docker.internal:8085/metrics'); // NOSONAR — internal Docker test URL
 
   check(metricsRes, {
     'metrics endpoint works': (r) => r.status === 200,

@@ -13,6 +13,7 @@ func (r *repository) DeleteEmployee(ctx context.Context, tx output.Tx, id string
 	if err != nil {
 		return err
 	}
+	defer dbtx.Rollback()
 
 	_, err = dbtx.ExecContext(ctx, QueryDelete, id)
 	if err != nil {
