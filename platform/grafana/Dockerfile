@@ -16,8 +16,7 @@ EXPOSE 3000
 
 
 ENV GF_SECURITY_ADMIN_USER=admin
-# Override in docker-compose with real credentials
-ENV GF_SECURITY_ADMIN_PASSWORD=changeme
+# GF_SECURITY_ADMIN_PASSWORD is injected via docker-compose (not set here to avoid secret in image)
 ENV GF_USERS_ALLOW_SIGN_UP=false
 ENV GF_SERVER_ROOT_URL=http://localhost:3000
 ENV GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
