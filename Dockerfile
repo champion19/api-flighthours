@@ -15,9 +15,15 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Compilar binario estático
-# NOSONAR — secured by .dockerignore (excludes .env, .git, secrets, docs)
-COPY . .
+# Compilar binario estático — only copy directories needed for build
+COPY cmd/ ./cmd/
+COPY core/ ./core/
+COPY config/ ./config/
+COPY handlers/ ./handlers/
+COPY middleware/ ./middleware/
+COPY server/ ./server/
+COPY platform/ ./platform/
+COPY mocks/ ./mocks/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
   -ldflags="-s -w" \
   -o /flighthours-api ./cmd
