@@ -88,6 +88,8 @@ documents/
 local/
 
 
+.agents/
+
 
 # Production secrets
 .env.production
