@@ -21,7 +21,7 @@
     "from_email": "flighthours@rbsuport.com"
   },
   "verification": {
-    "base_url": "https://flighthours-api.rbsuport.com"
+    "base_url": "https://api-flighthours.rbsuport.com"
   },
   "keycloak": {
     "server_url": "https://flighthours-auth.rbsuport.com",
