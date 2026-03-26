@@ -24,6 +24,7 @@ COPY middleware/ ./middleware/
 COPY server/ ./server/
 COPY platform/ ./platform/
 COPY mocks/ ./mocks/
+COPY tools/ ./tools/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
   -ldflags="-s -w" \
   -o /flighthours-api ./cmd
