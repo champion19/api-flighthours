@@ -72,6 +72,7 @@ type Resend struct {
 
 type KeycloakConfig struct {
 	ServerURL    string `json:"server_url"`
+	IssuerURL    string `json:"issuer_url,omitempty"`
 	Realm        string `json:"realm"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
@@ -145,6 +146,7 @@ func LoadConfig() (*Config, error) {
 	overrideFromEnv(&config.Database.Host, "DB_HOST")
 	overrideFromEnv(&config.Database.Username, "DB_USER")
 	overrideFromEnv(&config.Database.Password, "DB_PASSWORD")
+	overrideFromEnv(&config.Keycloak.IssuerURL, "KEYCLOAK_ISSUER_URL")
 	overrideFromEnv(&config.Cookie.Domain, "COOKIE_DOMAIN")
 	config.Cookie.Secure = os.Getenv("COOKIE_SECURE") == "true"
 
@@ -201,9 +203,11 @@ func (c *Config) GetKeycloakJWKSURL() string {
 }
 
 func (c *Config) GetKeycloakIssuerURL() string {
-	return fmt.Sprintf("%s/realms/%s",
-		c.Keycloak.ServerURL,
-		c.Keycloak.Realm)
+	base := c.Keycloak.ServerURL
+	if c.Keycloak.IssuerURL != "" {
+		base = c.Keycloak.IssuerURL
+	}
+	return fmt.Sprintf("%s/realms/%s", base, c.Keycloak.Realm)
 }
 
 // overrideFromEnv sets the target value from the named environment variable if it is non-empty.
