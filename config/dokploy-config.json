@@ -5,7 +5,7 @@
     "host": "host.docker.internal",
     "port": "3319",
     "username": "root",
-    "password": "1997",
+    "password": "rVKeLdyNz3IzvEglmr31LHlh0+WzsSeF",
     "name": "flightDb",
     "max_connections": 20,
     "max_idle_connections": 10,
