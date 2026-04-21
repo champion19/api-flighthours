@@ -157,6 +157,8 @@ func (h handler) Login() gin.HandlerFunc {
 				h.Response.Error(c, domain.MsgKCLoginEmailNotVerified)
 			case domain.ErrUserNotFound:
 				h.Response.Error(c, domain.MsgUnauthorized)
+			case domain.ErrKeycloakUnavailable:
+				h.Response.Error(c, domain.MsgServerError)
 			default:
 				h.Response.Error(c, domain.MsgUnauthorized)
 			}
