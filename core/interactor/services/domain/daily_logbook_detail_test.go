@@ -81,21 +81,91 @@ func TestIsValidPilotRole(t *testing.T) {
 	}
 }
 
-func TestIsValidApproachType(t *testing.T) {
+func TestIsValidApproachCategory(t *testing.T) {
 	tests := []struct {
-		name         string
-		approachType string
-		want         bool
+		name     string
+		category string
+		want     bool
 	}{
-		{"APV", "APV", true},
+		{"RNP", "RNP", true},
+		{"ILS", "ILS", true},
 		{"VISUAL", "VISUAL", true},
 		{"empty is valid", "", true},
-		{"invalid", "ILS", false},
+		{"invalid", "APV", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidApproachType(tt.approachType); got != tt.want {
-				t.Errorf("IsValidApproachType(%q) = %v, want %v", tt.approachType, got, tt.want)
+			if got := IsValidApproachCategory(tt.category); got != tt.want {
+				t.Errorf("IsValidApproachCategory(%q) = %v, want %v", tt.category, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsValidApproachSubtype(t *testing.T) {
+	tests := []struct {
+		name     string
+		category ApproachCategory
+		subtype  string
+		want     bool
+	}{
+		{"RNP LNAV", ApproachCategoryRNP, "LNAV", true},
+		{"RNP LNAV/VNAV", ApproachCategoryRNP, "LNAV/VNAV", true},
+		{"RNP AR = 0.3", ApproachCategoryRNP, "RNP AR = 0.3", true},
+		{"RNP AR < 0.3", ApproachCategoryRNP, "RNP AR < 0.3", true},
+		{"RNP with ILS subtype", ApproachCategoryRNP, "CAT I", false},
+		{"ILS CAT I", ApproachCategoryILS, "CAT I", true},
+		{"ILS CAT II", ApproachCategoryILS, "CAT II", true},
+		{"ILS CAT III > 175", ApproachCategoryILS, "CAT III > 175", true},
+		{"ILS CAT III < 175", ApproachCategoryILS, "CAT III < 175", true},
+		{"ILS with RNP subtype", ApproachCategoryILS, "LNAV", false},
+		{"VISUAL empty subtype", ApproachCategoryVisual, "", true},
+		{"VISUAL with subtype", ApproachCategoryVisual, "LNAV", false},
+		{"no category, empty subtype", "", "", true},
+		{"no category, non-empty subtype", "", "LNAV", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsValidApproachSubtype(tt.category, tt.subtype); got != tt.want {
+				t.Errorf("IsValidApproachSubtype(%q, %q) = %v, want %v", tt.category, tt.subtype, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestValidateApproachFields(t *testing.T) {
+	rnp := ApproachCategoryRNP
+	ils := ApproachCategoryILS
+	visual := ApproachCategoryVisual
+	lnav := "LNAV"
+	catI := "CAT I"
+	invalidSubtype := "VOR"
+	trueVal := true
+	falseVal := false
+
+	tests := []struct {
+		name     string
+		category *ApproachCategory
+		subtype  *string
+		autoland *bool
+		wantErr  bool
+	}{
+		{"nil everything", nil, nil, nil, false},
+		{"valid RNP + LNAV", &rnp, &lnav, nil, false},
+		{"valid ILS + CAT I, no autoland", &ils, &catI, nil, false},
+		{"valid ILS + CAT I + autoland true", &ils, &catI, &trueVal, false},
+		{"valid VISUAL, no subtype", &visual, nil, nil, false},
+		{"RNP subtype mismatched with ILS category", &ils, &lnav, nil, true},
+		{"unknown subtype", &rnp, &invalidSubtype, nil, true},
+		{"autoland true but category RNP", &rnp, &lnav, &trueVal, true},
+		{"autoland true but category VISUAL", &visual, nil, &trueVal, true},
+		{"autoland false is fine outside ILS", &rnp, &lnav, &falseVal, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateApproachFields(tt.category, tt.subtype, tt.autoland)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateApproachFields() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

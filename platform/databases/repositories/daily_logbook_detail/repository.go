@@ -28,7 +28,9 @@ const (
 		dld.crew_role,
 		dld.air_time,
 		dld.block_time,
-		dld.approach_type,
+		dld.approach_category,
+		dld.approach_subtype,
+		dld.autoland,
 		dld.flight_type,
 		dld.employee_logbook_id,
 		dl.log_date,
@@ -70,7 +72,9 @@ const (
 			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
-			dld.approach_type,
+			dld.approach_category,
+			dld.approach_subtype,
+			dld.autoland,
 			dld.flight_type,
 			dld.employee_logbook_id,
 			dl.log_date,
@@ -112,7 +116,9 @@ const (
 			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
-			dld.approach_type,
+			dld.approach_category,
+			dld.approach_subtype,
+			dld.autoland,
 			dld.flight_type,
 			dld.employee_logbook_id,
 			dl.log_date,
@@ -148,8 +154,8 @@ const (
 			out_time, takeoff_time, landing_time, in_time,
 			pilot_role, companion_name, crew_role,
 			air_time, block_time,
-			approach_type, flight_type, employee_logbook_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			approach_category, approach_subtype, autoland, flight_type, employee_logbook_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Update query
 	QueryUpdate = `
@@ -168,7 +174,9 @@ const (
 			crew_role = ?,
 			air_time = ?,
 			block_time = ?,
-			approach_type = ?,
+			approach_category = ?,
+			approach_subtype = ?,
+			autoland = ?,
 			flight_type = ?
 		WHERE id = ?`
 

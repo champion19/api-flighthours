@@ -132,12 +132,12 @@ func newDailyLogbookDetailTestRouter(
 	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc, nil)
 	logbookInteractor := interactor.NewDailyLogbookInteractor(logbookSvc)
 	h := New(HandlerDeps{
-		EmployeeInteractor: &fakeEmployeeInteractor{},
-		IDEncoder: enc,
-		Response: resp,
+		EmployeeInteractor:           &fakeEmployeeInteractor{},
+		IDEncoder:                    enc,
+		Response:                     resp,
 		DailyLogbookDetailInteractor: detailInteractor,
-		DailyLogbookInteractor: logbookInteractor,
-		})
+		DailyLogbookInteractor:       logbookInteractor,
+	})
 
 	r := gin.New()
 	r.Use(middleware.RequestID())
@@ -420,7 +420,7 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 					FlightNumber:   "AV123",
 					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
-					TailNumberID: testAircraftID,
+					TailNumberID:   testAircraftID,
 				}, nil
 			},
 		}
@@ -589,7 +589,7 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
 			"pilot_role":"PF","air_time":"01:15","block_time":"01:45",
-			"approach_type":"INVALID_APPROACH"
+			"approach_category":"INVALID_APPROACH"
 		}`
 		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -820,7 +820,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					FlightNumber:   "AV123",
 					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
-					TailNumberID: testAircraftID,
+					TailNumberID:   testAircraftID,
 				}, nil
 			},
 		}
@@ -997,7 +997,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
 			"pilot_role":"PM","air_time":"01:15","block_time":"01:45",
-			"approach_type":"INVALID_APPROACH"
+			"approach_category":"INVALID_APPROACH"
 		}`
 		req := httptest.NewRequest(http.MethodPut, "/daily-logbook-details/"+encodedDetailID, bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -1016,7 +1016,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					FlightNumber:   "AV123",
 					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
-					TailNumberID: testAircraftID,
+					TailNumberID:   testAircraftID,
 				}, nil
 			},
 			validateTimeFn: func(_, _, _, _ string) error {
@@ -1048,7 +1048,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					FlightNumber:   "AV123",
 					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
-					TailNumberID: testAircraftID,
+					TailNumberID:   testAircraftID,
 				}, nil
 			},
 			updateFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
@@ -1098,7 +1098,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 					FlightNumber:   "AV123",
 					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
-					TailNumberID: testAircraftID,
+					TailNumberID:   testAircraftID,
 				}, nil
 			},
 			updateFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
@@ -1134,7 +1134,7 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 						FlightNumber:   "AV123",
 						PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 						AirlineRouteID: testRouteID,
-						TailNumberID: testAircraftID,
+						TailNumberID:   testAircraftID,
 					}, nil
 				}
 				// Second call: refetch fails
@@ -1242,17 +1242,19 @@ func TestHTTP_ListMyFlights(t *testing.T) {
 
 func TestToDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 	crewRole := "captain"
-	approachType := "ILS_CAT_I"
+	approachCategory := "ILS"
+	approachSubtype := "CAT I"
 	pilotRole := "PF"
 
 	req := CreateDailyLogbookDetailRequest{
-		FlightRealDate: "2025-01-15",
-		FlightNumber:   "AV123",
-		AirlineRouteID: "route-uuid",
-		TailNumberID: "plate-uuid",
-		PilotRole:      &pilotRole,
-		CrewRole:       &crewRole,
-		ApproachType:   &approachType,
+		FlightRealDate:   "2025-01-15",
+		FlightNumber:     "AV123",
+		AirlineRouteID:   "route-uuid",
+		TailNumberID:     "plate-uuid",
+		PilotRole:        &pilotRole,
+		CrewRole:         &crewRole,
+		ApproachCategory: &approachCategory,
+		ApproachSubtype:  &approachSubtype,
 	}
 
 	detail := ToDomainDailyLogbookDetail("logbook-uuid", req)
@@ -1263,10 +1265,15 @@ func TestToDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 		t.Errorf("expected CrewRole captain, got %s", string(*detail.CrewRole))
 	}
 
-	if detail.ApproachType == nil {
-		t.Error("expected ApproachType to be set")
-	} else if string(*detail.ApproachType) != "ILS_CAT_I" {
-		t.Errorf("expected ApproachType ILS_CAT_I, got %s", string(*detail.ApproachType))
+	if detail.ApproachCategory == nil {
+		t.Error("expected ApproachCategory to be set")
+	} else if string(*detail.ApproachCategory) != "ILS" {
+		t.Errorf("expected ApproachCategory ILS, got %s", string(*detail.ApproachCategory))
+	}
+	if detail.ApproachSubtype == nil {
+		t.Error("expected ApproachSubtype to be set")
+	} else if *detail.ApproachSubtype != "CAT I" {
+		t.Errorf("expected ApproachSubtype 'CAT I', got %s", *detail.ApproachSubtype)
 	}
 
 	if detail.PilotRole == nil {
@@ -1276,19 +1283,21 @@ func TestToDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 
 func TestFromDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 	crewRole := domain.CrewRole("captain")
-	approachType := domain.ApproachType("ILS_CAT_I")
+	approachCategory := domain.ApproachCategoryILS
+	approachSubtype := "CAT I"
 	pilotRole := domain.PilotRolePF
 
 	d := &domain.DailyLogbookDetail{
-		ID:             "detail-uuid",
-		DailyLogbookID: "logbook-uuid",
-		FlightRealDate: "2025-01-15",
-		FlightNumber:   "AV123",
-		AirlineRouteID: "route-uuid",
-		TailNumberID: "plate-uuid",
-		PilotRole:      &pilotRole,
-		CrewRole:       &crewRole,
-		ApproachType:   &approachType,
+		ID:               "detail-uuid",
+		DailyLogbookID:   "logbook-uuid",
+		FlightRealDate:   "2025-01-15",
+		FlightNumber:     "AV123",
+		AirlineRouteID:   "route-uuid",
+		TailNumberID:     "plate-uuid",
+		PilotRole:        &pilotRole,
+		CrewRole:         &crewRole,
+		ApproachCategory: &approachCategory,
+		ApproachSubtype:  &approachSubtype,
 	}
 
 	resp := FromDomainDailyLogbookDetail(d, "enc-id", "enc-logbook", "enc-route", "enc-plate")
@@ -1299,10 +1308,15 @@ func TestFromDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 		t.Errorf("expected CrewRole captain, got %s", *resp.CrewRole)
 	}
 
-	if resp.ApproachType == nil {
-		t.Error("expected ApproachType to be set in response")
-	} else if *resp.ApproachType != "ILS_CAT_I" {
-		t.Errorf("expected ApproachType ILS_CAT_I, got %s", *resp.ApproachType)
+	if resp.ApproachCategory == nil {
+		t.Error("expected ApproachCategory to be set in response")
+	} else if *resp.ApproachCategory != "ILS" {
+		t.Errorf("expected ApproachCategory ILS, got %s", *resp.ApproachCategory)
+	}
+	if resp.ApproachSubtype == nil {
+		t.Error("expected ApproachSubtype to be set in response")
+	} else if *resp.ApproachSubtype != "CAT I" {
+		t.Errorf("expected ApproachSubtype 'CAT I', got %s", *resp.ApproachSubtype)
 	}
 
 	if resp.PilotRole == nil {
@@ -1312,17 +1326,17 @@ func TestFromDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 
 func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
 	crewRole := "first officer"
-	approachType := "VISUAL"
+	approachCategory := "VISUAL"
 	pilotRole := "PM"
 
 	req := UpdateDailyLogbookDetailRequest{
-		FlightRealDate: "2025-01-16",
-		FlightNumber:   "AV456",
-		AirlineRouteID: "route-uuid",
-		TailNumberID: "plate-uuid",
-		PilotRole:      &pilotRole,
-		CrewRole:       &crewRole,
-		ApproachType:   &approachType,
+		FlightRealDate:   "2025-01-16",
+		FlightNumber:     "AV456",
+		AirlineRouteID:   "route-uuid",
+		TailNumberID:     "plate-uuid",
+		PilotRole:        &pilotRole,
+		CrewRole:         &crewRole,
+		ApproachCategory: &approachCategory,
 	}
 
 	detail := ToDomainDailyLogbookDetailUpdate("detail-uuid", req)
@@ -1333,10 +1347,10 @@ func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
 		t.Errorf("expected CrewRole first officer, got %s", string(*detail.CrewRole))
 	}
 
-	if detail.ApproachType == nil {
-		t.Error("expected ApproachType to be set")
-	} else if string(*detail.ApproachType) != "VISUAL" {
-		t.Errorf("expected ApproachType VISUAL, got %s", string(*detail.ApproachType))
+	if detail.ApproachCategory == nil {
+		t.Error("expected ApproachCategory to be set")
+	} else if string(*detail.ApproachCategory) != "VISUAL" {
+		t.Errorf("expected ApproachCategory VISUAL, got %s", string(*detail.ApproachCategory))
 	}
 
 	if detail.PilotRole == nil {
@@ -1372,7 +1386,7 @@ func TestHTTP_DeleteDailyLogbookDetail(t *testing.T) {
 					FlightNumber:   "AV123",
 					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
 					AirlineRouteID: testRouteID,
-					TailNumberID: testAircraftID,
+					TailNumberID:   testAircraftID,
 				}, nil
 			},
 		}
