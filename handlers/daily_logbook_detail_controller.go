@@ -125,6 +125,12 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		detail.SetID()
 		detail.EmployeeLogbookID = &employee.ID
 
+		if err := domain.ValidateApproachFields(detail.ApproachCategory, detail.ApproachSubtype, detail.Autoland); err != nil {
+			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", err)
+			h.Response.Error(c, domain.MsgFlightInvalidApproach)
+			return
+		}
+
 		if err := h.DailyLogbookDetailInteractor.CreateDailyLogbookDetail(c.Request.Context(), traceID, detail, employee.ID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailCreateError, "error", err)
 			h.Response.Error(c, mapCreateError(err))
@@ -231,6 +237,12 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		req.TailNumberID = aircraftUUID
 
 		detail := ToDomainDailyLogbookDetailUpdate(detailUUID, req)
+
+		if err := domain.ValidateApproachFields(detail.ApproachCategory, detail.ApproachSubtype, detail.Autoland); err != nil {
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", err)
+			h.Response.Error(c, domain.MsgFlightInvalidApproach)
+			return
+		}
 
 		if err := h.DailyLogbookDetailInteractor.UpdateDailyLogbookDetail(c.Request.Context(), traceID, detail, employee.ID); err != nil {
 			log.Error(logger.LogDailyLogbookDetailUpdateError, "error", err)

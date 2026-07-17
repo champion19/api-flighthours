@@ -46,7 +46,7 @@ var fieldNameMapping = map[string]string{
 	"bp":         "BP Number",
 
 	// Tail Number
-	"tail_number":     "Tail Number",
+	"tail_number":       "Tail Number",
 	"aircraft_model_id": "Aircraft Model",
 
 	// Daily Logbook
@@ -54,22 +54,24 @@ var fieldNameMapping = map[string]string{
 	"book_page": "Book Page",
 
 	// Daily Logbook Detail (Flight)
-	"airline_route_id": "Airline Route",
-	"tail_number_id": "Aircraft Tail Number",
-	"flight_number":    "Flight Number",
-	"flight_real_date": "Flight Date",
-	"flight_type":      "Flight Type",
-	"crew_role":        "Crew Role",
-	"pilot_role":       "Pilot Role",
-	"approach_type":    "Approach Type",
-	"companion_name":   "Companion Name",
-	"passengers":       "Passengers",
-	"out_time":         "Out Time",
-	"takeoff_time":     "Takeoff Time",
-	"landing_time":     "Landing Time",
-	"in_time":          "In Time",
-	"block_time":       "Block Time",
-	"air_time":         "Air Time",
+	"airline_route_id":  "Airline Route",
+	"tail_number_id":    "Aircraft Tail Number",
+	"flight_number":     "Flight Number",
+	"flight_real_date":  "Flight Date",
+	"flight_type":       "Flight Type",
+	"crew_role":         "Crew Role",
+	"pilot_role":        "Pilot Role",
+	"approach_category": "Approach Category",
+	"approach_subtype":  "Approach Subtype",
+	"autoland":          "Autoland",
+	"companion_name":    "Companion Name",
+	"passengers":        "Passengers",
+	"out_time":          "Out Time",
+	"takeoff_time":      "Takeoff Time",
+	"landing_time":      "Landing Time",
+	"in_time":           "In Time",
+	"block_time":        "Block Time",
+	"air_time":          "Air Time",
 
 	// Message Management
 	"code":     "Code",

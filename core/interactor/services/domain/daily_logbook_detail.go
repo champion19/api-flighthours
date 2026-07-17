@@ -20,12 +20,28 @@ const (
 	CrewRoleFirstOfficer CrewRole = "first officer" // Primer Oficial
 )
 
-// ApproachType represents the type of approach during landing
-type ApproachType string
+// ApproachCategory represents the top-level approach procedure used during landing
+type ApproachCategory string
 
 const (
-	ApproachTypeAPV    ApproachType = "APV"    // Approach with Vertical Guidance
-	ApproachTypeVisual ApproachType = "VISUAL" // Visual Approach
+	ApproachCategoryRNP    ApproachCategory = "RNP"    // Required Navigation Performance
+	ApproachCategoryILS    ApproachCategory = "ILS"    // Instrument Landing System
+	ApproachCategoryVisual ApproachCategory = "VISUAL" // Visual Approach
+)
+
+// ApproachSubtype represents the specific procedure within an ApproachCategory.
+// Only meaningful for RNP and ILS — VISUAL has no subtype.
+type ApproachSubtype string
+
+const (
+	ApproachSubtypeLNAV        ApproachSubtype = "LNAV"
+	ApproachSubtypeLNAVVNAV    ApproachSubtype = "LNAV/VNAV"
+	ApproachSubtypeRNPAR03     ApproachSubtype = "RNP AR = 0.3"
+	ApproachSubtypeRNPARLT03   ApproachSubtype = "RNP AR < 0.3"
+	ApproachSubtypeCatI        ApproachSubtype = "CAT I"
+	ApproachSubtypeCatII       ApproachSubtype = "CAT II"
+	ApproachSubtypeCatIIIGT175 ApproachSubtype = "CAT III > 175"
+	ApproachSubtypeCatIIILT175 ApproachSubtype = "CAT III < 175"
 )
 
 // ValidPilotRoles contains all valid pilot roles
@@ -34,8 +50,25 @@ var ValidPilotRoles = []PilotRole{PilotRolePF, PilotRolePM, PilotRolePFTO, Pilot
 // ValidCrewRoles contains all valid crew roles
 var ValidCrewRoles = []CrewRole{CrewRoleCaptain, CrewRoleFirstOfficer}
 
-// ValidApproachTypes contains all valid approach types
-var ValidApproachTypes = []ApproachType{ApproachTypeAPV, ApproachTypeVisual}
+// ValidApproachCategories contains all valid approach categories
+var ValidApproachCategories = []ApproachCategory{ApproachCategoryRNP, ApproachCategoryILS, ApproachCategoryVisual}
+
+// approachSubtypesByCategory maps each category that has subtypes to its valid subtypes.
+// ApproachCategoryVisual is intentionally absent — it has no subtypes.
+var approachSubtypesByCategory = map[ApproachCategory][]ApproachSubtype{
+	ApproachCategoryRNP: {
+		ApproachSubtypeLNAV,
+		ApproachSubtypeLNAVVNAV,
+		ApproachSubtypeRNPAR03,
+		ApproachSubtypeRNPARLT03,
+	},
+	ApproachCategoryILS: {
+		ApproachSubtypeCatI,
+		ApproachSubtypeCatII,
+		ApproachSubtypeCatIIIGT175,
+		ApproachSubtypeCatIIILT175,
+	},
+}
 
 // IsValidPilotRole checks if a string is a valid pilot role
 func IsValidPilotRole(role string) bool {
@@ -60,48 +93,93 @@ func IsValidCrewRole(role string) bool {
 	return false
 }
 
-// IsValidApproachType checks if a string is a valid approach type
-func IsValidApproachType(approachType string) bool {
-	if approachType == "" {
+// IsValidApproachCategory checks if a string is a valid approach category
+func IsValidApproachCategory(category string) bool {
+	if category == "" {
 		return true // NULL is valid
 	}
-	for _, at := range ValidApproachTypes {
-		if string(at) == approachType {
+	for _, c := range ValidApproachCategories {
+		if string(c) == category {
 			return true
 		}
 	}
 	return false
 }
 
+// IsValidApproachSubtype checks if a subtype string is valid for the given category.
+// An empty subtype is valid for VISUAL (or when no category is set) but invalid for RNP/ILS.
+func IsValidApproachSubtype(category ApproachCategory, subtype string) bool {
+	allowed, hasSubtypes := approachSubtypesByCategory[category]
+	if !hasSubtypes {
+		return subtype == ""
+	}
+	for _, s := range allowed {
+		if string(s) == subtype {
+			return true
+		}
+	}
+	return false
+}
+
+// ValidateApproachFields enforces the cross-field rules that a flat enum can't express:
+//   - subtype must belong to the selected category (or be empty for VISUAL)
+//   - autoland can only be set when the category is ILS
+func ValidateApproachFields(category *ApproachCategory, subtype *string, autoland *bool) error {
+	if category != nil && !IsValidApproachCategory(string(*category)) {
+		return ErrFlightInvalidApproach
+	}
+
+	var cat ApproachCategory
+	if category != nil {
+		cat = *category
+	}
+
+	subtypeValue := ""
+	if subtype != nil {
+		subtypeValue = *subtype
+	}
+	if !IsValidApproachSubtype(cat, subtypeValue) {
+		return ErrFlightInvalidApproach
+	}
+
+	if autoland != nil && *autoland && cat != ApproachCategoryILS {
+		return ErrFlightInvalidApproach
+	}
+
+	return nil
+}
+
 // DailyLogbookDetail represents a flight segment within a daily logbook
 // This is the CORE entity of the flight hours tracking system
 type DailyLogbookDetail struct {
-	ID                  string        `json:"id"`
-	DailyLogbookID      string        `json:"daily_logbook_id"`
-	FlightRealDate      string        `json:"flight_real_date"` // DATE format: YYYY-MM-DD
-	FlightNumber        string        `json:"flight_number"`
-	AirlineRouteID      string        `json:"airline_route_id"`
-	TailNumberID        string        `json:"tail_number_id"`
-	Passengers          *int          `json:"passengers,omitempty"`
-	OutTime             *string       `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
-	TakeoffTime         *string       `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
-	LandingTime         *string       `json:"landing_time,omitempty"` // Hora aterrizaje (ON)
-	InTime              *string       `json:"in_time,omitempty"`      // Hora llegada a bloque (IN)
-	PilotRole           *PilotRole    `json:"pilot_role,omitempty"`
-	CrewRole            *CrewRole     `json:"crew_role,omitempty"`
-	CompanionName       *string       `json:"companion_name,omitempty"`
-	AirTime             *string       `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
-	BlockTime           *string       `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
-	ApproachType        *ApproachType `json:"approach_type,omitempty"`
-	FlightType          *string       `json:"flight_type,omitempty"` // 'COMMERCIAL', 'TRAINING', 'FERRY', 'CHECK', 'POSITIONING'
-	EmployeeLogbookID   *string       `json:"employee_logbook_id,omitempty"`
-	LogDate             string        `json:"log_date,omitempty"`
-	RouteCode           string        `json:"route_code,omitempty"`            // e.g., "BOG-CLO"
-	OriginIataCode      string        `json:"origin_iata_code,omitempty"`      // Origin airport IATA
-	DestinationIataCode string        `json:"destination_iata_code,omitempty"` // Destination airport IATA
-	AirlineCode         string        `json:"airline_code,omitempty"`          // Airline IATA code
-	TailNumber          string        `json:"tail_number,omitempty"`           // Aircraft registration
-	ModelName           string        `json:"model_name,omitempty"`            // Aircraft model name
+	ID                  string            `json:"id"`
+	DailyLogbookID      string            `json:"daily_logbook_id"`
+	FlightRealDate      string            `json:"flight_real_date"` // DATE format: YYYY-MM-DD
+	FlightNumber        string            `json:"flight_number"`
+	AirlineRouteID      string            `json:"airline_route_id"`
+	TailNumberID        string            `json:"tail_number_id"`
+	Passengers          *int              `json:"passengers,omitempty"`
+	OutTime             *string           `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
+	TakeoffTime         *string           `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
+	LandingTime         *string           `json:"landing_time,omitempty"` // Hora aterrizaje (ON)
+	InTime              *string           `json:"in_time,omitempty"`      // Hora llegada a bloque (IN)
+	PilotRole           *PilotRole        `json:"pilot_role,omitempty"`
+	CrewRole            *CrewRole         `json:"crew_role,omitempty"`
+	CompanionName       *string           `json:"companion_name,omitempty"`
+	AirTime             *string           `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
+	BlockTime           *string           `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
+	ApproachCategory    *ApproachCategory `json:"approach_category,omitempty"`
+	ApproachSubtype     *string           `json:"approach_subtype,omitempty"`
+	Autoland            *bool             `json:"autoland,omitempty"`
+	FlightType          *string           `json:"flight_type,omitempty"` // 'COMMERCIAL', 'TRAINING', 'FERRY', 'CHECK', 'POSITIONING'
+	EmployeeLogbookID   *string           `json:"employee_logbook_id,omitempty"`
+	LogDate             string            `json:"log_date,omitempty"`
+	RouteCode           string            `json:"route_code,omitempty"`            // e.g., "BOG-CLO"
+	OriginIataCode      string            `json:"origin_iata_code,omitempty"`      // Origin airport IATA
+	DestinationIataCode string            `json:"destination_iata_code,omitempty"` // Destination airport IATA
+	AirlineCode         string            `json:"airline_code,omitempty"`          // Airline IATA code
+	TailNumber          string            `json:"tail_number,omitempty"`           // Aircraft registration
+	ModelName           string            `json:"model_name,omitempty"`            // Aircraft model name
 }
 
 // SetID generates a new UUID for the detail

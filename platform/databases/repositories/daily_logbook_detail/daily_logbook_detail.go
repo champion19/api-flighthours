@@ -13,7 +13,7 @@ type DailyLogbookDetail struct {
 	FlightRealDate      string // DATE stored as string
 	FlightNumber        string
 	AirlineRouteID      string
-	TailNumberID      string
+	TailNumberID        string
 	Passengers          sql.NullInt64
 	OutTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	TakeoffTime         sql.NullString // nullable
@@ -24,11 +24,13 @@ type DailyLogbookDetail struct {
 	CompanionName       sql.NullString
 	AirTime             sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	BlockTime           sql.NullString // TIME stored as string HH:MM:SS (nullable)
-	ApproachType        sql.NullString
+	ApproachCategory    sql.NullString
+	ApproachSubtype     sql.NullString
+	Autoland            sql.NullBool
 	FlightType          sql.NullString
 	EmployeeLogbookID   sql.NullString
 	LogDate             sql.NullString
-	TailNumber        sql.NullString
+	TailNumber          sql.NullString
 	ModelName           sql.NullString
 	RouteCode           sql.NullString
 	OriginIataCode      sql.NullString
@@ -43,7 +45,7 @@ func (d *DailyLogbookDetail) ToDomain() *domain.DailyLogbookDetail {
 		FlightRealDate: d.FlightRealDate,
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
-		TailNumberID: d.TailNumberID,
+		TailNumberID:   d.TailNumberID,
 	}
 
 	d.mapTimeFields(detail)
@@ -94,9 +96,15 @@ func (d *DailyLogbookDetail) mapOptionalFields(detail *domain.DailyLogbookDetail
 	if d.CompanionName.Valid {
 		detail.CompanionName = &d.CompanionName.String
 	}
-	if d.ApproachType.Valid {
-		approachType := domain.ApproachType(d.ApproachType.String)
-		detail.ApproachType = &approachType
+	if d.ApproachCategory.Valid {
+		approachCategory := domain.ApproachCategory(d.ApproachCategory.String)
+		detail.ApproachCategory = &approachCategory
+	}
+	if d.ApproachSubtype.Valid {
+		detail.ApproachSubtype = &d.ApproachSubtype.String
+	}
+	if d.Autoland.Valid {
+		detail.Autoland = &d.Autoland.Bool
 	}
 	if d.FlightType.Valid {
 		detail.FlightType = &d.FlightType.String
@@ -137,7 +145,7 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		FlightRealDate: d.FlightRealDate,
 		FlightNumber:   d.FlightNumber,
 		AirlineRouteID: d.AirlineRouteID,
-		TailNumberID: d.TailNumberID,
+		TailNumberID:   d.TailNumberID,
 	}
 
 	if d.OutTime != nil {
@@ -173,8 +181,16 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		entity.CompanionName = sql.NullString{String: *d.CompanionName, Valid: true}
 	}
 
-	if d.ApproachType != nil {
-		entity.ApproachType = sql.NullString{String: string(*d.ApproachType), Valid: true}
+	if d.ApproachCategory != nil {
+		entity.ApproachCategory = sql.NullString{String: string(*d.ApproachCategory), Valid: true}
+	}
+
+	if d.ApproachSubtype != nil {
+		entity.ApproachSubtype = sql.NullString{String: *d.ApproachSubtype, Valid: true}
+	}
+
+	if d.Autoland != nil {
+		entity.Autoland = sql.NullBool{Bool: *d.Autoland, Valid: true}
 	}
 
 	if d.FlightType != nil {
@@ -211,7 +227,9 @@ func scanDetail(rows interface {
 		&entity.CrewRole,
 		&entity.AirTime,
 		&entity.BlockTime,
-		&entity.ApproachType,
+		&entity.ApproachCategory,
+		&entity.ApproachSubtype,
+		&entity.Autoland,
 		&entity.FlightType,
 		&entity.EmployeeLogbookID,
 		&entity.LogDate,

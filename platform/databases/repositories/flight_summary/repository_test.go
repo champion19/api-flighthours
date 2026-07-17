@@ -225,7 +225,7 @@ func TestGetRecentFlights(t *testing.T) {
 		"airline_route_id", "actual_tail_number_id", "passengers",
 		"out_time", "takeoff_time", "landing_time", "in_time",
 		"pilot_role", "companion_name", "crew_role",
-		"air_time", "block_time", "approach_type", "flight_type",
+		"air_time", "block_time", "approach_category", "approach_subtype", "autoland", "flight_type",
 		"employee_logbook_id", "log_date", "tail_number", "model_name",
 		"route_code", "origin_iata_code", "destination_iata_code", "airline_code",
 	}
@@ -239,7 +239,7 @@ func TestGetRecentFlights(t *testing.T) {
 				"route-1", "tn-1", 120,
 				"08:00", "08:15", "09:30", "09:45",
 				"PF", nil, nil,
-				"01:15", "01:45", nil, nil,
+				"01:15", "01:45", nil, nil, nil, nil,
 				nil, testDate, "HK-1234", "A320",
 				"BOG-CLO", "BOG", "CLO", "AV")
 		mock.ExpectQuery(stmtSelect).WithArgs(testEmployeeID, 5).WillReturnRows(rows)
