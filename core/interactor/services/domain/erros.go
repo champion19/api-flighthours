@@ -587,6 +587,7 @@ var (
 	ErrFlightInvalidTailNumber   = errors.New("ERR_FLIGHT_INVALID_TAIL_NUMBER")
 	ErrFlightInvalidTimeSequence = errors.New("ERR_FLIGHT_INVALID_TIME_SEQUENCE")
 	ErrFlightDuplicate           = errors.New("ERR_FLIGHT_DUPLICATE")
+	ErrFlightInvalidApproach     = errors.New("ERR_FLIGHT_INVALID_APPROACH")
 )
 
 // AirlineRoute Module (RUT_AIR_*) - Ruta Aerolinea
@@ -660,6 +661,7 @@ const (
 	MsgFlightInvalidLogbook      = "VUE_VAL_ERR_04806" // Error - Bitácora inválida
 	MsgFlightInvalidTailNumber   = "VUE_VAL_ERR_04807" // Error - Matrícula de aeronave inválida
 	MsgFlightInvalidTimeSequence = "VUE_VAL_ERR_04808" // Error - Secuencia de tiempos inválida (out < takeoff < landing < in)
+	MsgFlightInvalidApproach     = "VUE_VAL_ERR_04809" // Error - Combinación de categoría/subtipo/autoland de aproximación inválida
 
 	// ========================================
 	// Eliminar - VUE_DEL_*

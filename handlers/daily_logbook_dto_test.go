@@ -138,25 +138,27 @@ func TestToDailyLogbookListResponse(t *testing.T) {
 func TestToDomainDailyLogbookDetail(t *testing.T) {
 	passengers := 150
 	companion := "Co-Pilot Smith"
-	approachType := "APV"
+	approachCategory := "RNP"
+	approachSubtype := "LNAV"
 	flightType := "COMMERCIAL"
 
 	req := CreateDailyLogbookDetailRequest{
-		FlightRealDate: "2025-01-15",
-		FlightNumber:   "AV123",
-		AirlineRouteID: "route-1",
-		TailNumberID: "lp-1",
-		Passengers:     &passengers,
-		OutTime:        strPtrH("08:00"),
-		TakeoffTime:    strPtrH("08:15"),
-		LandingTime:    strPtrH("09:30"),
-		InTime:         strPtrH("09:45"),
-		PilotRole:      strPtrH("PF"),
-		CompanionName:  &companion,
-		AirTime:        strPtrH("01:15"),
-		BlockTime:      strPtrH("01:45"),
-		ApproachType:   &approachType,
-		FlightType:     &flightType,
+		FlightRealDate:   "2025-01-15",
+		FlightNumber:     "AV123",
+		AirlineRouteID:   "route-1",
+		TailNumberID:     "lp-1",
+		Passengers:       &passengers,
+		OutTime:          strPtrH("08:00"),
+		TakeoffTime:      strPtrH("08:15"),
+		LandingTime:      strPtrH("09:30"),
+		InTime:           strPtrH("09:45"),
+		PilotRole:        strPtrH("PF"),
+		CompanionName:    &companion,
+		AirTime:          strPtrH("01:15"),
+		BlockTime:        strPtrH("01:45"),
+		ApproachCategory: &approachCategory,
+		ApproachSubtype:  &approachSubtype,
+		FlightType:       &flightType,
 	}
 
 	detail := ToDomainDailyLogbookDetail("logbook-1", req)
@@ -170,37 +172,40 @@ func TestToDomainDailyLogbookDetail(t *testing.T) {
 	if detail.PilotRole == nil || *detail.PilotRole != domain.PilotRolePF {
 		t.Errorf("expected PilotRole PF, got %v", detail.PilotRole)
 	}
-	if detail.ApproachType == nil || *detail.ApproachType != domain.ApproachTypeAPV {
-		t.Error("expected ApproachType APV")
+	if detail.ApproachCategory == nil || *detail.ApproachCategory != domain.ApproachCategoryRNP {
+		t.Error("expected ApproachCategory RNP")
+	}
+	if detail.ApproachSubtype == nil || *detail.ApproachSubtype != "LNAV" {
+		t.Error("expected ApproachSubtype LNAV")
 	}
 
-	t.Run("without approach type", func(t *testing.T) {
+	t.Run("without approach category", func(t *testing.T) {
 		req2 := CreateDailyLogbookDetailRequest{
 			FlightNumber: "AV456",
 			PilotRole:    strPtrH("PM"),
 		}
 		detail2 := ToDomainDailyLogbookDetail("logbook-2", req2)
-		if detail2.ApproachType != nil {
-			t.Error("expected nil ApproachType")
+		if detail2.ApproachCategory != nil {
+			t.Error("expected nil ApproachCategory")
 		}
 	})
 }
 
 func TestToDomainDailyLogbookDetailUpdate(t *testing.T) {
-	approachType := "VOR"
+	approachCategory := "ILS"
 	req := UpdateDailyLogbookDetailRequest{
-		FlightRealDate: "2025-01-16",
-		FlightNumber:   "AV789",
-		AirlineRouteID: "route-2",
-		TailNumberID: "lp-2",
-		OutTime:        strPtrH("10:00"),
-		TakeoffTime:    strPtrH("10:15"),
-		LandingTime:    strPtrH("11:30"),
-		InTime:         strPtrH("11:45"),
-		PilotRole:      strPtrH("PM"),
-		AirTime:        strPtrH("01:15"),
-		BlockTime:      strPtrH("01:45"),
-		ApproachType:   &approachType,
+		FlightRealDate:   "2025-01-16",
+		FlightNumber:     "AV789",
+		AirlineRouteID:   "route-2",
+		TailNumberID:     "lp-2",
+		OutTime:          strPtrH("10:00"),
+		TakeoffTime:      strPtrH("10:15"),
+		LandingTime:      strPtrH("11:30"),
+		InTime:           strPtrH("11:45"),
+		PilotRole:        strPtrH("PM"),
+		AirTime:          strPtrH("01:15"),
+		BlockTime:        strPtrH("01:45"),
+		ApproachCategory: &approachCategory,
 	}
 
 	detail := ToDomainDailyLogbookDetailUpdate("detail-1", req)
@@ -211,42 +216,42 @@ func TestToDomainDailyLogbookDetailUpdate(t *testing.T) {
 	if detail.FlightNumber != "AV789" {
 		t.Errorf("expected FlightNumber 'AV789', got %s", detail.FlightNumber)
 	}
-	if detail.ApproachType == nil {
-		t.Fatal("expected ApproachType to be set")
+	if detail.ApproachCategory == nil {
+		t.Fatal("expected ApproachCategory to be set")
 	}
 
-	t.Run("without approach type", func(t *testing.T) {
+	t.Run("without approach category", func(t *testing.T) {
 		req2 := UpdateDailyLogbookDetailRequest{
 			FlightNumber: "AV456",
 			PilotRole:    strPtrH("PF"),
 		}
 		detail2 := ToDomainDailyLogbookDetailUpdate("detail-2", req2)
-		if detail2.ApproachType != nil {
-			t.Error("expected nil ApproachType")
+		if detail2.ApproachCategory != nil {
+			t.Error("expected nil ApproachCategory")
 		}
 	})
 }
 
 func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 	companion := "  Co-Pilot  "
-	approachType := "  ILS  "
+	approachCategory := "  ILS  "
 	flightType := "  COMMERCIAL  "
 
 	req := &UpdateDailyLogbookDetailRequest{
-		FlightRealDate: "  2025-01-15  ",
-		FlightNumber:   "  AV123  ",
-		AirlineRouteID: "  route-1  ",
-		TailNumberID: "  lp-1  ",
-		OutTime:        strPtrH("  08:00  "),
-		TakeoffTime:    strPtrH("  08:15  "),
-		LandingTime:    strPtrH("  09:30  "),
-		InTime:         strPtrH("  09:45  "),
-		PilotRole:      strPtrH("  PF  "),
-		CompanionName:  &companion,
-		AirTime:        strPtrH("  01:15  "),
-		BlockTime:      strPtrH("  01:45  "),
-		ApproachType:   &approachType,
-		FlightType:     &flightType,
+		FlightRealDate:   "  2025-01-15  ",
+		FlightNumber:     "  AV123  ",
+		AirlineRouteID:   "  route-1  ",
+		TailNumberID:     "  lp-1  ",
+		OutTime:          strPtrH("  08:00  "),
+		TakeoffTime:      strPtrH("  08:15  "),
+		LandingTime:      strPtrH("  09:30  "),
+		InTime:           strPtrH("  09:45  "),
+		PilotRole:        strPtrH("  PF  "),
+		CompanionName:    &companion,
+		AirTime:          strPtrH("  01:15  "),
+		BlockTime:        strPtrH("  01:45  "),
+		ApproachCategory: &approachCategory,
+		FlightType:       &flightType,
 	}
 	req.Sanitize()
 
@@ -265,7 +270,7 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 }
 
 func TestFromDomainDailyLogbookDetail(t *testing.T) {
-	approachType := domain.ApproachTypeAPV
+	approachCategory := domain.ApproachCategoryRNP
 	flightType := "COMMERCIAL"
 
 	detail := &domain.DailyLogbookDetail{
@@ -274,7 +279,7 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 		FlightRealDate:      "2025-01-15",
 		FlightNumber:        "AV123",
 		AirlineRouteID:      "route-1",
-		TailNumberID:      "lp-1",
+		TailNumberID:        "lp-1",
 		OutTime:             strPtrH("08:00"),
 		TakeoffTime:         strPtrH("08:15"),
 		LandingTime:         strPtrH("09:30"),
@@ -282,14 +287,14 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 		PilotRole:           domainPilotRolePtrH(domain.PilotRolePF),
 		AirTime:             strPtrH("01:15"),
 		BlockTime:           strPtrH("01:45"),
-		ApproachType:        &approachType,
+		ApproachCategory:    &approachCategory,
 		FlightType:          &flightType,
 		RouteCode:           "BOG-CLO",
 		OriginIataCode:      "BOG",
 		DestinationIataCode: "CLO",
 		AirlineCode:         "AV",
 		LogDate:             "2025-01-15",
-		TailNumber:        "HK-4567",
+		TailNumber:          "HK-4567",
 		ModelName:           "A320",
 	}
 
@@ -301,8 +306,8 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 	if resp.FlightNumber != "AV123" {
 		t.Errorf("expected FlightNumber 'AV123', got %s", resp.FlightNumber)
 	}
-	if resp.ApproachType == nil || *resp.ApproachType != "APV" {
-		t.Error("expected ApproachType 'ILS'")
+	if resp.ApproachCategory == nil || *resp.ApproachCategory != "RNP" {
+		t.Error("expected ApproachCategory 'RNP'")
 	}
 	if resp.FlightType == nil || *resp.FlightType != "COMMERCIAL" {
 		t.Error("expected FlightType 'COMMERCIAL'")
@@ -318,8 +323,8 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 			PilotRole:    domainPilotRolePtrH(domain.PilotRolePM),
 		}
 		resp2 := FromDomainDailyLogbookDetail(detail2, "enc-2", "enc-lb", "enc-rt", "enc-ac")
-		if resp2.ApproachType != nil {
-			t.Error("expected nil ApproachType")
+		if resp2.ApproachCategory != nil {
+			t.Error("expected nil ApproachCategory")
 		}
 		if resp2.FlightType != nil {
 			t.Error("expected nil FlightType")

@@ -86,13 +86,32 @@
       "description": "Block time (HH:MM)",
       "pattern": "^\\d{2}:\\d{2}$"
     },
-    "approach_type": {
+    "approach_category": {
       "type": "string",
-      "description": "Approach type: APV, VISUAL",
+      "description": "Approach category: RNP, ILS, VISUAL",
       "enum": [
-        "APV",
+        "RNP",
+        "ILS",
         "VISUAL"
       ]
+    },
+    "approach_subtype": {
+      "type": "string",
+      "description": "Approach subtype — must match the selected approach_category (RNP: LNAV, LNAV/VNAV, RNP AR = 0.3, RNP AR < 0.3 — ILS: CAT I, CAT II, CAT III > 175, CAT III < 175 — empty/omitted for VISUAL)",
+      "enum": [
+        "LNAV",
+        "LNAV/VNAV",
+        "RNP AR = 0.3",
+        "RNP AR < 0.3",
+        "CAT I",
+        "CAT II",
+        "CAT III > 175",
+        "CAT III < 175"
+      ]
+    },
+    "autoland": {
+      "type": "boolean",
+      "description": "Whether an autoland was performed — only valid when approach_category is ILS"
     },
     "flight_type": {
       "type": "string",

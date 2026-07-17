@@ -53,7 +53,9 @@ func scanDetail(rows interface {
 		crewRole            sql.NullString
 		airTime             sql.NullString
 		blockTime           sql.NullString
-		approachType        sql.NullString
+		approachCategory    sql.NullString
+		approachSubtype     sql.NullString
+		autoland            sql.NullBool
 		flightType          sql.NullString
 		employeeLogbookID   sql.NullString
 		logDate             sql.NullString
@@ -71,7 +73,7 @@ func scanDetail(rows interface {
 		&outTime, &takeoffTime, &landingTime, &inTime,
 		&pilotRole, &companionName, &crewRole,
 		&airTime, &blockTime,
-		&approachType, &flightType, &employeeLogbookID,
+		&approachCategory, &approachSubtype, &autoland, &flightType, &employeeLogbookID,
 		&logDate, &tailNumber, &modelName,
 		&routeCode, &originIataCode, &destinationIataCode, &airlineCode,
 	)
@@ -104,7 +106,7 @@ func scanDetail(rows interface {
 		AirlineCode:         nullableString(airlineCode),
 	}
 
-	// Map typed nullable fields (PilotRole, CrewRole, ApproachType)
+	// Map typed nullable fields (PilotRole, CrewRole, ApproachCategory)
 	if pilotRole.Valid {
 		pr := domain.PilotRole(pilotRole.String)
 		detail.PilotRole = &pr
@@ -113,9 +115,15 @@ func scanDetail(rows interface {
 		cr := domain.CrewRole(crewRole.String)
 		detail.CrewRole = &cr
 	}
-	if approachType.Valid {
-		at := domain.ApproachType(approachType.String)
-		detail.ApproachType = &at
+	if approachCategory.Valid {
+		ac := domain.ApproachCategory(approachCategory.String)
+		detail.ApproachCategory = &ac
+	}
+	if approachSubtype.Valid {
+		detail.ApproachSubtype = &approachSubtype.String
+	}
+	if autoland.Valid {
+		detail.Autoland = &autoland.Bool
 	}
 	if employeeLogbookID.Valid {
 		detail.EmployeeLogbookID = &employeeLogbookID.String
