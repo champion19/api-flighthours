@@ -28,15 +28,18 @@ func (r *repository) ListRoutes(ctx context.Context, filters map[string]interfac
 	for rows.Next() {
 		var route Route
 		var estimatedFlightTime sql.NullString
+		var originCountry, destinationCountry sql.NullString
 
 		if err := rows.Scan(
 			&route.ID,
 			&route.OriginAirportID,
 			&route.OriginIataCode,
 			&route.OriginAirportName,
+			&originCountry,
 			&route.DestinationAirportID,
 			&route.DestinationIataCode,
 			&route.DestinationAirportName,
+			&destinationCountry,
 			&route.AirportType,
 			&estimatedFlightTime,
 			&route.RouteCode,
@@ -46,6 +49,12 @@ func (r *repository) ListRoutes(ctx context.Context, filters map[string]interfac
 
 		if estimatedFlightTime.Valid {
 			route.EstimatedFlightTime = estimatedFlightTime.String
+		}
+		if originCountry.Valid {
+			route.OriginCountry = originCountry.String
+		}
+		if destinationCountry.Valid {
+			route.DestinationCountry = destinationCountry.String
 		}
 
 		routes = append(routes, *route.ToDomain())

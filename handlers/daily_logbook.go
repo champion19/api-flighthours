@@ -10,12 +10,14 @@ const dateFormatISO = "2006-01-02"
 
 // DailyLogbookResponse - Response DTO for daily logbook data
 type DailyLogbookResponse struct {
-	ID         string `json:"id"`
-	LogDate    string `json:"log_date"`
-	EmployeeID string `json:"employee_id"`
-	BookPage   *int   `json:"book_page,omitempty"`
-	Status     string `json:"status"`
-	Links      []Link `json:"_links,omitempty"`
+	ID           string  `json:"id"`
+	LogDate      string  `json:"log_date"`
+	EmployeeID   string  `json:"employee_id"`
+	BookPage     *int    `json:"book_page,omitempty"`
+	Status       string  `json:"status"`
+	TailNumberID *string `json:"tail_number_id,omitempty"`
+	TailNumber   *string `json:"tail_number,omitempty"`
+	Links        []Link  `json:"_links,omitempty"`
 }
 
 // FromDomainDailyLogbook converts domain.DailyLogbook to DailyLogbookResponse with encoded IDs
@@ -25,18 +27,21 @@ func FromDomainDailyLogbook(logbook *domain.DailyLogbook, encodedID, encodedEmpl
 		status = "active"
 	}
 	return DailyLogbookResponse{
-		ID:         encodedID,
-		LogDate:    logbook.LogDate.Format(dateFormatISO),
-		EmployeeID: encodedEmployeeID,
-		BookPage:   logbook.BookPage,
-		Status:     status,
+		ID:           encodedID,
+		LogDate:      logbook.LogDate.Format(dateFormatISO),
+		EmployeeID:   encodedEmployeeID,
+		BookPage:     logbook.BookPage,
+		Status:       status,
+		TailNumberID: logbook.TailNumberID,
+		TailNumber:   logbook.TailNumber,
 	}
 }
 
 // CreateDailyLogbookRequest - Request DTO for creating a daily logbook
 type CreateDailyLogbookRequest struct {
-	LogDate  string `json:"log_date" binding:"required"`
-	BookPage *int   `json:"book_page,omitempty"`
+	LogDate      string  `json:"log_date" binding:"required"`
+	BookPage     *int    `json:"book_page,omitempty"`
+	TailNumberID *string `json:"tail_number_id,omitempty"`
 }
 
 // Sanitize trims whitespace from CreateDailyLogbookRequest fields
@@ -52,10 +57,11 @@ func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLo
 	}
 
 	logbook := &domain.DailyLogbook{
-		LogDate:    logDate,
-		EmployeeID: employeeID,
-		BookPage:   r.BookPage,
-		Status:     true, // New logbooks are active by default
+		LogDate:      logDate,
+		EmployeeID:   employeeID,
+		BookPage:     r.BookPage,
+		Status:       true, // New logbooks are active by default
+		TailNumberID: r.TailNumberID,
 	}
 	logbook.SetID()
 	return logbook, nil
@@ -63,9 +69,10 @@ func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLo
 
 // UpdateDailyLogbookRequest - Request DTO for updating a daily logbook
 type UpdateDailyLogbookRequest struct {
-	LogDate  string `json:"log_date" binding:"required"`
-	BookPage *int   `json:"book_page,omitempty"`
-	Status   *bool  `json:"status,omitempty"`
+	LogDate      string  `json:"log_date" binding:"required"`
+	BookPage     *int    `json:"book_page,omitempty"`
+	Status       *bool   `json:"status,omitempty"`
+	TailNumberID *string `json:"tail_number_id,omitempty"`
 }
 
 // Sanitize trims whitespace from UpdateDailyLogbookRequest fields
@@ -86,11 +93,12 @@ func (r *UpdateDailyLogbookRequest) ToDomain(id, employeeID string) (*domain.Dai
 	}
 
 	return &domain.DailyLogbook{
-		ID:         id,
-		LogDate:    logDate,
-		EmployeeID: employeeID,
-		BookPage:   r.BookPage,
-		Status:     status,
+		ID:           id,
+		LogDate:      logDate,
+		EmployeeID:   employeeID,
+		BookPage:     r.BookPage,
+		Status:       status,
+		TailNumberID: r.TailNumberID,
 	}, nil
 }
 
@@ -119,6 +127,11 @@ func ToDailyLogbookListResponse(logbooks []domain.DailyLogbook, encodeFunc func(
 			encodedEmployeeID = logbook.EmployeeID
 		}
 		logbookResp := FromDomainDailyLogbook(&logbook, encodedID, encodedEmployeeID)
+		if logbookResp.TailNumberID != nil && *logbookResp.TailNumberID != "" {
+			if encodedTailNumberID, err := encodeFunc(*logbookResp.TailNumberID); err == nil {
+				logbookResp.TailNumberID = &encodedTailNumberID
+			}
+		}
 		// Add HATEOAS links to each logbook
 		if baseURL != "" {
 			logbookResp.Links = BuildDailyLogbookLinks(baseURL, encodedID)

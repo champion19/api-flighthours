@@ -113,7 +113,17 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.AirlineRouteID = routeUUID
 
-		tailNumberUUID, _ := h.resolveID(req.TailNumberID)
+		var tailNumberUUID string
+		if req.TailNumberID == "" {
+			// No tail number given for this flight — fall back to the one already
+			// set on the parent daily logbook (captured once in "New Logbook Entry").
+			logbook, lerr := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
+			if lerr == nil && logbook != nil && logbook.TailNumberID != nil && *logbook.TailNumberID != "" {
+				tailNumberUUID = *logbook.TailNumberID
+			}
+		} else {
+			tailNumberUUID, _ = h.resolveID(req.TailNumberID)
+		}
 		if tailNumberUUID == "" {
 			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid tail number ID")
 			h.Response.Error(c, domain.MsgFlightInvalidTailNumber)

@@ -18,6 +18,10 @@
     "status": {
       "type": "boolean",
       "description": "Logbook status (true = active, false = inactive)"
+    },
+    "tail_number_id": {
+      "type": "string",
+      "description": "Tail number (aircraft registration) used for all flights logged under this book page"
     }
   },
   "required": [

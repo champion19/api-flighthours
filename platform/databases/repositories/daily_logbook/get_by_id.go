@@ -16,6 +16,8 @@ func (r *repository) GetDailyLogbookByID(ctx context.Context, id string) (*domai
 		&d.EmployeeID,
 		&d.BookPage,
 		&d.Status,
+		&d.TailNumberID,
+		&d.TailNumber,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -13,7 +13,10 @@ func (r *repository) GetAirportByID(ctx context.Context, id string) (*domain.Air
 	err := r.stmtGetByID.QueryRowContext(ctx, id).Scan(
 		&a.ID,
 		&a.Name,
+		&a.City,
+		&a.Country,
 		&a.IATACode,
+		&a.OACICode,
 		&a.Status,
 		&a.AirportType,
 	)

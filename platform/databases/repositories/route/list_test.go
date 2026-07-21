@@ -22,10 +22,10 @@ func TestListRoutes_All(t *testing.T) {
 	r := &repository{stmtGetAll: stmtAll}
 
 	rows := sqlmock.NewRows([]string{
-		"id", "origin_airport_id", "origin_iata_code", "origin_airport_name",
-		"destination_airport_id", "destination_iata_code", "destination_airport_name",
+		"id", "origin_airport_id", "origin_iata_code", "origin_airport_name", "origin_country",
+		"destination_airport_id", "destination_iata_code", "destination_airport_name", "destination_country",
 		"airport_type", "estimated_flight_time", "route_code",
-	}).AddRow("r1", "ap1", "BOG", "El Dorado", "ap2", "JFK", "Kennedy", "International", sql.NullString{String: "5h", Valid: true}, "BOG-JFK")
+	}).AddRow("r1", "ap1", "BOG", "El Dorado", "Colombia", "ap2", "JFK", "Kennedy", "Estados Unidos", "International", sql.NullString{String: "5h", Valid: true}, "BOG-JFK")
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 	result, err := r.ListRoutes(context.Background(), map[string]interface{}{})
@@ -53,10 +53,10 @@ func TestListRoutes_ByAirportType(t *testing.T) {
 	r := &repository{stmtGetByAirportType: stmtByType}
 
 	rows := sqlmock.NewRows([]string{
-		"id", "origin_airport_id", "origin_iata_code", "origin_airport_name",
-		"destination_airport_id", "destination_iata_code", "destination_airport_name",
+		"id", "origin_airport_id", "origin_iata_code", "origin_airport_name", "origin_country",
+		"destination_airport_id", "destination_iata_code", "destination_airport_name", "destination_country",
 		"airport_type", "estimated_flight_time", "route_code",
-	}).AddRow("r1", "ap1", "BOG", "El Dorado", "ap2", "MDE", "Cordova", "Domestic", sql.NullString{Valid: false}, "BOG-MDE")
+	}).AddRow("r1", "ap1", "BOG", "El Dorado", "Colombia", "ap2", "MDE", "Cordova", "Colombia", "Domestic", sql.NullString{Valid: false}, "BOG-MDE")
 	mock.ExpectQuery("SELECT").WithArgs("Domestic").WillReturnRows(rows)
 
 	result, err := r.ListRoutes(context.Background(), map[string]interface{}{"airport_type": "Domestic"})

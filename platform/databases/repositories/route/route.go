@@ -7,9 +7,11 @@ type Route struct {
 	OriginAirportID        string `db:"origin_airport_id"`
 	OriginIataCode         string `db:"origin_iata_code"`
 	OriginAirportName      string `db:"origin_airport_name"`
+	OriginCountry          string `db:"origin_country"`
 	DestinationAirportID   string `db:"destination_airport_id"`
 	DestinationIataCode    string `db:"destination_iata_code"`
 	DestinationAirportName string `db:"destination_airport_name"`
+	DestinationCountry     string `db:"destination_country"`
 	AirportType            string `db:"airport_type"`
 	EstimatedFlightTime    string `db:"estimated_flight_time"`
 	RouteCode              string `db:"route_code"`
@@ -21,9 +23,11 @@ func (r *Route) ToDomain() *domain.Route {
 		OriginAirportID:        r.OriginAirportID,
 		OriginIataCode:         r.OriginIataCode,
 		OriginAirportName:      r.OriginAirportName,
+		OriginCountry:          r.OriginCountry,
 		DestinationAirportID:   r.DestinationAirportID,
 		DestinationIataCode:    r.DestinationIataCode,
 		DestinationAirportName: r.DestinationAirportName,
+		DestinationCountry:     r.DestinationCountry,
 		AirportType:            r.AirportType,
 		EstimatedFlightTime:    r.EstimatedFlightTime,
 		RouteCode:              r.RouteCode,
@@ -36,9 +40,11 @@ func FromDomain(domainRoute *domain.Route) *Route {
 		OriginAirportID:        domainRoute.OriginAirportID,
 		OriginIataCode:         domainRoute.OriginIataCode,
 		OriginAirportName:      domainRoute.OriginAirportName,
+		OriginCountry:          domainRoute.OriginCountry,
 		DestinationAirportID:   domainRoute.DestinationAirportID,
 		DestinationIataCode:    domainRoute.DestinationIataCode,
 		DestinationAirportName: domainRoute.DestinationAirportName,
+		DestinationCountry:     domainRoute.DestinationCountry,
 		AirportType:            domainRoute.AirportType,
 		EstimatedFlightTime:    domainRoute.EstimatedFlightTime,
 		RouteCode:              domainRoute.RouteCode,

@@ -32,7 +32,7 @@ func (r *repository) ListAirports(ctx context.Context, filters map[string]interf
 	var airports []domain.Airport
 	for rows.Next() {
 		var a Airport
-		if err := rows.Scan(&a.ID, &a.Name, &a.IATACode, &a.Status, &a.AirportType); err != nil {
+		if err := rows.Scan(&a.ID, &a.Name, &a.City, &a.Country, &a.IATACode, &a.OACICode, &a.Status, &a.AirportType); err != nil {
 			return nil, err
 		}
 		airports = append(airports, *a.ToDomain())

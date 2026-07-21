@@ -23,7 +23,7 @@
     },
     "tail_number_id": {
       "type": "string",
-      "description": "Tail number ID (obfuscated ID)",
+      "description": "Tail number ID (obfuscated ID). Optional — if omitted, defaults to the tail number already set on the parent daily logbook",
       "minLength": 1,
       "maxLength": 50
     },
@@ -128,8 +128,7 @@
   "required": [
     "flight_real_date",
     "flight_number",
-    "airline_route_id",
-    "tail_number_id"
+    "airline_route_id"
   ],
   "additionalProperties": false
 }

@@ -9,21 +9,27 @@ func TestAirport_ToLogger(t *testing.T) {
 		airport := &Airport{
 			ID:          "airport-uuid-123",
 			Name:        "El Dorado International",
+			City:        "Bogotá",
+			Country:     "Colombia",
 			IATACode:    "BOG",
+			OACICode:    "SKBO",
 			Status:      true,
 			AirportType: "international",
 		}
 
 		result := airport.ToLogger()
 
-		if len(result) != 5 {
-			t.Fatalf("expected 5 log fields, got %d", len(result))
+		if len(result) != 8 {
+			t.Fatalf("expected 8 log fields, got %d", len(result))
 		}
 
 		expected := []string{
 			"id:airport-uuid-123",
 			"name:El Dorado International",
+			"city:Bogotá",
+			"country:Colombia",
 			"iata_code:BOG",
+			"oaci_code:SKBO",
 			"airport_type:international",
 			"status:active",
 		}
@@ -61,14 +67,17 @@ func TestAirport_ToLogger(t *testing.T) {
 
 		result := airport.ToLogger()
 
-		if len(result) != 5 {
-			t.Fatalf("expected 5 log fields, got %d", len(result))
+		if len(result) != 8 {
+			t.Fatalf("expected 8 log fields, got %d", len(result))
 		}
 
 		expected := []string{
 			"id:",
 			"name:",
+			"city:",
+			"country:",
 			"iata_code:",
+			"oaci_code:",
 			"airport_type:",
 			"status:inactive",
 		}
