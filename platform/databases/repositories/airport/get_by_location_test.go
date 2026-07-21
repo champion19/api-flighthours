@@ -19,9 +19,9 @@ func TestGetAirportsByType_Success(t *testing.T) {
 	stmtByType, _ := db.Prepare(QueryGetByType)
 	r := &repository{stmtGetByType: stmtByType}
 
-	cols := []string{"id", "name", "iata_code", "status", "airport_type"}
+	cols := []string{"id", "name", "city", "country", "iata_code", "oaci_code", "status", "airport_type"}
 	prep.ExpectQuery().WithArgs("International").WillReturnRows(
-		sqlmock.NewRows(cols).AddRow("ap1", "El Dorado", "BOG", true, "International"),
+		sqlmock.NewRows(cols).AddRow("ap1", "El Dorado", "Bogotá", "Colombia", "BOG", "SKBO", true, "International"),
 	)
 
 	result, err := r.GetAirportsByType(context.Background(), "International")
@@ -44,7 +44,7 @@ func TestGetAirportsByType_Empty(t *testing.T) {
 	stmtByType, _ := db.Prepare(QueryGetByType)
 	r := &repository{stmtGetByType: stmtByType}
 
-	cols := []string{"id", "name", "iata_code", "status", "airport_type"}
+	cols := []string{"id", "name", "city", "country", "iata_code", "oaci_code", "status", "airport_type"}
 	prep.ExpectQuery().WithArgs("Unknown").WillReturnRows(sqlmock.NewRows(cols))
 
 	_, err = r.GetAirportsByType(context.Background(), "Unknown")

@@ -21,9 +21,9 @@ func TestGetAirportByID_Success(t *testing.T) {
 	stmtByID, _ := db.Prepare(QueryByID)
 	r := &repository{stmtGetByID: stmtByID}
 
-	cols := []string{"id", "name", "iata_code", "status", "airport_type"}
+	cols := []string{"id", "name", "city", "country", "iata_code", "oaci_code", "status", "airport_type"}
 	prep.ExpectQuery().WithArgs("ap1").WillReturnRows(
-		sqlmock.NewRows(cols).AddRow("ap1", "El Dorado", "BOG", true, "International"),
+		sqlmock.NewRows(cols).AddRow("ap1", "El Dorado", "Bogotá", "Colombia", "BOG", "SKBO", true, "International"),
 	)
 
 	result, err := r.GetAirportByID(context.Background(), "ap1")

@@ -21,6 +21,7 @@ func (r *repository) SaveDailyLogbook(ctx context.Context, tx output.Tx, logbook
 		logbook.EmployeeID,
 		logbook.BookPage,
 		logbook.Status,
+		logbook.TailNumberID,
 	)
 	if err != nil {
 		return domain.ErrDailyLogbookCannotSave

@@ -6,7 +6,10 @@ import domain "github.com/champion19/api-flighthours/core/interactor/services/do
 type Airport struct {
 	ID          string  `db:"id"`
 	Name        string  `db:"name"`
+	City        *string `db:"city"`
+	Country     *string `db:"country"`
 	IATACode    *string `db:"iata_code"`
+	OACICode    *string `db:"oaci_code"`
 	Status      bool    `db:"status"`
 	AirportType *string `db:"airport_type"`
 }
@@ -18,8 +21,17 @@ func (a *Airport) ToDomain() *domain.Airport {
 		Status: a.Status,
 	}
 
+	if a.City != nil {
+		airport.City = *a.City
+	}
+	if a.Country != nil {
+		airport.Country = *a.Country
+	}
 	if a.IATACode != nil {
 		airport.IATACode = *a.IATACode
+	}
+	if a.OACICode != nil {
+		airport.OACICode = *a.OACICode
 	}
 	if a.AirportType != nil {
 		airport.AirportType = *a.AirportType
@@ -35,8 +47,17 @@ func FromDomain(domainAirport *domain.Airport) *Airport {
 		Status: domainAirport.Status,
 	}
 
+	if domainAirport.City != "" {
+		airport.City = &domainAirport.City
+	}
+	if domainAirport.Country != "" {
+		airport.Country = &domainAirport.Country
+	}
 	if domainAirport.IATACode != "" {
 		airport.IATACode = &domainAirport.IATACode
+	}
+	if domainAirport.OACICode != "" {
+		airport.OACICode = &domainAirport.OACICode
 	}
 	if domainAirport.AirportType != "" {
 		airport.AirportType = &domainAirport.AirportType

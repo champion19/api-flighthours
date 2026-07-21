@@ -19,6 +19,7 @@ func (r *repository) UpdateDailyLogbook(ctx context.Context, tx output.Tx, logbo
 		logbook.LogDate,
 		logbook.BookPage,
 		logbook.Status,
+		logbook.TailNumberID,
 		logbook.ID,
 	)
 	if err != nil {

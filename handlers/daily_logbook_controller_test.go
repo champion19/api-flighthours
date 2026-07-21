@@ -347,6 +347,54 @@ func TestHTTP_CreateDailyLogbook(t *testing.T) {
 		t.Logf("status: %d", w.Code)
 	})
 
+	t.Run("success - decodes obfuscated tail_number_id before saving", func(t *testing.T) {
+		tailNumberUUID := "550e8400-e29b-41d4-a716-446655440099"
+		encodedTailNumberID, _ := enc.Encode(tailNumberUUID)
+
+		var savedLogbook domain.DailyLogbook
+		svc := &fakeDailyLogbookService{
+			createTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				savedLogbook = logbook
+				return nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		body := `{"log_date":"2025-01-15","book_page":42,"tail_number_id":"` + encodedTailNumberID + `"}`
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK && w.Code != http.StatusCreated {
+			t.Fatalf("expected success status, got %d. body=%s", w.Code, w.Body.String())
+		}
+		if savedLogbook.TailNumberID == nil || *savedLogbook.TailNumberID != tailNumberUUID {
+			t.Errorf("expected tail_number_id to be decoded to raw UUID %s before saving, got %v", tailNumberUUID, savedLogbook.TailNumberID)
+		}
+	})
+
+	t.Run("error - invalid tail_number_id", func(t *testing.T) {
+		svc := &fakeDailyLogbookService{
+			createTxFn: func(ctx context.Context, tx output.Tx, logbook domain.DailyLogbook) error {
+				return nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookTestRouter(svc, enc, resp, errHandler, authUser)
+
+		body := `{"log_date":"2025-01-15","tail_number_id":"not-a-real-encoded-id"}`
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusOK || w.Code == http.StatusCreated {
+			t.Fatalf("expected error status for invalid tail_number_id, got %d", w.Code)
+		}
+	})
+
 	t.Run("invalid JSON", func(t *testing.T) {
 		svc := &fakeDailyLogbookService{}
 		authUser := &domain.Employee{ID: testEmployeeID}

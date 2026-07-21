@@ -435,6 +435,91 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		t.Logf("status: %d", w.Code)
 	})
 
+	t.Run("success - tail_number_id omitted falls back to logbook's tail number", func(t *testing.T) {
+		bodyNoTailNumber := `{
+			"flight_real_date":"2025-01-15",
+			"flight_number":"AV123",
+			"airline_route_id":"` + encodedRouteID + `",
+			"out_time":"08:00",
+			"takeoff_time":"08:15",
+			"landing_time":"09:30",
+			"in_time":"09:45",
+			"pilot_role":"PF",
+			"air_time":"01:15",
+			"block_time":"01:45"
+		}`
+
+		var createdDetail domain.DailyLogbookDetail
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID, Status: true, TailNumberID: &testAircraftID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{
+			createFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
+				createdDetail = detail
+				return nil
+			},
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
+				return &domain.DailyLogbookDetail{
+					ID:             id,
+					DailyLogbookID: testLogbookID,
+					FlightNumber:   "AV123",
+					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
+					AirlineRouteID: testRouteID,
+					TailNumberID:   testAircraftID,
+				}, nil
+			},
+		}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(bodyNoTailNumber))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusCreated && w.Code != http.StatusOK {
+			t.Fatalf("expected success status, got %d. body=%s", w.Code, w.Body.String())
+		}
+		if createdDetail.TailNumberID != testAircraftID {
+			t.Errorf("expected tail_number_id to fall back to %s, got %s", testAircraftID, createdDetail.TailNumberID)
+		}
+	})
+
+	t.Run("error - tail_number_id omitted and logbook has none either", func(t *testing.T) {
+		bodyNoTailNumber := `{
+			"flight_real_date":"2025-01-15",
+			"flight_number":"AV123",
+			"airline_route_id":"` + encodedRouteID + `",
+			"out_time":"08:00",
+			"takeoff_time":"08:15",
+			"landing_time":"09:30",
+			"in_time":"09:45",
+			"pilot_role":"PF",
+			"air_time":"01:15",
+			"block_time":"01:45"
+		}`
+
+		logbookSvc := &fakeDailyLogbookService{
+			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbook, error) {
+				return &domain.DailyLogbook{ID: testLogbookID, EmployeeID: testEmployeeID}, nil
+			},
+		}
+		detailSvc := &fakeDailyLogbookDetailService{}
+		authUser := &domain.Employee{ID: testEmployeeID}
+		router := newDailyLogbookDetailTestRouter(detailSvc, logbookSvc, enc, resp, errHandler, authUser)
+
+		req := httptest.NewRequest(http.MethodPost, "/daily-logbooks/"+encodedLogbookID+"/details", bytes.NewBufferString(bodyNoTailNumber))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code == http.StatusCreated || w.Code == http.StatusOK {
+			t.Fatalf("expected error status, got %d", w.Code)
+		}
+	})
+
 	t.Run("unauthorized - no employee", func(t *testing.T) {
 		logbookSvc := &fakeDailyLogbookService{}
 		detailSvc := &fakeDailyLogbookDetailService{}

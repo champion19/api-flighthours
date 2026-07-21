@@ -11,15 +11,18 @@ import (
 func (r *repository) GetRouteByID(ctx context.Context, id string) (*domain.Route, error) {
 	var route Route
 	var estimatedFlightTime sql.NullString
+	var originCountry, destinationCountry sql.NullString
 
 	err := r.stmtGetByID.QueryRowContext(ctx, id).Scan(
 		&route.ID,
 		&route.OriginAirportID,
 		&route.OriginIataCode,
 		&route.OriginAirportName,
+		&originCountry,
 		&route.DestinationAirportID,
 		&route.DestinationIataCode,
 		&route.DestinationAirportName,
+		&destinationCountry,
 		&route.AirportType,
 		&estimatedFlightTime,
 		&route.RouteCode,
@@ -34,6 +37,12 @@ func (r *repository) GetRouteByID(ctx context.Context, id string) (*domain.Route
 
 	if estimatedFlightTime.Valid {
 		route.EstimatedFlightTime = estimatedFlightTime.String
+	}
+	if originCountry.Valid {
+		route.OriginCountry = originCountry.String
+	}
+	if destinationCountry.Valid {
+		route.DestinationCountry = destinationCountry.String
 	}
 
 	return route.ToDomain(), nil

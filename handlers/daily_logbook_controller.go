@@ -112,6 +112,7 @@ func (h *handler) GetDailyLogbookByID() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response := FromDomainDailyLogbook(logbook, responseID, encodedEmployeeID)
+		h.encodeTailNumberID(&response)
 		response.Links = BuildDailyLogbookLinks(baseURL, responseID)
 
 		log.Info(logger.LogDailyLogbookGetOK, "logbook_id", logbookUUID)
@@ -157,6 +158,17 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 		// Sanitize input data
 		req.Sanitize()
 
+		// Resolve tail_number_id (accepts both UUID and obfuscated ID) before persisting
+		if req.TailNumberID != nil && *req.TailNumberID != "" {
+			tailNumberUUID, _ := h.resolveID(*req.TailNumberID)
+			if tailNumberUUID == "" {
+				log.Warn(logger.LogDailyLogbookCreateError, "error", "invalid tail number ID")
+				h.Response.Error(c, domain.MsgFlightInvalidTailNumber)
+				return
+			}
+			req.TailNumberID = &tailNumberUUID
+		}
+
 		logbook, err := req.ToDomain(employee.ID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookCreateError, "error", err)
@@ -181,6 +193,7 @@ func (h *handler) CreateDailyLogbook() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response := FromDomainDailyLogbook(logbook, encodedID, encodedEmployeeID)
+		h.encodeTailNumberID(&response)
 		response.Links = BuildDailyLogbookCreatedLinks(baseURL, encodedID)
 
 		SetLocationHeader(c, baseURL, "daily-logbooks", encodedID)
@@ -239,6 +252,17 @@ func (h *handler) UpdateDailyLogbook() gin.HandlerFunc {
 		// Sanitize input data
 		req.Sanitize()
 
+		// Resolve tail_number_id (accepts both UUID and obfuscated ID) before persisting
+		if req.TailNumberID != nil && *req.TailNumberID != "" {
+			tailNumberUUID, _ := h.resolveID(*req.TailNumberID)
+			if tailNumberUUID == "" {
+				log.Warn(logger.LogDailyLogbookUpdateError, "error", "invalid tail number ID")
+				h.Response.Error(c, domain.MsgFlightInvalidTailNumber)
+				return
+			}
+			req.TailNumberID = &tailNumberUUID
+		}
+
 		logbook, err := req.ToDomain(logbookUUID, employee.ID)
 		if err != nil {
 			log.Error(logger.LogDailyLogbookUpdateError, "error", err)
@@ -261,6 +285,7 @@ func (h *handler) UpdateDailyLogbook() gin.HandlerFunc {
 
 		baseURL := GetBaseURL(c)
 		response := FromDomainDailyLogbook(logbook, responseID, encodedEmployeeID)
+		h.encodeTailNumberID(&response)
 		response.Links = BuildDailyLogbookLinks(baseURL, responseID)
 
 		log.Info(logger.LogDailyLogbookUpdateOK, "logbook_id", logbookUUID)

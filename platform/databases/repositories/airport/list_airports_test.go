@@ -20,8 +20,8 @@ func TestListAirports_All(t *testing.T) {
 
 	r := &repository{stmtGetAll: stmtAll}
 
-	rows := sqlmock.NewRows([]string{"id", "name", "iata_code", "status", "airport_type"}).
-		AddRow("ap1", "El Dorado", "BOG", true, "International")
+	rows := sqlmock.NewRows([]string{"id", "name", "city", "country", "iata_code", "oaci_code", "status", "airport_type"}).
+		AddRow("ap1", "El Dorado", "Bogotá", "Colombia", "BOG", "SKBO", true, "International")
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 	result, err := r.ListAirports(context.Background(), map[string]interface{}{})
@@ -45,8 +45,8 @@ func TestListAirports_ByStatus(t *testing.T) {
 
 	r := &repository{stmtGetByStatus: stmtByStatus}
 
-	rows := sqlmock.NewRows([]string{"id", "name", "iata_code", "status", "airport_type"}).
-		AddRow("ap1", "El Dorado", "BOG", true, "International")
+	rows := sqlmock.NewRows([]string{"id", "name", "city", "country", "iata_code", "oaci_code", "status", "airport_type"}).
+		AddRow("ap1", "El Dorado", "Bogotá", "Colombia", "BOG", "SKBO", true, "International")
 	mock.ExpectQuery("SELECT").WithArgs(true).WillReturnRows(rows)
 
 	result, err := r.ListAirports(context.Background(), map[string]interface{}{"status": true})

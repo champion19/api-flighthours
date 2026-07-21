@@ -120,6 +120,18 @@ func (h *handler) HandleIDDecodingError(c *gin.Context, encodedID string, err er
 	c.Error(domain.ErrInvalidID)
 }
 
+// encodeTailNumberID re-encodes a DailyLogbookResponse's raw tail_number_id
+// (a UUID at this point, resolved from the request) into an obfuscated ID,
+// keeping it consistent with every other ID in the API response.
+func (h *handler) encodeTailNumberID(response *DailyLogbookResponse) {
+	if response.TailNumberID == nil || *response.TailNumberID == "" {
+		return
+	}
+	if encoded, err := h.EncodeID(*response.TailNumberID); err == nil {
+		response.TailNumberID = &encoded
+	}
+}
+
 func (h *handler) resolveID(inputID string) (string, string) {
 	if inputID == "" {
 		return "", ""
