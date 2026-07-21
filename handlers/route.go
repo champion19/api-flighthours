@@ -9,9 +9,11 @@ type RouteResponse struct {
 	OriginAirportID        string `json:"origin_airport_id"`
 	OriginIataCode         string `json:"origin_iata_code"`
 	OriginAirportName      string `json:"origin_airport_name"`
+	OriginCountry          string `json:"origin_country,omitempty"`
 	DestinationAirportID   string `json:"destination_airport_id"`
 	DestinationIataCode    string `json:"destination_iata_code"`
 	DestinationAirportName string `json:"destination_airport_name"`
+	DestinationCountry     string `json:"destination_country,omitempty"`
 	AirportType            string `json:"airport_type"`
 	EstimatedFlightTime    string `json:"estimated_flight_time,omitempty"`
 	RouteCode              string `json:"route_code"`
@@ -24,9 +26,11 @@ func FromDomainRoute(route *domain.Route, encodedID, encodedOriginAirportID, enc
 		OriginAirportID:        encodedOriginAirportID,
 		OriginIataCode:         route.OriginIataCode,
 		OriginAirportName:      route.OriginAirportName,
+		OriginCountry:          route.OriginCountry,
 		DestinationAirportID:   encodedDestAirportID,
 		DestinationIataCode:    route.DestinationIataCode,
 		DestinationAirportName: route.DestinationAirportName,
+		DestinationCountry:     route.DestinationCountry,
 		AirportType:            route.AirportType,
 		EstimatedFlightTime:    route.EstimatedFlightTime,
 		RouteCode:              route.RouteCode,
@@ -63,9 +67,11 @@ func ToRouteListResponse(routes []domain.Route, encodeFunc func(string) (string,
 			OriginAirportID:        encodedOriginAirportID,
 			OriginIataCode:         route.OriginIataCode,
 			OriginAirportName:      route.OriginAirportName,
+			OriginCountry:          route.OriginCountry,
 			DestinationAirportID:   encodedDestAirportID,
 			DestinationIataCode:    route.DestinationIataCode,
 			DestinationAirportName: route.DestinationAirportName,
+			DestinationCountry:     route.DestinationCountry,
 			AirportType:            route.AirportType,
 			EstimatedFlightTime:    route.EstimatedFlightTime,
 			RouteCode:              route.RouteCode,

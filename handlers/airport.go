@@ -7,7 +7,10 @@ import (
 type AirportResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
+	City        string `json:"city,omitempty"`
+	Country     string `json:"country,omitempty"`
 	IATACode    string `json:"iata_code,omitempty"`
+	OACICode    string `json:"oaci_code,omitempty"`
 	Status      string `json:"status"`
 	AirportType string `json:"airport_type,omitempty"`
 	Links       []Link `json:"_links,omitempty"`
@@ -21,7 +24,10 @@ func FromDomainAirport(airport *domain.Airport, encodedID string) AirportRespons
 	return AirportResponse{
 		ID:          encodedID,
 		Name:        airport.Name,
+		City:        airport.City,
+		Country:     airport.Country,
 		IATACode:    airport.IATACode,
+		OACICode:    airport.OACICode,
 		Status:      status,
 		AirportType: airport.AirportType,
 	}
@@ -58,7 +64,10 @@ func ToAirportListResponse(airports []domain.Airport, encodeFunc func(string) (s
 		airportResp := AirportResponse{
 			ID:          encodedID,
 			Name:        airport.Name,
+			City:        airport.City,
+			Country:     airport.Country,
 			IATACode:    airport.IATACode,
+			OACICode:    airport.OACICode,
 			Status:      status,
 			AirportType: airport.AirportType,
 		}

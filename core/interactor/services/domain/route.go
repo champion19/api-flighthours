@@ -9,8 +9,10 @@ type Route struct {
 	EstimatedFlightTime  string `json:"estimated_flight_time"` // Format: "HH:MM:SS"
 	OriginIataCode         string `json:"origin_iata_code"`
 	OriginAirportName      string `json:"origin_airport_name"`
+	OriginCountry          string `json:"origin_country"`
 	DestinationIataCode    string `json:"destination_iata_code"`
 	DestinationAirportName string `json:"destination_airport_name"`
+	DestinationCountry     string `json:"destination_country"`
 	RouteCode              string `json:"route_code"` // e.g., "BOG-CLO"
 }
 

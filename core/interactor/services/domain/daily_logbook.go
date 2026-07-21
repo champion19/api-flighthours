@@ -8,11 +8,13 @@ import (
 
 
 type DailyLogbook struct {
-	ID         string    `json:"id"`
-	LogDate    time.Time `json:"log_date"`
-	EmployeeID string    `json:"employee_id"`
-	BookPage   *int      `json:"book_page,omitempty"`
-	Status     bool      `json:"status"`
+	ID           string    `json:"id"`
+	LogDate      time.Time `json:"log_date"`
+	EmployeeID   string    `json:"employee_id"`
+	BookPage     *int      `json:"book_page,omitempty"`
+	Status       bool      `json:"status"`
+	TailNumberID *string   `json:"tail_number_id,omitempty"`
+	TailNumber   *string   `json:"tail_number,omitempty"` // denormalized plate, read-only
 }
 
 

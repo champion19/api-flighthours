@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	QueryByID         = "SELECT id, name, iata_code, status, airport_type FROM airport WHERE id = ? LIMIT 1"
+	QueryByID         = "SELECT id, name, city, country, iata_code, oaci_code, status, airport_type FROM airport WHERE id = ? LIMIT 1"
 	QueryUpdateStatus = "UPDATE airport SET status = ? WHERE id = ?"
-	QueryGetAll       = "SELECT id, name, iata_code, status, airport_type FROM airport ORDER BY name"
-	QueryGetByStatus  = "SELECT id, name, iata_code, status, airport_type FROM airport WHERE status = ? ORDER BY name"
-	QueryGetByType    = "SELECT id, name, iata_code, status, airport_type FROM airport WHERE airport_type = ? ORDER BY name"
+	QueryGetAll       = "SELECT id, name, city, country, iata_code, oaci_code, status, airport_type FROM airport ORDER BY name"
+	QueryGetByStatus  = "SELECT id, name, city, country, iata_code, oaci_code, status, airport_type FROM airport WHERE status = ? ORDER BY name"
+	QueryGetByType    = "SELECT id, name, city, country, iata_code, oaci_code, status, airport_type FROM airport WHERE airport_type = ? ORDER BY name"
 )
 
 var log logger.Logger = logger.NewSlogLogger()
