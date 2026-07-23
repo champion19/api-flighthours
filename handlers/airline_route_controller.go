@@ -228,3 +228,113 @@ func (h *handler) ListMyAirlineRoutes() gin.HandlerFunc {
 		h.Response.SuccessWithData(c, domain.MsgAirlineRouteListOK, response)
 	}
 }
+
+// ResolveAirlineRouteRequest is the body for POST /employees/airline-routes/resolve
+type ResolveAirlineRouteRequest struct {
+	OriginAirportID      string `json:"origin_airport_id" binding:"required"`
+	DestinationAirportID string `json:"destination_airport_id" binding:"required"`
+}
+
+// ResolveAirlineRoute godoc
+// @Summary      Resolve or auto-request the authenticated user's airline link for a route
+// @Description  Given an origin/destination airport pair, returns the airline_route link for the
+// @Description  authenticated employee's airline. If the physical route exists but isn't linked to
+// @Description  their airline yet, creates the link with status "pending" for an admin to approve.
+// @Tags         Airline Routes
+// @Accept       json
+// @Produce      json
+// @Param        request body ResolveAirlineRouteRequest true "Origin/destination airport IDs"
+// @Security     BearerAuth
+// @Success      200  {object}  middleware.APIResponse "Link already existed"
+// @Success      201  {object}  middleware.APIResponse "Pending link created"
+// @Failure      400  {object}  middleware.ErrorResponse "Invalid request body"
+// @Failure      401  {object}  middleware.ErrorResponse "Not authenticated"
+// @Failure      404  {object}  middleware.ErrorResponse "No route configured for that origin/destination"
+// @Failure      500  {object}  middleware.ErrorResponse "Internal server error"
+// @Router       /employees/airline-routes/resolve [post]
+func (h *handler) ResolveAirlineRoute() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		traceID := middleware.GetRequestID(c)
+		ctx := context.Background()
+
+		employee, exists := middleware.GetAuthenticatedUser(c)
+		if !exists {
+			c.Error(domain.ErrUserNotFound)
+			return
+		}
+
+		var req ResolveAirlineRouteRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			h.Response.Error(c, domain.MsgValJSONInvalid)
+			return
+		}
+
+		originUUID, _ := h.resolveID(req.OriginAirportID)
+		destinationUUID, _ := h.resolveID(req.DestinationAirportID)
+		if originUUID == "" || destinationUUID == "" {
+			h.Response.Error(c, domain.MsgAirlineRouteInvalidRoute)
+			return
+		}
+
+		airlineInfo, err := h.AirlineEmployeeInteractor.GetAirlineEmployeeByID(ctx, employee.ID)
+		if err != nil || airlineInfo == nil || airlineInfo.AirlineID == "" {
+			c.Error(domain.ErrAirlineEmployeeNotFound)
+			return
+		}
+
+		airlineRoute, created, err := h.AirlineRouteInteractor.ResolveOrCreatePendingAirlineRoute(
+			ctx, traceID, airlineInfo.AirlineID, originUUID, destinationUUID,
+		)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		encodedID, err := h.EncodeID(airlineRoute.ID)
+		if err != nil {
+			encodedID = airlineRoute.ID
+		}
+		encodedRouteID, err := h.EncodeID(airlineRoute.RouteID)
+		if err != nil {
+			encodedRouteID = airlineRoute.RouteID
+		}
+		encodedAirlineID, err := h.EncodeID(airlineRoute.AirlineID)
+		if err != nil {
+			encodedAirlineID = airlineRoute.AirlineID
+		}
+		encodedOriginAirportID, err := h.EncodeID(airlineRoute.OriginAirportID)
+		if err != nil {
+			encodedOriginAirportID = airlineRoute.OriginAirportID
+		}
+		encodedDestinationAirportID, err := h.EncodeID(airlineRoute.DestinationAirportID)
+		if err != nil {
+			encodedDestinationAirportID = airlineRoute.DestinationAirportID
+		}
+
+		response := AirlineRouteResponse{
+			ID:                     encodedID,
+			RouteID:                encodedRouteID,
+			AirlineID:              encodedAirlineID,
+			Status:                 airlineRoute.Status,
+			AirlineCode:            airlineRoute.AirlineCode,
+			AirlineName:            airlineRoute.AirlineName,
+			OriginAirportID:        encodedOriginAirportID,
+			OriginIataCode:         airlineRoute.OriginIataCode,
+			OriginOaciCode:         airlineRoute.OriginOaciCode,
+			DestinationAirportID:   encodedDestinationAirportID,
+			DestinationIataCode:    airlineRoute.DestinationIataCode,
+			DestinationOaciCode:    airlineRoute.DestinationOaciCode,
+			RouteCode:              airlineRoute.RouteCode,
+			OriginAirportName:      airlineRoute.OriginAirportName,
+			DestinationAirportName: airlineRoute.DestinationAirportName,
+			AirportType:            airlineRoute.AirportType,
+			EstimatedFlightTime:    airlineRoute.EstimatedFlightTime,
+		}
+
+		if created {
+			h.Response.SuccessWithData(c, domain.MsgAirlineRouteCreatedPendingOK, response)
+			return
+		}
+		h.Response.SuccessWithData(c, domain.MsgAirlineRouteResolvedOK, response)
+	}
+}

@@ -27,6 +27,7 @@ func TestNewRouteRepository_Success(t *testing.T) {
 	mock.ExpectPrepare("SELECT")
 	mock.ExpectPrepare("SELECT")
 	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT")
 
 	repo, err := NewRouteRepository(db)
 	if err != nil {
@@ -81,6 +82,27 @@ func TestNewRouteRepository_PrepareError_Third(t *testing.T) {
 	}
 	defer db.Close()
 
+	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT").WillReturnError(sql.ErrConnDone)
+
+	repo, err := NewRouteRepository(db)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if repo != nil {
+		t.Fatal("expected nil repo")
+	}
+}
+
+func TestNewRouteRepository_PrepareError_Fourth(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	mock.ExpectPrepare("SELECT")
 	mock.ExpectPrepare("SELECT")
 	mock.ExpectPrepare("SELECT")
 	mock.ExpectPrepare("SELECT").WillReturnError(sql.ErrConnDone)

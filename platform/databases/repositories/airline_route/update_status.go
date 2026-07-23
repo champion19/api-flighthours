@@ -8,7 +8,7 @@ import (
 	"github.com/champion19/api-flighthours/core/ports/output"
 )
 
-func (r *repository) UpdateAirlineRouteStatus(ctx context.Context, tx output.Tx, id string, status bool) error {
+func (r *repository) UpdateAirlineRouteStatus(ctx context.Context, tx output.Tx, id string, status string) error {
 	sqlTx, ok := tx.(*sql.Tx)
 	if !ok {
 		return domain.ErrInvalidTransaction
@@ -32,7 +32,7 @@ func (r *repository) UpdateAirlineRouteStatus(ctx context.Context, tx output.Tx,
 		}
 
 		if existingRoute.Status == status {
-			if status {
+			if status == domain.AirlineRouteStatusActive {
 				return domain.ErrAirlineRouteAlreadyActive
 			}
 			return domain.ErrAirlineRouteAlreadyInactive

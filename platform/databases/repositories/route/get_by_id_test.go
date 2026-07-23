@@ -21,11 +21,11 @@ func TestGetRouteByID_Success(t *testing.T) {
 	stmtByID, _ := db.Prepare(QueryByID)
 	r := &repository{stmtGetByID: stmtByID}
 
-	cols := []string{"id", "origin_airport_id", "origin_iata_code", "origin_airport_name", "origin_country",
-		"destination_airport_id", "destination_iata_code", "destination_airport_name", "destination_country",
+	cols := []string{"id", "origin_airport_id", "origin_iata_code", "origin_oaci_code", "origin_airport_name", "origin_country",
+		"destination_airport_id", "destination_iata_code", "destination_oaci_code", "destination_airport_name", "destination_country",
 		"airport_type", "estimated_flight_time", "route_code"}
 	prep.ExpectQuery().WithArgs("r1").WillReturnRows(
-		sqlmock.NewRows(cols).AddRow("r1", "ap1", "BOG", "El Dorado", "Colombia", "ap2", "JFK", "Kennedy", "Estados Unidos", "International", sql.NullString{String: "5h", Valid: true}, "BOG-JFK"),
+		sqlmock.NewRows(cols).AddRow("r1", "ap1", "BOG", "SKBO", "El Dorado", "Colombia", "ap2", "JFK", "KJFK", "Kennedy", "Estados Unidos", "International", sql.NullString{String: "5h", Valid: true}, "BOG-JFK"),
 	)
 
 	result, err := r.GetRouteByID(context.Background(), "r1")

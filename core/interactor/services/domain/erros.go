@@ -573,6 +573,7 @@ var (
 	ErrAirlineRouteInvalidAirline  = errors.New("ERR_AIRLINE_ROUTE_INVALID_AIRLINE")
 	ErrAirlineRouteAlreadyActive   = errors.New("ERR_AIRLINE_ROUTE_ALREADY_ACTIVE")
 	ErrAirlineRouteAlreadyInactive = errors.New("ERR_AIRLINE_ROUTE_ALREADY_INACTIVE")
+	ErrAirlineRouteAlreadyExists   = errors.New("ERR_AIRLINE_ROUTE_ALREADY_EXISTS")
 )
 
 // Flight Management Errors (VUE_*) - Also used for DailyLogbookDetail
@@ -624,6 +625,13 @@ const (
 	// ========================================
 	MsgAirlineRouteInvalidRoute   = "RUT_AIR_VAL_ERR_04301" // Error - Ruta inválida
 	MsgAirlineRouteInvalidAirline = "RUT_AIR_VAL_ERR_04302" // Error - Aerolínea inválida
+
+	// ========================================
+	// Resolver/Crear pendiente - RUT_AIR_RES_*
+	// ========================================
+	MsgAirlineRouteResolvedOK       = "RUT_AIR_RES_EXI_04401" // Éxito - Vínculo con la aerolínea ya existía
+	MsgAirlineRouteCreatedPendingOK = "RUT_AIR_RES_EXI_04402" // Éxito - Vínculo creado, pendiente de aprobación
+	MsgAirlineRouteResolveErr       = "RUT_AIR_RES_ERR_04403" // Error - Error técnico al resolver/crear
 )
 
 // Flight Module (VUE_*) - Vuelo

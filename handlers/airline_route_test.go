@@ -13,7 +13,7 @@ func TestFromDomainAirlineRoute(t *testing.T) {
 			ID:                     "raw-id",
 			RouteID:                "route-id",
 			AirlineID:              "airline-id",
-			Status:                 true,
+			Status:                 domain.AirlineRouteStatusActive,
 			AirlineCode:            "AV",
 			AirlineName:            "Avianca",
 			OriginIataCode:         "BOG",
@@ -39,8 +39,8 @@ func TestFromDomainAirlineRoute(t *testing.T) {
 		if result.AirlineCode != "AV" {
 			t.Errorf("expected 'AV', got %q", result.AirlineCode)
 		}
-		if !result.Status {
-			t.Error("expected Status to be true")
+		if result.Status != domain.AirlineRouteStatusActive {
+			t.Error("expected Status to be active")
 		}
 	})
 }
@@ -52,14 +52,14 @@ func TestToAirlineRouteListResponse(t *testing.T) {
 				ID:             "ar1",
 				RouteID:        "r1",
 				AirlineID:      "a1",
-				Status:         true,
+				Status:         domain.AirlineRouteStatusActive,
 				OriginIataCode: "BOG",
 			},
 			{
 				ID:             "ar2",
 				RouteID:        "r2",
 				AirlineID:      "a2",
-				Status:         false,
+				Status:         domain.AirlineRouteStatusInactive,
 				OriginIataCode: "MDE",
 			},
 		}

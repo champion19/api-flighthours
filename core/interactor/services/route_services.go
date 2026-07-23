@@ -28,3 +28,8 @@ func (s *RouteService) GetRouteByID(ctx context.Context, id string) (*domain.Rou
 func (s *RouteService) ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error) {
 	return s.repo.ListRoutes(ctx, filters)
 }
+
+// GetRouteByAirports retrieves the physical route (if any) between two airports
+func (s *RouteService) GetRouteByAirports(ctx context.Context, originAirportID, destinationAirportID string) (*domain.Route, error) {
+	return s.repo.GetRouteByAirports(ctx, originAirportID, destinationAirportID)
+}

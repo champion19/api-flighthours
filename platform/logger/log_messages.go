@@ -790,6 +790,9 @@ const (
 	LogAirlineRouteRepoInit        = "Inicializando repositorio de rutas aerolínea"
 	LogAirlineRouteRepoInitOK      = "Repositorio de rutas aerolínea inicializado"
 	LogAirlineRouteRepoInitError   = "Error inicializando repositorio de rutas aerolínea"
+	LogAirlineRouteResolve         = "Resolviendo/creando ruta aerolínea pendiente"
+	LogAirlineRouteResolveOK       = "Ruta aerolínea resuelta/creada exitosamente"
+	LogAirlineRouteResolveError    = "Error resolviendo/creando ruta aerolínea"
 )
 
 // ============================================

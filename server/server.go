@@ -179,6 +179,9 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		// Airline routes consulta (HU37)
 		pilot.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
+		// Auto-request a pending airline_route link when the physical route
+		// exists but isn't linked to the employee's airline yet
+		pilot.POST("/employees/airline-routes/resolve", handler.ResolveAirlineRoute())
 
 		// Tail numbers consulta y creación (HU31, HU32)
 		pilot.GET("/tail-numbers", handler.ListTailNumbers())

@@ -12,7 +12,7 @@ func TestAirlineRoute_ToDomain(t *testing.T) {
 			ID:                     "ar-123",
 			RouteID:                "route-456",
 			AirlineID:              "airline-789",
-			Status:                 true,
+			Status:                 domain.AirlineRouteStatusActive,
 			AirlineCode:            "TST",
 			AirlineName:            "Test Airlines",
 			OriginIataCode:         "BOG",
@@ -35,8 +35,8 @@ func TestAirlineRoute_ToDomain(t *testing.T) {
 		if result.AirlineID != "airline-789" {
 			t.Errorf("expected AirlineID 'airline-789', got %q", result.AirlineID)
 		}
-		if !result.Status {
-			t.Error("expected Status to be true")
+		if !result.IsActive() {
+			t.Error("expected Status to be active")
 		}
 		if result.AirlineCode != "TST" {
 			t.Errorf("expected AirlineCode 'TST', got %q", result.AirlineCode)
@@ -61,13 +61,26 @@ func TestAirlineRoute_ToDomain(t *testing.T) {
 	t.Run("converts inactive route", func(t *testing.T) {
 		ar := &AirlineRoute{
 			ID:     "ar-456",
-			Status: false,
+			Status: domain.AirlineRouteStatusInactive,
 		}
 
 		result := ar.ToDomain()
 
-		if result.Status {
-			t.Error("expected Status to be false")
+		if result.IsActive() {
+			t.Error("expected Status to be inactive")
+		}
+	})
+
+	t.Run("converts pending route", func(t *testing.T) {
+		ar := &AirlineRoute{
+			ID:     "ar-789",
+			Status: domain.AirlineRouteStatusPending,
+		}
+
+		result := ar.ToDomain()
+
+		if !result.IsPending() {
+			t.Error("expected Status to be pending")
 		}
 	})
 }
@@ -78,7 +91,7 @@ func TestFromDomain(t *testing.T) {
 			ID:                     "ar-123",
 			RouteID:                "route-456",
 			AirlineID:              "airline-789",
-			Status:                 true,
+			Status:                 domain.AirlineRouteStatusActive,
 			AirlineCode:            "DOM",
 			AirlineName:            "Domain Airlines",
 			OriginIataCode:         "MDE",
@@ -101,8 +114,8 @@ func TestFromDomain(t *testing.T) {
 		if result.AirlineID != "airline-789" {
 			t.Errorf("expected AirlineID 'airline-789', got %q", result.AirlineID)
 		}
-		if !result.Status {
-			t.Error("expected Status to be true")
+		if result.Status != domain.AirlineRouteStatusActive {
+			t.Error("expected Status to be active")
 		}
 		if result.AirlineCode != "DOM" {
 			t.Errorf("expected AirlineCode 'DOM', got %q", result.AirlineCode)
@@ -117,7 +130,7 @@ func TestFromDomain(t *testing.T) {
 			ID:                     "ar-trip",
 			RouteID:                "route-trip",
 			AirlineID:              "airline-trip",
-			Status:                 true,
+			Status:                 domain.AirlineRouteStatusActive,
 			AirlineCode:            "RND",
 			AirlineName:            "Roundtrip Airlines",
 			OriginIataCode:         "CLO",

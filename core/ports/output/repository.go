@@ -69,13 +69,16 @@ type AircraftModelRepository interface {
 type RouteRepository interface {
 	GetRouteByID(ctx context.Context, id string) (*domain.Route, error)
 	ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error)
+	GetRouteByAirports(ctx context.Context, originAirportID, destinationAirportID string) (*domain.Route, error)
 }
 type AirlineRouteRepository interface {
 	BeginTx(ctx context.Context) (Tx, error)
 	GetAirlineRouteByID(ctx context.Context, id string) (*domain.AirlineRoute, error)
 	ListAirlineRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error)
 	ListAirlineRoutesByAirlineID(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
-	UpdateAirlineRouteStatus(ctx context.Context, tx Tx, id string, status bool) error
+	UpdateAirlineRouteStatus(ctx context.Context, tx Tx, id string, status string) error
+	GetAirlineRouteByRouteAndAirline(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error)
+	SaveAirlineRoute(ctx context.Context, tx Tx, airlineRoute domain.AirlineRoute) error
 }
 
 type AirlineEmployeeRepository interface {

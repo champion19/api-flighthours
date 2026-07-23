@@ -22,7 +22,7 @@ func TestGetAirlineRouteByID_Success(t *testing.T) {
 	r := &repository{stmtGetByID: stmtByID}
 
 	prep.ExpectQuery().WithArgs("ar1").WillReturnRows(
-		sqlmock.NewRows(arCols).AddRow("ar1", "r1", "a1", true, "TST", "Test Air", "BOG", "JFK", "BOG-JFK", "El Dorado", "Kennedy", "International", sql.NullString{String: "5h", Valid: true}),
+		sqlmock.NewRows(arCols).AddRow("ar1", "r1", "a1", true, "TST", "Test Air", "ap1", "BOG", "SKBO", "ap2", "JFK", "KJFK", "BOG-JFK", "El Dorado", "Kennedy", "International", sql.NullString{String: "5h", Valid: true}),
 	)
 
 	result, err := r.GetAirlineRouteByID(context.Background(), "ar1")
