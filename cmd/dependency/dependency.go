@@ -281,7 +281,7 @@ func initDomainDependencies(db *sql.DB, log logger.Logger) (*domainDeps, error) 
 		airlineEmployeeInteractor:    interactor.NewAirlineEmployeeInteractor(services.NewAirlineEmployeeService(airlineEmployeeRepository)),
 		engineInteractor:             interactor.NewEngineInteractor(services.NewEngineService(engineRepository)),
 		routeInteractor:              interactor.NewRouteInteractor(services.NewRouteService(routeRepository)),
-		airlineRouteInteractor:       interactor.NewAirlineRouteInteractor(services.NewAirlineRouteService(airlineRouteRepository)),
+		airlineRouteInteractor:       interactor.NewAirlineRouteInteractor(services.NewAirlineRouteService(airlineRouteRepository), services.NewRouteService(routeRepository)),
 		airportInteractor:            interactor.NewAirportInteractor(airportService),
 		manufacturerInteractor:       interactor.NewManufacturerInteractor(services.NewManufacturerService(manufacturerRepository)),
 		aircraftModelInteractor:      interactor.NewAircraftModelInteractor(services.NewAircraftModelService(aircraftModelRepository, log)),

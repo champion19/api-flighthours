@@ -13,15 +13,17 @@ const (
 			r.id,
 			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
 			ao.name AS origin_airport_name,
 			ao.country AS origin_country,
 			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
+			ad.oaci_code AS destination_oaci_code,
 			ad.name AS destination_airport_name,
 			ad.country AS destination_country,
 			r.airport_type,
 			r.estimated_flight_time,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code
 		FROM route r
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
@@ -34,15 +36,17 @@ const (
 			r.id,
 			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
 			ao.name AS origin_airport_name,
 			ao.country AS origin_country,
 			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
+			ad.oaci_code AS destination_oaci_code,
 			ad.name AS destination_airport_name,
 			ad.country AS destination_country,
 			r.airport_type,
 			r.estimated_flight_time,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code
 		FROM route r
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
@@ -55,20 +59,45 @@ const (
 			r.id,
 			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
 			ao.name AS origin_airport_name,
 			ao.country AS origin_country,
 			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
+			ad.oaci_code AS destination_oaci_code,
 			ad.name AS destination_airport_name,
 			ad.country AS destination_country,
 			r.airport_type,
 			r.estimated_flight_time,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code
 		FROM route r
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
 		WHERE r.airport_type = ? AND ao.status = TRUE AND ad.status = TRUE
 		ORDER BY ao.iata_code, ad.iata_code
+	`
+
+	QueryGetByAirports = `
+		SELECT
+			r.id,
+			r.origin_airport_id,
+			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			ao.name AS origin_airport_name,
+			ao.country AS origin_country,
+			r.destination_airport_id,
+			ad.iata_code AS destination_iata_code,
+			ad.oaci_code AS destination_oaci_code,
+			ad.name AS destination_airport_name,
+			ad.country AS destination_country,
+			r.airport_type,
+			r.estimated_flight_time,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code
+		FROM route r
+		JOIN airport ao ON r.origin_airport_id = ao.id
+		JOIN airport ad ON r.destination_airport_id = ad.id
+		WHERE r.origin_airport_id = ? AND r.destination_airport_id = ?
+		LIMIT 1
 	`
 )
 
@@ -80,6 +109,7 @@ type repository struct {
 	stmtGetByID          *sql.Stmt
 	stmtGetAll           *sql.Stmt
 	stmtGetByAirportType *sql.Stmt
+	stmtGetByAirports    *sql.Stmt
 	db                   *sql.DB
 }
 
@@ -107,10 +137,17 @@ func NewRouteRepository(db *sql.DB) (*repository, error) {
 		return nil, err
 	}
 
+	stmtGetByAirports, err := db.Prepare(QueryGetByAirports)
+	if err != nil {
+		log.Error(logger.LogDatabaseUnavailable, errPreparingStatement, err)
+		return nil, err
+	}
+
 	return &repository{
 		db:                   db,
 		stmtGetByID:          stmtGetByID,
 		stmtGetAll:           stmtGetAll,
 		stmtGetByAirportType: stmtGetByAirportType,
+		stmtGetByAirports:    stmtGetByAirports,
 	}, nil
 }

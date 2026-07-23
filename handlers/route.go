@@ -8,10 +8,12 @@ type RouteResponse struct {
 	ID                     string `json:"id"`
 	OriginAirportID        string `json:"origin_airport_id"`
 	OriginIataCode         string `json:"origin_iata_code"`
+	OriginOaciCode         string `json:"origin_oaci_code,omitempty"`
 	OriginAirportName      string `json:"origin_airport_name"`
 	OriginCountry          string `json:"origin_country,omitempty"`
 	DestinationAirportID   string `json:"destination_airport_id"`
 	DestinationIataCode    string `json:"destination_iata_code"`
+	DestinationOaciCode    string `json:"destination_oaci_code,omitempty"`
 	DestinationAirportName string `json:"destination_airport_name"`
 	DestinationCountry     string `json:"destination_country,omitempty"`
 	AirportType            string `json:"airport_type"`
@@ -25,10 +27,12 @@ func FromDomainRoute(route *domain.Route, encodedID, encodedOriginAirportID, enc
 		ID:                     encodedID,
 		OriginAirportID:        encodedOriginAirportID,
 		OriginIataCode:         route.OriginIataCode,
+		OriginOaciCode:         route.OriginOaciCode,
 		OriginAirportName:      route.OriginAirportName,
 		OriginCountry:          route.OriginCountry,
 		DestinationAirportID:   encodedDestAirportID,
 		DestinationIataCode:    route.DestinationIataCode,
+		DestinationOaciCode:    route.DestinationOaciCode,
 		DestinationAirportName: route.DestinationAirportName,
 		DestinationCountry:     route.DestinationCountry,
 		AirportType:            route.AirportType,
@@ -66,10 +70,12 @@ func ToRouteListResponse(routes []domain.Route, encodeFunc func(string) (string,
 			ID:                     encodedID,
 			OriginAirportID:        encodedOriginAirportID,
 			OriginIataCode:         route.OriginIataCode,
+			OriginOaciCode:         route.OriginOaciCode,
 			OriginAirportName:      route.OriginAirportName,
 			OriginCountry:          route.OriginCountry,
 			DestinationAirportID:   encodedDestAirportID,
 			DestinationIataCode:    route.DestinationIataCode,
+			DestinationOaciCode:    route.DestinationOaciCode,
 			DestinationAirportName: route.DestinationAirportName,
 			DestinationCountry:     route.DestinationCountry,
 			AirportType:            route.AirportType,

@@ -501,6 +501,11 @@ var messageCodeToHTTPStatus = map[string]int{
 	"RUT_AIR_VAL_ERR_04301": http.StatusBadRequest, // 400 - Ruta inválida
 	"RUT_AIR_VAL_ERR_04302": http.StatusBadRequest, // 400 - Aerolínea inválida
 
+	// Resolver/Crear pendiente
+	"RUT_AIR_RES_EXI_04401": http.StatusOK,                  // 200 - Vínculo ya existía
+	"RUT_AIR_RES_EXI_04402": http.StatusCreated,             // 201 - Vínculo creado, pendiente
+	"RUT_AIR_RES_ERR_04403": http.StatusInternalServerError, // 500 - Error técnico
+
 	// ========================================
 	// Flight Module (VUE_*) - Vuelo
 	// ========================================

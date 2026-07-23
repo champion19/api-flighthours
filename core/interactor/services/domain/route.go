@@ -1,21 +1,21 @@
 package domain
 
-
 type Route struct {
-	ID                   string `json:"id"`
-	OriginAirportID      string `json:"origin_airport_id"`
-	DestinationAirportID string `json:"destination_airport_id"`
-	AirportType          string `json:"airport_type"`
-	EstimatedFlightTime  string `json:"estimated_flight_time"` // Format: "HH:MM:SS"
-	OriginIataCode         string `json:"origin_iata_code"`
+	ID                     string `json:"id"`
+	OriginAirportID        string `json:"origin_airport_id"`
+	DestinationAirportID   string `json:"destination_airport_id"`
+	AirportType            string `json:"airport_type"`
+	EstimatedFlightTime    string `json:"estimated_flight_time"` // Format: "HH:MM:SS"
+	OriginIataCode         string `json:"origin_iata_code,omitempty"`
+	OriginOaciCode         string `json:"origin_oaci_code,omitempty"`
 	OriginAirportName      string `json:"origin_airport_name"`
 	OriginCountry          string `json:"origin_country"`
-	DestinationIataCode    string `json:"destination_iata_code"`
+	DestinationIataCode    string `json:"destination_iata_code,omitempty"`
+	DestinationOaciCode    string `json:"destination_oaci_code,omitempty"`
 	DestinationAirportName string `json:"destination_airport_name"`
 	DestinationCountry     string `json:"destination_country"`
 	RouteCode              string `json:"route_code"` // e.g., "BOG-CLO"
 }
-
 
 func (r *Route) ToLogger() []string {
 	return []string{

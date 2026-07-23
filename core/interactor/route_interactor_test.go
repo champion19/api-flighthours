@@ -11,8 +11,9 @@ import (
 
 // fakeRouteService implements input.RouteService for testing
 type fakeRouteService struct {
-	getByIDFn func(ctx context.Context, id string) (*domain.Route, error)
-	listFn    func(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error)
+	getByIDFn       func(ctx context.Context, id string) (*domain.Route, error)
+	listFn          func(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error)
+	getByAirportsFn func(ctx context.Context, originAirportID, destinationAirportID string) (*domain.Route, error)
 }
 
 var _ input.RouteService = (*fakeRouteService)(nil)
@@ -27,6 +28,13 @@ func (f *fakeRouteService) GetRouteByID(ctx context.Context, id string) (*domain
 func (f *fakeRouteService) ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error) {
 	if f.listFn != nil {
 		return f.listFn(ctx, filters)
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (f *fakeRouteService) GetRouteByAirports(ctx context.Context, originAirportID, destinationAirportID string) (*domain.Route, error) {
+	if f.getByAirportsFn != nil {
+		return f.getByAirportsFn(ctx, originAirportID, destinationAirportID)
 	}
 	return nil, errors.New("not implemented")
 }

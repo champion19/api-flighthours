@@ -17,9 +17,13 @@ const (
 			ar.status,
 			a.airline_code,
 			a.airline_name,
+			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code,
+			ad.oaci_code AS destination_oaci_code,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code,
 			ao.name AS origin_airport_name,
 			ad.name AS destination_airport_name,
 			r.airport_type,
@@ -41,9 +45,13 @@ const (
 			ar.status,
 			a.airline_code,
 			a.airline_name,
+			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code,
+			ad.oaci_code AS destination_oaci_code,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code,
 			ao.name AS origin_airport_name,
 			ad.name AS destination_airport_name,
 			r.airport_type,
@@ -65,9 +73,13 @@ const (
 			ar.status,
 			a.airline_code,
 			a.airline_name,
+			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code,
+			ad.oaci_code AS destination_oaci_code,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code,
 			ao.name AS origin_airport_name,
 			ad.name AS destination_airport_name,
 			r.airport_type,
@@ -77,8 +89,41 @@ const (
 		JOIN route r ON ar.route_id = r.id
 		JOIN airport ao ON r.origin_airport_id = ao.id
 		JOIN airport ad ON r.destination_airport_id = ad.id
-		WHERE ar.airline_id = ? AND ar.status = true AND ao.status = TRUE AND ad.status = TRUE AND a.status = TRUE
+		WHERE ar.airline_id = ? AND ar.status = 'active' AND ao.status = TRUE AND ad.status = TRUE AND a.status = TRUE
 		ORDER BY ao.iata_code, ad.iata_code
+	`
+
+	QueryGetByRouteAndAirline = `
+		SELECT
+			ar.id,
+			ar.route_id,
+			ar.airline_id,
+			ar.status,
+			a.airline_code,
+			a.airline_name,
+			r.origin_airport_id,
+			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			r.destination_airport_id,
+			ad.iata_code AS destination_iata_code,
+			ad.oaci_code AS destination_oaci_code,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code,
+			ao.name AS origin_airport_name,
+			ad.name AS destination_airport_name,
+			r.airport_type,
+			r.estimated_flight_time
+		FROM airline_route ar
+		JOIN airline a ON ar.airline_id = a.id
+		JOIN route r ON ar.route_id = r.id
+		JOIN airport ao ON r.origin_airport_id = ao.id
+		JOIN airport ad ON r.destination_airport_id = ad.id
+		WHERE ar.route_id = ? AND ar.airline_id = ?
+		LIMIT 1
+	`
+
+	QueryInsert = `
+		INSERT INTO airline_route (id, route_id, airline_id, status)
+		VALUES (?, ?, ?, ?)
 	`
 
 	QueryGetByAirlineCode = `
@@ -89,9 +134,13 @@ const (
 			ar.status,
 			a.airline_code,
 			a.airline_name,
+			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code,
+			ad.oaci_code AS destination_oaci_code,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code,
 			ao.name AS origin_airport_name,
 			ad.name AS destination_airport_name,
 			r.airport_type,
@@ -113,9 +162,13 @@ const (
 			ar.status,
 			a.airline_code,
 			a.airline_name,
+			r.origin_airport_id,
 			ao.iata_code AS origin_iata_code,
+			ao.oaci_code AS origin_oaci_code,
+			r.destination_airport_id,
 			ad.iata_code AS destination_iata_code,
-			CONCAT(ao.iata_code, '-', ad.iata_code) AS route_code,
+			ad.oaci_code AS destination_oaci_code,
+			CONCAT(COALESCE(ao.iata_code, ao.oaci_code), '-', COALESCE(ad.iata_code, ad.oaci_code)) AS route_code,
 			ao.name AS origin_airport_name,
 			ad.name AS destination_airport_name,
 			r.airport_type,
@@ -141,13 +194,15 @@ var log logger.Logger = logger.NewSlogLogger()
 const errPreparingStatement = "error preparing statement"
 
 type repository struct {
-	stmtGetByID          *sql.Stmt
-	stmtGetAll           *sql.Stmt
-	stmtGetByAirlineID   *sql.Stmt
-	stmtGetByAirlineCode *sql.Stmt
-	stmtGetByStatus      *sql.Stmt
-	stmtUpdateStatus     *sql.Stmt
-	db                   *sql.DB
+	stmtGetByID              *sql.Stmt
+	stmtGetAll               *sql.Stmt
+	stmtGetByAirlineID       *sql.Stmt
+	stmtGetByRouteAndAirline *sql.Stmt
+	stmtInsert               *sql.Stmt
+	stmtGetByAirlineCode     *sql.Stmt
+	stmtGetByStatus          *sql.Stmt
+	stmtUpdateStatus         *sql.Stmt
+	db                       *sql.DB
 }
 
 func NewAirlineRouteRepository(db *sql.DB) (*repository, error) {
@@ -168,6 +223,18 @@ func NewAirlineRouteRepository(db *sql.DB) (*repository, error) {
 	}
 
 	stmtGetByAirlineID, err := db.Prepare(QueryGetByAirlineID)
+	if err != nil {
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
+		return nil, err
+	}
+
+	stmtGetByRouteAndAirline, err := db.Prepare(QueryGetByRouteAndAirline)
+	if err != nil {
+		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
+		return nil, err
+	}
+
+	stmtInsert, err := db.Prepare(QueryInsert)
 	if err != nil {
 		log.Error(logger.LogAirlineRouteRepoInitError, errPreparingStatement, err)
 		return nil, err
@@ -194,13 +261,15 @@ func NewAirlineRouteRepository(db *sql.DB) (*repository, error) {
 	log.Info(logger.LogAirlineRouteRepoInitOK)
 
 	return &repository{
-		db:                   db,
-		stmtGetByID:          stmtGetByID,
-		stmtGetAll:           stmtGetAll,
-		stmtGetByAirlineID:   stmtGetByAirlineID,
-		stmtGetByAirlineCode: stmtGetByAirlineCode,
-		stmtGetByStatus:      stmtGetByStatus,
-		stmtUpdateStatus:     stmtUpdateStatus,
+		db:                       db,
+		stmtGetByID:              stmtGetByID,
+		stmtGetAll:               stmtGetAll,
+		stmtGetByAirlineID:       stmtGetByAirlineID,
+		stmtGetByRouteAndAirline: stmtGetByRouteAndAirline,
+		stmtInsert:               stmtInsert,
+		stmtGetByAirlineCode:     stmtGetByAirlineCode,
+		stmtGetByStatus:          stmtGetByStatus,
+		stmtUpdateStatus:         stmtUpdateStatus,
 	}, nil
 }
 

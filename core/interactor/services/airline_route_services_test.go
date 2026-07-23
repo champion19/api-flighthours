@@ -39,11 +39,13 @@ func (m *mockTx) QueryRowContext(ctx context.Context, query string, args ...inte
 
 // Mock airline route repository
 type mockAirlineRouteRepo struct {
-	getByIDFn       func(ctx context.Context, id string) (*domain.AirlineRoute, error)
-	listFn          func(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error)
-	listByAirlineFn func(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
-	beginTxFn       func(ctx context.Context) (output.Tx, error)
-	updateStatusFn  func(ctx context.Context, tx output.Tx, id string, status bool) error
+	getByIDFn              func(ctx context.Context, id string) (*domain.AirlineRoute, error)
+	listFn                 func(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error)
+	listByAirlineFn        func(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
+	beginTxFn              func(ctx context.Context) (output.Tx, error)
+	updateStatusFn         func(ctx context.Context, tx output.Tx, id string, status string) error
+	getByRouteAndAirlineFn func(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error)
+	saveFn                 func(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error
 }
 
 func (m *mockAirlineRouteRepo) GetAirlineRouteByID(ctx context.Context, id string) (*domain.AirlineRoute, error) {
@@ -74,9 +76,23 @@ func (m *mockAirlineRouteRepo) BeginTx(ctx context.Context) (output.Tx, error) {
 	return &mockTx{}, nil
 }
 
-func (m *mockAirlineRouteRepo) UpdateAirlineRouteStatus(ctx context.Context, tx output.Tx, id string, status bool) error {
+func (m *mockAirlineRouteRepo) UpdateAirlineRouteStatus(ctx context.Context, tx output.Tx, id string, status string) error {
 	if m.updateStatusFn != nil {
 		return m.updateStatusFn(ctx, tx, id, status)
+	}
+	return nil
+}
+
+func (m *mockAirlineRouteRepo) GetAirlineRouteByRouteAndAirline(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error) {
+	if m.getByRouteAndAirlineFn != nil {
+		return m.getByRouteAndAirlineFn(ctx, routeID, airlineID)
+	}
+	return nil, nil
+}
+
+func (m *mockAirlineRouteRepo) SaveAirlineRoute(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error {
+	if m.saveFn != nil {
+		return m.saveFn(ctx, tx, airlineRoute)
 	}
 	return nil
 }
@@ -205,9 +221,9 @@ func TestAirlineRouteService_BeginTx(t *testing.T) {
 func TestAirlineRouteService_ActivateAirlineRouteTx(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := &mockAirlineRouteRepo{
-			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
-				if !status {
-					t.Error("expected status=true")
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status string) error {
+				if status != domain.AirlineRouteStatusActive {
+					t.Errorf("expected status=active, got %q", status)
 				}
 				return nil
 			},
@@ -221,7 +237,7 @@ func TestAirlineRouteService_ActivateAirlineRouteTx(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		repo := &mockAirlineRouteRepo{
-			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status string) error {
 				return errors.New("db error")
 			},
 		}
@@ -236,9 +252,9 @@ func TestAirlineRouteService_ActivateAirlineRouteTx(t *testing.T) {
 func TestAirlineRouteService_DeactivateAirlineRouteTx(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := &mockAirlineRouteRepo{
-			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
-				if status {
-					t.Error("expected status=false")
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status string) error {
+				if status != domain.AirlineRouteStatusInactive {
+					t.Errorf("expected status=inactive, got %q", status)
 				}
 				return nil
 			},
@@ -252,7 +268,7 @@ func TestAirlineRouteService_DeactivateAirlineRouteTx(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		repo := &mockAirlineRouteRepo{
-			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status bool) error {
+			updateStatusFn: func(ctx context.Context, tx output.Tx, id string, status string) error {
 				return errors.New("db error")
 			},
 		}
@@ -260,6 +276,76 @@ func TestAirlineRouteService_DeactivateAirlineRouteTx(t *testing.T) {
 		err := svc.DeactivateAirlineRouteTx(context.Background(), &mockTx{}, "route-1")
 		if err == nil {
 			t.Fatal("expected error")
+		}
+	})
+}
+
+func TestAirlineRouteService_GetAirlineRouteByRouteAndAirline(t *testing.T) {
+	t.Run("returns link when found", func(t *testing.T) {
+		expected := &domain.AirlineRoute{ID: "ar-1", RouteID: "route-1", AirlineID: "airline-1"}
+		repo := &mockAirlineRouteRepo{
+			getByRouteAndAirlineFn: func(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error) {
+				return expected, nil
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		result, err := svc.GetAirlineRouteByRouteAndAirline(context.Background(), "route-1", "airline-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result.ID != "ar-1" {
+			t.Errorf("expected ID 'ar-1', got %q", result.ID)
+		}
+	})
+
+	t.Run("returns error when not found", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			getByRouteAndAirlineFn: func(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error) {
+				return nil, domain.ErrAirlineRouteNotFound
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		_, err := svc.GetAirlineRouteByRouteAndAirline(context.Background(), "route-1", "airline-1")
+		if err != domain.ErrAirlineRouteNotFound {
+			t.Errorf("expected ErrAirlineRouteNotFound, got %v", err)
+		}
+	})
+}
+
+func TestAirlineRouteService_SaveAirlineRouteTx(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		var saved domain.AirlineRoute
+		repo := &mockAirlineRouteRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error {
+				saved = airlineRoute
+				return nil
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		err := svc.SaveAirlineRouteTx(context.Background(), &mockTx{}, domain.AirlineRoute{
+			ID:        "ar-new",
+			RouteID:   "route-1",
+			AirlineID: "airline-1",
+			Status:    domain.AirlineRouteStatusPending,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if saved.Status != domain.AirlineRouteStatusPending {
+			t.Errorf("expected saved status=pending, got %q", saved.Status)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		repo := &mockAirlineRouteRepo{
+			saveFn: func(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error {
+				return domain.ErrAirlineRouteAlreadyExists
+			},
+		}
+		svc := NewAirlineRouteService(repo)
+		err := svc.SaveAirlineRouteTx(context.Background(), &mockTx{}, domain.AirlineRoute{})
+		if err != domain.ErrAirlineRouteAlreadyExists {
+			t.Errorf("expected ErrAirlineRouteAlreadyExists, got %v", err)
 		}
 	})
 }

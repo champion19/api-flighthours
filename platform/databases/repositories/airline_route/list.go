@@ -7,7 +7,6 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-
 func (r *repository) ListAirlineRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error) {
 	var rows *sql.Rows
 	var err error
@@ -32,6 +31,11 @@ func (r *repository) ListAirlineRoutes(ctx context.Context, filters map[string]i
 	for rows.Next() {
 		var ar AirlineRoute
 		var estimatedFlightTime sql.NullString
+		// iata_code/oaci_code/route_code can be NULL when an airport was
+		// registered with only one of the two codes.
+		var originIataCode, originOaciCode sql.NullString
+		var destinationIataCode, destinationOaciCode sql.NullString
+		var routeCode sql.NullString
 
 		if err := rows.Scan(
 			&ar.ID,
@@ -40,9 +44,13 @@ func (r *repository) ListAirlineRoutes(ctx context.Context, filters map[string]i
 			&ar.Status,
 			&ar.AirlineCode,
 			&ar.AirlineName,
-			&ar.OriginIataCode,
-			&ar.DestinationIataCode,
-			&ar.RouteCode,
+			&ar.OriginAirportID,
+			&originIataCode,
+			&originOaciCode,
+			&ar.DestinationAirportID,
+			&destinationIataCode,
+			&destinationOaciCode,
+			&routeCode,
 			&ar.OriginAirportName,
 			&ar.DestinationAirportName,
 			&ar.AirportType,
@@ -53,6 +61,21 @@ func (r *repository) ListAirlineRoutes(ctx context.Context, filters map[string]i
 
 		if estimatedFlightTime.Valid {
 			ar.EstimatedFlightTime = estimatedFlightTime.String
+		}
+		if originIataCode.Valid {
+			ar.OriginIataCode = originIataCode.String
+		}
+		if originOaciCode.Valid {
+			ar.OriginOaciCode = originOaciCode.String
+		}
+		if destinationIataCode.Valid {
+			ar.DestinationIataCode = destinationIataCode.String
+		}
+		if destinationOaciCode.Valid {
+			ar.DestinationOaciCode = destinationOaciCode.String
+		}
+		if routeCode.Valid {
+			ar.RouteCode = routeCode.String
 		}
 
 		airlineRoutes = append(airlineRoutes, *ar.ToDomain())
