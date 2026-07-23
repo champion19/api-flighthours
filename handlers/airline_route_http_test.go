@@ -26,7 +26,9 @@ type fakeAirlineRouteService struct {
 	activateFn                 func(ctx context.Context, id string) error
 	deactivateFn               func(ctx context.Context, id string) error
 	beginTxFn                  func(ctx context.Context) (output.Tx, error)
-	updateAirlineRouteStatusFn func(ctx context.Context, tx output.Tx, id string, status bool) error
+	updateAirlineRouteStatusFn func(ctx context.Context, tx output.Tx, id string, status string) error
+	getByRouteAndAirlineFn     func(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error)
+	saveTxFn                   func(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error
 }
 
 var _ input.AirlineRouteService = (*fakeAirlineRouteService)(nil)
@@ -84,6 +86,18 @@ func (f *fakeAirlineRouteService) DeactivateAirlineRouteTx(ctx context.Context, 
 	}
 	return nil
 }
+func (f *fakeAirlineRouteService) GetAirlineRouteByRouteAndAirline(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error) {
+	if f.getByRouteAndAirlineFn != nil {
+		return f.getByRouteAndAirlineFn(ctx, routeID, airlineID)
+	}
+	return nil, errors.New("not implemented")
+}
+func (f *fakeAirlineRouteService) SaveAirlineRouteTx(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error {
+	if f.saveTxFn != nil {
+		return f.saveTxFn(ctx, tx, airlineRoute)
+	}
+	return nil
+}
 
 func newTestAirlineRouteMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
@@ -116,11 +130,11 @@ func TestHTTP_ListAirlineRoutes(t *testing.T) {
 	}
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
-		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
+		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc, &fakeRouteService{})
 		h := New(HandlerDeps{
-		IDEncoder: enc,
-		Response: resp,
-		AirlineRouteInteractor: airlineRouteInteractor,
+			IDEncoder:              enc,
+			Response:               resp,
+			AirlineRouteInteractor: airlineRouteInteractor,
 		})
 
 		r := gin.New()
@@ -136,7 +150,7 @@ func TestHTTP_ListAirlineRoutes(t *testing.T) {
 				ID:                  "route-uuid-1",
 				RouteID:             "base-route-1",
 				AirlineID:           "airline-uuid-1",
-				Status:              true,
+				Status:              domain.AirlineRouteStatusActive,
 				AirlineCode:         "TST",
 				AirlineName:         "Test Airlines",
 				OriginIataCode:      "BOG",
@@ -309,11 +323,11 @@ func TestHTTP_ActivateAirlineRoute(t *testing.T) {
 	}
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
-		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
+		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc, &fakeRouteService{})
 		h := New(HandlerDeps{
-		IDEncoder: enc,
-		Response: resp,
-		AirlineRouteInteractor: airlineRouteInteractor,
+			IDEncoder:              enc,
+			Response:               resp,
+			AirlineRouteInteractor: airlineRouteInteractor,
 		})
 
 		r := gin.New()
@@ -333,7 +347,7 @@ func TestHTTP_ActivateAirlineRoute(t *testing.T) {
 				return &domain.AirlineRoute{
 					ID:        routeUUID,
 					AirlineID: "airline-uuid",
-					Status:    false,
+					Status:    domain.AirlineRouteStatusInactive,
 				}, nil
 			},
 			activateFn: func(ctx context.Context, id string) error {
@@ -372,7 +386,7 @@ func TestHTTP_ActivateAirlineRoute(t *testing.T) {
 				return &domain.AirlineRoute{
 					ID:        routeUUID,
 					AirlineID: "airline-uuid",
-					Status:    true,
+					Status:    domain.AirlineRouteStatusActive,
 				}, nil
 			},
 			activateFn: func(ctx context.Context, id string) error {
@@ -457,11 +471,11 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 	}
 
 	newRouter := func(svc input.AirlineRouteService) *gin.Engine {
-		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc)
+		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(svc, &fakeRouteService{})
 		h := New(HandlerDeps{
-		IDEncoder: enc,
-		Response: resp,
-		AirlineRouteInteractor: airlineRouteInteractor,
+			IDEncoder:              enc,
+			Response:               resp,
+			AirlineRouteInteractor: airlineRouteInteractor,
 		})
 
 		r := gin.New()
@@ -481,7 +495,7 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 				return &domain.AirlineRoute{
 					ID:        routeUUID,
 					AirlineID: "airline-uuid",
-					Status:    true,
+					Status:    domain.AirlineRouteStatusActive,
 				}, nil
 			},
 			deactivateFn: func(ctx context.Context, id string) error {
@@ -520,7 +534,7 @@ func TestHTTP_DeactivateAirlineRoute(t *testing.T) {
 				return &domain.AirlineRoute{
 					ID:        routeUUID,
 					AirlineID: "airline-uuid",
-					Status:    false,
+					Status:    domain.AirlineRouteStatusInactive,
 				}, nil
 			},
 			deactivateFn: func(ctx context.Context, id string) error {
@@ -608,13 +622,13 @@ func TestHTTP_ListMyAirlineRoutes(t *testing.T) {
 
 	newMyRoutesRouter := func(aeSvc *fakeAirlineEmployeeService, arSvc *fakeAirlineRouteService, authUser *domain.Employee) *gin.Engine {
 		aeInteractor := interactor.NewAirlineEmployeeInteractor(aeSvc)
-		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(arSvc)
+		airlineRouteInteractor := interactor.NewAirlineRouteInteractor(arSvc, &fakeRouteService{})
 		h := New(HandlerDeps{
-		EmployeeInteractor: &fakeEmployeeInteractor{},
-		IDEncoder: enc,
-		Response: resp,
-		AirlineEmployeeInteractor: aeInteractor,
-		AirlineRouteInteractor: airlineRouteInteractor,
+			EmployeeInteractor:        &fakeEmployeeInteractor{},
+			IDEncoder:                 enc,
+			Response:                  resp,
+			AirlineEmployeeInteractor: aeInteractor,
+			AirlineRouteInteractor:    airlineRouteInteractor,
 		})
 
 		r := gin.New()
@@ -639,7 +653,7 @@ func TestHTTP_ListMyAirlineRoutes(t *testing.T) {
 		arSvc := &fakeAirlineRouteService{
 			listByAirlineIDFn: func(_ context.Context, airID string) ([]domain.AirlineRoute, error) {
 				return []domain.AirlineRoute{
-					{ID: "ar-1", RouteID: "r-1", AirlineID: airlineID, Status: true, RouteCode: "BOG-MDE"},
+					{ID: "ar-1", RouteID: "r-1", AirlineID: airlineID, Status: domain.AirlineRouteStatusActive, RouteCode: "BOG-MDE"},
 				}, nil
 			},
 		}

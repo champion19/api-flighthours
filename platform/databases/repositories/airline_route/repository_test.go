@@ -25,9 +25,9 @@ func TestNewAirlineRouteRepository_Success(t *testing.T) {
 	}
 	defer db.Close()
 
-	// 6 prepared statements
-	for i := 0; i < 6; i++ {
-		mock.ExpectPrepare("SELECT|UPDATE")
+	// 8 prepared statements
+	for i := 0; i < 8; i++ {
+		mock.ExpectPrepare("SELECT|UPDATE|INSERT")
 	}
 
 	repo, err := NewAirlineRouteRepository(db)
@@ -64,8 +64,8 @@ func TestAirlineRouteRepository_BeginTx_Success(t *testing.T) {
 	}
 	defer db.Close()
 
-	for i := 0; i < 6; i++ {
-		mock.ExpectPrepare("SELECT|UPDATE")
+	for i := 0; i < 8; i++ {
+		mock.ExpectPrepare("SELECT|UPDATE|INSERT")
 	}
 
 	repo, err := NewAirlineRouteRepository(db)
@@ -90,8 +90,8 @@ func TestAirlineRouteRepository_BeginTx_Error(t *testing.T) {
 	}
 	defer db.Close()
 
-	for i := 0; i < 6; i++ {
-		mock.ExpectPrepare("SELECT|UPDATE")
+	for i := 0; i < 8; i++ {
+		mock.ExpectPrepare("SELECT|UPDATE|INSERT")
 	}
 
 	repo, err := NewAirlineRouteRepository(db)

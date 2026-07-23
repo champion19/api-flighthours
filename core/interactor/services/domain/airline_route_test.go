@@ -9,7 +9,7 @@ func TestAirlineRoute_ToLogger_Active(t *testing.T) {
 		AirlineID:   "airline-456",
 		AirlineCode: "AV",
 		RouteCode:   "BOG-CLO",
-		Status:      true,
+		Status:      AirlineRouteStatusActive,
 	}
 
 	logs := ar.ToLogger()
@@ -46,7 +46,7 @@ func TestAirlineRoute_ToLogger_Active(t *testing.T) {
 func TestAirlineRoute_ToLogger_Inactive(t *testing.T) {
 	ar := &AirlineRoute{
 		ID:     "route-inactive",
-		Status: false,
+		Status: AirlineRouteStatusInactive,
 	}
 
 	logs := ar.ToLogger()

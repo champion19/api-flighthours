@@ -40,10 +40,21 @@ func (s *AirlineRouteService) ListAirlineRoutesByAirlineID(ctx context.Context, 
 
 // ActivateAirlineRouteTx activates an airline route using an external transaction
 func (s *AirlineRouteService) ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
-	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, true)
+	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, domain.AirlineRouteStatusActive)
 }
 
 // DeactivateAirlineRouteTx deactivates an airline route using an external transaction
 func (s *AirlineRouteService) DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error {
-	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, false)
+	return s.repo.UpdateAirlineRouteStatus(ctx, tx, id, domain.AirlineRouteStatusInactive)
+}
+
+// GetAirlineRouteByRouteAndAirline looks up the link (any status) between a
+// physical route and an airline.
+func (s *AirlineRouteService) GetAirlineRouteByRouteAndAirline(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error) {
+	return s.repo.GetAirlineRouteByRouteAndAirline(ctx, routeID, airlineID)
+}
+
+// SaveAirlineRouteTx inserts a new airline_route link using an external transaction
+func (s *AirlineRouteService) SaveAirlineRouteTx(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error {
+	return s.repo.SaveAirlineRoute(ctx, tx, airlineRoute)
 }

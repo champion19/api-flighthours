@@ -7,18 +7,18 @@ import (
 	domain "github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-// GetRouteByID retrieves a route by ID with denormalized airport data
-func (r *repository) GetRouteByID(ctx context.Context, id string) (*domain.Route, error) {
+// GetRouteByAirports looks up the physical route (if any) between two
+// airports by their ID — used to resolve/auto-request an airline_route link
+// without depending on IATA/OACI codes, which can be missing.
+func (r *repository) GetRouteByAirports(ctx context.Context, originAirportID, destinationAirportID string) (*domain.Route, error) {
 	var route Route
 	var estimatedFlightTime sql.NullString
 	var originCountry, destinationCountry sql.NullString
-	// iata_code/oaci_code/route_code can be NULL when an airport was
-	// registered with only one of the two codes.
 	var originIataCode, originOaciCode sql.NullString
 	var destinationIataCode, destinationOaciCode sql.NullString
 	var routeCode sql.NullString
 
-	err := r.stmtGetByID.QueryRowContext(ctx, id).Scan(
+	err := r.stmtGetByAirports.QueryRowContext(ctx, originAirportID, destinationAirportID).Scan(
 		&route.ID,
 		&route.OriginAirportID,
 		&originIataCode,

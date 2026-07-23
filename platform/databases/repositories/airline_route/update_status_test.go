@@ -16,7 +16,7 @@ func (f *fakeTxAR) Rollback() error { return nil }
 
 func TestUpdateAirlineRouteStatus_InvalidTx(t *testing.T) {
 	r := &repository{}
-	err := r.UpdateAirlineRouteStatus(context.Background(), &fakeTxAR{}, "id-1", true)
+	err := r.UpdateAirlineRouteStatus(context.Background(), &fakeTxAR{}, "id-1", domain.AirlineRouteStatusActive)
 	if !errors.Is(err, domain.ErrInvalidTransaction) {
 		t.Fatalf("expected ErrInvalidTransaction, got %v", err)
 	}
@@ -34,14 +34,14 @@ func TestUpdateAirlineRouteStatus_ExecError(t *testing.T) {
 
 	mock.ExpectBegin()
 	stmtUpdate.ExpectExec().
-		WithArgs(true, "id-1", true).
+		WithArgs(domain.AirlineRouteStatusActive, "id-1", domain.AirlineRouteStatusActive).
 		WillReturnError(errors.New("exec error"))
 
 	stmt, _ := db.Prepare(QueryUpdateStatus)
 	r := &repository{stmtUpdateStatus: stmt, db: db}
 
 	tx, _ := db.Begin()
-	err = r.UpdateAirlineRouteStatus(context.Background(), tx, "id-1", true)
+	err = r.UpdateAirlineRouteStatus(context.Background(), tx, "id-1", domain.AirlineRouteStatusActive)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -58,14 +58,14 @@ func TestUpdateAirlineRouteStatus_RowsAffected_Success(t *testing.T) {
 
 	mock.ExpectBegin()
 	stmtUpdate.ExpectExec().
-		WithArgs(true, "id-1", true).
+		WithArgs(domain.AirlineRouteStatusActive, "id-1", domain.AirlineRouteStatusActive).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	stmt, _ := db.Prepare(QueryUpdateStatus)
 	r := &repository{stmtUpdateStatus: stmt, db: db}
 
 	tx, _ := db.Begin()
-	err = r.UpdateAirlineRouteStatus(context.Background(), tx, "id-1", true)
+	err = r.UpdateAirlineRouteStatus(context.Background(), tx, "id-1", domain.AirlineRouteStatusActive)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
