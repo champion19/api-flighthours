@@ -143,22 +143,23 @@ func TestToDomainDailyLogbookDetail(t *testing.T) {
 	flightType := "COMMERCIAL"
 
 	req := CreateDailyLogbookDetailRequest{
-		FlightRealDate:   "2025-01-15",
-		FlightNumber:     "AV123",
-		AirlineRouteID:   "route-1",
-		TailNumberID:     "lp-1",
-		Passengers:       &passengers,
-		OutTime:          strPtrH("08:00"),
-		TakeoffTime:      strPtrH("08:15"),
-		LandingTime:      strPtrH("09:30"),
-		InTime:           strPtrH("09:45"),
-		PilotRole:        strPtrH("PF"),
-		CompanionName:    &companion,
-		AirTime:          strPtrH("01:15"),
-		BlockTime:        strPtrH("01:45"),
-		ApproachCategory: &approachCategory,
-		ApproachSubtype:  &approachSubtype,
-		FlightType:       &flightType,
+		FlightRealDate:       "2025-01-15",
+		FlightNumber:         "AV123",
+		OriginAirportID:      "airport-1",
+		DestinationAirportID: "airport-2",
+		TailNumberID:         "lp-1",
+		Passengers:           &passengers,
+		OutTime:              strPtrH("08:00"),
+		TakeoffTime:          strPtrH("08:15"),
+		LandingTime:          strPtrH("09:30"),
+		InTime:               strPtrH("09:45"),
+		PilotRole:            strPtrH("PF"),
+		CompanionName:        &companion,
+		AirTime:              strPtrH("01:15"),
+		BlockTime:            strPtrH("01:45"),
+		ApproachCategory:     &approachCategory,
+		ApproachSubtype:      &approachSubtype,
+		FlightType:           &flightType,
 	}
 
 	detail := ToDomainDailyLogbookDetail("logbook-1", req)
@@ -194,18 +195,19 @@ func TestToDomainDailyLogbookDetail(t *testing.T) {
 func TestToDomainDailyLogbookDetailUpdate(t *testing.T) {
 	approachCategory := "ILS"
 	req := UpdateDailyLogbookDetailRequest{
-		FlightRealDate:   "2025-01-16",
-		FlightNumber:     "AV789",
-		AirlineRouteID:   "route-2",
-		TailNumberID:     "lp-2",
-		OutTime:          strPtrH("10:00"),
-		TakeoffTime:      strPtrH("10:15"),
-		LandingTime:      strPtrH("11:30"),
-		InTime:           strPtrH("11:45"),
-		PilotRole:        strPtrH("PM"),
-		AirTime:          strPtrH("01:15"),
-		BlockTime:        strPtrH("01:45"),
-		ApproachCategory: &approachCategory,
+		FlightRealDate:       "2025-01-16",
+		FlightNumber:         "AV789",
+		OriginAirportID:      "airport-3",
+		DestinationAirportID: "airport-4",
+		TailNumberID:         "lp-2",
+		OutTime:              strPtrH("10:00"),
+		TakeoffTime:          strPtrH("10:15"),
+		LandingTime:          strPtrH("11:30"),
+		InTime:               strPtrH("11:45"),
+		PilotRole:            strPtrH("PM"),
+		AirTime:              strPtrH("01:15"),
+		BlockTime:            strPtrH("01:45"),
+		ApproachCategory:     &approachCategory,
 	}
 
 	detail := ToDomainDailyLogbookDetailUpdate("detail-1", req)
@@ -238,20 +240,21 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 	flightType := "  COMMERCIAL  "
 
 	req := &UpdateDailyLogbookDetailRequest{
-		FlightRealDate:   "  2025-01-15  ",
-		FlightNumber:     "  AV123  ",
-		AirlineRouteID:   "  route-1  ",
-		TailNumberID:     "  lp-1  ",
-		OutTime:          strPtrH("  08:00  "),
-		TakeoffTime:      strPtrH("  08:15  "),
-		LandingTime:      strPtrH("  09:30  "),
-		InTime:           strPtrH("  09:45  "),
-		PilotRole:        strPtrH("  PF  "),
-		CompanionName:    &companion,
-		AirTime:          strPtrH("  01:15  "),
-		BlockTime:        strPtrH("  01:45  "),
-		ApproachCategory: &approachCategory,
-		FlightType:       &flightType,
+		FlightRealDate:       "  2025-01-15  ",
+		FlightNumber:         "  AV123  ",
+		OriginAirportID:      "  airport-1  ",
+		DestinationAirportID: "  airport-2  ",
+		TailNumberID:         "  lp-1  ",
+		OutTime:              strPtrH("  08:00  "),
+		TakeoffTime:          strPtrH("  08:15  "),
+		LandingTime:          strPtrH("  09:30  "),
+		InTime:               strPtrH("  09:45  "),
+		PilotRole:            strPtrH("  PF  "),
+		CompanionName:        &companion,
+		AirTime:              strPtrH("  01:15  "),
+		BlockTime:            strPtrH("  01:45  "),
+		ApproachCategory:     &approachCategory,
+		FlightType:           &flightType,
 	}
 	req.Sanitize()
 
@@ -274,31 +277,32 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 	flightType := "COMMERCIAL"
 
 	detail := &domain.DailyLogbookDetail{
-		ID:                  "uuid-1",
-		DailyLogbookID:      "logbook-1",
-		FlightRealDate:      "2025-01-15",
-		FlightNumber:        "AV123",
-		AirlineRouteID:      "route-1",
-		TailNumberID:        "lp-1",
-		OutTime:             strPtrH("08:00"),
-		TakeoffTime:         strPtrH("08:15"),
-		LandingTime:         strPtrH("09:30"),
-		InTime:              strPtrH("09:45"),
-		PilotRole:           domainPilotRolePtrH(domain.PilotRolePF),
-		AirTime:             strPtrH("01:15"),
-		BlockTime:           strPtrH("01:45"),
-		ApproachCategory:    &approachCategory,
-		FlightType:          &flightType,
-		RouteCode:           "BOG-CLO",
-		OriginIataCode:      "BOG",
-		DestinationIataCode: "CLO",
-		AirlineCode:         "AV",
-		LogDate:             "2025-01-15",
-		TailNumber:          "HK-4567",
-		ModelName:           "A320",
+		ID:                   "uuid-1",
+		DailyLogbookID:       "logbook-1",
+		FlightRealDate:       "2025-01-15",
+		FlightNumber:         "AV123",
+		OriginAirportID:      "airport-1",
+		DestinationAirportID: "airport-2",
+		TailNumberID:         "lp-1",
+		OutTime:              strPtrH("08:00"),
+		TakeoffTime:          strPtrH("08:15"),
+		LandingTime:          strPtrH("09:30"),
+		InTime:               strPtrH("09:45"),
+		PilotRole:            domainPilotRolePtrH(domain.PilotRolePF),
+		AirTime:              strPtrH("01:15"),
+		BlockTime:            strPtrH("01:45"),
+		ApproachCategory:     &approachCategory,
+		FlightType:           &flightType,
+		RouteCode:            "BOG-CLO",
+		OriginIataCode:       "BOG",
+		DestinationIataCode:  "CLO",
+		AirlineCode:          "AV",
+		LogDate:              "2025-01-15",
+		TailNumber:           "HK-4567",
+		ModelName:            "A320",
 	}
 
-	resp := FromDomainDailyLogbookDetail(detail, "enc-id", "enc-logbook", "enc-route", "enc-aircraft")
+	resp := FromDomainDailyLogbookDetail(detail, "enc-id", "enc-logbook", "enc-origin", "enc-destination", "enc-aircraft")
 
 	if resp.ID != "enc-id" {
 		t.Errorf("expected ID 'enc-id', got %s", resp.ID)
@@ -322,7 +326,7 @@ func TestFromDomainDailyLogbookDetail(t *testing.T) {
 			FlightNumber: "AV456",
 			PilotRole:    domainPilotRolePtrH(domain.PilotRolePM),
 		}
-		resp2 := FromDomainDailyLogbookDetail(detail2, "enc-2", "enc-lb", "enc-rt", "enc-ac")
+		resp2 := FromDomainDailyLogbookDetail(detail2, "enc-2", "enc-lb", "enc-origin", "enc-destination", "enc-ac")
 		if resp2.ApproachCategory != nil {
 			t.Error("expected nil ApproachCategory")
 		}

@@ -227,7 +227,7 @@ func (m *MySQLContainer) CleanEmployeeTable(ctx context.Context) error {
 }
 
 // ===========================================
-// Airport Schema (base table for routes)
+// Airport Schema
 // ===========================================
 
 // SetupAirportSchema creates the airport table for testing
@@ -257,87 +257,5 @@ func (m *MySQLContainer) InsertAirport(ctx context.Context, id, name, iataCode, 
 // CleanAirportTable removes all data from airport table
 func (m *MySQLContainer) CleanAirportTable(ctx context.Context) error {
 	_, err := m.DB.ExecContext(ctx, "DELETE FROM airport")
-	return err
-}
-
-// ===========================================
-// Route Schema (depends on airport)
-// ===========================================
-
-// SetupRouteSchema creates the route table for testing (requires airport table)
-func (m *MySQLContainer) SetupRouteSchema(ctx context.Context) error {
-	// First ensure airport table exists
-	if err := m.SetupAirportSchema(ctx); err != nil {
-		return err
-	}
-	schema := `
-		CREATE TABLE IF NOT EXISTS route (
-			id VARCHAR(36) NOT NULL,
-			origin_airport_id VARCHAR(36) NOT NULL,
-			destination_airport_id VARCHAR(36) NOT NULL,
-			airport_type VARCHAR(13) NOT NULL,
-			estimated_flight_time TIME,
-			PRIMARY KEY (id),
-			CONSTRAINT fk_route_origin_airport FOREIGN KEY (origin_airport_id) REFERENCES airport(id),
-			CONSTRAINT fk_route_destination_airport FOREIGN KEY (destination_airport_id) REFERENCES airport(id)
-		);
-	`
-	_, err := m.DB.ExecContext(ctx, schema)
-	return err
-}
-
-// InsertRoute inserts test data into route table
-func (m *MySQLContainer) InsertRoute(ctx context.Context, id, originAirportID, destAirportID, airportType, estimatedTime string) error {
-	_, err := m.DB.ExecContext(ctx,
-		"INSERT INTO route (id, origin_airport_id, destination_airport_id, airport_type, estimated_flight_time) VALUES (?, ?, ?, ?, ?)",
-		id, originAirportID, destAirportID, airportType, estimatedTime)
-	return err
-}
-
-// CleanRouteTable removes all data from route table
-func (m *MySQLContainer) CleanRouteTable(ctx context.Context) error {
-	_, err := m.DB.ExecContext(ctx, "DELETE FROM route")
-	return err
-}
-
-// ===========================================
-// Airline Route Schema (depends on route and airline)
-// ===========================================
-
-// SetupAirlineRouteSchema creates the airline_route table for testing (requires route and airline tables)
-func (m *MySQLContainer) SetupAirlineRouteSchema(ctx context.Context) error {
-	// First ensure dependent tables exist
-	if err := m.SetupAirlineSchema(ctx); err != nil {
-		return err
-	}
-	if err := m.SetupRouteSchema(ctx); err != nil {
-		return err
-	}
-	schema := `
-		CREATE TABLE IF NOT EXISTS airline_route (
-			id VARCHAR(36) NOT NULL,
-			route_id VARCHAR(36) NOT NULL,
-			airline_id VARCHAR(36) NOT NULL,
-			status BOOLEAN NOT NULL,
-			PRIMARY KEY (id),
-			CONSTRAINT fk_airline_route_route FOREIGN KEY (route_id) REFERENCES route(id),
-			CONSTRAINT fk_airline_route_airline FOREIGN KEY (airline_id) REFERENCES airline(id)
-		);
-	`
-	_, err := m.DB.ExecContext(ctx, schema)
-	return err
-}
-
-// InsertAirlineRoute inserts test data into airline_route table
-func (m *MySQLContainer) InsertAirlineRoute(ctx context.Context, id, routeID, airlineID string, status bool) error {
-	_, err := m.DB.ExecContext(ctx,
-		"INSERT INTO airline_route (id, route_id, airline_id, status) VALUES (?, ?, ?, ?)",
-		id, routeID, airlineID, status)
-	return err
-}
-
-// CleanAirlineRouteTable removes all data from airline_route table
-func (m *MySQLContainer) CleanAirlineRouteTable(ctx context.Context) error {
-	_, err := m.DB.ExecContext(ctx, "DELETE FROM airline_route")
 	return err
 }

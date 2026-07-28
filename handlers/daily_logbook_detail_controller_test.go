@@ -102,7 +102,7 @@ func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache
 		{Code: domain.MsgFlightListError, Type: cachetypes.TypeError, Content: "error listing flights"},
 		{Code: domain.MsgFlightUnauthorized, Type: cachetypes.TypeError, Content: "unauthorized"},
 		{Code: domain.MsgFlightInvalidTimeSequence, Type: cachetypes.TypeError, Content: "invalid time sequence"},
-		{Code: domain.MsgFlightInvalidRoute, Type: cachetypes.TypeError, Content: "invalid route"},
+		{Code: domain.MsgFlightInvalidAirport, Type: cachetypes.TypeError, Content: "invalid route"},
 		{Code: domain.MsgFlightInvalidLogbook, Type: cachetypes.TypeError, Content: "invalid logbook"},
 		{Code: domain.MsgFlightInvalidTailNumber, Type: cachetypes.TypeError, Content: "invalid aircraft"},
 		{Code: domain.MsgDailyLogbookNotFound, Type: cachetypes.TypeError, Content: "logbook not found"},
@@ -392,7 +392,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 	validBody := `{
 		"flight_real_date":"2025-01-15",
 		"flight_number":"AV123",
-		"airline_route_id":"` + encodedRouteID + `",
+		"origin_airport_id":"` + encodedRouteID + `",
+		"destination_airport_id":"` + encodedRouteID + `",
 		"tail_number_id":"` + encodedAircraftID + `",
 		"out_time":"08:00",
 		"takeoff_time":"08:15",
@@ -415,12 +416,13 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 			},
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             id,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   id,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 		}
@@ -439,7 +441,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		bodyNoTailNumber := `{
 			"flight_real_date":"2025-01-15",
 			"flight_number":"AV123",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"out_time":"08:00",
 			"takeoff_time":"08:15",
 			"landing_time":"09:30",
@@ -462,12 +465,13 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 			},
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             id,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   id,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 		}
@@ -491,7 +495,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 		bodyNoTailNumber := `{
 			"flight_real_date":"2025-01-15",
 			"flight_number":"AV123",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"out_time":"08:00",
 			"takeoff_time":"08:15",
 			"landing_time":"09:30",
@@ -595,7 +600,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-15","flight_number":"AV123",
-			"airline_route_id":"invalid!!!",
+			"origin_airport_id":"invalid!!!",
+			"destination_airport_id":"invalid!!!",
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
 			"pilot_role":"PF","air_time":"01:15","block_time":"01:45"
@@ -620,7 +626,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-15","flight_number":"AV123",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"tail_number_id":"invalid!!!",
 			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
 			"pilot_role":"PF","air_time":"01:15","block_time":"01:45"
@@ -645,7 +652,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-15","flight_number":"AV123",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
 			"pilot_role":"INVALID_ROLE","air_time":"01:15","block_time":"01:45"
@@ -670,7 +678,8 @@ func TestHTTP_CreateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-15","flight_number":"AV123",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"08:00","takeoff_time":"08:15","landing_time":"09:30","in_time":"09:45",
 			"pilot_role":"PF","air_time":"01:15","block_time":"01:45",
@@ -884,7 +893,8 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 	validUpdateBody := `{
 		"flight_real_date":"2025-01-16",
 		"flight_number":"AV456",
-		"airline_route_id":"` + encodedRouteID + `",
+		"origin_airport_id":"` + encodedRouteID + `",
+		"destination_airport_id":"` + encodedRouteID + `",
 		"tail_number_id":"` + encodedAircraftID + `",
 		"out_time":"10:00",
 		"takeoff_time":"10:15",
@@ -900,12 +910,13 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             testDetailID,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   testDetailID,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 		}
@@ -1018,7 +1029,8 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-16","flight_number":"AV456",
-			"airline_route_id":"invalid!!!",
+			"origin_airport_id":"invalid!!!",
+			"destination_airport_id":"invalid!!!",
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
 			"pilot_role":"PM","air_time":"01:15","block_time":"01:45"
@@ -1038,7 +1050,8 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-16","flight_number":"AV456",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"tail_number_id":"invalid!!!",
 			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
 			"pilot_role":"PM","air_time":"01:15","block_time":"01:45"
@@ -1058,7 +1071,8 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-16","flight_number":"AV456",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
 			"pilot_role":"INVALID_ROLE","air_time":"01:15","block_time":"01:45"
@@ -1078,7 +1092,8 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 
 		body := `{
 			"flight_real_date":"2025-01-16","flight_number":"AV456",
-			"airline_route_id":"` + encodedRouteID + `",
+			"origin_airport_id":"` + encodedRouteID + `",
+			"destination_airport_id":"` + encodedRouteID + `",
 			"tail_number_id":"` + encodedAircraftID + `",
 			"out_time":"10:00","takeoff_time":"10:15","landing_time":"11:30","in_time":"11:45",
 			"pilot_role":"PM","air_time":"01:15","block_time":"01:45",
@@ -1096,12 +1111,13 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             testDetailID,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   testDetailID,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 			validateTimeFn: func(_, _, _, _ string) error {
@@ -1128,12 +1144,13 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             testDetailID,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   testDetailID,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 			updateFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
@@ -1178,12 +1195,13 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             testDetailID,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   testDetailID,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 			updateFn: func(ctx context.Context, detail domain.DailyLogbookDetail) error {
@@ -1214,12 +1232,13 @@ func TestHTTP_UpdateDailyLogbookDetail(t *testing.T) {
 				if callCount == 1 {
 					// First call: ownership check succeeds
 					return &domain.DailyLogbookDetail{
-						ID:             testDetailID,
-						DailyLogbookID: testLogbookID,
-						FlightNumber:   "AV123",
-						PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-						AirlineRouteID: testRouteID,
-						TailNumberID:   testAircraftID,
+						ID:                   testDetailID,
+						DailyLogbookID:       testLogbookID,
+						FlightNumber:         "AV123",
+						PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+						OriginAirportID:      testRouteID,
+						DestinationAirportID: testRouteID,
+						TailNumberID:         testAircraftID,
 					}, nil
 				}
 				// Second call: refetch fails
@@ -1332,14 +1351,15 @@ func TestToDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 	pilotRole := "PF"
 
 	req := CreateDailyLogbookDetailRequest{
-		FlightRealDate:   "2025-01-15",
-		FlightNumber:     "AV123",
-		AirlineRouteID:   "route-uuid",
-		TailNumberID:     "plate-uuid",
-		PilotRole:        &pilotRole,
-		CrewRole:         &crewRole,
-		ApproachCategory: &approachCategory,
-		ApproachSubtype:  &approachSubtype,
+		FlightRealDate:       "2025-01-15",
+		FlightNumber:         "AV123",
+		OriginAirportID:      "origin-airport-uuid",
+		DestinationAirportID: "destination-airport-uuid",
+		TailNumberID:         "plate-uuid",
+		PilotRole:            &pilotRole,
+		CrewRole:             &crewRole,
+		ApproachCategory:     &approachCategory,
+		ApproachSubtype:      &approachSubtype,
 	}
 
 	detail := ToDomainDailyLogbookDetail("logbook-uuid", req)
@@ -1373,19 +1393,20 @@ func TestFromDomainDailyLogbookDetail_OptionalFields(t *testing.T) {
 	pilotRole := domain.PilotRolePF
 
 	d := &domain.DailyLogbookDetail{
-		ID:               "detail-uuid",
-		DailyLogbookID:   "logbook-uuid",
-		FlightRealDate:   "2025-01-15",
-		FlightNumber:     "AV123",
-		AirlineRouteID:   "route-uuid",
-		TailNumberID:     "plate-uuid",
-		PilotRole:        &pilotRole,
-		CrewRole:         &crewRole,
-		ApproachCategory: &approachCategory,
-		ApproachSubtype:  &approachSubtype,
+		ID:                   "detail-uuid",
+		DailyLogbookID:       "logbook-uuid",
+		FlightRealDate:       "2025-01-15",
+		FlightNumber:         "AV123",
+		OriginAirportID:      "origin-airport-uuid",
+		DestinationAirportID: "destination-airport-uuid",
+		TailNumberID:         "plate-uuid",
+		PilotRole:            &pilotRole,
+		CrewRole:             &crewRole,
+		ApproachCategory:     &approachCategory,
+		ApproachSubtype:      &approachSubtype,
 	}
 
-	resp := FromDomainDailyLogbookDetail(d, "enc-id", "enc-logbook", "enc-route", "enc-plate")
+	resp := FromDomainDailyLogbookDetail(d, "enc-id", "enc-logbook", "enc-origin", "enc-destination", "enc-plate")
 
 	if resp.CrewRole == nil {
 		t.Error("expected CrewRole to be set in response")
@@ -1415,13 +1436,14 @@ func TestToDomainDailyLogbookDetailUpdate_OptionalFields(t *testing.T) {
 	pilotRole := "PM"
 
 	req := UpdateDailyLogbookDetailRequest{
-		FlightRealDate:   "2025-01-16",
-		FlightNumber:     "AV456",
-		AirlineRouteID:   "route-uuid",
-		TailNumberID:     "plate-uuid",
-		PilotRole:        &pilotRole,
-		CrewRole:         &crewRole,
-		ApproachCategory: &approachCategory,
+		FlightRealDate:       "2025-01-16",
+		FlightNumber:         "AV456",
+		OriginAirportID:      "origin-airport-uuid",
+		DestinationAirportID: "destination-airport-uuid",
+		TailNumberID:         "plate-uuid",
+		PilotRole:            &pilotRole,
+		CrewRole:             &crewRole,
+		ApproachCategory:     &approachCategory,
 	}
 
 	detail := ToDomainDailyLogbookDetailUpdate("detail-uuid", req)
@@ -1466,12 +1488,13 @@ func TestHTTP_DeleteDailyLogbookDetail(t *testing.T) {
 		detailSvc := &fakeDailyLogbookDetailService{
 			getByIDFn: func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
 				return &domain.DailyLogbookDetail{
-					ID:             testDetailID,
-					DailyLogbookID: testLogbookID,
-					FlightNumber:   "AV123",
-					PilotRole:      domainPilotRolePtr(domain.PilotRolePF),
-					AirlineRouteID: testRouteID,
-					TailNumberID:   testAircraftID,
+					ID:                   testDetailID,
+					DailyLogbookID:       testLogbookID,
+					FlightNumber:         "AV123",
+					PilotRole:            domainPilotRolePtr(domain.PilotRolePF),
+					OriginAirportID:      testRouteID,
+					DestinationAirportID: testRouteID,
+					TailNumberID:         testAircraftID,
 				}, nil
 			},
 		}

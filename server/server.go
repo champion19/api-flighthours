@@ -75,10 +75,8 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		AirlineInteractor:            dependencies.AirlineInteractor,
 		AirlineEmployeeInteractor:    dependencies.AirlineEmployeeInteractor,
 		EngineInteractor:             dependencies.EngineInteractor,
-		RouteInteractor:              dependencies.RouteInteractor,
 		ManufacturerInteractor:       dependencies.ManufacturerInteractor,
 		AirportInteractor:            dependencies.AirportInteractor,
-		AirlineRouteInteractor:       dependencies.AirlineRouteInteractor,
 		DailyLogbookDetailInteractor: dependencies.DailyLogbookDetailInteractor,
 		DailyLogbookInteractor:       dependencies.DailyLogbookInteractor,
 		AircraftModelInteractor:      dependencies.AircraftModelInteractor,
@@ -130,12 +128,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/engines/:id", handler.GetEngineByID())
 
-		public.GET("/routes", handler.ListRoutes())
-
-		public.GET("/routes/:id", handler.GetRouteByID())
-
-		public.GET("/airline-routes", handler.ListAirlineRoutes())
-
 		public.GET("/airports", handler.ListAirports())
 
 		public.GET("/airports/:id", handler.GetAirportByID())
@@ -176,12 +168,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		pilot.PUT("/employees/airline-info", validator.WithValidateUpdateAirlineEmployee(), handler.UpdateEmployeeAirlineInfo())
 		pilot.PATCH("/employees/airline/activate", handler.ActivateEmployeeAirlineInfo())
 		pilot.PATCH("/employees/airline/deactivate", handler.DeactivateEmployeeAirlineInfo())
-
-		// Airline routes consulta (HU37)
-		pilot.GET("/employees/airline-routes", handler.ListMyAirlineRoutes())
-		// Auto-request a pending airline_route link when the physical route
-		// exists but isn't linked to the employee's airline yet
-		pilot.POST("/employees/airline-routes/resolve", handler.ResolveAirlineRoute())
 
 		// Tail numbers consulta y creación (HU31, HU32)
 		pilot.GET("/tail-numbers", handler.ListTailNumbers())
@@ -227,10 +213,6 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		adminProtected.PATCH("/airlines/:id/activate", handler.ActivateAirline())
 		adminProtected.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
 
-		// Airline route state (HU38, HU39)
-		adminProtected.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
-		adminProtected.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
-
 		// Airport state (HU5, HU6)
 		adminProtected.PATCH("/airports/:id/activate", handler.ActivateAirport())
 		adminProtected.PATCH("/airports/:id/deactivate", handler.DeactivateAirport())
@@ -246,13 +228,10 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 	admin.Use(middleware.RequireAuth(dependencies.EmployeeService, dependencies.MessagingCache, dependencies.JWTValidator))
 	admin.Use(middleware.RequireRole("admin"))
 	{
-		admin.GET("/routes", handler.ListRoutes())
 		admin.GET("/airlines", handler.ListAirlines())
 		admin.GET("/airlines/:id", handler.GetAirlineByID())
 		admin.PATCH("/airlines/:id/activate", handler.ActivateAirline())
 		admin.PATCH("/airlines/:id/deactivate", handler.DeactivateAirline())
-		admin.PATCH("/airline-routes/:id/activate", handler.ActivateAirlineRoute())
-		admin.PATCH("/airline-routes/:id/deactivate", handler.DeactivateAirlineRoute())
 	}
 	log.Success(logger.LogRouteConfigured)
 }

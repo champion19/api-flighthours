@@ -755,47 +755,6 @@ const (
 )
 
 // ============================================
-// ROUTE INTERACTOR
-// ============================================
-const (
-	LogRouteGet           = "Obteniendo información de ruta"
-	LogRouteGetOK         = "Ruta obtenida exitosamente"
-	LogRouteGetError      = "Error obteniendo ruta"
-	LogRouteNotFound      = "Ruta no encontrada"
-	LogRouteList          = "Listando rutas"
-	LogRouteListOK        = "Rutas listadas exitosamente"
-	LogRouteListError     = "Error listando rutas"
-	LogRouteRepoInit      = "Inicializando repositorio de rutas"
-	LogRouteRepoInitOK    = "Repositorio de rutas inicializado"
-	LogRouteRepoInitError = "Error inicializando repositorio de rutas"
-)
-
-// ============================================
-// AIRLINE ROUTE INTERACTOR
-// ============================================
-const (
-	LogAirlineRouteGet             = "Obteniendo información de ruta aerolínea"
-	LogAirlineRouteGetOK           = "Ruta aerolínea obtenida exitosamente"
-	LogAirlineRouteGetError        = "Error obteniendo ruta aerolínea"
-	LogAirlineRouteNotFound        = "Ruta aerolínea no encontrada"
-	LogAirlineRouteList            = "Listando rutas aerolínea"
-	LogAirlineRouteListOK          = "Rutas aerolínea listadas exitosamente"
-	LogAirlineRouteListError       = "Error listando rutas aerolínea"
-	LogAirlineRouteActivate        = "Activando ruta aerolínea"
-	LogAirlineRouteActivateOK      = "Ruta aerolínea activada exitosamente"
-	LogAirlineRouteActivateError   = "Error activando ruta aerolínea"
-	LogAirlineRouteDeactivate      = "Desactivando ruta aerolínea"
-	LogAirlineRouteDeactivateOK    = "Ruta aerolínea desactivada exitosamente"
-	LogAirlineRouteDeactivateError = "Error desactivando ruta aerolínea"
-	LogAirlineRouteRepoInit        = "Inicializando repositorio de rutas aerolínea"
-	LogAirlineRouteRepoInitOK      = "Repositorio de rutas aerolínea inicializado"
-	LogAirlineRouteRepoInitError   = "Error inicializando repositorio de rutas aerolínea"
-	LogAirlineRouteResolve         = "Resolviendo/creando ruta aerolínea pendiente"
-	LogAirlineRouteResolveOK       = "Ruta aerolínea resuelta/creada exitosamente"
-	LogAirlineRouteResolveError    = "Error resolviendo/creando ruta aerolínea"
-)
-
-// ============================================
 // FLIGHT INTERACTOR
 // ============================================
 const (

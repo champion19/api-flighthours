@@ -16,7 +16,6 @@ import (
 	aircraftModelRepo "github.com/champion19/api-flighthours/platform/databases/repositories/aircraft_model"
 	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
 	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
-	airlineRouteRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_route"
 	airportRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airport"
 	dailyLogbookRepo "github.com/champion19/api-flighthours/platform/databases/repositories/daily_logbook"
 	dailyLogbookDetailRepo "github.com/champion19/api-flighthours/platform/databases/repositories/daily_logbook_detail"
@@ -26,7 +25,6 @@ import (
 	flightSummaryRepo "github.com/champion19/api-flighthours/platform/databases/repositories/flight_summary"
 	manufacturerRepo "github.com/champion19/api-flighthours/platform/databases/repositories/manufacturer"
 	messageRepo "github.com/champion19/api-flighthours/platform/databases/repositories/message"
-	routeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/route"
 	tailNumberRepo "github.com/champion19/api-flighthours/platform/databases/repositories/tail_number"
 	"github.com/champion19/api-flighthours/platform/identity_provider/keycloak"
 	"github.com/champion19/api-flighthours/platform/jwt"
@@ -50,8 +48,6 @@ type Dependencies struct {
 	AirlineInteractor            *interactor.AirlineInteractor
 	AirlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
 	EngineInteractor             *interactor.EngineInteractor
-	RouteInteractor              *interactor.RouteInteractor
-	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
 	AirportInteractor            *interactor.AirportInteractor
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
@@ -165,8 +161,6 @@ func Init() (*Dependencies, error) {
 		AirlineInteractor:            deps.airlineInteractor,
 		AirlineEmployeeInteractor:    deps.airlineEmployeeInteractor,
 		EngineInteractor:             deps.engineInteractor,
-		RouteInteractor:              deps.routeInteractor,
-		AirlineRouteInteractor:       deps.airlineRouteInteractor,
 		AirportInteractor:            deps.airportInteractor,
 		ManufacturerInteractor:       deps.manufacturerInteractor,
 		AircraftModelInteractor:      deps.aircraftModelInteractor,
@@ -181,8 +175,6 @@ type domainDeps struct {
 	airlineInteractor            *interactor.AirlineInteractor
 	airlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
 	engineInteractor             *interactor.EngineInteractor
-	routeInteractor              *interactor.RouteInteractor
-	airlineRouteInteractor       *interactor.AirlineRouteInteractor
 	airportInteractor            *interactor.AirportInteractor
 	manufacturerInteractor       *interactor.ManufacturerInteractor
 	aircraftModelInteractor      *interactor.AircraftModelInteractor
@@ -234,20 +226,6 @@ func initDomainDependencies(db *sql.DB, log logger.Logger) (*domainDeps, error) 
 	}
 	log.Success(logger.LogAircraftModelRepoInitOK)
 
-	routeRepository, err := routeRepo.NewRouteRepository(db)
-	if err != nil {
-		log.Error(logger.LogRouteRepoInitError, "error", err)
-		return nil, err
-	}
-	log.Success(logger.LogRouteRepoInitOK)
-
-	airlineRouteRepository, err := airlineRouteRepo.NewAirlineRouteRepository(db)
-	if err != nil {
-		log.Error(logger.LogAirlineRouteRepoInitError, "error", err)
-		return nil, err
-	}
-	log.Success(logger.LogAirlineRouteRepoInitOK)
-
 	dailyLogbookDetailRepository, err := dailyLogbookDetailRepo.NewDailyLogbookDetailRepository(db)
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailRepoInitError, "error", err)
@@ -280,8 +258,6 @@ func initDomainDependencies(db *sql.DB, log logger.Logger) (*domainDeps, error) 
 		airlineInteractor:            interactor.NewAirlineInteractor(airlineService),
 		airlineEmployeeInteractor:    interactor.NewAirlineEmployeeInteractor(services.NewAirlineEmployeeService(airlineEmployeeRepository)),
 		engineInteractor:             interactor.NewEngineInteractor(services.NewEngineService(engineRepository)),
-		routeInteractor:              interactor.NewRouteInteractor(services.NewRouteService(routeRepository)),
-		airlineRouteInteractor:       interactor.NewAirlineRouteInteractor(services.NewAirlineRouteService(airlineRouteRepository), services.NewRouteService(routeRepository)),
 		airportInteractor:            interactor.NewAirportInteractor(airportService),
 		manufacturerInteractor:       interactor.NewManufacturerInteractor(services.NewManufacturerService(manufacturerRepository)),
 		aircraftModelInteractor:      interactor.NewAircraftModelInteractor(services.NewAircraftModelService(aircraftModelRepository, log)),

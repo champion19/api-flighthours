@@ -15,9 +15,15 @@
       "description": "Flight number (numeric, up to 4 digits)",
       "pattern": "^\\d{1,4}$"
     },
-    "airline_route_id": {
+    "origin_airport_id": {
       "type": "string",
-      "description": "Airline route ID (obfuscated ID)",
+      "description": "Origin airport ID (obfuscated ID)",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "destination_airport_id": {
+      "type": "string",
+      "description": "Destination airport ID (obfuscated ID)",
       "minLength": 1,
       "maxLength": 50
     },
@@ -128,7 +134,8 @@
   "required": [
     "flight_real_date",
     "flight_number",
-    "airline_route_id"
+    "origin_airport_id",
+    "destination_airport_id"
   ],
   "additionalProperties": false
 }

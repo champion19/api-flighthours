@@ -50,11 +50,12 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 
 		// Encode related IDs
 		encodedLogbookID, _ := h.EncodeID(detail.DailyLogbookID)
-		encodedRouteID, _ := h.EncodeID(detail.AirlineRouteID)
+		encodedOriginAirportID, _ := h.EncodeID(detail.OriginAirportID)
+		encodedDestinationAirportID, _ := h.EncodeID(detail.DestinationAirportID)
 		encodedAircraftID, _ := h.EncodeID(detail.TailNumberID)
 
 		// Build response
-		response := FromDomainDailyLogbookDetail(detail, responseID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+		response := FromDomainDailyLogbookDetail(detail, responseID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, responseID)
 
 		log.Info(logger.LogDailyLogbookDetailGetOK, "id", detailUUID)
@@ -105,13 +106,21 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.Sanitize()
 
-		routeUUID, _ := h.resolveID(req.AirlineRouteID)
-		if routeUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid route ID")
-			h.Response.Error(c, domain.MsgFlightInvalidRoute)
+		originAirportUUID, _ := h.resolveID(req.OriginAirportID)
+		if originAirportUUID == "" {
+			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid origin airport ID")
+			h.Response.Error(c, domain.MsgFlightInvalidAirport)
 			return
 		}
-		req.AirlineRouteID = routeUUID
+		req.OriginAirportID = originAirportUUID
+
+		destinationAirportUUID, _ := h.resolveID(req.DestinationAirportID)
+		if destinationAirportUUID == "" {
+			log.Warn(logger.LogDailyLogbookDetailCreateError, "error", "invalid destination airport ID")
+			h.Response.Error(c, domain.MsgFlightInvalidAirport)
+			return
+		}
+		req.DestinationAirportID = destinationAirportUUID
 
 		var tailNumberUUID string
 		if req.TailNumberID == "" {
@@ -156,10 +165,11 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 
 		encodedID, _ := h.EncodeID(detail.ID)
 		encodedLogbookID, _ := h.EncodeID(logbookUUID)
-		encodedRouteID, _ := h.EncodeID(req.AirlineRouteID)
+		encodedOriginAirportID, _ := h.EncodeID(req.OriginAirportID)
+		encodedDestinationAirportID, _ := h.EncodeID(req.DestinationAirportID)
 		encodedAircraftID, _ := h.EncodeID(req.TailNumberID)
 
-		response := FromDomainDailyLogbookDetail(createdDetail, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+		response := FromDomainDailyLogbookDetail(createdDetail, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 
 		log.Info(logger.LogDailyLogbookDetailCreateOK, "id", detail.ID)
@@ -173,8 +183,8 @@ func mapCreateError(err error) string {
 		return domain.MsgFlightUnauthorized
 	case domain.ErrFlightInvalidLogbook:
 		return domain.MsgFlightInvalidLogbook
-	case domain.ErrFlightInvalidRoute:
-		return domain.MsgFlightInvalidRoute
+	case domain.ErrFlightInvalidAirport:
+		return domain.MsgFlightInvalidAirport
 	case domain.ErrFlightInvalidTailNumber:
 		return domain.MsgFlightInvalidTailNumber
 	case domain.ErrFlightInvalidTimeSequence:
@@ -230,13 +240,21 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.Sanitize()
 
-		routeUUID, _ := h.resolveID(req.AirlineRouteID)
-		if routeUUID == "" {
-			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid route ID")
-			h.Response.Error(c, domain.MsgFlightInvalidRoute)
+		originAirportUUID, _ := h.resolveID(req.OriginAirportID)
+		if originAirportUUID == "" {
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid origin airport ID")
+			h.Response.Error(c, domain.MsgFlightInvalidAirport)
 			return
 		}
-		req.AirlineRouteID = routeUUID
+		req.OriginAirportID = originAirportUUID
+
+		destinationAirportUUID, _ := h.resolveID(req.DestinationAirportID)
+		if destinationAirportUUID == "" {
+			log.Warn(logger.LogDailyLogbookDetailUpdateError, "error", "invalid destination airport ID")
+			h.Response.Error(c, domain.MsgFlightInvalidAirport)
+			return
+		}
+		req.DestinationAirportID = destinationAirportUUID
 
 		aircraftUUID, _ := h.resolveID(req.TailNumberID)
 		if aircraftUUID == "" {
@@ -268,10 +286,11 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		}
 
 		encodedLogbookID, _ := h.EncodeID(updatedDetail.DailyLogbookID)
-		encodedRouteID, _ := h.EncodeID(updatedDetail.AirlineRouteID)
+		encodedOriginAirportID, _ := h.EncodeID(updatedDetail.OriginAirportID)
+		encodedDestinationAirportID, _ := h.EncodeID(updatedDetail.DestinationAirportID)
 		encodedAircraftID, _ := h.EncodeID(updatedDetail.TailNumberID)
 
-		response := FromDomainDailyLogbookDetail(updatedDetail, responseID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+		response := FromDomainDailyLogbookDetail(updatedDetail, responseID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
 		response.Links = BuildDailyLogbookDetailLinks(c, responseID)
 
 		log.Info(logger.LogDailyLogbookDetailUpdateOK, "id", detailUUID)
@@ -412,10 +431,11 @@ func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 		for _, d := range details {
 			encodedID, _ := h.EncodeID(d.ID)
 			encodedLogbookID, _ := h.EncodeID(d.DailyLogbookID)
-			encodedRouteID, _ := h.EncodeID(d.AirlineRouteID)
+			encodedOriginAirportID, _ := h.EncodeID(d.OriginAirportID)
+			encodedDestinationAirportID, _ := h.EncodeID(d.DestinationAirportID)
 			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
-			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
 			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 			responses = append(responses, response)
 		}
@@ -463,10 +483,11 @@ func (h *handler) ListMyFlights() gin.HandlerFunc {
 		for _, d := range details {
 			encodedID, _ := h.EncodeID(d.ID)
 			encodedLogbookID, _ := h.EncodeID(d.DailyLogbookID)
-			encodedRouteID, _ := h.EncodeID(d.AirlineRouteID)
+			encodedOriginAirportID, _ := h.EncodeID(d.OriginAirportID)
+			encodedDestinationAirportID, _ := h.EncodeID(d.DestinationAirportID)
 			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
-			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
 			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 			responses = append(responses, response)
 		}
