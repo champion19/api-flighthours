@@ -244,49 +244,6 @@ func TestBuildAircraftModelStatusLinks(t *testing.T) {
 	}
 }
 
-func TestBuildRouteLinks(t *testing.T) {
-	links := BuildRouteLinks("http://localhost:8080/api/v1", "route-1")
-	if len(links) == 0 {
-		t.Error("expected route links")
-	}
-}
-
-func TestBuildRouteListLinks(t *testing.T) {
-	links := BuildRouteListLinks("http://localhost:8080/api/v1")
-	if len(links) == 0 {
-		t.Error("expected route list links")
-	}
-}
-
-func TestBuildAirlineRouteLinks(t *testing.T) {
-	links := BuildAirlineRouteLinks("http://localhost:8080/api/v1", "ar-1", true)
-	if len(links) == 0 {
-		t.Error("expected airline route links")
-	}
-	links2 := BuildAirlineRouteLinks("http://localhost:8080/api/v1", "ar-1", false)
-	if len(links2) == 0 {
-		t.Error("expected airline route links for inactive")
-	}
-}
-
-func TestBuildAirlineRouteListLinks(t *testing.T) {
-	links := BuildAirlineRouteListLinks("http://localhost:8080/api/v1")
-	if len(links) == 0 {
-		t.Error("expected airline route list links")
-	}
-}
-
-func TestBuildAirlineRouteStatusLinks(t *testing.T) {
-	links := BuildAirlineRouteStatusLinks("http://localhost:8080/api/v1", "ar-1", true)
-	if len(links) == 0 {
-		t.Error("expected airline route status links")
-	}
-	links2 := BuildAirlineRouteStatusLinks("http://localhost:8080/api/v1", "ar-1", false)
-	if len(links2) == 0 {
-		t.Error("expected airline route status links for inactive")
-	}
-}
-
 func TestBuildDailyLogbookDetailLinks_Gin(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

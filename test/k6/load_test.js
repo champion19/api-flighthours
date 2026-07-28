@@ -403,11 +403,9 @@ function runCatalogQueries() {
       { path: '/airlines', tag: 'catalog_airlines' },
       { path: '/airports', tag: 'catalog_airports' },
       { path: '/engines', tag: 'catalog_engines' },
-      { path: '/routes', tag: 'catalog_routes' },
       { path: '/manufacturers', tag: 'catalog_manufacturers' },
       { path: '/aircraft-models', tag: 'catalog_aircraft_models' },
       { path: '/crew-member-types', tag: 'catalog_crew_types' },
-      { path: '/airline-routes', tag: 'catalog_airline_routes' },
     ];
 
     const count = randomIntBetween(3, 4);
@@ -477,14 +475,6 @@ function runAuthenticatedEndpoints(authHeaders) {
       'daily-logbooks < 1.5s': (r) => r.timings.duration < 1500,
     }, '10s');
     sleep(Math.random() * 0.5 + 0.2); // NOSONAR
-  }
-
-  if (Math.random() < 0.4) { // NOSONAR
-    checkEndpoint('06_MyAirlineRoutes', `${API}/employees/airline-routes`, authHeaders, flightQueryTime, 'my_airline_routes', {
-      'my airline-routes 200/204': (r) => r.status === 200 || r.status === 204,
-      'my airline-routes < 1s': (r) => r.timings.duration < 1000,
-    }, '10s');
-    sleep(Math.random() * 0.3 + 0.2); // NOSONAR
   }
 
   if (Math.random() < 0.3) { // NOSONAR

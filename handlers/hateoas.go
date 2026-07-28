@@ -14,7 +14,6 @@ const (
 	resourceDailyLogbooks    = "daily-logbooks"
 	resourceTailNumbers      = "tail-numbers"
 	resourceAircraftModels   = "aircraft-models"
-	resourceAirlineRoutes    = "airline-routes"
 	resourceAirlineEmployees = "airline-employees"
 )
 
@@ -693,106 +692,6 @@ func BuildAircraftModelStatusLinks(baseURL, modelID string, isActive bool) []Lin
 	})
 
 	return links
-}
-
-// ============================================================================
-// ROUTE HATEOAS LINKS
-// ============================================================================
-
-// BuildRouteLinks construye links HATEOAS para una ruta específica
-func BuildRouteLinks(baseURL, routeID string) []Link {
-	resourceURL := BuildResourceURL(baseURL, "routes", routeID)
-	collectionURL := BuildCollectionURL(baseURL, "routes")
-
-	return []Link{
-		{
-			Href:   resourceURL,
-			Rel:    "self",
-			Method: "GET",
-		},
-		{
-			Href:   collectionURL,
-			Rel:    "collection",
-			Method: "GET",
-		},
-	}
-}
-
-// BuildRouteListLinks construye links para la lista de rutas
-func BuildRouteListLinks(baseURL string) []Link {
-	collectionURL := BuildCollectionURL(baseURL, "routes")
-
-	return []Link{
-		{
-			Href:   collectionURL,
-			Rel:    "self",
-			Method: "GET",
-		},
-	}
-}
-
-// ============================================================================
-// AIRLINE ROUTE HATEOAS LINKS
-// ============================================================================
-
-// BuildAirlineRouteLinks construye links HATEOAS para una ruta de aerolínea específica
-func BuildAirlineRouteLinks(baseURL, airlineRouteID string, isActive bool) []Link {
-	resourceURL := BuildResourceURL(baseURL, resourceAirlineRoutes, airlineRouteID)
-	collectionURL := BuildCollectionURL(baseURL, resourceAirlineRoutes)
-
-	links := []Link{
-		{
-			Href:   resourceURL,
-			Rel:    "self",
-			Method: "GET",
-		},
-	}
-
-	// Si está activo, mostrar link para desactivar y viceversa
-	if isActive {
-		links = append(links, Link{
-			Href:   resourceURL + pathDeactivate,
-			Rel:    "deactivate",
-			Method: "PATCH",
-		})
-	} else {
-		links = append(links, Link{
-			Href:   resourceURL + pathActivate,
-			Rel:    "activate",
-			Method: "PATCH",
-		})
-	}
-
-	links = append(links, Link{
-		Href:   collectionURL,
-		Rel:    "collection",
-		Method: "GET",
-	})
-
-	return links
-}
-
-// BuildAirlineRouteListLinks construye links para la lista de rutas aerolínea
-func BuildAirlineRouteListLinks(baseURL string) []Link {
-	collectionURL := BuildCollectionURL(baseURL, resourceAirlineRoutes)
-
-	return []Link{
-		{
-			Href:   collectionURL,
-			Rel:    "self",
-			Method: "GET",
-		},
-		{
-			Href:   collectionURL,
-			Rel:    "create",
-			Method: "POST",
-		},
-	}
-}
-
-// BuildAirlineRouteStatusLinks construye links para respuesta de cambio de status
-func BuildAirlineRouteStatusLinks(baseURL, airlineRouteID string, isActive bool) []Link {
-	return BuildAirlineRouteLinks(baseURL, airlineRouteID, isActive)
 }
 
 // ============================================================================

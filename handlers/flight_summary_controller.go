@@ -145,10 +145,11 @@ func (h *handler) GetRecentFlights() gin.HandlerFunc {
 		for _, d := range flights {
 			encodedID, _ := h.EncodeID(d.ID)
 			encodedLogbookID, _ := h.EncodeID(d.DailyLogbookID)
-			encodedRouteID, _ := h.EncodeID(d.AirlineRouteID)
+			encodedOriginAirportID, _ := h.EncodeID(d.OriginAirportID)
+			encodedDestinationAirportID, _ := h.EncodeID(d.DestinationAirportID)
 			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
-			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedRouteID, encodedAircraftID)
+			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
 			responses = append(responses, response)
 		}
 

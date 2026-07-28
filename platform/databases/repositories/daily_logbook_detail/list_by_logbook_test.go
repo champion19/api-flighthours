@@ -63,7 +63,7 @@ func TestListDailyLogbookDetailsByLogbook_Empty(t *testing.T) {
 
 	cols := []string{
 		"id", "daily_logbook_id", "flight_real_date", "flight_number",
-		"airline_route_id", "tail_number_id", "passengers",
+		"origin_airport_id", "destination_airport_id", "tail_number_id", "passengers",
 		"out_time", "takeoff_time", "landing_time", "in_time",
 		"pilot_role", "companion_name", "crew_role",
 		"air_time", "block_time", "approach_category", "approach_subtype", "autoland", "flight_type",

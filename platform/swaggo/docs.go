@@ -270,182 +270,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/airline-routes": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a list of all airline-route associations with optional filters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Airline Routes"
-                ],
-                "summary": "List all airline routes",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by airline code",
-                        "name": "airline_code",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by status (true/false/1/0)",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Airline routes list",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/airline-routes/{id}/activate": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Sets the airline route status to active. Idempotent operation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Airline Routes"
-                ],
-                "summary": "Activate an airline route",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Airline Route ID (obfuscated ID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Airline route activated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Airline route not found",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/airline-routes/{id}/deactivate": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Sets the airline route status to inactive. Idempotent operation.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Airline Routes"
-                ],
-                "summary": "Deactivate an airline route",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Airline Route ID (obfuscated ID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Airline route deactivated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Airline route not found",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/airlines": {
             "get": {
                 "description": "Returns a list of all airlines with optional status filter",
@@ -2245,52 +2069,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/employees/airline-routes": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the airline routes associated with the authenticated employee's airline",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Airline Routes"
-                ],
-                "summary": "List routes for authenticated user's airline",
-                "responses": {
-                    "200": {
-                        "description": "My airline routes list",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Not authenticated",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Employee or airline association not found",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/middleware.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/employees/airline/activate": {
             "patch": {
                 "security": [
@@ -3170,95 +2948,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/routes": {
-            "get": {
-                "description": "Returns a list of all routes with optional filters",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Routes"
-                ],
-                "summary": "List all routes",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by airport type (e.g., Nacional, Internacional)",
-                        "name": "airport_type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RouteListResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/routes/{id}": {
-            "get": {
-                "description": "Returns route information by ID (accepts both UUID and obfuscated ID)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Routes"
-                ],
-                "summary": "Get route by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Route ID (obfuscated ID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
         "/tail-numbers": {
             "get": {
                 "description": "Returns a list of all aircraft registrations with optional filters",
@@ -3686,6 +3375,12 @@ const docTemplate = `{
                 "airport_type": {
                     "type": "string"
                 },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "iata_code": {
                     "type": "string"
                 },
@@ -3693,6 +3388,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "oaci_code": {
                     "type": "string"
                 },
                 "status": {
@@ -3760,11 +3458,14 @@ const docTemplate = `{
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
-                "airline_route_id": {
+                "approach_category": {
                     "type": "string"
                 },
-                "approach_type": {
+                "approach_subtype": {
                     "type": "string"
+                },
+                "autoland": {
+                    "type": "boolean"
                 },
                 "block_time": {
                     "description": "TIME format HH:MM (nullable)",
@@ -3775,6 +3476,9 @@ const docTemplate = `{
                 },
                 "crew_role": {
                     "description": "nullable",
+                    "type": "string"
+                },
+                "destination_airport_id": {
                     "type": "string"
                 },
                 "flight_number": {
@@ -3792,6 +3496,9 @@ const docTemplate = `{
                 },
                 "landing_time": {
                     "description": "TIME format HH:MM (nullable)",
+                    "type": "string"
+                },
+                "origin_airport_id": {
                     "type": "string"
                 },
                 "out_time": {
@@ -3824,6 +3531,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "log_date": {
+                    "type": "string"
+                },
+                "tail_number_id": {
                     "type": "string"
                 }
             }
@@ -3879,11 +3589,14 @@ const docTemplate = `{
                 "airline_code": {
                     "type": "string"
                 },
-                "airline_route_id": {
+                "approach_category": {
                     "type": "string"
                 },
-                "approach_type": {
+                "approach_subtype": {
                     "type": "string"
+                },
+                "autoland": {
+                    "type": "boolean"
                 },
                 "block_time": {
                     "type": "string"
@@ -3895,6 +3608,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "daily_logbook_id": {
+                    "type": "string"
+                },
+                "destination_airport_id": {
                     "type": "string"
                 },
                 "destination_iata_code": {
@@ -3922,6 +3638,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "model_name": {
+                    "type": "string"
+                },
+                "origin_airport_id": {
                     "type": "string"
                 },
                 "origin_iata_code": {
@@ -3992,6 +3711,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "tail_number": {
+                    "type": "string"
+                },
+                "tail_number_id": {
                     "type": "string"
                 }
             }
@@ -4398,9 +4123,6 @@ const docTemplate = `{
         },
         "handlers.RefreshTokenRequest": {
             "type": "object",
-            "required": [
-                "refresh_token"
-            ],
             "properties": {
                 "refresh_token": {
                     "type": "string"
@@ -4426,67 +4148,6 @@ const docTemplate = `{
                 },
                 "sent": {
                     "type": "boolean"
-                }
-            }
-        },
-        "handlers.RouteListResponse": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.Link"
-                    }
-                },
-                "routes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.RouteResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.RouteResponse": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.Link"
-                    }
-                },
-                "airport_type": {
-                    "type": "string"
-                },
-                "destination_airport_id": {
-                    "type": "string"
-                },
-                "destination_airport_name": {
-                    "type": "string"
-                },
-                "destination_iata_code": {
-                    "type": "string"
-                },
-                "estimated_flight_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "origin_airport_id": {
-                    "type": "string"
-                },
-                "origin_airport_name": {
-                    "type": "string"
-                },
-                "origin_iata_code": {
-                    "type": "string"
-                },
-                "route_code": {
-                    "type": "string"
                 }
             }
         },
@@ -4566,11 +4227,14 @@ const docTemplate = `{
                     "description": "TIME format HH:MM (nullable)",
                     "type": "string"
                 },
-                "airline_route_id": {
+                "approach_category": {
                     "type": "string"
                 },
-                "approach_type": {
+                "approach_subtype": {
                     "type": "string"
+                },
+                "autoland": {
+                    "type": "boolean"
                 },
                 "block_time": {
                     "description": "TIME format HH:MM (nullable)",
@@ -4581,6 +4245,9 @@ const docTemplate = `{
                 },
                 "crew_role": {
                     "description": "nullable",
+                    "type": "string"
+                },
+                "destination_airport_id": {
                     "type": "string"
                 },
                 "flight_number": {
@@ -4598,6 +4265,9 @@ const docTemplate = `{
                 },
                 "landing_time": {
                     "description": "TIME format HH:MM (nullable)",
+                    "type": "string"
+                },
+                "origin_airport_id": {
                     "type": "string"
                 },
                 "out_time": {
@@ -4634,6 +4304,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "boolean"
+                },
+                "tail_number_id": {
+                    "type": "string"
                 }
             }
         },
@@ -4809,28 +4482,11 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
-                "fields": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/middleware.ValidationFieldError"
-                    }
-                },
                 "message": {
                     "type": "string"
                 },
                 "success": {
                     "type": "boolean"
-                }
-            }
-        },
-        "middleware.ValidationFieldError": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
                 }
             }
         }
@@ -4848,7 +4504,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8081",
+	Host:             "localhost:8082",
 	BasePath:         "/flighthours/api/v1",
 	Schemes:          []string{},
 	Title:            "Flighthours API",

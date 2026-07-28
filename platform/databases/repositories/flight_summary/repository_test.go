@@ -222,7 +222,7 @@ func TestGetDailyFlightSeconds(t *testing.T) {
 func TestGetRecentFlights(t *testing.T) {
 	detailCols := []string{
 		"id", "daily_logbook_id", "flight_real_date", "flight_number",
-		"airline_route_id", "actual_tail_number_id", "passengers",
+		"origin_airport_id", "destination_airport_id", "actual_tail_number_id", "passengers",
 		"out_time", "takeoff_time", "landing_time", "in_time",
 		"pilot_role", "companion_name", "crew_role",
 		"air_time", "block_time", "approach_category", "approach_subtype", "autoland", "flight_type",
@@ -236,7 +236,7 @@ func TestGetRecentFlights(t *testing.T) {
 
 		rows := sqlmock.NewRows(detailCols).
 			AddRow("d-1", "lb-1", testDate, "AV123",
-				"route-1", "tn-1", 120,
+				"airport-orig-1", "airport-dest-1", "tn-1", 120,
 				"08:00", "08:15", "09:30", "09:45",
 				"PF", nil, nil,
 				"01:15", "01:45", nil, nil, nil, nil,

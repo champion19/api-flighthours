@@ -481,27 +481,6 @@ const (
 	MsgManufacturerListError = "FAB_LIST_ERR_03105" // Error - Error al listar fabricantes
 )
 
-// Route Management Errors (RUT_*)
-var (
-	ErrRouteNotFound = errors.New("ERR_ROUTE_NOT_FOUND")
-)
-
-// Route Module (RUT_*) - Ruta
-const (
-	// ========================================
-	// Consultar  - RUT_CON_*
-	// ========================================
-	MsgRouteGetOK    = "RUT_CON_EXI_03901" // Éxito - Ruta consultada exitosamente
-	MsgRouteNotFound = "RUT_CON_ERR_03902" // Error - Ruta no encontrada
-	MsgRouteGetErr   = "RUT_CON_ERR_03903" // Error - Error técnico al consultar
-
-	// ========================================
-	// Listar - RUT_LIST_*
-	// ========================================
-	MsgRouteListOK    = "RUT_LIST_EXI_03001" // Éxito - Lista de rutas obtenida
-	MsgRouteListError = "RUT_LIST_ERR_03002" // Error - Error al listar rutas
-)
-
 // DailyLogbook Management Errors (BIT_*)
 var (
 	ErrDailyLogbookNotFound     = errors.New("ERR_DAILY_LOGBOOK_NOT_FOUND")
@@ -564,18 +543,6 @@ const (
 	MsgDailyLogbookInactive     = "BIT_VAL_ERR_01905"  // Error - Bitácora cerrada, no se pueden agregar ni editar vuelos
 )
 
-// AirlineRoute Management Errors (RUT_AIR_*)
-var (
-	ErrAirlineRouteNotFound        = errors.New("ERR_AIRLINE_ROUTE_NOT_FOUND")
-	ErrAirlineRouteCannotSave      = errors.New("ERR_AIRLINE_ROUTE_CANNOT_SAVE")
-	ErrAirlineRouteCannotUpdate    = errors.New("ERR_AIRLINE_ROUTE_CANNOT_UPDATE")
-	ErrAirlineRouteInvalidRoute    = errors.New("ERR_AIRLINE_ROUTE_INVALID_ROUTE")
-	ErrAirlineRouteInvalidAirline  = errors.New("ERR_AIRLINE_ROUTE_INVALID_AIRLINE")
-	ErrAirlineRouteAlreadyActive   = errors.New("ERR_AIRLINE_ROUTE_ALREADY_ACTIVE")
-	ErrAirlineRouteAlreadyInactive = errors.New("ERR_AIRLINE_ROUTE_ALREADY_INACTIVE")
-	ErrAirlineRouteAlreadyExists   = errors.New("ERR_AIRLINE_ROUTE_ALREADY_EXISTS")
-)
-
 // Flight Management Errors (VUE_*) - Also used for DailyLogbookDetail
 var (
 	ErrFlightNotFound            = errors.New("ERR_FLIGHT_NOT_FOUND")
@@ -583,55 +550,12 @@ var (
 	ErrFlightCannotUpdate        = errors.New("ERR_FLIGHT_CANNOT_UPDATE")
 	ErrFlightCannotDelete        = errors.New("ERR_FLIGHT_CANNOT_DELETE")
 	ErrFlightUnauthorized        = errors.New("ERR_FLIGHT_UNAUTHORIZED")
-	ErrFlightInvalidRoute        = errors.New("ERR_FLIGHT_INVALID_ROUTE")
+	ErrFlightInvalidAirport      = errors.New("ERR_FLIGHT_INVALID_AIRPORT")
 	ErrFlightInvalidLogbook      = errors.New("ERR_FLIGHT_INVALID_LOGBOOK")
 	ErrFlightInvalidTailNumber   = errors.New("ERR_FLIGHT_INVALID_TAIL_NUMBER")
 	ErrFlightInvalidTimeSequence = errors.New("ERR_FLIGHT_INVALID_TIME_SEQUENCE")
 	ErrFlightDuplicate           = errors.New("ERR_FLIGHT_DUPLICATE")
 	ErrFlightInvalidApproach     = errors.New("ERR_FLIGHT_INVALID_APPROACH")
-)
-
-// AirlineRoute Module (RUT_AIR_*) - Ruta Aerolinea
-const (
-	// ========================================
-	// Consultar - RUT_AIR_CON_*
-	// ========================================
-	MsgAirlineRouteGetOK    = "RUT_AIR_CON_EXI_04001" // Éxito - Ruta aerolínea consultada exitosamente
-	MsgAirlineRouteNotFound = "RUT_AIR_CON_ERR_04002" // Error - Ruta aerolínea no encontrada
-	MsgAirlineRouteGetErr   = "RUT_AIR_CON_ERR_04003" // Error - Error técnico al consultar
-
-	// ========================================
-	// Desactivar - RUT_AIR_INA_*
-	// ========================================
-	MsgAirlineRouteDeactivateOK    = "RUT_AIR_INA_EXI_04101" // Éxito - Ruta aerolínea desactivada
-	MsgAirlineRouteDeactivateErr   = "RUT_AIR_INA_ERR_04102" // Error - Error técnico al desactivar
-	MsgAirlineRouteAlreadyInactive = "RUT_AIR_INA_ERR_04103" // Error - La ruta aerolínea ya está inactiva
-
-	// ========================================
-	// Activar - RUT_AIR_ACT_*
-	// ========================================
-	MsgAirlineRouteActivateOK    = "RUT_AIR_ACT_EXI_04201" // Éxito - Ruta aerolínea activada
-	MsgAirlineRouteActivateErr   = "RUT_AIR_ACT_ERR_04202" // Error - Error técnico al activar
-	MsgAirlineRouteAlreadyActive = "RUT_AIR_ACT_ERR_04203" // Error - La ruta aerolínea ya está activa
-
-	// ========================================
-	// Listar - RUT_AIR_LIST_*
-	// ========================================
-	MsgAirlineRouteListOK    = "RUT_AIR_LIST_EXI_04001" // Éxito - Lista de rutas aerolínea obtenida
-	MsgAirlineRouteListError = "RUT_AIR_LIST_ERR_04002" // Error - Error al listar rutas aerolínea
-
-	// ========================================
-	// Validaciones - RUT_AIR_VAL_*
-	// ========================================
-	MsgAirlineRouteInvalidRoute   = "RUT_AIR_VAL_ERR_04301" // Error - Ruta inválida
-	MsgAirlineRouteInvalidAirline = "RUT_AIR_VAL_ERR_04302" // Error - Aerolínea inválida
-
-	// ========================================
-	// Resolver/Crear pendiente - RUT_AIR_RES_*
-	// ========================================
-	MsgAirlineRouteResolvedOK       = "RUT_AIR_RES_EXI_04401" // Éxito - Vínculo con la aerolínea ya existía
-	MsgAirlineRouteCreatedPendingOK = "RUT_AIR_RES_EXI_04402" // Éxito - Vínculo creado, pendiente de aprobación
-	MsgAirlineRouteResolveErr       = "RUT_AIR_RES_ERR_04403" // Error - Error técnico al resolver/crear
 )
 
 // Flight Module (VUE_*) - Vuelo
@@ -665,7 +589,7 @@ const (
 	// ========================================
 	// Validaciones - VUE_VAL_*
 	// ========================================
-	MsgFlightInvalidRoute        = "VUE_VAL_ERR_04805" // Error - Ruta de aerolínea inválida
+	MsgFlightInvalidAirport      = "VUE_VAL_ERR_04805" // Error - Aeropuerto de origen/destino inválido
 	MsgFlightInvalidLogbook      = "VUE_VAL_ERR_04806" // Error - Bitácora inválida
 	MsgFlightInvalidTailNumber   = "VUE_VAL_ERR_04807" // Error - Matrícula de aeronave inválida
 	MsgFlightInvalidTimeSequence = "VUE_VAL_ERR_04808" // Error - Secuencia de tiempos inválida (out < takeoff < landing < in)

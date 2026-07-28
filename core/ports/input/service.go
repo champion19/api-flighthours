@@ -91,23 +91,6 @@ type AircraftModelService interface {
 	DeactivateAircraftModelTx(ctx context.Context, tx output.Tx, id string) error
 }
 
-type RouteService interface {
-	GetRouteByID(ctx context.Context, id string) (*domain.Route, error)
-	ListRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.Route, error)
-	GetRouteByAirports(ctx context.Context, originAirportID, destinationAirportID string) (*domain.Route, error)
-}
-
-type AirlineRouteService interface {
-	BeginTx(ctx context.Context) (output.Tx, error)
-	GetAirlineRouteByID(ctx context.Context, id string) (*domain.AirlineRoute, error)
-	ListAirlineRoutes(ctx context.Context, filters map[string]interface{}) ([]domain.AirlineRoute, error)
-	ListAirlineRoutesByAirlineID(ctx context.Context, airlineID string) ([]domain.AirlineRoute, error)
-	ActivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error
-	DeactivateAirlineRouteTx(ctx context.Context, tx output.Tx, id string) error
-	GetAirlineRouteByRouteAndAirline(ctx context.Context, routeID, airlineID string) (*domain.AirlineRoute, error)
-	SaveAirlineRouteTx(ctx context.Context, tx output.Tx, airlineRoute domain.AirlineRoute) error
-}
-
 type DailyLogbookDetailService interface {
 	BeginTx(ctx context.Context) (output.Tx, error)
 	GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)

@@ -24,8 +24,6 @@ type handler struct {
 	AirportInteractor            *interactor.AirportInteractor
 	AirlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
 	EngineInteractor             *interactor.EngineInteractor
-	RouteInteractor              *interactor.RouteInteractor
-	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
 	TailNumberInteractor         *interactor.TailNumberInteractor
@@ -45,8 +43,6 @@ type HandlerDeps struct {
 	AirlineInteractor            *interactor.AirlineInteractor
 	AirlineEmployeeInteractor    *interactor.AirlineEmployeeInteractor
 	EngineInteractor             *interactor.EngineInteractor
-	RouteInteractor              *interactor.RouteInteractor
-	AirlineRouteInteractor       *interactor.AirlineRouteInteractor
 	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
 	ManufacturerInteractor       *interactor.ManufacturerInteractor
@@ -68,8 +64,6 @@ func New(deps HandlerDeps) *handler {
 		AirlineInteractor:            deps.AirlineInteractor,
 		AirlineEmployeeInteractor:    deps.AirlineEmployeeInteractor,
 		EngineInteractor:             deps.EngineInteractor,
-		RouteInteractor:              deps.RouteInteractor,
-		AirlineRouteInteractor:       deps.AirlineRouteInteractor,
 		DailyLogbookDetailInteractor: deps.DailyLogbookDetailInteractor,
 		DailyLogbookInteractor:       deps.DailyLogbookInteractor,
 		ManufacturerInteractor:       deps.ManufacturerInteractor,

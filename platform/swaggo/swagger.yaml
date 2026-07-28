@@ -144,11 +144,17 @@ definitions:
         type: array
       airport_type:
         type: string
+      city:
+        type: string
+      country:
+        type: string
       iata_code:
         type: string
       id:
         type: string
       name:
+        type: string
+      oaci_code:
         type: string
       status:
         type: string
@@ -194,10 +200,12 @@ definitions:
       air_time:
         description: TIME format HH:MM (nullable)
         type: string
-      airline_route_id:
+      approach_category:
         type: string
-      approach_type:
+      approach_subtype:
         type: string
+      autoland:
+        type: boolean
       block_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -205,6 +213,8 @@ definitions:
         type: string
       crew_role:
         description: nullable
+        type: string
+      destination_airport_id:
         type: string
       flight_number:
         type: string
@@ -217,6 +227,8 @@ definitions:
         type: string
       landing_time:
         description: TIME format HH:MM (nullable)
+        type: string
+      origin_airport_id:
         type: string
       out_time:
         description: TIME format HH:MM (nullable)
@@ -237,6 +249,8 @@ definitions:
       book_page:
         type: integer
       log_date:
+        type: string
+      tail_number_id:
         type: string
     required:
     - log_date
@@ -275,10 +289,12 @@ definitions:
         type: string
       airline_code:
         type: string
-      airline_route_id:
+      approach_category:
         type: string
-      approach_type:
+      approach_subtype:
         type: string
+      autoland:
+        type: boolean
       block_time:
         type: string
       companion_name:
@@ -286,6 +302,8 @@ definitions:
       crew_role:
         type: string
       daily_logbook_id:
+        type: string
+      destination_airport_id:
         type: string
       destination_iata_code:
         type: string
@@ -304,6 +322,8 @@ definitions:
       log_date:
         type: string
       model_name:
+        type: string
+      origin_airport_id:
         type: string
       origin_iata_code:
         type: string
@@ -350,6 +370,10 @@ definitions:
       log_date:
         type: string
       status:
+        type: string
+      tail_number:
+        type: string
+      tail_number_id:
         type: string
     type: object
   handlers.DailyLogbookStatusResponse:
@@ -616,8 +640,6 @@ definitions:
     properties:
       refresh_token:
         type: string
-    required:
-    - refresh_token
     type: object
   handlers.ResendVerificationEmailRequest:
     properties:
@@ -632,46 +654,6 @@ definitions:
         type: string
       sent:
         type: boolean
-    type: object
-  handlers.RouteListResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      routes:
-        items:
-          $ref: '#/definitions/handlers.RouteResponse'
-        type: array
-      total:
-        type: integer
-    type: object
-  handlers.RouteResponse:
-    properties:
-      _links:
-        items:
-          $ref: '#/definitions/handlers.Link'
-        type: array
-      airport_type:
-        type: string
-      destination_airport_id:
-        type: string
-      destination_airport_name:
-        type: string
-      destination_iata_code:
-        type: string
-      estimated_flight_time:
-        type: string
-      id:
-        type: string
-      origin_airport_id:
-        type: string
-      origin_airport_name:
-        type: string
-      origin_iata_code:
-        type: string
-      route_code:
-        type: string
     type: object
   handlers.StatusChangeResponse:
     properties:
@@ -724,10 +706,12 @@ definitions:
       air_time:
         description: TIME format HH:MM (nullable)
         type: string
-      airline_route_id:
+      approach_category:
         type: string
-      approach_type:
+      approach_subtype:
         type: string
+      autoland:
+        type: boolean
       block_time:
         description: TIME format HH:MM (nullable)
         type: string
@@ -735,6 +719,8 @@ definitions:
         type: string
       crew_role:
         description: nullable
+        type: string
+      destination_airport_id:
         type: string
       flight_number:
         type: string
@@ -747,6 +733,8 @@ definitions:
         type: string
       landing_time:
         description: TIME format HH:MM (nullable)
+        type: string
+      origin_airport_id:
         type: string
       out_time:
         description: TIME format HH:MM (nullable)
@@ -770,6 +758,8 @@ definitions:
         type: string
       status:
         type: boolean
+      tail_number_id:
+        type: string
     required:
     - log_date
     type: object
@@ -887,23 +877,12 @@ definitions:
     properties:
       code:
         type: string
-      fields:
-        items:
-          $ref: '#/definitions/middleware.ValidationFieldError'
-        type: array
       message:
         type: string
       success:
         type: boolean
     type: object
-  middleware.ValidationFieldError:
-    properties:
-      field:
-        type: string
-      message:
-        type: string
-    type: object
-host: localhost:8081
+host: localhost:8082
 info:
   contact:
     email: support@champion19.com
@@ -1089,119 +1068,6 @@ paths:
       summary: Deactivate aircraft model
       tags:
       - Aircraft Models
-  /airline-routes:
-    get:
-      consumes:
-      - application/json
-      description: Returns a list of all airline-route associations with optional
-        filters
-      parameters:
-      - description: Filter by airline code
-        in: query
-        name: airline_code
-        type: string
-      - description: Filter by status (true/false/1/0)
-        in: query
-        name: status
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Airline routes list
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List all airline routes
-      tags:
-      - Airline Routes
-  /airline-routes/{id}/activate:
-    patch:
-      consumes:
-      - application/json
-      description: Sets the airline route status to active. Idempotent operation.
-      parameters:
-      - description: Airline Route ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Airline route activated
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "400":
-          description: Invalid ID
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "404":
-          description: Airline route not found
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Activate an airline route
-      tags:
-      - Airline Routes
-  /airline-routes/{id}/deactivate:
-    patch:
-      consumes:
-      - application/json
-      description: Sets the airline route status to inactive. Idempotent operation.
-      parameters:
-      - description: Airline Route ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Airline route deactivated
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "400":
-          description: Invalid ID
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "404":
-          description: Airline route not found
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Deactivate an airline route
-      tags:
-      - Airline Routes
   /airlines:
     get:
       description: Returns a list of all airlines with optional status filter
@@ -2400,36 +2266,6 @@ paths:
       summary: Edit airline information for authenticated employee
       tags:
       - AirlineEmployees
-  /employees/airline-routes:
-    get:
-      consumes:
-      - application/json
-      description: Returns the airline routes associated with the authenticated employee's
-        airline
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: My airline routes list
-          schema:
-            $ref: '#/definitions/middleware.APIResponse'
-        "401":
-          description: Not authenticated
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "404":
-          description: Employee or airline association not found
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/middleware.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List routes for authenticated user's airline
-      tags:
-      - Airline Routes
   /employees/airline/activate:
     patch:
       description: Activates the airline information for the authenticated employee.
@@ -3005,67 +2841,6 @@ paths:
       summary: Register a new employee
       tags:
       - Authentication
-  /routes:
-    get:
-      description: Returns a list of all routes with optional filters
-      parameters:
-      - description: Filter by airport type (e.g., Nacional, Internacional)
-        in: query
-        name: airport_type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.RouteListResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: List all routes
-      tags:
-      - Routes
-  /routes/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Returns route information by ID (accepts both UUID and obfuscated
-        ID)
-      parameters:
-      - description: Route ID (obfuscated ID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get route by ID
-      tags:
-      - Routes
   /tail-numbers:
     get:
       description: Returns a list of all aircraft registrations with optional filters
