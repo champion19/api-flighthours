@@ -152,34 +152,35 @@ func ValidateApproachFields(category *ApproachCategory, subtype *string, autolan
 // DailyLogbookDetail represents a flight segment within a daily logbook
 // This is the CORE entity of the flight hours tracking system
 type DailyLogbookDetail struct {
-	ID                  string            `json:"id"`
-	DailyLogbookID      string            `json:"daily_logbook_id"`
-	FlightRealDate      string            `json:"flight_real_date"` // DATE format: YYYY-MM-DD
-	FlightNumber        string            `json:"flight_number"`
-	AirlineRouteID      string            `json:"airline_route_id"`
-	TailNumberID        string            `json:"tail_number_id"`
-	Passengers          *int              `json:"passengers,omitempty"`
-	OutTime             *string           `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
-	TakeoffTime         *string           `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
-	LandingTime         *string           `json:"landing_time,omitempty"` // Hora aterrizaje (ON)
-	InTime              *string           `json:"in_time,omitempty"`      // Hora llegada a bloque (IN)
-	PilotRole           *PilotRole        `json:"pilot_role,omitempty"`
-	CrewRole            *CrewRole         `json:"crew_role,omitempty"`
-	CompanionName       *string           `json:"companion_name,omitempty"`
-	AirTime             *string           `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
-	BlockTime           *string           `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
-	ApproachCategory    *ApproachCategory `json:"approach_category,omitempty"`
-	ApproachSubtype     *string           `json:"approach_subtype,omitempty"`
-	Autoland            *bool             `json:"autoland,omitempty"`
-	FlightType          *string           `json:"flight_type,omitempty"` // 'COMMERCIAL', 'TRAINING', 'FERRY', 'CHECK', 'POSITIONING'
-	EmployeeLogbookID   *string           `json:"employee_logbook_id,omitempty"`
-	LogDate             string            `json:"log_date,omitempty"`
-	RouteCode           string            `json:"route_code,omitempty"`            // e.g., "BOG-CLO"
-	OriginIataCode      string            `json:"origin_iata_code,omitempty"`      // Origin airport IATA
-	DestinationIataCode string            `json:"destination_iata_code,omitempty"` // Destination airport IATA
-	AirlineCode         string            `json:"airline_code,omitempty"`          // Airline IATA code
-	TailNumber          string            `json:"tail_number,omitempty"`           // Aircraft registration
-	ModelName           string            `json:"model_name,omitempty"`            // Aircraft model name
+	ID                   string            `json:"id"`
+	DailyLogbookID       string            `json:"daily_logbook_id"`
+	FlightRealDate       string            `json:"flight_real_date"` // DATE format: YYYY-MM-DD
+	FlightNumber         string            `json:"flight_number"`
+	OriginAirportID      string            `json:"origin_airport_id"`
+	DestinationAirportID string            `json:"destination_airport_id"`
+	TailNumberID         string            `json:"tail_number_id"`
+	Passengers           *int              `json:"passengers,omitempty"`
+	OutTime              *string           `json:"out_time,omitempty"`     // Hora salida de bloque (OUT)
+	TakeoffTime          *string           `json:"takeoff_time,omitempty"` // Hora despegue (OFF)
+	LandingTime          *string           `json:"landing_time,omitempty"` // Hora aterrizaje (ON)
+	InTime               *string           `json:"in_time,omitempty"`      // Hora llegada a bloque (IN)
+	PilotRole            *PilotRole        `json:"pilot_role,omitempty"`
+	CrewRole             *CrewRole         `json:"crew_role,omitempty"`
+	CompanionName        *string           `json:"companion_name,omitempty"`
+	AirTime              *string           `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
+	BlockTime            *string           `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
+	ApproachCategory     *ApproachCategory `json:"approach_category,omitempty"`
+	ApproachSubtype      *string           `json:"approach_subtype,omitempty"`
+	Autoland             *bool             `json:"autoland,omitempty"`
+	FlightType           *string           `json:"flight_type,omitempty"` // 'COMMERCIAL', 'TRAINING', 'FERRY', 'CHECK', 'POSITIONING'
+	EmployeeLogbookID    *string           `json:"employee_logbook_id,omitempty"`
+	LogDate              string            `json:"log_date,omitempty"`
+	RouteCode            string            `json:"route_code,omitempty"`            // e.g., "BOG-CLO"
+	OriginIataCode       string            `json:"origin_iata_code,omitempty"`      // Origin airport IATA
+	DestinationIataCode  string            `json:"destination_iata_code,omitempty"` // Destination airport IATA
+	AirlineCode          string            `json:"airline_code,omitempty"`          // Airline IATA code
+	TailNumber           string            `json:"tail_number,omitempty"`           // Aircraft registration
+	ModelName            string            `json:"model_name,omitempty"`            // Aircraft model name
 }
 
 // SetID generates a new UUID for the detail

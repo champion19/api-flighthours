@@ -16,7 +16,8 @@ const (
 		dld.daily_logbook_id,
 		dld.flight_real_date,
 		dld.flight_number,
-		dld.airline_route_id,
+		dld.origin_airport_id,
+		dld.destination_airport_id,
 		dld.actual_tail_number_id,
 		dld.passengers,
 		dld.out_time,
@@ -47,11 +48,10 @@ const (
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
 		INNER JOIN tail_number tn ON dld.actual_tail_number_id = tn.id
 		INNER JOIN aircraft_model am ON tn.aircraft_model_id = am.id
-		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
-		INNER JOIN route r ON alr.route_id = r.id
-		INNER JOIN airport orig ON r.origin_airport_id = orig.id
-		INNER JOIN airport dest ON r.destination_airport_id = dest.id
-		INNER JOIN airline airl ON alr.airline_id = airl.id`
+		INNER JOIN airport orig ON dld.origin_airport_id = orig.id
+		INNER JOIN airport dest ON dld.destination_airport_id = dest.id
+		INNER JOIN employee emp ON dl.employee_id = emp.id
+		INNER JOIN airline airl ON emp.airline = airl.id`
 
 	// Query for getting a detail by ID with JOINs for denormalized data
 	QueryByID = `
@@ -60,7 +60,8 @@ const (
 			dld.daily_logbook_id,
 			dld.flight_real_date,
 			dld.flight_number,
-			dld.airline_route_id,
+			dld.origin_airport_id,
+			dld.destination_airport_id,
 			dld.actual_tail_number_id,
 			dld.passengers,
 			dld.out_time,
@@ -88,11 +89,10 @@ const (
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
 		INNER JOIN tail_number tn ON dld.actual_tail_number_id = tn.id
 		INNER JOIN aircraft_model am ON tn.aircraft_model_id = am.id
-		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
-		INNER JOIN route r ON alr.route_id = r.id
-		INNER JOIN airport orig ON r.origin_airport_id = orig.id
-		INNER JOIN airport dest ON r.destination_airport_id = dest.id
-		INNER JOIN airline airl ON alr.airline_id = airl.id
+		INNER JOIN airport orig ON dld.origin_airport_id = orig.id
+		INNER JOIN airport dest ON dld.destination_airport_id = dest.id
+		INNER JOIN employee emp ON dl.employee_id = emp.id
+		INNER JOIN airline airl ON emp.airline = airl.id
 		WHERE dld.id = ?
 		LIMIT 1
 	`
@@ -104,7 +104,8 @@ const (
 			dld.daily_logbook_id,
 			dld.flight_real_date,
 			dld.flight_number,
-			dld.airline_route_id,
+			dld.origin_airport_id,
+			dld.destination_airport_id,
 			dld.actual_tail_number_id,
 			dld.passengers,
 			dld.out_time,
@@ -132,11 +133,10 @@ const (
 		INNER JOIN daily_logbook dl ON dld.daily_logbook_id = dl.id
 		INNER JOIN tail_number tn ON dld.actual_tail_number_id = tn.id
 		INNER JOIN aircraft_model am ON tn.aircraft_model_id = am.id
-		INNER JOIN airline_route alr ON dld.airline_route_id = alr.id
-		INNER JOIN route r ON alr.route_id = r.id
-		INNER JOIN airport orig ON r.origin_airport_id = orig.id
-		INNER JOIN airport dest ON r.destination_airport_id = dest.id
-		INNER JOIN airline airl ON alr.airline_id = airl.id
+		INNER JOIN airport orig ON dld.origin_airport_id = orig.id
+		INNER JOIN airport dest ON dld.destination_airport_id = dest.id
+		INNER JOIN employee emp ON dl.employee_id = emp.id
+		INNER JOIN airline airl ON emp.airline = airl.id
 		WHERE dld.daily_logbook_id = ?
 		ORDER BY dld.out_time ASC
 	`
@@ -150,19 +150,20 @@ const (
 	QueryInsert = `
 		INSERT INTO daily_logbook_detail (
 			id, daily_logbook_id, flight_real_date, flight_number,
-			airline_route_id, actual_tail_number_id, passengers,
+			origin_airport_id, destination_airport_id, actual_tail_number_id, passengers,
 			out_time, takeoff_time, landing_time, in_time,
 			pilot_role, companion_name, crew_role,
 			air_time, block_time,
 			approach_category, approach_subtype, autoland, flight_type, employee_logbook_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Update query
 	QueryUpdate = `
 		UPDATE daily_logbook_detail SET
 			flight_real_date = ?,
 			flight_number = ?,
-			airline_route_id = ?,
+			origin_airport_id = ?,
+			destination_airport_id = ?,
 			actual_tail_number_id = ?,
 			passengers = ?,
 			out_time = ?,

@@ -287,12 +287,13 @@ func TestHTTP_GetRecentFlights(t *testing.T) {
 				pf := domain.PilotRolePF
 				return []domain.DailyLogbookDetail{
 					{
-						ID:             "550e8400-e29b-41d4-a716-446655440010",
-						DailyLogbookID: "550e8400-e29b-41d4-a716-446655440002",
-						FlightNumber:   "AV123",
-						AirlineRouteID: "550e8400-e29b-41d4-a716-446655440003",
-						TailNumberID:   "550e8400-e29b-41d4-a716-446655440004",
-						PilotRole:      &pf,
+						ID:                   "550e8400-e29b-41d4-a716-446655440010",
+						DailyLogbookID:       "550e8400-e29b-41d4-a716-446655440002",
+						FlightNumber:         "AV123",
+						OriginAirportID:      "550e8400-e29b-41d4-a716-446655440003",
+						DestinationAirportID: "550e8400-e29b-41d4-a716-446655440005",
+						TailNumberID:         "550e8400-e29b-41d4-a716-446655440004",
+						PilotRole:            &pf,
 					},
 				}, nil
 			},

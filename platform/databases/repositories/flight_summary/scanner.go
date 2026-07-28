@@ -37,39 +37,40 @@ func scanDetail(rows interface {
 	Scan(dest ...interface{}) error
 }) (*domain.DailyLogbookDetail, error) {
 	var (
-		id                  string
-		dailyLogbookID      string
-		flightRealDate      string
-		flightNumber        string
-		airlineRouteID      string
-		tailNumberID        string
-		passengers          sql.NullInt64
-		outTime             sql.NullString
-		takeoffTime         sql.NullString
-		landingTime         sql.NullString
-		inTime              sql.NullString
-		pilotRole           sql.NullString
-		companionName       sql.NullString
-		crewRole            sql.NullString
-		airTime             sql.NullString
-		blockTime           sql.NullString
-		approachCategory    sql.NullString
-		approachSubtype     sql.NullString
-		autoland            sql.NullBool
-		flightType          sql.NullString
-		employeeLogbookID   sql.NullString
-		logDate             sql.NullString
-		tailNumber          sql.NullString
-		modelName           sql.NullString
-		routeCode           sql.NullString
-		originIataCode      sql.NullString
-		destinationIataCode sql.NullString
-		airlineCode         sql.NullString
+		id                   string
+		dailyLogbookID       string
+		flightRealDate       string
+		flightNumber         string
+		originAirportID      string
+		destinationAirportID string
+		tailNumberID         string
+		passengers           sql.NullInt64
+		outTime              sql.NullString
+		takeoffTime          sql.NullString
+		landingTime          sql.NullString
+		inTime               sql.NullString
+		pilotRole            sql.NullString
+		companionName        sql.NullString
+		crewRole             sql.NullString
+		airTime              sql.NullString
+		blockTime            sql.NullString
+		approachCategory     sql.NullString
+		approachSubtype      sql.NullString
+		autoland             sql.NullBool
+		flightType           sql.NullString
+		employeeLogbookID    sql.NullString
+		logDate              sql.NullString
+		tailNumber           sql.NullString
+		modelName            sql.NullString
+		routeCode            sql.NullString
+		originIataCode       sql.NullString
+		destinationIataCode  sql.NullString
+		airlineCode          sql.NullString
 	)
 
 	err := rows.Scan(
 		&id, &dailyLogbookID, &flightRealDate, &flightNumber,
-		&airlineRouteID, &tailNumberID, &passengers,
+		&originAirportID, &destinationAirportID, &tailNumberID, &passengers,
 		&outTime, &takeoffTime, &landingTime, &inTime,
 		&pilotRole, &companionName, &crewRole,
 		&airTime, &blockTime,
@@ -82,28 +83,29 @@ func scanDetail(rows interface {
 	}
 
 	detail := &domain.DailyLogbookDetail{
-		ID:                  id,
-		DailyLogbookID:      dailyLogbookID,
-		FlightRealDate:      flightRealDate,
-		FlightNumber:        flightNumber,
-		AirlineRouteID:      airlineRouteID,
-		TailNumberID:        tailNumberID,
-		Passengers:          nullableIntPtr(passengers),
-		OutTime:             nullableStringPtr(outTime),
-		TakeoffTime:         nullableStringPtr(takeoffTime),
-		LandingTime:         nullableStringPtr(landingTime),
-		InTime:              nullableStringPtr(inTime),
-		CompanionName:       nullableStringPtr(companionName),
-		AirTime:             nullableStringPtr(airTime),
-		BlockTime:           nullableStringPtr(blockTime),
-		FlightType:          nullableStringPtr(flightType),
-		LogDate:             nullableString(logDate),
-		TailNumber:          nullableString(tailNumber),
-		ModelName:           nullableString(modelName),
-		RouteCode:           nullableString(routeCode),
-		OriginIataCode:      nullableString(originIataCode),
-		DestinationIataCode: nullableString(destinationIataCode),
-		AirlineCode:         nullableString(airlineCode),
+		ID:                   id,
+		DailyLogbookID:       dailyLogbookID,
+		FlightRealDate:       flightRealDate,
+		FlightNumber:         flightNumber,
+		OriginAirportID:      originAirportID,
+		DestinationAirportID: destinationAirportID,
+		TailNumberID:         tailNumberID,
+		Passengers:           nullableIntPtr(passengers),
+		OutTime:              nullableStringPtr(outTime),
+		TakeoffTime:          nullableStringPtr(takeoffTime),
+		LandingTime:          nullableStringPtr(landingTime),
+		InTime:               nullableStringPtr(inTime),
+		CompanionName:        nullableStringPtr(companionName),
+		AirTime:              nullableStringPtr(airTime),
+		BlockTime:            nullableStringPtr(blockTime),
+		FlightType:           nullableStringPtr(flightType),
+		LogDate:              nullableString(logDate),
+		TailNumber:           nullableString(tailNumber),
+		ModelName:            nullableString(modelName),
+		RouteCode:            nullableString(routeCode),
+		OriginIataCode:       nullableString(originIataCode),
+		DestinationIataCode:  nullableString(destinationIataCode),
+		AirlineCode:          nullableString(airlineCode),
 	}
 
 	// Map typed nullable fields (PilotRole, CrewRole, ApproachCategory)
