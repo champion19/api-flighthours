@@ -16,6 +16,7 @@ type DailyLogbook struct {
 	Status       bool           `db:"status"`
 	TailNumberID sql.NullString `db:"tail_number_id"`
 	TailNumber   sql.NullString `db:"tail_number"` // denormalized from LEFT JOIN tail_number
+	CrewRole     sql.NullString `db:"crew_role"`   // default crew role for every flight logged under this book page
 }
 
 // ToDomain converts the database entity to domain model
@@ -34,6 +35,10 @@ func (d *DailyLogbook) ToDomain() *domain.DailyLogbook {
 	if d.TailNumber.Valid {
 		logbook.TailNumber = &d.TailNumber.String
 	}
+	if d.CrewRole.Valid {
+		crewRole := domain.CrewRole(d.CrewRole.String)
+		logbook.CrewRole = &crewRole
+	}
 
 	return logbook
 }
@@ -50,6 +55,9 @@ func FromDomain(domainLogbook *domain.DailyLogbook) *DailyLogbook {
 
 	if domainLogbook.TailNumberID != nil {
 		logbook.TailNumberID = sql.NullString{String: *domainLogbook.TailNumberID, Valid: true}
+	}
+	if domainLogbook.CrewRole != nil {
+		logbook.CrewRole = sql.NullString{String: string(*domainLogbook.CrewRole), Valid: true}
 	}
 
 	return logbook

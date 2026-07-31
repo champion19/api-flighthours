@@ -68,18 +68,15 @@
         "PFL"
       ]
     },
-    "companion_name": {
-      "type": "string",
-      "description": "Name of the companion pilot (letters and spaces only)",
-      "pattern": "^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ ]+$",
-      "maxLength": 100
-    },
     "crew_role": {
       "type": "string",
-      "description": "Crew position: captain or first officer",
+      "description": "Crew position the logged-in pilot flew as on this flight",
       "enum": [
         "captain",
-        "first officer"
+        "first officer",
+        "instructor",
+        "line check captain",
+        "safety pilot"
       ]
     },
     "air_time": {
@@ -129,6 +126,44 @@
         "CHECK",
         "POSITIONING"
       ]
+    },
+    "crew": {
+      "type": "array",
+      "description": "Additional crew assigned to this flight leg (First Officer + cabin crew) — optional. Sending an empty array clears previously assigned crew. Each row is either an existing roster member (crew_member_id) or a brand-new person (name, created in the same save)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "crew_member_id": {
+            "type": "string",
+            "description": "Crew member ID from the pilot's roster (obfuscated ID) — omit when sending name instead",
+            "maxLength": 50
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of a brand-new crew member not yet in the roster — omit when sending crew_member_id instead",
+            "maxLength": 150
+          },
+          "bp": {
+            "type": "string",
+            "description": "Crew member badge/ID number (optional, numeric)",
+            "pattern": "^[0-9]+$",
+            "maxLength": 16
+          },
+          "role": {
+            "type": "string",
+            "description": "Role for this assignment: first_officer, purser (Jefe de Cabina), or flight_attendant (Tripulante de Cabina)",
+            "enum": [
+              "first_officer",
+              "purser",
+              "flight_attendant"
+            ]
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

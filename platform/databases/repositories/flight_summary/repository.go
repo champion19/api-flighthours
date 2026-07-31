@@ -63,7 +63,6 @@ const (
 		dld.landing_time,
 		dld.in_time,
 		dld.pilot_role,
-		dld.companion_name,
 		dld.crew_role,
 		dld.air_time,
 		dld.block_time,

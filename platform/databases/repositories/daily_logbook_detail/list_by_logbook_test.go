@@ -65,7 +65,7 @@ func TestListDailyLogbookDetailsByLogbook_Empty(t *testing.T) {
 		"id", "daily_logbook_id", "flight_real_date", "flight_number",
 		"origin_airport_id", "destination_airport_id", "tail_number_id", "passengers",
 		"out_time", "takeoff_time", "landing_time", "in_time",
-		"pilot_role", "companion_name", "crew_role",
+		"pilot_role", "crew_role",
 		"air_time", "block_time", "approach_category", "approach_subtype", "autoland", "flight_type",
 		"employee_logbook_id", "log_date", "tail_number", "model_name",
 		"route_code", "origin_iata_code", "destination_iata_code", "airline_code",

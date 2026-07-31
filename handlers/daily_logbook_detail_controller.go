@@ -56,6 +56,7 @@ func (h *handler) GetDailyLogbookDetail() gin.HandlerFunc {
 
 		// Build response
 		response := FromDomainDailyLogbookDetail(detail, responseID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
+		response.Crew = h.encodeCrewAssignments(response.Crew)
 		response.Links = BuildDailyLogbookDetailLinks(c, responseID)
 
 		log.Info(logger.LogDailyLogbookDetailGetOK, "id", detailUUID)
@@ -105,6 +106,7 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 		req.Sanitize()
+		req.Crew = h.resolveCrewAssignments(req.Crew)
 
 		originAirportUUID, _ := h.resolveID(req.OriginAirportID)
 		if originAirportUUID == "" {
@@ -122,13 +124,18 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		}
 		req.DestinationAirportID = destinationAirportUUID
 
+		needsParentLogbook := req.TailNumberID == "" || req.CrewRole == nil || *req.CrewRole == ""
+		var parentLogbook *domain.DailyLogbook
+		if needsParentLogbook {
+			parentLogbook, _ = h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
+		}
+
 		var tailNumberUUID string
 		if req.TailNumberID == "" {
 			// No tail number given for this flight — fall back to the one already
 			// set on the parent daily logbook (captured once in "New Logbook Entry").
-			logbook, lerr := h.DailyLogbookInteractor.GetDailyLogbookByID(c.Request.Context(), logbookUUID, employee.ID)
-			if lerr == nil && logbook != nil && logbook.TailNumberID != nil && *logbook.TailNumberID != "" {
-				tailNumberUUID = *logbook.TailNumberID
+			if parentLogbook != nil && parentLogbook.TailNumberID != nil && *parentLogbook.TailNumberID != "" {
+				tailNumberUUID = *parentLogbook.TailNumberID
 			}
 		} else {
 			tailNumberUUID, _ = h.resolveID(req.TailNumberID)
@@ -139,6 +146,15 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 		req.TailNumberID = tailNumberUUID
+
+		if req.CrewRole == nil || *req.CrewRole == "" {
+			// No crew role given for this flight — fall back to the one already
+			// set on the parent daily logbook (captured once in "New Logbook Entry").
+			if parentLogbook != nil && parentLogbook.CrewRole != nil && *parentLogbook.CrewRole != "" {
+				crewRole := string(*parentLogbook.CrewRole)
+				req.CrewRole = &crewRole
+			}
+		}
 
 		detail := ToDomainDailyLogbookDetail(logbookUUID, req)
 		detail.SetID()
@@ -170,6 +186,7 @@ func (h *handler) CreateDailyLogbookDetail() gin.HandlerFunc {
 		encodedAircraftID, _ := h.EncodeID(req.TailNumberID)
 
 		response := FromDomainDailyLogbookDetail(createdDetail, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
+		response.Crew = h.encodeCrewAssignments(response.Crew)
 		response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 
 		log.Info(logger.LogDailyLogbookDetailCreateOK, "id", detail.ID)
@@ -239,6 +256,7 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 			return
 		}
 		req.Sanitize()
+		req.Crew = h.resolveCrewAssignments(req.Crew)
 
 		originAirportUUID, _ := h.resolveID(req.OriginAirportID)
 		if originAirportUUID == "" {
@@ -291,6 +309,7 @@ func (h *handler) UpdateDailyLogbookDetail() gin.HandlerFunc {
 		encodedAircraftID, _ := h.EncodeID(updatedDetail.TailNumberID)
 
 		response := FromDomainDailyLogbookDetail(updatedDetail, responseID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
+		response.Crew = h.encodeCrewAssignments(response.Crew)
 		response.Links = BuildDailyLogbookDetailLinks(c, responseID)
 
 		log.Info(logger.LogDailyLogbookDetailUpdateOK, "id", detailUUID)
@@ -436,6 +455,7 @@ func (h *handler) ListDailyLogbookDetails() gin.HandlerFunc {
 			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
 			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
+			response.Crew = h.encodeCrewAssignments(response.Crew)
 			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 			responses = append(responses, response)
 		}
@@ -488,6 +508,7 @@ func (h *handler) ListMyFlights() gin.HandlerFunc {
 			encodedAircraftID, _ := h.EncodeID(d.TailNumberID)
 
 			response := FromDomainDailyLogbookDetail(&d, encodedID, encodedLogbookID, encodedOriginAirportID, encodedDestinationAirportID, encodedAircraftID)
+			response.Crew = h.encodeCrewAssignments(response.Crew)
 			response.Links = BuildDailyLogbookDetailLinks(c, encodedID)
 			responses = append(responses, response)
 		}

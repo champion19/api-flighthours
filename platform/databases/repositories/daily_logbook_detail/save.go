@@ -37,7 +37,6 @@ func (r *repository) SaveDailyLogbookDetail(ctx context.Context, tx output.Tx, d
 		entity.LandingTime,
 		entity.InTime,
 		entity.PilotRole,
-		entity.CompanionName,
 		entity.CrewRole,
 		entity.AirTime,
 		entity.BlockTime,

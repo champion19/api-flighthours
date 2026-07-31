@@ -18,6 +18,17 @@
     "tail_number_id": {
       "type": "string",
       "description": "Tail number (aircraft registration) used for all flights logged under this book page"
+    },
+    "crew_role": {
+      "type": "string",
+      "description": "Default crew role for every flight logged under this book page (editable per flight in Daily Logbook Detail)",
+      "enum": [
+        "captain",
+        "first officer",
+        "instructor",
+        "line check captain",
+        "safety pilot"
+      ]
     }
   },
   "required": [

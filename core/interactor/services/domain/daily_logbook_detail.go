@@ -12,13 +12,39 @@ const (
 	PilotRolePFL  PilotRole = "PFL"  // Pilot Flying Landing
 )
 
-// CrewRole represents the crew position (captain or first officer) in a flight segment
+// CrewRole represents the crew position the logged-in pilot flew as on a flight segment
 type CrewRole string
 
 const (
-	CrewRoleCaptain      CrewRole = "captain"       // Capitán
-	CrewRoleFirstOfficer CrewRole = "first officer" // Primer Oficial
+	CrewRoleCaptain          CrewRole = "captain"            // Capitán
+	CrewRoleFirstOfficer     CrewRole = "first officer"      // Primer Oficial
+	CrewRoleInstructor       CrewRole = "instructor"         // Instructor
+	CrewRoleLineCheckCaptain CrewRole = "line check captain" // Line Check Captain
+	CrewRoleSafetyPilot      CrewRole = "safety pilot"       // Safety Pilot
 )
+
+// CrewMemberRole represents the role of another crew member (not the logged-in pilot)
+// assigned to a flight segment: the first officer or a member of the cabin crew.
+type CrewMemberRole string
+
+const (
+	CrewMemberRoleFirstOfficer    CrewMemberRole = "first_officer"    // Primer Oficial
+	CrewMemberRolePurser          CrewMemberRole = "purser"           // Jefe de Cabina
+	CrewMemberRoleFlightAttendant CrewMemberRole = "flight_attendant" // Tripulante de Cabina
+)
+
+// ValidCrewMemberRoles contains all valid crew member roles for daily_logbook_detail_crew assignments
+var ValidCrewMemberRoles = []CrewMemberRole{CrewMemberRoleFirstOfficer, CrewMemberRolePurser, CrewMemberRoleFlightAttendant}
+
+// IsValidCrewMemberRole checks if a string is a valid crew member role
+func IsValidCrewMemberRole(role string) bool {
+	for _, r := range ValidCrewMemberRoles {
+		if string(r) == role {
+			return true
+		}
+	}
+	return false
+}
 
 // ApproachCategory represents the top-level approach procedure used during landing
 type ApproachCategory string
@@ -48,7 +74,13 @@ const (
 var ValidPilotRoles = []PilotRole{PilotRolePF, PilotRolePM, PilotRolePFTO, PilotRolePFL}
 
 // ValidCrewRoles contains all valid crew roles
-var ValidCrewRoles = []CrewRole{CrewRoleCaptain, CrewRoleFirstOfficer}
+var ValidCrewRoles = []CrewRole{
+	CrewRoleCaptain,
+	CrewRoleFirstOfficer,
+	CrewRoleInstructor,
+	CrewRoleLineCheckCaptain,
+	CrewRoleSafetyPilot,
+}
 
 // ValidApproachCategories contains all valid approach categories
 var ValidApproachCategories = []ApproachCategory{ApproachCategoryRNP, ApproachCategoryILS, ApproachCategoryVisual}
@@ -166,7 +198,6 @@ type DailyLogbookDetail struct {
 	InTime               *string           `json:"in_time,omitempty"`      // Hora llegada a bloque (IN)
 	PilotRole            *PilotRole        `json:"pilot_role,omitempty"`
 	CrewRole             *CrewRole         `json:"crew_role,omitempty"`
-	CompanionName        *string           `json:"companion_name,omitempty"`
 	AirTime              *string           `json:"air_time,omitempty"`   // Tiempo de vuelo (ON - OFF)
 	BlockTime            *string           `json:"block_time,omitempty"` // Tiempo de bloque (IN - OUT)
 	ApproachCategory     *ApproachCategory `json:"approach_category,omitempty"`
@@ -181,6 +212,7 @@ type DailyLogbookDetail struct {
 	AirlineCode          string            `json:"airline_code,omitempty"`          // Airline IATA code
 	TailNumber           string            `json:"tail_number,omitempty"`           // Aircraft registration
 	ModelName            string            `json:"model_name,omitempty"`            // Aircraft model name
+	Crew                 []CrewAssignment  `json:"crew,omitempty"`                  // First Officer + cabin crew assigned to this leg
 }
 
 // SetID generates a new UUID for the detail

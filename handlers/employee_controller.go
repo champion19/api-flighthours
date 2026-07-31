@@ -592,27 +592,56 @@ func (h handler) UpdatePassword() gin.HandlerFunc {
 	}
 }
 
+// CrewMemberTypeCatalogEntry is a static catalog entry describing a selectable crew "cargo"
+// (e.g. "Jefe de Cabina") within a role bucket (pilot, copilot, flight_engineer, cabin_crew).
+type CrewMemberTypeCatalogEntry struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+
+// crewMemberTypesByRole returns the static catalog of crew member types for a role bucket.
+// No database table backs this - it mirrors the fixed, small enums (pilot role, approach
+// category, etc.) that this API already serves as static lookups.
+func crewMemberTypesByRole(role string) []CrewMemberTypeCatalogEntry {
+	switch role {
+	case "pilot":
+		return []CrewMemberTypeCatalogEntry{
+			{ID: "pilot-captain", Name: "Captain", Status: "active"},
+		}
+	case "copilot":
+		return []CrewMemberTypeCatalogEntry{
+			{ID: "copilot-first_officer", Name: "First Officer", Status: "active"},
+		}
+	case "cabin_crew":
+		return []CrewMemberTypeCatalogEntry{
+			{ID: "cabin-purser", Name: "Jefe de Cabina", Status: "active"},
+			{ID: "cabin-flight_attendant", Name: "Tripulante de Cabina", Status: "active"},
+		}
+	default:
+		return []CrewMemberTypeCatalogEntry{}
+	}
+}
+
 // GetCrewMemberTypes godoc
 // @Summary      Get crew member types
-// @Description  Returns the available crew member types (captain, first officer). Static catalog endpoint - no database query needed.
+// @Description  Returns the available crew "cargo" types for a role bucket (pilot, copilot, flight_engineer, cabin_crew). Static catalog endpoint - no database query needed.
 // @Tags         Crew Member Types
 // @Produce      json
+// @Param        role path string true "Role bucket: pilot, copilot, flight_engineer, cabin_crew"
 // @Success      200  {object}  map[string]interface{}
-// @Router       /crew-member-types [get]
+// @Router       /crew-member-types/{role} [get]
 func (h *handler) GetCrewMemberTypes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := middleware.GetRequestID(c)
 		log := log.WithTraceID(traceID)
 
-		log.Info(logger.LogCrewMemberTypeGet, "client_ip", c.ClientIP())
+		role := c.Param("role")
+		log.Info(logger.LogCrewMemberTypeGet, "role", role, "client_ip", c.ClientIP())
 
-		// Return the crew role enum values directly from domain constants
-		roles := make([]string, len(domain.ValidCrewRoles))
-		for i, r := range domain.ValidCrewRoles {
-			roles[i] = string(r)
-		}
+		types := crewMemberTypesByRole(role)
 
-		log.Success(logger.LogCrewMemberTypeGetOK, "count", len(roles), "client_ip", c.ClientIP())
-		h.Response.SuccessWithData(c, domain.MsgCrewMemberTypeGetOK, roles)
+		log.Success(logger.LogCrewMemberTypeGetOK, "role", role, "count", len(types), "client_ip", c.ClientIP())
+		h.Response.SuccessWithData(c, domain.MsgCrewMemberTypeGetOK, gin.H{"crew_member_types": types})
 	}
 }

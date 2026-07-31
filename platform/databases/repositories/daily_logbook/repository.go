@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	QueryByID                = "SELECT dl.id, dl.log_date, dl.employee_id, dl.book_page, dl.status, dl.tail_number_id, tn.tail_number FROM daily_logbook dl LEFT JOIN tail_number tn ON dl.tail_number_id = tn.id WHERE dl.id = ? LIMIT 1"
-	QueryByEmployee          = "SELECT dl.id, dl.log_date, dl.employee_id, dl.book_page, dl.status, dl.tail_number_id, tn.tail_number FROM daily_logbook dl LEFT JOIN tail_number tn ON dl.tail_number_id = tn.id WHERE dl.employee_id = ? ORDER BY dl.log_date DESC"
-	QueryByEmployeeAndStatus = "SELECT dl.id, dl.log_date, dl.employee_id, dl.book_page, dl.status, dl.tail_number_id, tn.tail_number FROM daily_logbook dl LEFT JOIN tail_number tn ON dl.tail_number_id = tn.id WHERE dl.employee_id = ? AND dl.status = ? ORDER BY dl.log_date DESC"
-	QueryInsert              = "INSERT INTO daily_logbook (id, log_date, employee_id, book_page, status, tail_number_id) VALUES (?, ?, ?, ?, ?, ?)"
-	QueryUpdate              = "UPDATE daily_logbook SET log_date = ?, book_page = ?, status = ?, tail_number_id = ? WHERE id = ?"
+	QueryByID                = "SELECT dl.id, dl.log_date, dl.employee_id, dl.book_page, dl.status, dl.tail_number_id, tn.tail_number, dl.crew_role FROM daily_logbook dl LEFT JOIN tail_number tn ON dl.tail_number_id = tn.id WHERE dl.id = ? LIMIT 1"
+	QueryByEmployee          = "SELECT dl.id, dl.log_date, dl.employee_id, dl.book_page, dl.status, dl.tail_number_id, tn.tail_number, dl.crew_role FROM daily_logbook dl LEFT JOIN tail_number tn ON dl.tail_number_id = tn.id WHERE dl.employee_id = ? ORDER BY dl.log_date DESC"
+	QueryByEmployeeAndStatus = "SELECT dl.id, dl.log_date, dl.employee_id, dl.book_page, dl.status, dl.tail_number_id, tn.tail_number, dl.crew_role FROM daily_logbook dl LEFT JOIN tail_number tn ON dl.tail_number_id = tn.id WHERE dl.employee_id = ? AND dl.status = ? ORDER BY dl.log_date DESC"
+	QueryInsert              = "INSERT INTO daily_logbook (id, log_date, employee_id, book_page, status, tail_number_id, crew_role) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	QueryUpdate              = "UPDATE daily_logbook SET log_date = ?, book_page = ?, status = ?, tail_number_id = ?, crew_role = ? WHERE id = ?"
 	QueryDeleteDetails       = "DELETE FROM daily_logbook_detail WHERE daily_logbook_id = ?"
 	QueryDelete              = "DELETE FROM daily_logbook WHERE id = ?"
 	QueryUpdateStatus        = "UPDATE daily_logbook SET status = ? WHERE id = ?"
