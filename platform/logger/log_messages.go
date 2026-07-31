@@ -723,6 +723,27 @@ const (
 )
 
 // ============================================
+// CREW MEMBER (ROSTER) INTERACTOR
+// ============================================
+const (
+	LogCrewMemberSearch         = "Buscando tripulantes"
+	LogCrewMemberSearchOK       = "Tripulantes encontrados exitosamente"
+	LogCrewMemberSearchError    = "Error buscando tripulantes"
+	LogCrewMemberCreate         = "Registrando tripulante"
+	LogCrewMemberCreateOK       = "Tripulante registrado exitosamente"
+	LogCrewMemberCreateError    = "Error registrando tripulante"
+	LogCrewMemberRepoInit       = "Inicializando repositorio de tripulantes"
+	LogCrewMemberRepoInitOK     = "Repositorio de tripulantes inicializado"
+	LogCrewMemberRepoInitError  = "Error inicializando repositorio de tripulantes"
+	LogCrewAssignmentList       = "Listando tripulación asignada a un vuelo"
+	LogCrewAssignmentListOK     = "Tripulación asignada obtenida exitosamente"
+	LogCrewAssignmentListError  = "Error listando tripulación asignada a un vuelo"
+	LogCrewAssignmentReplace    = "Reemplazando tripulación asignada a un vuelo"
+	LogCrewAssignmentReplaceOK  = "Tripulación asignada reemplazada exitosamente"
+	LogCrewAssignmentReplaceErr = "Error reemplazando tripulación asignada a un vuelo"
+)
+
+// ============================================
 // AIRCRAFT MODEL INTERACTOR
 // ============================================
 const (

@@ -17,6 +17,7 @@ type DailyLogbookResponse struct {
 	Status       string  `json:"status"`
 	TailNumberID *string `json:"tail_number_id,omitempty"`
 	TailNumber   *string `json:"tail_number,omitempty"`
+	CrewRole     *string `json:"crew_role,omitempty"` // default crew role for every flight logged under this book page
 	Links        []Link  `json:"_links,omitempty"`
 }
 
@@ -26,7 +27,7 @@ func FromDomainDailyLogbook(logbook *domain.DailyLogbook, encodedID, encodedEmpl
 	if logbook.Status {
 		status = "active"
 	}
-	return DailyLogbookResponse{
+	response := DailyLogbookResponse{
 		ID:           encodedID,
 		LogDate:      logbook.LogDate.Format(dateFormatISO),
 		EmployeeID:   encodedEmployeeID,
@@ -35,6 +36,11 @@ func FromDomainDailyLogbook(logbook *domain.DailyLogbook, encodedID, encodedEmpl
 		TailNumberID: logbook.TailNumberID,
 		TailNumber:   logbook.TailNumber,
 	}
+	if logbook.CrewRole != nil {
+		crewRole := string(*logbook.CrewRole)
+		response.CrewRole = &crewRole
+	}
+	return response
 }
 
 // CreateDailyLogbookRequest - Request DTO for creating a daily logbook
@@ -42,6 +48,7 @@ type CreateDailyLogbookRequest struct {
 	LogDate      string  `json:"log_date" binding:"required"`
 	BookPage     *int    `json:"book_page,omitempty"`
 	TailNumberID *string `json:"tail_number_id,omitempty"`
+	CrewRole     *string `json:"crew_role,omitempty"` // default crew role for every flight logged under this book page
 }
 
 // Sanitize trims whitespace from CreateDailyLogbookRequest fields
@@ -63,6 +70,13 @@ func (r *CreateDailyLogbookRequest) ToDomain(employeeID string) (*domain.DailyLo
 		Status:       true, // New logbooks are active by default
 		TailNumberID: r.TailNumberID,
 	}
+	if r.CrewRole != nil && *r.CrewRole != "" {
+		if !domain.IsValidCrewRole(*r.CrewRole) {
+			return nil, domain.ErrInvalidRequest
+		}
+		crewRole := domain.CrewRole(*r.CrewRole)
+		logbook.CrewRole = &crewRole
+	}
 	logbook.SetID()
 	return logbook, nil
 }
@@ -73,6 +87,7 @@ type UpdateDailyLogbookRequest struct {
 	BookPage     *int    `json:"book_page,omitempty"`
 	Status       *bool   `json:"status,omitempty"`
 	TailNumberID *string `json:"tail_number_id,omitempty"`
+	CrewRole     *string `json:"crew_role,omitempty"`
 }
 
 // Sanitize trims whitespace from UpdateDailyLogbookRequest fields
@@ -92,14 +107,22 @@ func (r *UpdateDailyLogbookRequest) ToDomain(id, employeeID string) (*domain.Dai
 		status = *r.Status
 	}
 
-	return &domain.DailyLogbook{
+	logbook := &domain.DailyLogbook{
 		ID:           id,
 		LogDate:      logDate,
 		EmployeeID:   employeeID,
 		BookPage:     r.BookPage,
 		Status:       status,
 		TailNumberID: r.TailNumberID,
-	}, nil
+	}
+	if r.CrewRole != nil && *r.CrewRole != "" {
+		if !domain.IsValidCrewRole(*r.CrewRole) {
+			return nil, domain.ErrInvalidRequest
+		}
+		crewRole := domain.CrewRole(*r.CrewRole)
+		logbook.CrewRole = &crewRole
+	}
+	return logbook, nil
 }
 
 // DailyLogbookListResponse - Response DTO for listing daily logbooks

@@ -22,7 +22,6 @@ type DailyLogbookDetail struct {
 	InTime               sql.NullString // nullable
 	PilotRole            sql.NullString // nullable
 	CrewRole             sql.NullString // nullable
-	CompanionName        sql.NullString
 	AirTime              sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	BlockTime            sql.NullString // TIME stored as string HH:MM:SS (nullable)
 	ApproachCategory     sql.NullString
@@ -94,9 +93,6 @@ func (d *DailyLogbookDetail) mapOptionalFields(detail *domain.DailyLogbookDetail
 	if d.Passengers.Valid {
 		passengers := int(d.Passengers.Int64)
 		detail.Passengers = &passengers
-	}
-	if d.CompanionName.Valid {
-		detail.CompanionName = &d.CompanionName.String
 	}
 	if d.ApproachCategory.Valid {
 		approachCategory := domain.ApproachCategory(d.ApproachCategory.String)
@@ -180,10 +176,6 @@ func FromDomain(d *domain.DailyLogbookDetail) *DailyLogbookDetail {
 		entity.Passengers = sql.NullInt64{Int64: int64(*d.Passengers), Valid: true}
 	}
 
-	if d.CompanionName != nil {
-		entity.CompanionName = sql.NullString{String: *d.CompanionName, Valid: true}
-	}
-
 	if d.ApproachCategory != nil {
 		entity.ApproachCategory = sql.NullString{String: string(*d.ApproachCategory), Valid: true}
 	}
@@ -227,7 +219,6 @@ func scanDetail(rows interface {
 		&entity.LandingTime,
 		&entity.InTime,
 		&entity.PilotRole,
-		&entity.CompanionName,
 		&entity.CrewRole,
 		&entity.AirTime,
 		&entity.BlockTime,

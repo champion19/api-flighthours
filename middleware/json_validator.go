@@ -65,7 +65,6 @@ var fieldNameMapping = map[string]string{
 	"approach_category":      "Approach Category",
 	"approach_subtype":       "Approach Subtype",
 	"autoland":               "Autoland",
-	"companion_name":         "Companion Name",
 	"passengers":             "Passengers",
 	"out_time":               "Out Time",
 	"takeoff_time":           "Takeoff Time",

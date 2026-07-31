@@ -147,9 +147,9 @@ func TestHTTP_Login(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -254,9 +254,9 @@ func TestHTTP_RefreshToken(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -360,9 +360,9 @@ func TestHTTP_PasswordReset(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -434,9 +434,9 @@ func TestHTTP_VerifyEmailByToken(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -596,9 +596,9 @@ func TestHTTP_ResendVerificationEmail(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -716,9 +716,9 @@ func TestHTTP_UpdatePassword(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -830,9 +830,9 @@ func TestHTTP_RegisterEmployee_WithMock(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -929,9 +929,9 @@ func TestHTTP_ChangePassword(t *testing.T) {
 
 	newRouter := func(interactor input.EmployeeInteractor) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -1094,9 +1094,9 @@ func TestHTTP_DeleteEmployee(t *testing.T) {
 	// Helper to create router with auth context middleware
 	newRouterWithAuth := func(interactor input.EmployeeInteractor, authUser *domain.Employee) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -1196,8 +1196,8 @@ func TestHTTP_GetEmployee(t *testing.T) {
 	// Helper to create router with auth context middleware
 	newRouterWithAuth := func(authUser *domain.Employee) *gin.Engine {
 		h := New(HandlerDeps{
-		IDEncoder: enc,
-		Response: resp,
+			IDEncoder: enc,
+			Response:  resp,
 		})
 
 		r := gin.New()
@@ -1273,9 +1273,9 @@ func TestHTTP_UpdateEmployee(t *testing.T) {
 	// Helper to create router with auth context middleware
 	newRouterWithAuth := func(interactor input.EmployeeInteractor, authUser *domain.Employee) *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: interactor,
-		IDEncoder: enc,
-		Response: resp,
+			EmployeeInteractor: interactor,
+			IDEncoder:          enc,
+			Response:           resp,
 		})
 
 		r := gin.New()
@@ -1409,21 +1409,21 @@ func TestHTTP_GetCrewMemberTypes(t *testing.T) {
 
 	newRouter := func() *gin.Engine {
 		h := New(HandlerDeps{
-		EmployeeInteractor: &fakeEmployeeInteractor{},
-		IDEncoder: enc,
-		Response: crewResp,
+			EmployeeInteractor: &fakeEmployeeInteractor{},
+			IDEncoder:          enc,
+			Response:           crewResp,
 		})
 
 		r := gin.New()
 		r.Use(middleware.RequestID())
-		r.GET("/crew-member-types", h.GetCrewMemberTypes())
+		r.GET("/crew-member-types/:role", h.GetCrewMemberTypes())
 		return r
 	}
 
-	t.Run("success - returns crew roles", func(t *testing.T) {
+	t.Run("success - returns cabin crew types", func(t *testing.T) {
 		router := newRouter()
 
-		req := httptest.NewRequest(http.MethodGet, "/crew-member-types", nil)
+		req := httptest.NewRequest(http.MethodGet, "/crew-member-types/cabin_crew", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -1438,18 +1438,49 @@ func TestHTTP_GetCrewMemberTypes(t *testing.T) {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}
 
-		data, ok := response["data"]
+		data, ok := response["data"].(map[string]interface{})
 		if !ok {
-			t.Fatal("expected 'data' field in response")
+			t.Fatal("expected 'data' object in response")
 		}
 
-		roles, ok := data.([]interface{})
+		types, ok := data["crew_member_types"].([]interface{})
 		if !ok {
-			t.Fatal("expected data to be an array")
+			t.Fatal("expected 'crew_member_types' array in data")
 		}
 
-		if len(roles) != 2 {
-			t.Errorf("expected 2 roles, got %d", len(roles))
+		if len(types) != 2 {
+			t.Errorf("expected 2 cabin crew types, got %d", len(types))
+		}
+	})
+
+	t.Run("success - returns empty list for unknown role", func(t *testing.T) {
+		router := newRouter()
+
+		req := httptest.NewRequest(http.MethodGet, "/crew-member-types/flight_engineer", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", w.Code)
+		}
+
+		var response map[string]interface{}
+		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		data, ok := response["data"].(map[string]interface{})
+		if !ok {
+			t.Fatal("expected 'data' object in response")
+		}
+
+		types, ok := data["crew_member_types"].([]interface{})
+		if !ok {
+			t.Fatal("expected 'crew_member_types' array in data")
+		}
+
+		if len(types) != 0 {
+			t.Errorf("expected 0 types for flight_engineer, got %d", len(types))
 		}
 	})
 }

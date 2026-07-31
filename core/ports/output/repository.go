@@ -93,6 +93,15 @@ type DailyLogbookDetailRepository interface {
 	UpdateDailyLogbookDetail(ctx context.Context, tx Tx, detail domain.DailyLogbookDetail) error
 	ExistsByUniqueKey(ctx context.Context, employeeID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
 	DeleteDailyLogbookDetail(ctx context.Context, tx Tx, id string) error
+	ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error)
+	ReplaceCrewForDetail(ctx context.Context, tx Tx, detailID string, assignments []domain.CrewAssignment) error
+}
+
+type CrewMemberRepository interface {
+	BeginTx(ctx context.Context) (Tx, error)
+	SearchCrewMembers(ctx context.Context, employeeID, query string) ([]domain.CrewMember, error)
+	FindOrCreateCrewMember(ctx context.Context, tx Tx, employeeID, name string, bp *string) (*domain.CrewMember, error)
+	GetCrewMemberByID(ctx context.Context, id string) (*domain.CrewMember, error)
 }
 
 type DailyLogbookRepository interface {

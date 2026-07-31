@@ -15,6 +15,12 @@ func (r *repository) SaveDailyLogbook(ctx context.Context, tx output.Tx, logbook
 		return err
 	}
 
+	var crewRole *string
+	if logbook.CrewRole != nil {
+		s := string(*logbook.CrewRole)
+		crewRole = &s
+	}
+
 	_, err = sqlTx.ExecContext(ctx, QueryInsert,
 		logbook.ID,
 		logbook.LogDate,
@@ -22,6 +28,7 @@ func (r *repository) SaveDailyLogbook(ctx context.Context, tx output.Tx, logbook
 		logbook.BookPage,
 		logbook.Status,
 		logbook.TailNumberID,
+		crewRole,
 	)
 	if err != nil {
 		return domain.ErrDailyLogbookCannotSave

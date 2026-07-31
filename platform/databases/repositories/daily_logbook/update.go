@@ -15,11 +15,18 @@ func (r *repository) UpdateDailyLogbook(ctx context.Context, tx output.Tx, logbo
 		return err
 	}
 
+	var crewRole *string
+	if logbook.CrewRole != nil {
+		s := string(*logbook.CrewRole)
+		crewRole = &s
+	}
+
 	result, err := sqlTx.ExecContext(ctx, QueryUpdate,
 		logbook.LogDate,
 		logbook.BookPage,
 		logbook.Status,
 		logbook.TailNumberID,
+		crewRole,
 		logbook.ID,
 	)
 	if err != nil {

@@ -137,7 +137,6 @@ func TestToDailyLogbookListResponse(t *testing.T) {
 
 func TestToDomainDailyLogbookDetail(t *testing.T) {
 	passengers := 150
-	companion := "Co-Pilot Smith"
 	approachCategory := "RNP"
 	approachSubtype := "LNAV"
 	flightType := "COMMERCIAL"
@@ -154,7 +153,6 @@ func TestToDomainDailyLogbookDetail(t *testing.T) {
 		LandingTime:          strPtrH("09:30"),
 		InTime:               strPtrH("09:45"),
 		PilotRole:            strPtrH("PF"),
-		CompanionName:        &companion,
 		AirTime:              strPtrH("01:15"),
 		BlockTime:            strPtrH("01:45"),
 		ApproachCategory:     &approachCategory,
@@ -235,7 +233,6 @@ func TestToDomainDailyLogbookDetailUpdate(t *testing.T) {
 }
 
 func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
-	companion := "  Co-Pilot  "
 	approachCategory := "  ILS  "
 	flightType := "  COMMERCIAL  "
 
@@ -250,7 +247,6 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 		LandingTime:          strPtrH("  09:30  "),
 		InTime:               strPtrH("  09:45  "),
 		PilotRole:            strPtrH("  PF  "),
-		CompanionName:        &companion,
 		AirTime:              strPtrH("  01:15  "),
 		BlockTime:            strPtrH("  01:45  "),
 		ApproachCategory:     &approachCategory,
@@ -266,9 +262,6 @@ func TestUpdateDailyLogbookDetailRequest_Sanitize(t *testing.T) {
 	}
 	if req.PilotRole == nil || *req.PilotRole != "PF" {
 		t.Errorf("expected trimmed PilotRole, got '%v'", req.PilotRole)
-	}
-	if *req.CompanionName != "Co-Pilot" {
-		t.Errorf("expected trimmed CompanionName, got '%s'", *req.CompanionName)
 	}
 }
 

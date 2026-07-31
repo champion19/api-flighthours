@@ -376,6 +376,19 @@ const (
 	MsgCrewMemberTypeGetErr   = "TIN_CON_ERR_04703" // Error - Error técnico al consultar
 )
 
+// Crew Member Module (TRI_*) - Tripulante (roster de personas por piloto: Primer Oficial, tripulación de cabina)
+const (
+	// ========================================
+	// Agregar  - TRI_AGR_*
+	// ========================================
+	MsgCrewMemberCreated = "TRI_AGR_EXI_05101" // Éxito - Tripulante creado o ya existente en el roster
+
+	// ========================================
+	// Consultar  - TRI_CON_*
+	// ========================================
+	MsgCrewMemberSearchOK = "TRI_CON_EXI_05201" // Éxito - Búsqueda de tripulantes exitosa
+)
+
 // Tail Number Module (MAT_*) - Matrícula
 const (
 	// ========================================

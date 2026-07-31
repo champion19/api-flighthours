@@ -82,6 +82,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		AircraftModelInteractor:      dependencies.AircraftModelInteractor,
 		TailNumberInteractor:         dependencies.TailNumberInteractor,
 		FlightSummaryInteractor:      dependencies.FlightSummaryInteractor,
+		CrewMemberInteractor:         dependencies.CrewMemberInteractor,
 	})
 
 	validators, err := schema.NewValidator(&schema.DefaultFileReader{})
@@ -134,7 +135,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 
 		public.GET("/airport-types/:airport_type", handler.GetAirportsByType())
 
-		public.GET("/crew-member-types", handler.GetCrewMemberTypes())
+		public.GET("/crew-member-types/:role", handler.GetCrewMemberTypes())
 
 		public.GET("/manufacturers", handler.ListManufacturers())
 
@@ -195,6 +196,10 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		pilot.GET("/employees/flight-hours-summary", handler.GetFlightHoursSummary())
 		pilot.GET("/employees/flight-alerts", handler.GetFlightAlerts())
 		pilot.GET("/employees/recent-flights", handler.GetRecentFlights())
+
+		// Crew members: each pilot's own roster of First Officers/cabin crew flown with before
+		pilot.GET("/crew-members", handler.SearchCrewMembers())
+		pilot.POST("/crew-members", handler.CreateCrewMember())
 	}
 
 	// ── Admin-only endpoints (role: "admin") ────────────────────────────

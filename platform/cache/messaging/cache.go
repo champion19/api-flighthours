@@ -346,6 +346,12 @@ var messageCodeToHTTPStatus = map[string]int{
 	"TIN_CON_ERR_04703": http.StatusInternalServerError, // 500 - Technical error querying crew member type
 
 	// ========================================
+	// Crew Member Module (TRI_*) - Tripulante (roster de personas por piloto)
+	// ========================================
+	"TRI_AGR_EXI_05101": http.StatusOK, // 200 - Crew member created or already existing in roster
+	"TRI_CON_EXI_05201": http.StatusOK, // 200 - Crew member search successful
+
+	// ========================================
 	// DailyLogbook Module (BIT_*) - Bitácora Diaria
 	// ========================================
 	// Consultar

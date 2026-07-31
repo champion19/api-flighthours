@@ -87,6 +87,14 @@ func (f *fakeDailyLogbookDetailService) DeleteDailyLogbookDetailTx(ctx context.C
 	return nil
 }
 
+func (f *fakeDailyLogbookDetailService) ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error) {
+	return nil, nil
+}
+
+func (f *fakeDailyLogbookDetailService) ReplaceCrewForDetailTx(ctx context.Context, tx output.Tx, detailID string, assignments []domain.CrewAssignment) error {
+	return nil
+}
+
 func newTestDailyLogbookDetailMessageCache(t *testing.T) *messaging.MessageCache {
 	t.Helper()
 
@@ -129,7 +137,7 @@ func newDailyLogbookDetailTestRouter(
 	errHandler *middleware.ErrorHandler,
 	authUser *domain.Employee,
 ) *gin.Engine {
-	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc, nil)
+	detailInteractor := interactor.NewDailyLogbookDetailInteractor(detailSvc, logbookSvc, nil, nil)
 	logbookInteractor := interactor.NewDailyLogbookInteractor(logbookSvc)
 	h := New(HandlerDeps{
 		EmployeeInteractor:           &fakeEmployeeInteractor{},

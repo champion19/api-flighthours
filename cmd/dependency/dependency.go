@@ -17,6 +17,7 @@ import (
 	airlineRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline"
 	airlineEmployeeRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airline_employee"
 	airportRepo "github.com/champion19/api-flighthours/platform/databases/repositories/airport"
+	crewMemberRepo "github.com/champion19/api-flighthours/platform/databases/repositories/crew_member"
 	dailyLogbookRepo "github.com/champion19/api-flighthours/platform/databases/repositories/daily_logbook"
 	dailyLogbookDetailRepo "github.com/champion19/api-flighthours/platform/databases/repositories/daily_logbook_detail"
 	repo "github.com/champion19/api-flighthours/platform/databases/repositories/employee"
@@ -55,6 +56,7 @@ type Dependencies struct {
 	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
 	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
+	CrewMemberInteractor         *interactor.CrewMemberInteractor
 }
 
 func Init() (*Dependencies, error) {
@@ -168,6 +170,7 @@ func Init() (*Dependencies, error) {
 		DailyLogbookDetailInteractor: deps.dailyLogbookDetailInteractor,
 		DailyLogbookInteractor:       deps.dailyLogbookInteractor,
 		FlightSummaryInteractor:      deps.flightSummaryInteractor,
+		CrewMemberInteractor:         deps.crewMemberInteractor,
 	}, nil
 }
 
@@ -182,6 +185,7 @@ type domainDeps struct {
 	dailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	dailyLogbookInteractor       *interactor.DailyLogbookInteractor
 	flightSummaryInteractor      *interactor.FlightSummaryInteractor
+	crewMemberInteractor         *interactor.CrewMemberInteractor
 }
 
 func initDomainDependencies(db *sql.DB, log logger.Logger) (*domainDeps, error) {
@@ -254,6 +258,15 @@ func initDomainDependencies(db *sql.DB, log logger.Logger) (*domainDeps, error) 
 	}
 	log.Success(logger.LogDatabaseAvailable, "repository", "airline_employee")
 
+	crewMemberRepository, err := crewMemberRepo.NewCrewMemberRepository(db)
+	if err != nil {
+		log.Error(logger.LogCrewMemberRepoInitError, "error", err)
+		return nil, err
+	}
+	log.Success(logger.LogCrewMemberRepoInitOK)
+
+	crewMemberService := services.NewCrewMemberService(crewMemberRepository)
+
 	return &domainDeps{
 		airlineInteractor:            interactor.NewAirlineInteractor(airlineService),
 		airlineEmployeeInteractor:    interactor.NewAirlineEmployeeInteractor(services.NewAirlineEmployeeService(airlineEmployeeRepository)),
@@ -262,9 +275,10 @@ func initDomainDependencies(db *sql.DB, log logger.Logger) (*domainDeps, error) 
 		manufacturerInteractor:       interactor.NewManufacturerInteractor(services.NewManufacturerService(manufacturerRepository)),
 		aircraftModelInteractor:      interactor.NewAircraftModelInteractor(services.NewAircraftModelService(aircraftModelRepository, log)),
 		tailNumberInteractor:         interactor.NewTailNumberInteractor(services.NewTailNumberService(tailNumberRepository), log),
-		dailyLogbookDetailInteractor: interactor.NewDailyLogbookDetailInteractor(services.NewDailyLogbookDetailService(dailyLogbookDetailRepository), dailyLogbookService, initEmployeeFlightSummaryService(db, log)),
+		dailyLogbookDetailInteractor: interactor.NewDailyLogbookDetailInteractor(services.NewDailyLogbookDetailService(dailyLogbookDetailRepository), dailyLogbookService, initEmployeeFlightSummaryService(db, log), crewMemberService),
 		dailyLogbookInteractor:       interactor.NewDailyLogbookInteractor(dailyLogbookService),
 		flightSummaryInteractor:      initFlightSummaryInteractor(db, log),
+		crewMemberInteractor:         interactor.NewCrewMemberInteractor(crewMemberService),
 	}, nil
 }
 
