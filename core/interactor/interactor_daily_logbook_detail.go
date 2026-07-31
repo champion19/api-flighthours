@@ -13,9 +13,10 @@ import (
 // DailyLogbookDetailInteractor orchestrates daily logbook detail operations
 // This is the CORE interactor for flight segment tracking
 type DailyLogbookDetailInteractor struct {
-	service        input.DailyLogbookDetailService
-	logbookService input.DailyLogbookService          // For ownership verification
-	summaryService input.EmployeeFlightSummaryService // For hours accumulation
+	service           input.DailyLogbookDetailService
+	logbookService    input.DailyLogbookService          // For ownership verification
+	summaryService    input.EmployeeFlightSummaryService // For hours accumulation
+	crewMemberService input.CrewMemberService            // Resolves brand-new crew (by name) at save time
 }
 
 // NewDailyLogbookDetailInteractor creates a new DailyLogbookDetailInteractor
@@ -23,11 +24,13 @@ func NewDailyLogbookDetailInteractor(
 	service input.DailyLogbookDetailService,
 	logbookService input.DailyLogbookService,
 	summaryService input.EmployeeFlightSummaryService,
+	crewMemberService input.CrewMemberService,
 ) *DailyLogbookDetailInteractor {
 	return &DailyLogbookDetailInteractor{
-		service:        service,
-		logbookService: logbookService,
-		summaryService: summaryService,
+		service:           service,
+		logbookService:    logbookService,
+		summaryService:    summaryService,
+		crewMemberService: crewMemberService,
 	}
 }
 
@@ -45,6 +48,8 @@ func (i *DailyLogbookDetailInteractor) GetDailyLogbookDetailByID(ctx context.Con
 		log.Warn(logger.LogDailyLogbookDetailNotFound, "trace_id", traceID, "id", id)
 		return nil, domain.ErrFlightNotFound
 	}
+
+	i.attachCrew(ctx, traceID, detail)
 
 	log.Info(logger.LogDailyLogbookDetailGetOK, "trace_id", traceID, "id", id)
 	return detail, nil
@@ -73,6 +78,10 @@ func (i *DailyLogbookDetailInteractor) ListDailyLogbookDetailsByLogbook(ctx cont
 	if err != nil {
 		log.Error(logger.LogDailyLogbookDetailListError, "trace_id", traceID, "error", err)
 		return nil, err
+	}
+
+	for idx := range details {
+		i.attachCrew(ctx, traceID, &details[idx])
 	}
 
 	log.Info(logger.LogDailyLogbookDetailListOK, "trace_id", traceID, "count", len(details))
@@ -122,6 +131,16 @@ func (i *DailyLogbookDetailInteractor) CreateDailyLogbookDetail(ctx context.Cont
 			if err := i.service.CreateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
 				return err
 			}
+			// detail.Crew == nil means the client didn't send a "crew" field at all (leave
+			// untouched); a non-nil, possibly empty slice means it was sent explicitly.
+			if detail.Crew != nil {
+				if err := i.resolveCrewMembers(ctx, tx, employeeID, detail.Crew); err != nil {
+					return err
+				}
+				if err := i.service.ReplaceCrewForDetailTx(ctx, tx, detail.ID, detail.Crew); err != nil {
+					return err
+				}
+			}
 			i.accumulateHours(ctx, tx, traceID, employeeID, detail, false, "accumulate_on_create")
 			return nil
 		})
@@ -162,6 +181,17 @@ func (i *DailyLogbookDetailInteractor) UpdateDailyLogbookDetail(ctx context.Cont
 			i.accumulateHours(ctx, tx, traceID, employeeID, *existing, true, "reverse_on_update")
 			if err := i.service.UpdateDailyLogbookDetailTx(ctx, tx, detail); err != nil {
 				return err
+			}
+			// detail.Crew == nil means the client didn't send a "crew" field at all (leave
+			// untouched); a non-nil, possibly empty slice means it was sent explicitly and
+			// should replace whatever crew was previously assigned to this leg.
+			if detail.Crew != nil {
+				if err := i.resolveCrewMembers(ctx, tx, employeeID, detail.Crew); err != nil {
+					return err
+				}
+				if err := i.service.ReplaceCrewForDetailTx(ctx, tx, detail.ID, detail.Crew); err != nil {
+					return err
+				}
 			}
 			// Then, accumulate the new detail
 			i.accumulateHours(ctx, tx, traceID, employeeID, detail, false, "accumulate_on_update")
@@ -223,6 +253,29 @@ func (i *DailyLogbookDetailInteractor) validateTimeFields(detail domain.DailyLog
 	return i.service.ValidateTimeSequence(*detail.OutTime, *detail.TakeoffTime, *detail.LandingTime, *detail.InTime)
 }
 
+// resolveCrewMembers fills in CrewMemberID for any row that only carries a Name
+// (a brand-new person, typed but never explicitly "added" beforehand) by finding
+// or creating them within the same transaction as the flight save — this is what
+// lets the whole crew section (existing + new people) persist in one atomic step.
+// Rows that already have a CrewMemberID (picked from search) are left untouched.
+func (i *DailyLogbookDetailInteractor) resolveCrewMembers(ctx context.Context, tx output.Tx, employeeID string, crew []domain.CrewAssignment) error {
+	if i.crewMemberService == nil {
+		return nil
+	}
+	for idx := range crew {
+		a := &crew[idx]
+		if a.CrewMemberID != "" || a.Name == "" {
+			continue
+		}
+		member, err := i.crewMemberService.FindOrCreateCrewMemberTx(ctx, tx, employeeID, a.Name, a.BP)
+		if err != nil {
+			return err
+		}
+		a.CrewMemberID = member.ID
+	}
+	return nil
+}
+
 // checkDuplicateFlight checks for duplicate flights when EmployeeLogbookID is set.
 func (i *DailyLogbookDetailInteractor) checkDuplicateFlight(ctx context.Context, traceID string, detail domain.DailyLogbookDetail) error {
 	if detail.EmployeeLogbookID == nil {
@@ -252,6 +305,17 @@ func (i *DailyLogbookDetailInteractor) accumulateHours(ctx context.Context, tx o
 	if err := i.summaryService.AccumulateFlightHours(ctx, tx, employeeID, detail, isDelete); err != nil {
 		log.Warn(logger.LogFlightSummaryGetError, "trace_id", traceID, "action", action, "error", err)
 	}
+}
+
+// attachCrew fetches and attaches the First Officer + cabin crew assigned to a detail.
+// Best-effort: a failure here shouldn't fail the whole read.
+func (i *DailyLogbookDetailInteractor) attachCrew(ctx context.Context, traceID string, detail *domain.DailyLogbookDetail) {
+	crew, err := i.service.ListCrewByDetail(ctx, detail.ID)
+	if err != nil {
+		log.Warn(logger.LogCrewAssignmentListError, "trace_id", traceID, "id", detail.ID, "error", err)
+		return
+	}
+	detail.Crew = crew
 }
 
 // fetchExistingDetail fetches and validates the existence of a detail record.

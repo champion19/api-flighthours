@@ -34,7 +34,6 @@ func (r *repository) ListDailyLogbookDetailsByLogbook(ctx context.Context, logbo
 			&entity.LandingTime,
 			&entity.InTime,
 			&entity.PilotRole,
-			&entity.CompanionName,
 			&entity.CrewRole,
 			&entity.AirTime,
 			&entity.BlockTime,

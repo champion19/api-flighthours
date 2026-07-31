@@ -25,7 +25,6 @@ const (
 		dld.landing_time,
 		dld.in_time,
 		dld.pilot_role,
-		dld.companion_name,
 		dld.crew_role,
 		dld.air_time,
 		dld.block_time,
@@ -69,7 +68,6 @@ const (
 			dld.landing_time,
 			dld.in_time,
 			dld.pilot_role,
-			dld.companion_name,
 			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
@@ -113,7 +111,6 @@ const (
 			dld.landing_time,
 			dld.in_time,
 			dld.pilot_role,
-			dld.companion_name,
 			dld.crew_role,
 			dld.air_time,
 			dld.block_time,
@@ -152,10 +149,10 @@ const (
 			id, daily_logbook_id, flight_real_date, flight_number,
 			origin_airport_id, destination_airport_id, actual_tail_number_id, passengers,
 			out_time, takeoff_time, landing_time, in_time,
-			pilot_role, companion_name, crew_role,
+			pilot_role, crew_role,
 			air_time, block_time,
 			approach_category, approach_subtype, autoland, flight_type, employee_logbook_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Update query
 	QueryUpdate = `
@@ -171,7 +168,6 @@ const (
 			landing_time = ?,
 			in_time = ?,
 			pilot_role = ?,
-			companion_name = ?,
 			crew_role = ?,
 			air_time = ?,
 			block_time = ?,

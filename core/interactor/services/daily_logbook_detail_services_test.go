@@ -13,14 +13,16 @@ func pilotRolePtr(r domain.PilotRole) *domain.PilotRole { return &r }
 
 // mock daily logbook detail repository
 type mockDailyLogbookDetailRepo struct {
-	getByIDFn           func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
-	listByLogbookFn     func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
-	listByEmployeeFn    func(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
-	saveFn              func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
-	updateFn            func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
-	beginTxFn           func(ctx context.Context) (output.Tx, error)
-	existsByUniqueKeyFn func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
-	deleteFn            func(ctx context.Context, tx output.Tx, id string) error
+	getByIDFn              func(ctx context.Context, id string) (*domain.DailyLogbookDetail, error)
+	listByLogbookFn        func(ctx context.Context, logbookID string) ([]domain.DailyLogbookDetail, error)
+	listByEmployeeFn       func(ctx context.Context, employeeID string) ([]domain.DailyLogbookDetail, error)
+	saveFn                 func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	updateFn               func(ctx context.Context, tx output.Tx, detail domain.DailyLogbookDetail) error
+	beginTxFn              func(ctx context.Context) (output.Tx, error)
+	existsByUniqueKeyFn    func(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
+	deleteFn               func(ctx context.Context, tx output.Tx, id string) error
+	listCrewByDetailFn     func(ctx context.Context, detailID string) ([]domain.CrewAssignment, error)
+	replaceCrewForDetailFn func(ctx context.Context, tx output.Tx, detailID string, assignments []domain.CrewAssignment) error
 }
 
 func (m *mockDailyLogbookDetailRepo) GetDailyLogbookDetailByID(ctx context.Context, id string) (*domain.DailyLogbookDetail, error) {
@@ -75,6 +77,20 @@ func (m *mockDailyLogbookDetailRepo) ExistsByUniqueKey(ctx context.Context, empl
 func (m *mockDailyLogbookDetailRepo) DeleteDailyLogbookDetail(ctx context.Context, tx output.Tx, id string) error {
 	if m.deleteFn != nil {
 		return m.deleteFn(ctx, tx, id)
+	}
+	return nil
+}
+
+func (m *mockDailyLogbookDetailRepo) ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error) {
+	if m.listCrewByDetailFn != nil {
+		return m.listCrewByDetailFn(ctx, detailID)
+	}
+	return nil, nil
+}
+
+func (m *mockDailyLogbookDetailRepo) ReplaceCrewForDetail(ctx context.Context, tx output.Tx, detailID string, assignments []domain.CrewAssignment) error {
+	if m.replaceCrewForDetailFn != nil {
+		return m.replaceCrewForDetailFn(ctx, tx, detailID, assignments)
 	}
 	return nil
 }

@@ -22,9 +22,9 @@ func TestGetDailyLogbookByID_Success(t *testing.T) {
 	stmtByID, _ := db.Prepare(QueryByID)
 	r := &repository{stmtGetByID: stmtByID}
 
-	cols := []string{"id", "log_date", "employee_id", "book_page", "status", "tail_number_id", "tail_number"}
+	cols := []string{"id", "log_date", "employee_id", "book_page", "status", "tail_number_id", "tail_number", "crew_role"}
 	prep.ExpectQuery().WithArgs("dl1").WillReturnRows(
-		sqlmock.NewRows(cols).AddRow("dl1", time.Now(), "emp1", 1, true, nil, nil),
+		sqlmock.NewRows(cols).AddRow("dl1", time.Now(), "emp1", 1, true, nil, nil, nil),
 	)
 
 	result, err := r.GetDailyLogbookByID(context.Background(), "dl1")

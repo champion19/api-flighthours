@@ -125,3 +125,13 @@ func adjustForMidnight(current, previous time.Time) time.Time {
 func (s *DailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error) {
 	return s.repo.ExistsByUniqueKey(ctx, employeeLogbookID, flightRealDate, flightNumber, tailNumberID)
 }
+
+// ListCrewByDetail returns the First Officer + cabin crew assigned to a flight leg
+func (s *DailyLogbookDetailService) ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error) {
+	return s.repo.ListCrewByDetail(ctx, detailID)
+}
+
+// ReplaceCrewForDetailTx replaces the crew assigned to a flight leg using an external transaction
+func (s *DailyLogbookDetailService) ReplaceCrewForDetailTx(ctx context.Context, tx output.Tx, detailID string, assignments []domain.CrewAssignment) error {
+	return s.repo.ReplaceCrewForDetail(ctx, tx, detailID, assignments)
+}

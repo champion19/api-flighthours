@@ -50,7 +50,6 @@ func scanDetail(rows interface {
 		landingTime          sql.NullString
 		inTime               sql.NullString
 		pilotRole            sql.NullString
-		companionName        sql.NullString
 		crewRole             sql.NullString
 		airTime              sql.NullString
 		blockTime            sql.NullString
@@ -72,7 +71,7 @@ func scanDetail(rows interface {
 		&id, &dailyLogbookID, &flightRealDate, &flightNumber,
 		&originAirportID, &destinationAirportID, &tailNumberID, &passengers,
 		&outTime, &takeoffTime, &landingTime, &inTime,
-		&pilotRole, &companionName, &crewRole,
+		&pilotRole, &crewRole,
 		&airTime, &blockTime,
 		&approachCategory, &approachSubtype, &autoland, &flightType, &employeeLogbookID,
 		&logDate, &tailNumber, &modelName,
@@ -95,7 +94,6 @@ func scanDetail(rows interface {
 		TakeoffTime:          nullableStringPtr(takeoffTime),
 		LandingTime:          nullableStringPtr(landingTime),
 		InTime:               nullableStringPtr(inTime),
-		CompanionName:        nullableStringPtr(companionName),
 		AirTime:              nullableStringPtr(airTime),
 		BlockTime:            nullableStringPtr(blockTime),
 		FlightType:           nullableStringPtr(flightType),

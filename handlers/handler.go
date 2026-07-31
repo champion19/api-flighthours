@@ -30,6 +30,7 @@ type handler struct {
 	DailyLogbookDetailInteractor *interactor.DailyLogbookDetailInteractor
 	DailyLogbookInteractor       *interactor.DailyLogbookInteractor
 	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
+	CrewMemberInteractor         *interactor.CrewMemberInteractor
 }
 
 type HandlerDeps struct {
@@ -50,6 +51,7 @@ type HandlerDeps struct {
 	AircraftModelInteractor      *interactor.AircraftModelInteractor
 	TailNumberInteractor         *interactor.TailNumberInteractor
 	FlightSummaryInteractor      *interactor.FlightSummaryInteractor
+	CrewMemberInteractor         *interactor.CrewMemberInteractor
 }
 
 func New(deps HandlerDeps) *handler {
@@ -71,6 +73,7 @@ func New(deps HandlerDeps) *handler {
 		AircraftModelInteractor:      deps.AircraftModelInteractor,
 		TailNumberInteractor:         deps.TailNumberInteractor,
 		FlightSummaryInteractor:      deps.FlightSummaryInteractor,
+		CrewMemberInteractor:         deps.CrewMemberInteractor,
 	}
 }
 

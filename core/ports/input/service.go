@@ -101,6 +101,15 @@ type DailyLogbookDetailService interface {
 	ValidateTimeSequence(outTime, takeoffTime, landingTime, inTime string) error
 	ExistsByUniqueKey(ctx context.Context, employeeLogbookID, flightRealDate, flightNumber, tailNumberID string) (bool, error)
 	DeleteDailyLogbookDetailTx(ctx context.Context, tx output.Tx, id string) error
+	ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error)
+	ReplaceCrewForDetailTx(ctx context.Context, tx output.Tx, detailID string, assignments []domain.CrewAssignment) error
+}
+
+type CrewMemberService interface {
+	BeginTx(ctx context.Context) (output.Tx, error)
+	SearchCrewMembers(ctx context.Context, employeeID, query string) ([]domain.CrewMember, error)
+	FindOrCreateCrewMemberTx(ctx context.Context, tx output.Tx, employeeID, name string, bp *string) (*domain.CrewMember, error)
+	GetCrewMemberByID(ctx context.Context, id string) (*domain.CrewMember, error)
 }
 
 type DailyLogbookService interface {
