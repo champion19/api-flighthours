@@ -32,7 +32,7 @@ func (r *repository) ListDailyLogbooksByEmployee(ctx context.Context, employeeID
 	var logbooks []domain.DailyLogbook
 	for rows.Next() {
 		var d DailyLogbook
-		if err := rows.Scan(&d.ID, &d.LogDate, &d.EmployeeID, &d.BookPage, &d.Status, &d.TailNumberID, &d.TailNumber, &d.CrewRole); err != nil {
+		if err := rows.Scan(&d.ID, &d.LogDate, &d.EmployeeID, &d.BookPage, &d.Status, &d.TailNumberID, &d.TailNumber, &d.CrewRole, &d.CreatedAt); err != nil {
 			return nil, err
 		}
 		logbooks = append(logbooks, *d.ToDomain())
