@@ -17,6 +17,7 @@ type DailyLogbook struct {
 	TailNumberID sql.NullString `db:"tail_number_id"`
 	TailNumber   sql.NullString `db:"tail_number"` // denormalized from LEFT JOIN tail_number
 	CrewRole     sql.NullString `db:"crew_role"`   // default crew role for every flight logged under this book page
+	CreatedAt    time.Time      `db:"created_at"`  // DB-assigned creation timestamp, not editable by the pilot
 }
 
 // ToDomain converts the database entity to domain model
@@ -27,6 +28,7 @@ func (d *DailyLogbook) ToDomain() *domain.DailyLogbook {
 		EmployeeID: d.EmployeeID,
 		BookPage:   d.BookPage,
 		Status:     d.Status,
+		CreatedAt:  d.CreatedAt,
 	}
 
 	if d.TailNumberID.Valid {

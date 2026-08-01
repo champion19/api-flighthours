@@ -17,7 +17,8 @@ type DailyLogbookResponse struct {
 	Status       string  `json:"status"`
 	TailNumberID *string `json:"tail_number_id,omitempty"`
 	TailNumber   *string `json:"tail_number,omitempty"`
-	CrewRole     *string `json:"crew_role,omitempty"` // default crew role for every flight logged under this book page
+	CrewRole     *string `json:"crew_role,omitempty"`  // default crew role for every flight logged under this book page
+	CreatedAt    string  `json:"created_at,omitempty"` // DB-assigned creation timestamp, not editable by the pilot
 	Links        []Link  `json:"_links,omitempty"`
 }
 
@@ -35,6 +36,9 @@ func FromDomainDailyLogbook(logbook *domain.DailyLogbook, encodedID, encodedEmpl
 		Status:       status,
 		TailNumberID: logbook.TailNumberID,
 		TailNumber:   logbook.TailNumber,
+	}
+	if !logbook.CreatedAt.IsZero() {
+		response.CreatedAt = logbook.CreatedAt.Format(time.RFC3339)
 	}
 	if logbook.CrewRole != nil {
 		crewRole := string(*logbook.CrewRole)

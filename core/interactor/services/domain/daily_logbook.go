@@ -15,6 +15,7 @@ type DailyLogbook struct {
 	TailNumberID *string   `json:"tail_number_id,omitempty"`
 	TailNumber   *string   `json:"tail_number,omitempty"` // denormalized plate, read-only
 	CrewRole     *CrewRole `json:"crew_role,omitempty"`   // default crew role for every flight logged under this book page
+	CreatedAt    time.Time `json:"created_at,omitempty"`  // DB-assigned creation timestamp, not editable by the pilot
 }
 
 func (d *DailyLogbook) SetID() {

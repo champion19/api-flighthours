@@ -21,8 +21,8 @@ func TestListDailyLogbooksByEmployee_All(t *testing.T) {
 
 	r := &repository{stmtGetByEmployee: stmtByEmp}
 
-	rows := sqlmock.NewRows([]string{"id", "log_date", "employee_id", "book_page", "status", "tail_number_id", "tail_number", "crew_role"}).
-		AddRow("dl1", time.Now(), "emp1", 1, true, nil, nil, nil)
+	rows := sqlmock.NewRows([]string{"id", "log_date", "employee_id", "book_page", "status", "tail_number_id", "tail_number", "crew_role", "created_at"}).
+		AddRow("dl1", time.Now(), "emp1", 1, true, nil, nil, nil, time.Now())
 	prep.ExpectQuery().WithArgs("emp1").WillReturnRows(rows)
 
 	result, err := r.ListDailyLogbooksByEmployee(context.Background(), "emp1", map[string]interface{}{})
@@ -46,8 +46,8 @@ func TestListDailyLogbooksByEmployee_ByStatus(t *testing.T) {
 
 	r := &repository{stmtGetByEmployeeAndStatus: stmtByEmpStatus}
 
-	rows := sqlmock.NewRows([]string{"id", "log_date", "employee_id", "book_page", "status", "tail_number_id", "tail_number", "crew_role"}).
-		AddRow("dl1", time.Now(), "emp1", 1, true, nil, nil, nil)
+	rows := sqlmock.NewRows([]string{"id", "log_date", "employee_id", "book_page", "status", "tail_number_id", "tail_number", "crew_role", "created_at"}).
+		AddRow("dl1", time.Now(), "emp1", 1, true, nil, nil, nil, time.Now())
 	prep.ExpectQuery().WithArgs("emp1", true).WillReturnRows(rows)
 
 	result, err := r.ListDailyLogbooksByEmployee(context.Background(), "emp1", map[string]interface{}{"status": true})
