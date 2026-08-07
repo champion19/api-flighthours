@@ -307,7 +307,7 @@ func (i *DailyLogbookDetailInteractor) accumulateHours(ctx context.Context, tx o
 	}
 }
 
-// attachCrew fetches and attaches the First Officer + cabin crew assigned to a detail.
+// attachCrew fetches and attaches the command crew + cabin crew assigned to a detail.
 // Best-effort: a failure here shouldn't fail the whole read.
 func (i *DailyLogbookDetailInteractor) attachCrew(ctx context.Context, traceID string, detail *domain.DailyLogbookDetail) {
 	crew, err := i.service.ListCrewByDetail(ctx, detail.ID)

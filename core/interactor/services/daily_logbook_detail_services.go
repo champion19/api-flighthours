@@ -126,7 +126,7 @@ func (s *DailyLogbookDetailService) ExistsByUniqueKey(ctx context.Context, emplo
 	return s.repo.ExistsByUniqueKey(ctx, employeeLogbookID, flightRealDate, flightNumber, tailNumberID)
 }
 
-// ListCrewByDetail returns the First Officer + cabin crew assigned to a flight leg
+// ListCrewByDetail returns the command crew + cabin crew assigned to a flight leg
 func (s *DailyLogbookDetailService) ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error) {
 	return s.repo.ListCrewByDetail(ctx, detailID)
 }
