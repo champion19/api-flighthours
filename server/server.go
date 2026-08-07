@@ -197,7 +197,7 @@ func routing(app *gin.Engine, dependencies *dependency.Dependencies) {
 		pilot.GET("/employees/flight-alerts", handler.GetFlightAlerts())
 		pilot.GET("/employees/recent-flights", handler.GetRecentFlights())
 
-		// Crew members: each pilot's own roster of First Officers/cabin crew flown with before
+		// Crew members: each pilot's own roster of command crew/cabin crew flown with before
 		pilot.GET("/crew-members", handler.SearchCrewMembers())
 		pilot.POST("/crew-members", handler.CreateCrewMember())
 	}
