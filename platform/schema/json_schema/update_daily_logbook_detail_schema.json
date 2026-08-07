@@ -129,7 +129,7 @@
     },
     "crew": {
       "type": "array",
-      "description": "Additional crew assigned to this flight leg (First Officer + cabin crew) — optional. Sending an empty array clears previously assigned crew. Each row is either an existing roster member (crew_member_id) or a brand-new person (name, created in the same save)",
+      "description": "Additional crew assigned to this flight leg (Tripulación de Mando + cabin crew) — optional. Sending an empty array clears previously assigned crew. Each row is either an existing roster member (crew_member_id) or a brand-new person (name, created in the same save)",
       "items": {
         "type": "object",
         "properties": {
@@ -151,11 +151,16 @@
           },
           "role": {
             "type": "string",
-            "description": "Role for this assignment: first_officer, purser (Jefe de Cabina), or flight_attendant (Tripulante de Cabina)",
+            "description": "Role for this assignment: captain, first officer, instructor, line check captain, safety pilot (Tripulación de Mando) — or purser, flight_attendant (Tripulación de Cabina). first_officer is a legacy value kept for backward compatibility with flights saved before the command crew redesign.",
             "enum": [
-              "first_officer",
+              "captain",
+              "first officer",
+              "instructor",
+              "line check captain",
+              "safety pilot",
               "purser",
-              "flight_attendant"
+              "flight_attendant",
+              "first_officer"
             ]
           }
         },

@@ -15,7 +15,7 @@ const queryCrewByDetail = `
 	WHERE dldc.daily_logbook_detail_id = ?
 	ORDER BY dldc.created_at ASC`
 
-// ListCrewByDetail returns the First Officer + cabin crew assigned to a single flight leg.
+// ListCrewByDetail returns the command crew + cabin crew assigned to a single flight leg.
 func (r *repository) ListCrewByDetail(ctx context.Context, detailID string) ([]domain.CrewAssignment, error) {
 	log.Info(logger.LogCrewAssignmentList, "daily_logbook_detail_id", detailID)
 

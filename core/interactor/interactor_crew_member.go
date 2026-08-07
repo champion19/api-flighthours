@@ -11,7 +11,7 @@ import (
 	"github.com/champion19/api-flighthours/platform/logger"
 )
 
-// CrewMemberInteractor orchestrates a pilot's private crew roster (First Officer +
+// CrewMemberInteractor orchestrates a pilot's private crew roster (command crew +
 // cabin crew they've flown with before), always scoped to the authenticated employee.
 type CrewMemberInteractor struct {
 	service input.CrewMemberService

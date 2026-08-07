@@ -24,17 +24,31 @@ const (
 )
 
 // CrewMemberRole represents the role of another crew member (not the logged-in pilot)
-// assigned to a flight segment: the first officer or a member of the cabin crew.
+// assigned to a flight segment: either a member of the command crew ("Tripulación de
+// Mando" — same 5-value vocabulary as CrewRole, since it records which role each
+// additional pilot flew as) or a member of the cabin crew.
 type CrewMemberRole string
 
 const (
-	CrewMemberRoleFirstOfficer    CrewMemberRole = "first_officer"    // Primer Oficial
+	// CrewMemberRoleFirstOfficer is a legacy value: flights saved before the command
+	// crew redesign may still have rows with this role. New saves no longer write it —
+	// command crew rows now use one of the CrewRole values below instead.
+	CrewMemberRoleFirstOfficer    CrewMemberRole = "first_officer"    // Primer Oficial (legacy)
 	CrewMemberRolePurser          CrewMemberRole = "purser"           // Jefe de Cabina
 	CrewMemberRoleFlightAttendant CrewMemberRole = "flight_attendant" // Tripulante de Cabina
 )
 
-// ValidCrewMemberRoles contains all valid crew member roles for daily_logbook_detail_crew assignments
-var ValidCrewMemberRoles = []CrewMemberRole{CrewMemberRoleFirstOfficer, CrewMemberRolePurser, CrewMemberRoleFlightAttendant}
+// ValidCrewMemberRoles contains all valid crew member roles for daily_logbook_detail_crew
+// assignments: cabin crew roles plus the command crew roles (same vocabulary as CrewRole).
+var ValidCrewMemberRoles = []CrewMemberRole{
+	CrewMemberRolePurser,
+	CrewMemberRoleFlightAttendant,
+	CrewMemberRole(CrewRoleCaptain),
+	CrewMemberRole(CrewRoleFirstOfficer),
+	CrewMemberRole(CrewRoleInstructor),
+	CrewMemberRole(CrewRoleLineCheckCaptain),
+	CrewMemberRole(CrewRoleSafetyPilot),
+}
 
 // IsValidCrewMemberRole checks if a string is a valid crew member role
 func IsValidCrewMemberRole(role string) bool {
@@ -212,7 +226,7 @@ type DailyLogbookDetail struct {
 	AirlineCode          string            `json:"airline_code,omitempty"`          // Airline IATA code
 	TailNumber           string            `json:"tail_number,omitempty"`           // Aircraft registration
 	ModelName            string            `json:"model_name,omitempty"`            // Aircraft model name
-	Crew                 []CrewAssignment  `json:"crew,omitempty"`                  // First Officer + cabin crew assigned to this leg
+	Crew                 []CrewAssignment  `json:"crew,omitempty"`                  // Command crew + cabin crew assigned to this leg
 }
 
 // SetID generates a new UUID for the detail

@@ -4,14 +4,14 @@ import (
 	"github.com/champion19/api-flighthours/core/interactor/services/domain"
 )
 
-// CrewAssignmentRequest is one First Officer/cabin crew assignment sent as part of a flight leg payload.
+// CrewAssignmentRequest is one command crew/cabin crew assignment sent as part of a flight leg payload.
 // Either CrewMemberID (an existing roster entry, picked from search) or Name (a brand-new
 // person, created in the same save transaction) must be set.
 type CrewAssignmentRequest struct {
 	CrewMemberID string `json:"crew_member_id,omitempty"`
 	Name         string `json:"name,omitempty"`
 	BP           string `json:"bp,omitempty"`
-	Role         string `json:"role"` // first_officer, purser (Jefe de Cabina), flight_attendant (Tripulante de Cabina)
+	Role         string `json:"role"` // captain, first officer, instructor, line check captain, safety pilot (Tripulación de Mando); purser, flight_attendant (Tripulación de Cabina)
 }
 
 type CreateDailyLogbookDetailRequest struct {
@@ -33,7 +33,7 @@ type CreateDailyLogbookDetailRequest struct {
 	ApproachSubtype      *string                 `json:"approach_subtype,omitempty"`
 	Autoland             *bool                   `json:"autoland,omitempty"`
 	FlightType           *string                 `json:"flight_type,omitempty"`
-	Crew                 []CrewAssignmentRequest `json:"crew,omitempty"` // First Officer + cabin crew — optional
+	Crew                 []CrewAssignmentRequest `json:"crew,omitempty"` // command crew + cabin crew — optional
 }
 
 func (r *CreateDailyLogbookDetailRequest) Sanitize() {
@@ -74,7 +74,7 @@ type UpdateDailyLogbookDetailRequest struct {
 	ApproachSubtype      *string                 `json:"approach_subtype,omitempty"`
 	Autoland             *bool                   `json:"autoland,omitempty"`
 	FlightType           *string                 `json:"flight_type,omitempty"`
-	Crew                 []CrewAssignmentRequest `json:"crew,omitempty"` // First Officer + cabin crew — optional; empty array clears
+	Crew                 []CrewAssignmentRequest `json:"crew,omitempty"` // command crew + cabin crew — optional; empty array clears
 }
 
 func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
@@ -100,7 +100,7 @@ func (r *UpdateDailyLogbookDetailRequest) Sanitize() {
 // RESPONSE DTOs
 // ============================================
 
-// CrewAssignmentResponse is one First Officer/cabin crew assignment on a flight leg response.
+// CrewAssignmentResponse is one command crew/cabin crew assignment on a flight leg response.
 type CrewAssignmentResponse struct {
 	ID           string  `json:"id"`
 	CrewMemberID string  `json:"crew_member_id"`

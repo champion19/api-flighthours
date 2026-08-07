@@ -11,7 +11,7 @@ import (
 // filtered by name — this is also how "have I flown with this person before" is answered:
 // if they're in the roster, they've been assigned to a flight before.
 // @Summary Search crew members
-// @Description Searches the authenticated pilot's own roster of First Officers/cabin crew
+// @Description Searches the authenticated pilot's own roster of command crew/cabin crew
 // @Tags CrewMembers
 // @Produce json
 // @Param search query string false "Name filter (partial match)"
